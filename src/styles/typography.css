@@ -1,0 +1,172 @@
+/* MyTicket text styles.
+ *
+ * One class per Figma text style, named `text-<role>-<size>` from the Figma
+ * name lowercased and kebab-cased. Figma values and their conversions are
+ * recorded in docs/design-system/DESIGN-SYSTEM.md §6.
+ *
+ * Conversions applied here:
+ *   letter-spacing  px = figmaPercent / 100 * fontSize
+ *   line-height     values <= 10 are multipliers, > 10 are percentages
+ *
+ * Line heights are left unitless so they scale correctly if a consumer
+ * overrides font-size.
+ */
+
+@utility text-display-hero {
+  font-size: 54px;
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: -1.89px;
+}
+
+@utility text-display-hero-xl {
+  font-size: 56px;
+  line-height: 1.14;
+  font-weight: 800;
+  letter-spacing: -1.68px;
+}
+
+@utility text-display-cta {
+  font-size: 50px;
+  line-height: 0.98;
+  font-weight: 800;
+  letter-spacing: -1.75px;
+}
+
+@utility text-heading-h1 {
+  font-size: 46px;
+  line-height: 1.03;
+  font-weight: 800;
+  letter-spacing: -1.61px;
+}
+
+@utility text-heading-h2-home {
+  font-size: 44px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -1.54px;
+}
+
+@utility text-heading-h2-feature {
+  font-size: 38px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -1.14px;
+}
+
+@utility text-heading-h2-section {
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -1.02px;
+}
+
+@utility text-heading-h2 {
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.96px;
+}
+
+@utility text-heading-h3 {
+  font-size: 24px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.48px;
+}
+
+@utility text-heading-h4 {
+  font-size: 19px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+@utility text-heading-card {
+  font-size: 17px;
+  line-height: 1.22;
+  font-weight: 700;
+  letter-spacing: -0.255px;
+}
+
+@utility text-body-large {
+  font-size: 17px;
+  line-height: 1.6;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+@utility text-body-default {
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+@utility text-body-small {
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+@utility text-body-caption {
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* Tabular figures so prices and counters do not shift width as digits change. */
+@utility text-numeric-default {
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility text-label-overline {
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+@utility text-label-field {
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+@utility text-label-badge {
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+@utility text-label-error {
+  font-size: 12.5px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+@utility text-label-table {
+  font-size: 11.5px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.805px;
+  text-transform: uppercase;
+}
+
+@utility text-label-group {
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}

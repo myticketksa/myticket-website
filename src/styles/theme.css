@@ -1,0 +1,256 @@
+/* MyTicket design tokens.
+ *
+ * Extracted from Figma file yffYsbbooJbCZMYbAWSMfH via MCP get_variable_defs.
+ * Authoritative reference: docs/design-system/DESIGN-SYSTEM.md
+ * Do not take token values from docs/reference/ — those describe an earlier
+ * iteration of the system. See docs/design-system/TOKEN-RECONCILIATION.md.
+ *
+ * Single mode. The Figma file defines no dark theme.
+ */
+
+@theme {
+  /* ---------------------------------------------------------------- font */
+  /* Two faces. Figma names the Latin variable `--font-latin`, which is the
+     tell that a second face exists: the header language pill sets Arabic in
+     Cairo. Anything inside `dir="rtl"` or an Arabic string uses --font-arabic. */
+  --font-sans: 'Manrope Variable', 'Manrope', system-ui, -apple-system, sans-serif;
+  --font-arabic: 'Cairo Variable', 'Cairo', 'Segoe UI', system-ui, sans-serif;
+
+  /* -------------------------------------------------------------- colour */
+
+  /* backgrounds */
+  --color-bg-page: #fff7f3;
+  --color-bg-warm: #fff1e9;
+  --color-bg-tint-brand: #fff0e9;
+  --color-bg-skeleton: #f5ede7;
+
+  /* surfaces */
+  --color-surface-default: #ffffff;
+  --color-surface-inverse: #191008;
+
+  /* ink */
+  --color-ink-primary: #191008;
+  --color-ink-secondary: #6b5f58;
+  --color-ink-muted: #8e8078;
+  --color-ink-disabled: #b9aca4;
+  --color-ink-inverse: #ffffff;
+  --color-ink-brand: #f25f2c;
+  --color-ink-brand-mid: #d8431a;
+  --color-ink-brand-strong: #c4330b;
+  --color-ink-link-hover: #b8320f;
+  /* Body copy on light surfaces — Figma `--ink-body` (event detail about / policies). */
+  --color-ink-body: #3a2418;
+  /* Warm peach on dark media (FeaturedHeroCard date overline). Unbound in Figma. */
+  --color-ink-warm-on-dark: #ffb48a;
+
+  /* borders */
+  --color-border-default: #f3ded2;
+  --color-border-divider: #f7e9e1;
+  --color-border-focus: #f25f2c;
+  --color-border-brand: #f25f2c;
+  --color-border-danger: #dc3a2a;
+
+  /* brand */
+  --color-brand-primary: #f25f2c;
+  --color-brand-gradient-start: #ff9147;
+  --color-brand-gradient-mid: #f25f2c;
+  --color-brand-gradient-end: #d8431a;
+  --color-brand-identity-end: #e0451a;
+
+  /* semantic state */
+  --color-state-success: #1b8a5a;
+  --color-state-success-tint: #eaf6ef;
+  --color-state-danger: #dc3a2a;
+  --color-state-danger-tint: #fff8f6;
+  --color-state-danger-deep: #a31c13;
+  --color-state-danger-border: #f5cbc5;
+  --color-state-info: #3a6ea5;
+  --color-state-info-tint: #eef4fb;
+  --color-state-inactive: #f5ede7;
+  --color-state-inactive-ink: #8e8078;
+
+  /* neutral utilities — authored without the -- prefix in Figma */
+  --color-neutral-placeholder-start: #e8ddd6;
+  --color-neutral-placeholder-end: #d8ccc4;
+  --color-neutral-shimmer: #fbf4ef;
+  --color-neutral-scrollbar: #f5c9b4;
+
+  /* Seat map zones — Figma purchase seat selection (unbound in variables). */
+  --color-seat-vip: #5a18c4;
+  --color-seat-vip-tint: #f4e9ff;
+  --color-seat-gold-tint: #ffe8de;
+  --color-seat-silver: #e8a0b0;
+  --color-seat-silver-tint: #fff0f3;
+  --color-seat-bronze: #5c5048;
+  --color-seat-bronze-tint: #f3ebe6;
+  --color-seat-sold: #f7e4dc;
+
+  /* Home "Featured events" pastel panel — Figma `207:4490`. */
+  --background-image-home-featured: linear-gradient(
+    148deg,
+    #fff2ea 14%,
+    #ffe6d8 47%,
+    #f4e9ff 86%
+  );
+
+  /* ------------------------------------------------------------- spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+  --spacing-4xl: 40px;
+  --spacing-5xl-min: 56px;
+  --spacing-5xl-max: 88px;
+  --spacing-control-gap: 9px;
+  --spacing-gutter-desktop: 40px;
+
+  /* Button horizontal padding, one per size. */
+  --spacing-btn-pad-lg: 24px;
+  --spacing-btn-pad-md: 18px;
+  --spacing-btn-pad-sm: 15px;
+
+  /* Horizontal padding inside text fields. */
+  --spacing-field-pad: 14px;
+
+  /* Gap between a 16px control and its label, in Checkbox and Radio rows. */
+  --spacing-row-gap: 10px;
+
+  /* Page gutter on desktop screens, measured from the Home frame: every
+     section child starts at x=60 inside a 1440px frame. */
+  --spacing-page-gutter: 60px;
+
+  /* -------------------------------------------------------------- radius */
+  --radius-badge: 10px;
+  --radius-input: 12px;
+  --radius-control: 14px;
+  /* Buttons are pill-shaped: radius is exactly height/2 at every size. */
+  --radius-btn-lg: 24px;
+  --radius-btn-md: 21px;
+  --radius-btn-sm: 18px;
+  --radius-card: 18px;
+  --radius-chip: 19px;
+  --radius-icon-btn: 17px;
+  --radius-search: 22px;
+  --radius-panel: 22px;
+  --radius-pill: 999px;
+
+  /* --------------------------------------------------------------- sizes */
+  /* Figma keeps every dimension under one `size/` group. Tailwind splits them:
+     `h-*`, `w-*` and `size-*` read the `--spacing-*` namespace, so box
+     dimensions live there, while stroke widths stay under `--size-*` and are
+     consumed with `var()`. Figma's original names are recorded in
+     docs/design-system/tokens.json. */
+  --size-border-hairline: 1px;
+  --size-border-interactive: 1.5px;
+  --size-focus-ring: 2px;
+
+  /* size/icon-sm, size/icon-lg */
+  --spacing-icon-sm: 16px;
+  --spacing-icon-lg: 24px;
+  /* size/btn-lg, size/btn-md, size/btn-sm — control heights */
+  --spacing-btn-lg: 48px;
+  --spacing-btn-md: 42px;
+  --spacing-btn-sm: 36px;
+  /* size/avatar-sm, size/avatar-lg — the only two avatars drawn */
+  --spacing-avatar-sm: 28px;
+  --spacing-avatar-lg: 52px;
+
+  /* size/toggle-knob, size/otp-w, size/otp-h */
+  --spacing-toggle-knob: 20px;
+  --spacing-otp-w: 48px;
+  --spacing-otp-h: 56px;
+
+  /* size/input, size/amount-input, size/chip, size/icon-btn, size/search, size/header */
+  --spacing-input: 48px;
+  --spacing-amount-input: 56px;
+  --spacing-chip: 38px;
+  --spacing-icon-btn: 34px;
+  --spacing-search: 44px;
+  --spacing-header: 80px;
+
+  --container-content: 1320px;
+  --container-shell: 1400px;
+  --container-page: 1440px;
+
+  /* ------------------------------------------------------------- effects */
+  /* Both drop shadows are exact Figma effect styles from node 207:2519.
+     Figma spread maps to the CSS spread-radius slot, hence the negative
+     fourth value. */
+  --shadow-lift: 0 12px 30px -18px rgb(25 16 8 / 0.35);
+  --shadow-overlay: 0 40px 80px -30px rgb(25 16 8 / 0.6);
+
+  --blur-header: 14px;
+
+  /* -------------------------------------------------------------- motion */
+  /* Not present in Figma. Deliberate addition — see DESIGN-SYSTEM.md §10. */
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
+}
+
+/* Tailwind v4 exposes @theme values as utilities but durations need to be
+   plain custom properties to be usable in transition shorthands. */
+:root {
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 320ms;
+
+  /* Three stops with the mid at 52%, on a 135deg diagonal. Figma reports a
+     slightly different angle on every instance (133.49, 134.37, 135.30, 141.67,
+     152.54) because it stores the gradient as a transform over each layer's
+     bounding box, so the angle drifts with aspect ratio. 135 is the intent. */
+  --gradient-brand: linear-gradient(
+    135deg,
+    var(--color-brand-gradient-start) 0%,
+    var(--color-brand-gradient-mid) 52%,
+    var(--color-brand-gradient-end) 100%
+  );
+
+  /* gradient/cta-compact — two stops, skipping the mid, on the same 135deg
+     diagonal. Figma keeps it "distinct" from --gradient-brand on purpose and uses
+     it only on the compact state-card CTA. Same endpoints as the three-stop ramp,
+     so the difference is subtle but real: no plateau at brand/primary. */
+  --gradient-brand-compact: linear-gradient(
+    135deg,
+    var(--color-brand-gradient-start) 0%,
+    var(--color-brand-gradient-end) 100%
+  );
+
+  /* A separate two-stop ramp, no mid stop, ending on a different red, and at a
+     shallower 120deg. The Avatar and FilterChip descriptions both state 120deg
+     explicitly. Carries the Toggle ON track, a selected FilterChip and Avatar
+     initials. Not interchangeable with --gradient-brand. */
+  --gradient-identity: linear-gradient(
+    120deg,
+    var(--color-brand-gradient-start) 0%,
+    var(--color-brand-identity-end) 100%
+  );
+
+  /* 160deg per the ImagePlaceholder description. Both stops are literals that
+     Figma explicitly leaves untokenised — the first thing to bind if the imagery
+     palette is ever tokenised. */
+  --gradient-placeholder: linear-gradient(
+    160deg,
+    var(--color-neutral-placeholder-start) 0%,
+    var(--color-neutral-placeholder-end) 100%
+  );
+
+  /* Skeleton shimmer. The #fbf4ef highlight is a literal, not a token. */
+  --gradient-shimmer: linear-gradient(
+    100deg,
+    var(--color-bg-skeleton) 40%,
+    var(--color-neutral-shimmer) 50%,
+    var(--color-bg-skeleton) 60%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 1ms;
+    --duration-normal: 1ms;
+    --duration-slow: 1ms;
+  }
+}

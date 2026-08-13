@@ -1,0 +1,96 @@
+@import 'tailwindcss';
+
+@import './theme.css';
+@import './typography.css';
+
+/* The brand ramp is a three-stop gradient, applied either as a fill or as
+   clipped text. Both spellings are needed because the Home hero uses a
+   gradient headline while CTA bands use a gradient background. */
+@utility bg-brand-gradient {
+  background-image: var(--gradient-brand);
+}
+
+@utility bg-brand-gradient-compact {
+  background-image: var(--gradient-brand-compact);
+}
+
+@utility text-brand-gradient {
+  background-image: var(--gradient-brand);
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-placeholder-gradient {
+  background-image: var(--gradient-placeholder);
+}
+
+@utility bg-identity-gradient {
+  background-image: var(--gradient-identity);
+}
+
+/* Skeleton shimmer. Figma draws the highlight band but specifies no animation,
+   so travelling it is a deliberate addition — a static highlight reads as a
+   rendering bug. Sized at 200% so the band has room to cross. */
+@utility bg-shimmer {
+  background-image: var(--gradient-shimmer);
+  background-size: 200% 100%;
+  animation: myticket-shimmer 1.4s linear infinite;
+}
+
+@keyframes myticket-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-bg-page);
+    color: var(--color-ink-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :focus-visible {
+    outline: var(--size-focus-ring) solid var(--color-border-focus);
+    outline-offset: 2px;
+  }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    /* Tailwind v4's preflight sets `cursor: default` on buttons, which left every
+       control in the app showing the arrow cursor. Restored here rather than per
+       component so nothing can be missed. Disabled controls keep the default. */
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']) {
+      cursor: pointer;
+    }
+
+  img,
+  svg,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+}
