@@ -1,9 +1,26 @@
-import { useParams } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import {
+  useFavoriteExperienceMutation,
+  useGetExperienceDetailsQuery,
+  useGetExperienceReviewsQuery,
+  useGetExperiencesQuery,
+  useUnfavoriteExperienceMutation,
+} from '@/app/api/experiencesApi'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { selectIsAuthenticated } from '@/features/auth/authSlice'
+import { toastPushed } from '@/features/ui/uiSlice'
+import { apiErrorMessage } from '@/lib/api/unwrap'
 import { ExperienceCard } from '@/components/cards'
 import { StarFillIcon } from '@/components/icons'
 import { Breadcrumbs } from '@/components/navigation'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
+import {
+  mapApiExperienceToCard,
+  resolveExperienceFromList,
+  resolveExperienceId,
+} from '@/lib/api/mappers/experiences'
 import {
   CATALOG_EXPERIENCES,
   DetailGallery,
@@ -16,11 +33,87 @@ import {
   StickyCtaCard,
 } from '@/pages/_guest'
 
-/** Experience detail — Figma `207:7048`. */
+/** Experience detail — Figma `207:7048`. Experiences API with fixture fallback. */
 export function ExperienceDetailPage() {
   const { slug } = useParams()
-  const experience =
-    CATALOG_EXPERIENCES.find((e) => slugify(e.title) === slug) ?? CATALOG_EXPERIENCES[0]
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const isAuthenticated = useAppSelector(selectIsAuthenticated)
+  const slugOrId = slug ?? ''
+
+  const { data: apiExperiences } = useGetExperiencesQuery()
+  const [favoriteExperience, favState] = useFavoriteExperienceMutation()
+  const [unfavoriteExperience, unfavState] = useUnfavoriteExperienceMutation()
+  const [saved, setSaved] = useState(false)
+
+  const catalog = useMemo(() => {
+    if (apiExperiences && apiExperiences.length > 0) {
+      return apiExperiences.map(mapApiExperienceToCard)
+    }
+    return CATALOG_EXPERIENCES.map((e) => ({ ...e, slug: slugify(e.title) }))
+  }, [apiExperiences])
+
+  const resolvedId = useMemo(
+    () => resolveExperienceId(apiExperiences, slugOrId),
+    [apiExperiences, slugOrId],
+  )
+
+  const { data: apiDetail } = useGetExperienceDetailsQuery(resolvedId!, {
+    skip: !resolvedId,
+  })
+
+  const { data: apiReviews } = useGetExperienceReviewsQuery(resolvedId!, {
+    skip: !resolvedId,
+  })
+
+  const experience = useMemo(() => {
+    const fromList =
+      catalog.find((e) => e.slug === slugOrId || slugify(e.title) === slugOrId) ??
+      (apiExperiences?.length
+        ? mapApiExperienceToCard(resolveExperienceFromList(apiExperiences, slugOrId) ?? {})
+        : undefined) ??
+      catalog[0]!
+
+    if (apiDetail && Object.keys(apiDetail).length > 0) {
+      const mapped = mapApiExperienceToCard(apiDetail)
+      return { ...fromList, ...mapped }
+    }
+
+    return fromList
+  }, [apiDetail, apiExperiences, catalog, slugOrId])
+
+  const ratingDisplay = useMemo(() => {
+    if (apiReviews && apiReviews.length > 0 && !experience.rating?.includes('(')) {
+      return `${experience.rating} (${apiReviews.length})`
+    }
+    return experience.rating
+  }, [apiReviews, experience.rating])
+
+  const guestLabel = experience.guests ?? 'Up to 12 guests'
+
+  async function handleSave() {
+    if (!isAuthenticated) {
+      navigate('/sign-in')
+      return
+    }
+    if (!resolvedId) {
+      dispatch(toastPushed('error', 'Experience is not available to save yet'))
+      return
+    }
+    try {
+      if (saved) {
+        await unfavoriteExperience(resolvedId).unwrap()
+        setSaved(false)
+        dispatch(toastPushed('success', 'Removed from saved'))
+      } else {
+        await favoriteExperience(resolvedId).unwrap()
+        setSaved(true)
+        dispatch(toastPushed('success', 'Saved'))
+      }
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not update saved')))
+    }
+  }
 
   return (
     <>
@@ -38,7 +131,7 @@ export function ExperienceDetailPage() {
         <DetailGallery
           category={experience.meta.split(' · ')[0]}
           moreLabel="+24 photos"
-          mainImage={EXPERIENCE_DETAIL_GALLERY.main}
+          mainImage={experience.image ?? EXPERIENCE_DETAIL_GALLERY.main}
           thumbs={EXPERIENCE_DETAIL_GALLERY.thumbs}
         />
       </PageSection>
@@ -51,14 +144,18 @@ export function ExperienceDetailPage() {
             <div className="mt-[14px] flex flex-wrap items-center gap-[18px] text-[15px]">
               <span className="flex items-center gap-[5px] font-semibold text-ink-primary">
                 <StarFillIcon size={15} />
-                {experience.rating}
+                {ratingDisplay}
               </span>
               <span className="text-ink-secondary">{experience.place}</span>
-              <span className="text-ink-secondary">Up to 12 guests</span>
+              <span className="text-ink-secondary">{guestLabel}</span>
             </div>
             <div className="mt-[22px] flex gap-row-gap">
-              <Button variant="secondary" disabled title="Save requires an account">
-                Save
+              <Button
+                variant="secondary"
+                loading={favState.isLoading || unfavState.isLoading}
+                onClick={() => void handleSave()}
+              >
+                {saved ? 'Saved' : 'Save'}
               </Button>
               <Button variant="secondary" disabled title="Share not available yet">
                 Share
@@ -67,9 +164,8 @@ export function ExperienceDetailPage() {
 
             <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">About</h2>
             <p className="mt-[18px] max-w-[720px] text-[16px] leading-[1.6] text-ink-secondary">
-              A hosted experience on MyTicket — small groups, verified hosts, and clear
-              cancellation. Meet at the published pickup point; transfers and equipment are
-              included unless noted otherwise.
+              {experience.summary ??
+                'A hosted experience on MyTicket — small groups, verified hosts, and clear cancellation. Meet at the published pickup point; transfers and equipment are included unless noted otherwise.'}
             </p>
 
             <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">What’s included</h2>
@@ -115,10 +211,14 @@ export function ExperienceDetailPage() {
       </PageSection>
 
       <SimilarSection heading="Similar experiences">
-        {CATALOG_EXPERIENCES.filter((e) => e.title !== experience.title)
+        {catalog
+          .filter((e) => e.title !== experience.title)
           .slice(0, 4)
           .map((exp, i) => (
-            <LinkedCard key={exp.title} to={`/experiences/${slugify(exp.title)}`}>
+            <LinkedCard
+              key={exp.slug ?? exp.title}
+              to={`/experiences/${exp.slug ?? slugify(exp.title)}`}
+            >
               <ExperienceCard
                 title={exp.title}
                 location={exp.location}
@@ -127,7 +227,7 @@ export function ExperienceDetailPage() {
                 rating={exp.rating}
                 guests={exp.guests}
                 price={exp.price}
-                image={i === 0 ? EXPERIENCE_DETAIL_NEARBY : exp.image}
+                image={i === 0 ? (exp.image ?? EXPERIENCE_DETAIL_NEARBY) : exp.image}
               />
             </LinkedCard>
           ))}

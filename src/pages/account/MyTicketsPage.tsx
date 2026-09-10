@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { StatusBadge } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { AccountPageHead, AccountSplit } from '@/layouts'
 import { DefaultAccountAside } from '@/pages/_account/AccountAside'
 import { MY_TICKETS, type TicketStatus } from '@/pages/_account/fixtures'
+import { useGetOrdersQuery } from '@/app/api/ordersApi'
 
 const TABS = [
   { label: 'Upcoming', count: 3 },
@@ -13,26 +14,58 @@ const TABS = [
   { label: 'Listed for resale', count: 1 },
 ] as const
 
-function statusTone(status: TicketStatus) {
-  if (status === 'AWAITING SEAT') return 'brandTint' as const
-  if (status === 'UPCOMING') return 'brandTint' as const
-  if (status === 'LISTED') return 'brandTint' as const
+function statusTone(status: TicketStatus | string) {
+  const value = String(status).toUpperCase()
+  if (value.includes('AWAIT') || value.includes('UPCOMING') || value.includes('LISTED')) {
+    return 'brandTint' as const
+  }
   return 'inactive' as const
 }
 
+function mapOrderToTicket(order: Record<string, unknown>) {
+  const id = String(order.id ?? order.order_id ?? '')
+  const title = String(
+    order.title ?? order.event_title ?? order.name ?? `Order ${id || '—'}`,
+  )
+  return {
+    id: id || title,
+    orderId: String(order.reference ?? order.order_number ?? id),
+    title,
+    meta: String(order.meta ?? order.venue ?? order.status ?? ''),
+    status: String(order.status ?? 'UPCOMING') as TicketStatus,
+    cover: String(order.cover ?? order.image ?? MY_TICKETS[0]?.cover ?? ''),
+    countdown: order.countdown ? String(order.countdown) : undefined,
+    facts: Array.isArray(order.facts)
+      ? (order.facts as { label: string; value: string }[])
+      : [
+          { label: 'When', value: String(order.starts_at ?? order.date ?? '—') },
+          { label: 'Seats', value: String(order.seats ?? order.quantity ?? '—') },
+        ],
+    actions: (order.actions as string[]) ?? ['qr'],
+    note: order.note ? String(order.note) : undefined,
+  }
+}
+
 /**
- * My tickets — Figma `207:9469`.
- * AccountLayout shell; page owns AccountPageHead + AccountSplit + aside.
+ * My tickets — Figma `207:9469`. Orders API with fixture fallback.
  */
 export function MyTicketsPage() {
   const [tab, setTab] = useState(0)
+  const { data: orders, isError, isFetching } = useGetOrdersQuery()
+
+  const tickets = useMemo(() => {
+    if (orders && orders.length > 0) return orders.map(mapOrderToTicket)
+    return MY_TICKETS
+  }, [orders])
 
   return (
     <>
       <AccountPageHead
         eyebrow="Your account"
         title="My tickets"
-        subtitle="Everything you've booked, in one place. Your QR codes work offline in the app."
+        subtitle={`Everything you've booked, in one place. Your QR codes work offline in the app.${
+          isError ? ' Showing local preview while the API is unreachable.' : ''
+        }${isFetching ? ' Updating…' : ''}`}
         actions={
           <>
             <Button variant="secondary" size="md">
@@ -52,17 +85,21 @@ export function MyTicketsPage() {
 
       <AccountSplit aside={<DefaultAccountAside />}>
         <div className="flex flex-col gap-[14px]">
-          {MY_TICKETS.map((ticket) => (
+          {tickets.map((ticket) => (
             <article
               key={ticket.id}
               className="flex overflow-hidden rounded-[20px] border border-border-default bg-surface-default"
             >
               <div className="relative w-[148px] shrink-0 self-stretch sm:w-[196px]">
-                <img
-                  src={ticket.cover}
-                  alt=""
-                  className="absolute inset-0 size-full object-cover"
-                />
+                {ticket.cover ? (
+                  <img
+                    src={ticket.cover}
+                    alt=""
+                    className="absolute inset-0 size-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-bg-tint-brand" />
+                )}
                 {ticket.countdown && (
                   <span className="absolute top-[12px] left-[12px] rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold tracking-[0.06em] text-bg-page uppercase">
                     {ticket.countdown}

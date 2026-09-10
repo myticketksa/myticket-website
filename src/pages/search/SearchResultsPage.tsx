@@ -1,5 +1,8 @@
 import { useId, useMemo, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
+import { useGetEventsQuery } from '@/app/api/eventsApi'
+import { useGetExperiencesQuery } from '@/app/api/experiencesApi'
+import { useGetTalentsQuery } from '@/app/api/talentsApi'
 import { FilterChip, StatusBadge } from '@/components/data-display'
 import { StarFillIcon } from '@/components/icons'
 import {
@@ -9,6 +12,9 @@ import {
 } from '@/components/navigation'
 import { Button, Checkbox } from '@/components/ui'
 import { PageSection } from '@/layouts'
+import { mapApiEventToCard } from '@/lib/api/mappers/events'
+import { mapApiExperienceToCard } from '@/lib/api/mappers/experiences'
+import { mapApiTalentToCard } from '@/lib/api/mappers/talents'
 import {
   CatalogBody,
   FilterSidebar,
@@ -17,12 +23,28 @@ import {
   slugify,
 } from '@/pages/_guest'
 
+type SearchResultKind = 'Event' | 'Talent' | 'Experience' | 'Auction'
+
+type SearchResult = {
+  kind: SearchResultKind
+  title: string
+  meta: string
+  blurb: string
+  price: string
+  rating: string
+  cta: string
+  to: string
+  image: string
+  mediaRounded: string
+  flag?: string
+}
+
 const TABS = [
-  { label: 'All', count: 5, kinds: null },
-  { label: 'Events', count: 2, kinds: ['Event'] },
-  { label: 'Talents', count: 1, kinds: ['Talent'] },
-  { label: 'Experiences', count: 1, kinds: ['Experience'] },
-  { label: 'Auctions', count: 1, kinds: ['Auction'] },
+  { label: 'All', kinds: null },
+  { label: 'Events', kinds: ['Event'] as const },
+  { label: 'Talents', kinds: ['Talent'] as const },
+  { label: 'Experiences', kinds: ['Experience'] as const },
+  { label: 'Auctions', kinds: ['Auction'] as const },
 ] as const
 
 const SUGGESTIONS = [
@@ -117,6 +139,107 @@ function parsePrice(price: string): number {
   return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY
 }
 
+const AUCTION_RESULTS: SearchResult[] = RESULTS.filter((r) => r.kind === 'Auction').map((r) => ({
+  ...r,
+}))
+
+function matchesQuery(haystack: string, query: string): boolean {
+  return haystack.toLowerCase().includes(query.toLowerCase())
+}
+
+function buildApiResults(
+  query: string,
+  apiEvents: Record<string, unknown>[] | undefined,
+  apiTalents: Record<string, unknown>[] | undefined,
+  apiExperiences: Record<string, unknown>[] | undefined,
+): SearchResult[] {
+  const items: SearchResult[] = []
+  let imageIdx = 0
+  const nextImage = () => SEARCH_RESULT_IMAGES[imageIdx++ % SEARCH_RESULT_IMAGES.length]
+
+  if (apiEvents?.length) {
+    for (const event of apiEvents) {
+      const mapped = mapApiEventToCard(event)
+      const meta = [mapped.date, mapped.venue].filter(Boolean).join(' · ')
+      const haystack = `${mapped.title} ${meta} ${mapped.category ?? ''} ${mapped.venue}`
+      if (!matchesQuery(haystack, query)) continue
+
+      items.push({
+        kind: 'Event',
+        flag: mapped.flag,
+        title: mapped.title,
+        meta,
+        blurb: mapped.attendance || mapped.category || 'Event on MyTicket.',
+        price: mapped.price.toLowerCase().startsWith('from') ? mapped.price : `From ${mapped.price}`,
+        rating: mapped.rating,
+        cta: 'View event',
+        to: `/events/${mapped.slug}`,
+        image: mapped.image ?? nextImage(),
+        mediaRounded: 'rounded-[12px]',
+      })
+    }
+  }
+
+  if (apiTalents?.length) {
+    for (const talent of apiTalents) {
+      const mapped = mapApiTalentToCard(talent)
+      const meta =
+        mapped.meta ||
+        [mapped.discipline, mapped.city].filter(Boolean).join(' · ')
+      const haystack = `${mapped.name} ${meta} ${mapped.discipline} ${mapped.city}`
+      if (!matchesQuery(haystack, query)) continue
+
+      const price =
+        mapped.nextShow?.detail?.includes('from')
+          ? mapped.nextShow.detail.split('·').pop()?.trim() ?? `Next show from ${mapped.nextShow.detail}`
+          : mapped.nextShow
+            ? `Next show · ${mapped.nextShow.headline}`
+            : 'View upcoming shows'
+
+      items.push({
+        kind: 'Talent',
+        title: mapped.name,
+        meta,
+        blurb:
+          mapped.reviews && mapped.city
+            ? `${mapped.reviews} reviews · ${mapped.verified ? 'verified' : mapped.city}`
+            : mapped.meta || 'Performer on MyTicket.',
+        price: price.startsWith('from') || price.startsWith('Next') ? price : `Next show ${price}`,
+        rating: mapped.rating,
+        cta: 'View profile',
+        to: `/talents/${mapped.slug}`,
+        image: mapped.image ?? nextImage(),
+        mediaRounded: 'rounded-[59px]',
+      })
+    }
+  }
+
+  if (apiExperiences?.length) {
+    for (const experience of apiExperiences) {
+      const mapped = mapApiExperienceToCard(experience)
+      const meta = mapped.meta || [mapped.location, mapped.place].filter(Boolean).join(' · ')
+      const haystack = `${mapped.title} ${meta} ${mapped.summary ?? ''} ${mapped.location}`
+      if (!matchesQuery(haystack, query)) continue
+
+      items.push({
+        kind: 'Experience',
+        flag: mapped.flag,
+        title: mapped.title,
+        meta,
+        blurb: mapped.summary || mapped.guests || 'Guided experience on MyTicket.',
+        price: mapped.price,
+        rating: mapped.rating.split(' ')[0] ?? mapped.rating,
+        cta: 'View experience',
+        to: `/experiences/${mapped.slug}`,
+        image: mapped.image ?? nextImage(),
+        mediaRounded: 'rounded-[12px]',
+      })
+    }
+  }
+
+  return items
+}
+
 /** Search results — Figma `207:5205`. */
 export function SearchResultsPage() {
   const baseId = useId()
@@ -126,17 +249,36 @@ export function SearchResultsPage() {
   const [sort, setSort] = useState('Most relevant')
   const [cities, setCities] = useState<string[]>(['Riyadh'])
 
+  const { data: apiEvents, isError: eventsError } = useGetEventsQuery({ search: query })
+  const { data: apiTalents, isError: talentsError } = useGetTalentsQuery()
+  const { data: apiExperiences, isError: experiencesError } = useGetExperiencesQuery()
+
   const toggleCity = (label: string) => {
     setCities((prev) =>
       prev.includes(label) ? prev.filter((c) => c !== label) : [...prev, label],
     )
   }
 
+  const results = useMemo((): SearchResult[] => {
+    const hasApiData =
+      (apiEvents && apiEvents.length > 0) ||
+      (apiTalents && apiTalents.length > 0) ||
+      (apiExperiences && apiExperiences.length > 0)
+    const allErrored = eventsError && talentsError && experiencesError
+
+    if (!hasApiData || allErrored) {
+      return RESULTS.map((r) => ({ ...r }))
+    }
+
+    const apiItems = buildApiResults(query, apiEvents, apiTalents, apiExperiences)
+    return [...apiItems, ...AUCTION_RESULTS]
+  }, [apiEvents, apiTalents, apiExperiences, eventsError, talentsError, experiencesError, query])
+
   const activeTab = TABS.find((t) => t.label === tab) ?? TABS[0]
   const filtered = useMemo(() => {
     let list = !activeTab.kinds
-      ? [...RESULTS]
-      : RESULTS.filter((r) => (activeTab.kinds as readonly string[]).includes(r.kind))
+      ? [...results]
+      : results.filter((r) => (activeTab.kinds as readonly string[]).includes(r.kind))
 
     if (cities.length > 0) {
       list = list.filter((r) => {
@@ -153,16 +295,16 @@ export function SearchResultsPage() {
     }
 
     return list
-  }, [activeTab, cities, sort])
+  }, [activeTab, cities, sort, results])
 
   const tabCounts = useMemo(() => {
     return TABS.map((t) => ({
       ...t,
       count: t.kinds
-        ? RESULTS.filter((r) => (t.kinds as readonly string[]).includes(r.kind)).length
-        : RESULTS.length,
+        ? results.filter((r) => (t.kinds as readonly string[]).includes(r.kind)).length
+        : results.length,
     }))
-  }, [])
+  }, [results])
 
   return (
     <>
@@ -179,7 +321,7 @@ export function SearchResultsPage() {
       <PageSection padTop={14} padBottom={0}>
         <h1 className="text-heading-h2 text-ink-primary">Results for “{query}”</h1>
         <p className="mt-[6px] text-[15px] text-ink-secondary">
-          {RESULTS.length} matches across events, talents, experiences and auctions.
+          {results.length} matches across events, talents, experiences and auctions.
         </p>
         <div className="mt-xl flex flex-wrap gap-[8px]">
           {SUGGESTIONS.map((s) => (
@@ -369,7 +511,7 @@ export function SearchResultsPage() {
             ))}
           </div>
 
-          {filtered.length < RESULTS.length && (
+          {filtered.length < results.length && (
             <div className="mt-[26px] flex justify-center">
               <Button
                 variant="secondary"

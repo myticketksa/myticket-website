@@ -1,8 +1,11 @@
 import { useId, useMemo, useState } from 'react'
+import { useGetTalentCategoriesQuery, useGetTalentsQuery } from '@/app/api/talentsApi'
 import { TalentCard, TalentDirectoryCard } from '@/components/cards'
 import { FilterChip } from '@/components/data-display'
 import { Checkbox } from '@/components/ui'
 import { PageSection } from '@/layouts'
+import { mapCategoryLabels } from '@/lib/api/mappers/categories'
+import { mapApiTalentToCard } from '@/lib/api/mappers/talents'
 import {
   BusinessStrip,
   CatalogBody,
@@ -11,7 +14,6 @@ import {
   CATALOG_TALENTS,
   CITY_FACETS,
   FilterSidebar,
-  HOME_TALENTS,
   LinkedCard,
   PromoBand,
   RATING_OPTIONS,
@@ -45,8 +47,13 @@ function parseRatingFloor(option: string): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-function talentCityHaystack(talent: (typeof CATALOG_TALENTS)[number]): string {
-  return `${talent.meta} ${talent.nextShow?.detail ?? ''} ${talent.discipline}`.toLowerCase()
+function talentCityHaystack(talent: {
+  meta: string
+  discipline: string
+  nextShow?: { detail?: string }
+  city?: string
+}): string {
+  return `${talent.meta} ${talent.nextShow?.detail ?? ''} ${talent.discipline} ${talent.city ?? ''}`.toLowerCase()
 }
 
 function matchesChip(discipline: string, chip: string): boolean {
@@ -65,7 +72,7 @@ function matchesChip(discipline: string, chip: string): boolean {
   return (map[chip] ?? [chip.toLowerCase().replace(/s$/, '')]).some((t) => d.includes(t))
 }
 
-/** Talents directory — Figma `207:5539`. */
+/** Talents directory — Figma `207:5539`. Talents API with fixture fallback. */
 export function TalentsPage() {
   const baseId = useId()
   const [chip, setChip] = useState('All talents')
@@ -73,6 +80,30 @@ export function TalentsPage() {
   const [cities, setCities] = useState<string[]>([])
   const [rating, setRating] = useState('Any')
   const [sortKey, setSortKey] = useState<(typeof SORT_MODES)[number]['key']>('soonest')
+
+  const { data: apiTalents, isFetching, isError } = useGetTalentsQuery()
+  const { data: apiCategories } = useGetTalentCategoriesQuery()
+
+  const talentChips = useMemo(
+    () =>
+      mapCategoryLabels(apiCategories, {
+        allLabel: 'All talents',
+        fallback: TALENT_CHIPS,
+      }),
+    [apiCategories],
+  )
+
+  const catalog = useMemo(() => {
+    if (apiTalents && apiTalents.length > 0) {
+      return apiTalents.map(mapApiTalentToCard)
+    }
+    return CATALOG_TALENTS.map((talent) => ({
+      ...talent,
+      slug: slugify(talent.name),
+      reviews: '',
+      city: '',
+    }))
+  }, [apiTalents])
 
   const toggleCity = (label: string) => {
     setCities((prev) =>
@@ -88,7 +119,7 @@ export function TalentsPage() {
 
   const filtered = useMemo(() => {
     const floor = parseRatingFloor(rating)
-    return CATALOG_TALENTS.filter((t) => {
+    return catalog.filter((t) => {
       if (!matchesChip(t.discipline, chip)) return false
       if (
         cities.length > 0 &&
@@ -99,7 +130,7 @@ export function TalentsPage() {
       if (floor !== null && Number.parseFloat(t.rating) < floor) return false
       return true
     })
-  }, [chip, cities, rating])
+  }, [catalog, chip, cities, rating])
 
   const shown = useMemo(() => {
     const list = [...filtered]
@@ -121,8 +152,10 @@ export function TalentsPage() {
         <CatalogPageHead
           eyebrow="Who's performing"
           title="Follow the artists, catch every show"
-          subtitle="Public profiles show name, craft and rating — then find their tickets on events."
-          chips={TALENT_CHIPS.map((label) => ({
+          subtitle={`Public profiles show name, craft and rating — then find their tickets on events.${
+            isError ? ' Showing local preview while the API is unreachable.' : ''
+          }${isFetching ? ' Updating…' : ''}`}
+          chips={talentChips.map((label) => ({
             label,
             selected: label === chip,
           }))}
@@ -146,9 +179,23 @@ export function TalentsPage() {
           </a>
         </div>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {HOME_TALENTS.slice(0, 4).map((talent, i) => (
-            <LinkedCard key={talent.name} to={`/talents/${slugify(talent.name)}`}>
-              <TalentCard {...talent} image={TALENT_WEEK_IMAGES[i]} limited />
+          {catalog.slice(0, 4).map((talent, i) => (
+            <LinkedCard
+              key={talent.slug ?? talent.name}
+              to={`/talents/${talent.slug ?? slugify(talent.name)}`}
+            >
+              <TalentCard
+                name={talent.name}
+                discipline={talent.discipline}
+                rating={talent.rating}
+                reviews={talent.reviews ?? ''}
+                city={talent.city ?? ''}
+                nextLabel={talent.nextLabel}
+                nextEvent={talent.nextEvent}
+                verified={talent.verified}
+                image={talent.image ?? TALENT_WEEK_IMAGES[i]}
+                limited
+              />
             </LinkedCard>
           ))}
         </div>
@@ -232,7 +279,10 @@ export function TalentsPage() {
           />
           <div className="mt-[18px] grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
             {shown.slice(0, 9).map((talent) => (
-              <LinkedCard key={talent.name} to={`/talents/${slugify(talent.name)}`}>
+              <LinkedCard
+                key={talent.slug ?? talent.name}
+                to={`/talents/${talent.slug ?? slugify(talent.name)}`}
+              >
                 <TalentDirectoryCard {...talent} limited />
               </LinkedCard>
             ))}

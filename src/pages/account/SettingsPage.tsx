@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, type ReactNode } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Breadcrumbs } from '@/components/navigation'
 import {
   BellRingingIcon,
@@ -16,6 +16,12 @@ import { Button, Field, TextInput } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { ACCOUNT_USER } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
+import { useDeleteAccountMutation } from '@/app/api/accountApis'
+import { useLogoutMutation } from '@/app/api/authApi'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { credentialsCleared, selectAuthUser } from '@/features/auth/authSlice'
+import { toastPushed } from '@/features/ui/uiSlice'
+import { apiErrorMessage } from '@/lib/api/unwrap'
 
 type NavItem = {
   id: string
@@ -178,7 +184,54 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
  * Drawn content is Personal details + Email/phone + save bar only.
  * Undrawn sidebar rows match Figma inactive chrome (not washed-out); links go to drawn screens.
  */
+function initialsFromName(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || ACCOUNT_USER.initials
+  )
+}
+
 export function SettingsPage() {
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const user = useAppSelector(selectAuthUser)
+  const [logout, logoutState] = useLogoutMutation()
+  const [deleteAccount, deleteState] = useDeleteAccountMutation()
+  const [deletePassword, setDeletePassword] = useState('')
+
+  const displayName = user?.name ?? ACCOUNT_USER.name
+  const displayEmail = user?.email ?? ACCOUNT_USER.email
+  const displayPhone = user?.phone ?? ACCOUNT_USER.mobile
+  const initials = user?.name ? initialsFromName(user.name) : ACCOUNT_USER.initials
+
+  async function handleSignOut() {
+    try {
+      await logout().unwrap()
+    } catch {
+      /* Clear local session even if the API call fails */
+    }
+    dispatch(credentialsCleared())
+    navigate('/sign-in')
+  }
+
+  async function handleDeleteAccount() {
+    if (!deletePassword.trim()) {
+      dispatch(toastPushed('error', 'Enter your password to delete this account'))
+      return
+    }
+    try {
+      await deleteAccount({ password: deletePassword.trim() }).unwrap()
+      dispatch(credentialsCleared())
+      dispatch(toastPushed('success', 'Account deleted'))
+      navigate('/')
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not delete account')))
+    }
+  }
+
   return (
     <>
       <PageSection padTop={30} padBottom={0}>
@@ -219,6 +272,8 @@ export function SettingsPage() {
               <button
                 type="button"
                 className="mt-md flex h-[40px] w-full items-center gap-[11px] rounded-[12px] px-[11px] text-[14px] font-semibold text-state-danger hover:bg-bg-page"
+                onClick={() => void handleSignOut()}
+                disabled={logoutState.isLoading}
               >
                 <PowerIcon size={14} />
                 Sign out
@@ -235,7 +290,7 @@ export function SettingsPage() {
 
               <div className="mt-[22px] flex flex-wrap items-center gap-[18px]">
                 <Avatar
-                  initials={ACCOUNT_USER.initials}
+                  initials={initials}
                   size="lg"
                   className="!size-[66px] !rounded-[33px] !bg-surface-inverse !text-[25px] !tracking-[-0.75px] !text-bg-page"
                 />
@@ -257,12 +312,12 @@ export function SettingsPage() {
 
               <div className="grid gap-lg sm:grid-cols-2">
                 <Field label="Full name" htmlFor="full-name">
-                  <TextInput id="full-name" defaultValue={ACCOUNT_USER.name} className="h-[46px]" />
+                  <TextInput id="full-name" defaultValue={displayName} className="h-[46px]" />
                 </Field>
                 <Field label="Display name" htmlFor="display-name">
                   <TextInput
                     id="display-name"
-                    defaultValue={ACCOUNT_USER.displayName}
+                    defaultValue={displayName.split(' ')[0] ?? ACCOUNT_USER.displayName}
                     className="h-[46px]"
                   />
                 </Field>
@@ -308,13 +363,13 @@ export function SettingsPage() {
               </p>
               <div className="mt-xl flex flex-col gap-md">
                 <ContactRow
-                  value={ACCOUNT_USER.email}
+                  value={displayEmail}
                   hint="Tickets, receipts and account emails"
                   badge="Verified"
                   action="Change"
                 />
                 <ContactRow
-                  value={ACCOUNT_USER.mobile}
+                  value={displayPhone}
                   hint="Door alerts and SMS ticket delivery"
                   badge="Verified"
                   action="Change"
@@ -340,6 +395,34 @@ export function SettingsPage() {
                 <Button size="md">Save changes</Button>
               </div>
             </div>
+
+            <section className="rounded-[20px] border border-border-default bg-surface-default p-[26px]">
+              <h2 className="text-[19px] font-semibold text-ink-primary">Delete account</h2>
+              <p className="mt-xs text-[14px] text-ink-secondary">
+                Permanently remove your MyTicket account. Tickets already issued stay valid for the
+                event.
+              </p>
+              <div className="mt-[18px] flex flex-wrap items-end gap-md">
+                <Field label="Confirm with password" htmlFor="delete-password" className="min-w-[220px] flex-1">
+                  <TextInput
+                    id="delete-password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={deletePassword}
+                    onChange={(event) => setDeletePassword(event.target.value)}
+                    className="h-[46px]"
+                  />
+                </Field>
+                <Button
+                  variant="destructive"
+                  size="md"
+                  loading={deleteState.isLoading}
+                  onClick={() => void handleDeleteAccount()}
+                >
+                  Delete account
+                </Button>
+              </div>
+            </section>
           </div>
         </div>
       </PageSection>

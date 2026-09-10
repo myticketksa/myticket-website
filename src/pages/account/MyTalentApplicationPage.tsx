@@ -1,22 +1,14 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { StatusBadge, type StatusTone } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { useLocale } from '@/i18n/locale'
 import { AccountPageHead } from '@/layouts'
-
-type ApplicationStatus = 'pending' | 'rejected' | 'accepted'
-
-const FIXTURE: {
-  status: ApplicationStatus
-  reference: string
-  submittedAt: string
-  note: string
-} = {
-  status: 'pending',
-  reference: 'TAL-2026-0522',
-  submittedAt: 'Submitted 1 Mar 2026',
-  note: 'Our team is reviewing your request. You stay a guest on MyTicket — if accepted, we contact you outside the platform when a match comes up.',
-}
+import { useGetMyApplicationQuery } from '@/app/api/accountApis'
+import {
+  mapApplicationView,
+  type ApplicationStatus,
+} from '@/pages/_account/mapApplication'
 
 function statusTone(status: ApplicationStatus): StatusTone {
   if (status === 'accepted') return 'successTint'
@@ -34,6 +26,8 @@ function statusLabel(status: ApplicationStatus) {
 export function MyTalentApplicationPage() {
   const { roleLabel } = useLocale()
   const role = roleLabel('talent')
+  const { data } = useGetMyApplicationQuery()
+  const application = useMemo(() => mapApplicationView(data, 'talent'), [data])
 
   return (
     <>
@@ -56,23 +50,23 @@ export function MyTalentApplicationPage() {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-[10px]">
               <p className="text-[17px] font-bold text-ink-primary">{role} request</p>
-              <StatusBadge tone={statusTone(FIXTURE.status)}>
-                {statusLabel(FIXTURE.status)}
+              <StatusBadge tone={statusTone(application.status)}>
+                {statusLabel(application.status)}
               </StatusBadge>
             </div>
             <p className="mt-[4px] text-[13.5px] text-ink-secondary">
-              {FIXTURE.submittedAt} · Ref {FIXTURE.reference}
+              {application.submittedAt} · Ref {application.reference}
             </p>
             <p
               className={`mt-[5px] max-w-[640px] text-[13px] leading-[1.5] ${
-                FIXTURE.status === 'accepted'
+                application.status === 'accepted'
                   ? 'text-state-success'
-                  : FIXTURE.status === 'rejected'
+                  : application.status === 'rejected'
                     ? 'text-state-danger-deep'
                     : 'text-ink-secondary'
               }`}
             >
-              {FIXTURE.note}
+              {application.note}
             </p>
           </div>
           <div className="flex w-full shrink-0 flex-col gap-[8px] sm:w-[170px]">

@@ -1,5 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { SiteFooter, SiteHeader } from '@/components/navigation'
+import { useAppSelector } from '@/app/hooks'
+import { selectAuthUser, selectIsAuthenticated } from '@/features/auth/authSlice'
 
 /**
  * Pattern A — MainLayout. Verified on Home `207:4362`.
@@ -49,7 +51,16 @@ function resolveNav(pathname: string): {
 export function MainLayout() {
   const { pathname } = useLocation()
   const nav = resolveNav(pathname)
-  const signedIn = pathname === '/order-confirmation'
+  const isAuthenticated = useAppSelector(selectIsAuthenticated)
+  const user = useAppSelector(selectAuthUser)
+  const signedIn = isAuthenticated || pathname === '/order-confirmation'
+  const displayName = user?.name?.split(' ')[0] ?? 'Sara'
+  const initials =
+    user?.name
+      ?.split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || 'SA'
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg-page">
@@ -59,7 +70,7 @@ export function MainLayout() {
         activeItemState={nav.activeItemState}
         account={
           signedIn
-            ? { name: 'Sara', initials: 'SA', notifications: 3 }
+            ? { name: displayName, initials, notifications: 3 }
             : undefined
         }
       />

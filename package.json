@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "build:icons": "node scripts/build-icons.mjs",
+    "probe:api": "node scripts/probe-guest-api.mjs",
     "deploy": "npm run build & scp -r dist/* root@72.62.58.90:/var/www/myticket-frontend-prod"
   },
   "dependencies": {
@@ -29,6 +30,7 @@
     "react-router-dom": "^7.18.2",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
+    "yup": "^1.7.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

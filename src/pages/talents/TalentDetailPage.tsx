@@ -1,9 +1,16 @@
+import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useGetTalentDetailsQuery, useGetTalentsQuery } from '@/app/api/talentsApi'
 import { TalentDirectoryCard } from '@/components/cards'
 import { StarFillIcon, VerifiedIcon } from '@/components/icons'
 import { Breadcrumbs } from '@/components/navigation'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
+import {
+  mapApiTalentToCard,
+  resolveTalentFromList,
+  resolveTalentId,
+} from '@/lib/api/mappers/talents'
 import {
   CATALOG_TALENTS,
   LinkedCard,
@@ -20,8 +27,41 @@ import {
 export function TalentDetailPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const talent =
-    CATALOG_TALENTS.find((t) => slugify(t.name) === slug) ?? CATALOG_TALENTS[0]
+  const slugOrId = slug ?? ''
+
+  const { data: apiTalents } = useGetTalentsQuery()
+
+  const catalog = useMemo(() => {
+    if (apiTalents && apiTalents.length > 0) {
+      return apiTalents.map(mapApiTalentToCard)
+    }
+    return CATALOG_TALENTS.map((t) => ({ ...t, slug: slugify(t.name), reviews: '', city: '' }))
+  }, [apiTalents])
+
+  const resolvedId = useMemo(
+    () => resolveTalentId(apiTalents, slugOrId),
+    [apiTalents, slugOrId],
+  )
+
+  const { data: apiDetail } = useGetTalentDetailsQuery(resolvedId!, {
+    skip: !resolvedId,
+  })
+
+  const talent = useMemo(() => {
+    const fromList =
+      catalog.find((t) => t.slug === slugOrId || slugify(t.name) === slugOrId) ??
+      (apiTalents?.length
+        ? mapApiTalentToCard(resolveTalentFromList(apiTalents, slugOrId) ?? {})
+        : undefined) ??
+      catalog[0]!
+
+    if (apiDetail && Object.keys(apiDetail).length > 0) {
+      const mapped = mapApiTalentToCard(apiDetail)
+      return { ...fromList, ...mapped }
+    }
+
+    return fromList
+  }, [apiDetail, apiTalents, catalog, slugOrId])
 
   return (
     <>
@@ -39,7 +79,7 @@ export function TalentDetailPage() {
         <div className="mx-auto flex max-w-[720px] flex-col items-center text-center">
           <div className="size-[168px] overflow-hidden rounded-full border border-border-default bg-bg-skeleton">
             <img
-              src={TALENT_DETAIL_GALLERY.main}
+              src={talent.image ?? TALENT_DETAIL_GALLERY.main}
               alt=""
               className="size-full object-cover"
             />
@@ -70,17 +110,21 @@ export function TalentDetailPage() {
           heading="More talents"
           lede="Limited public profiles — name, craft and rating."
         >
-          {CATALOG_TALENTS.filter((t) => t.name !== talent.name)
+          {catalog
+            .filter((t) => t.name !== talent.name)
             .slice(0, 4)
             .map((t, i) => (
-              <LinkedCard key={t.name} to={`/talents/${slugify(t.name)}`}>
+              <LinkedCard
+                key={t.slug ?? t.name}
+                to={`/talents/${t.slug ?? slugify(t.name)}`}
+              >
                 <TalentDirectoryCard
                   name={t.name}
                   discipline={t.discipline}
                   meta=""
                   rating={t.rating}
                   verified={t.verified}
-                  image={TALENT_SIMILAR_IMAGES[i] ?? t.image}
+                  image={t.image ?? TALENT_SIMILAR_IMAGES[i] ?? undefined}
                   limited
                 />
               </LinkedCard>

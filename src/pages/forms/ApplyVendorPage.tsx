@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChipMultiSelect,
@@ -16,6 +16,15 @@ import {
   joinOrDash,
 } from '@/pages/forms/apply-shared'
 import { useLocale } from '@/i18n/locale'
+import {
+  useApplyVendorMutation,
+  useGetCitiesQuery,
+  useGetOfferedServicesQuery,
+} from '@/app/api/accountApis'
+import { useAppDispatch } from '@/app/hooks'
+import { toastPushed } from '@/features/ui/uiSlice'
+import { mapCategoryLabel } from '@/lib/api/mappers/categories'
+import { apiErrorMessage } from '@/lib/api/unwrap'
 
 const STEPS = ['Account', 'The business', 'Services', 'Credentials & work', 'Review'] as const
 
@@ -69,8 +78,22 @@ export function ApplyVendorPage() {
   const { roleLabel } = useLocale()
   const vendor = roleLabel('vendor')
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const [applyVendor, applyState] = useApplyVendorMutation()
+  const { data: apiCities } = useGetCitiesQuery()
+  const { data: apiServices } = useGetOfferedServicesQuery()
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<VendorDraft>(EMPTY_DRAFT)
+
+  const serviceOptions = useMemo(() => {
+    const fromApi = (apiServices ?? []).map((row) => mapCategoryLabel(row)).filter(Boolean)
+    return fromApi.length > 0 ? fromApi : [...SERVICE_OPTIONS]
+  }, [apiServices])
+
+  const cityOptions = useMemo(() => {
+    const fromApi = (apiCities ?? []).map((row) => mapCategoryLabel(row)).filter(Boolean)
+    return fromApi.length > 0 ? fromApi : [...CITY_OPTIONS]
+  }, [apiCities])
 
   const lastStep = STEPS.length - 1
   const regionLabel =
@@ -92,12 +115,28 @@ export function ApplyVendorPage() {
     setDraft((prev) => ({ ...prev, ...partial }))
   }
 
-  function handleContinue() {
+  async function handleContinue() {
     if (step < lastStep) {
       setStep((prev) => prev + 1)
       return
     }
-    navigate('/application-submitted?role=vendor')
+    const body = new FormData()
+    body.append('business[tradeName]', draft.businessName)
+    body.append('business[CRnumber]', draft.idNumber || 'pending')
+    body.append('business[primaryCity]', draft.city)
+    body.append('business[address]', draft.story.slice(0, 120) || 'Saudi Arabia')
+    body.append('service[name]', draft.services[0] ?? 'General services')
+    body.append(
+      'service[description]',
+      draft.story || draft.services.join(', ') || 'Vendor services',
+    )
+    try {
+      await applyVendor(body).unwrap()
+      dispatch(toastPushed('success', 'Vendor request submitted'))
+      navigate('/application-submitted?role=vendor')
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not submit request')))
+    }
   }
 
   function handleClear() {
@@ -121,8 +160,14 @@ export function ApplyVendorPage() {
       activeStep={step}
       backDisabled={step === 0}
       onBack={() => setStep((prev) => Math.max(0, prev - 1))}
-      onContinue={handleContinue}
-      continueLabel={step === lastStep ? 'Submit request' : 'Continue'}
+      onContinue={() => void handleContinue()}
+      continueLabel={
+        step === lastStep
+          ? applyState.isLoading
+            ? 'Submitting…'
+            : 'Submit request'
+          : 'Continue'
+      }
       trackHref="/my-vendor-application"
       trackLabel={`Track your ${vendor} request`}
       onClear={handleClear}
@@ -182,14 +227,14 @@ export function ApplyVendorPage() {
           <ChipMultiSelect
             label="Services you provide"
             hint="Pick everything you can deliver on a show night."
-            options={SERVICE_OPTIONS}
+            options={serviceOptions}
             value={draft.services}
             onChange={(services) => patch({ services })}
           />
           <ChipMultiSelect
             label="Coverage area"
             hint="Where can you actually show up?"
-            options={CITY_OPTIONS}
+            options={cityOptions}
             value={draft.coverage}
             onChange={(coverage) => patch({ coverage })}
           />

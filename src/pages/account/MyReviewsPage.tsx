@@ -1,13 +1,56 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { StarRating, StatusBadge } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { AccountPageHead } from '@/layouts'
 import { REVIEWS, REVIEWS_AWAITING } from '@/pages/_account/fixtures'
+import { useGetMyReviewsQuery } from '@/app/api/accountApis'
+
+function mapWrittenReview(record: Record<string, unknown>, index: number) {
+  const fallback = REVIEWS[index % REVIEWS.length]
+  return {
+    event: String(record.event ?? record.title ?? record.subject ?? fallback.event),
+    rating: Number(record.rating ?? record.score ?? fallback.rating),
+    excerpt: String(record.review ?? record.comment ?? record.excerpt ?? fallback.excerpt),
+    date: String(record.date ?? record.created_at ?? fallback.date),
+  }
+}
+
+function mapAwaitingReview(record: Record<string, unknown>, index: number) {
+  const fallback = REVIEWS_AWAITING[index % REVIEWS_AWAITING.length]
+  const name = String(record.name ?? record.title ?? record.event ?? fallback.name)
+  return {
+    initials: String(record.initials ?? name.slice(0, 2).toUpperCase()),
+    name,
+    kind: String(record.kind ?? record.type ?? fallback.kind),
+    meta: String(record.meta ?? record.subtitle ?? fallback.meta),
+  }
+}
+
+function isAwaitingReview(record: Record<string, unknown>) {
+  const status = String(record.status ?? '').toLowerCase()
+  if (status.includes('await') || status.includes('pending')) return true
+  const rating = Number(record.rating ?? record.score ?? 0)
+  const text = String(record.review ?? record.comment ?? '').trim()
+  return rating <= 0 && !text
+}
 
 /** My reviews — Figma `207:9974`. */
 export function MyReviewsPage() {
   const [tab, setTab] = useState(0)
+  const { data: reviews } = useGetMyReviewsQuery()
+
+  const { awaiting, written } = useMemo(() => {
+    if (!reviews || reviews.length === 0) {
+      return { awaiting: [...REVIEWS_AWAITING], written: [...REVIEWS] }
+    }
+    const pending = reviews.filter(isAwaitingReview)
+    const done = reviews.filter((record) => !isAwaitingReview(record))
+    return {
+      awaiting: pending.map(mapAwaitingReview),
+      written: done.map(mapWrittenReview),
+    }
+  }, [reviews])
 
   return (
     <>
@@ -19,13 +62,13 @@ export function MyReviewsPage() {
         tabs={[
           {
             label: 'Waiting for you',
-            count: REVIEWS_AWAITING.length,
+            count: awaiting.length,
             active: tab === 0,
             onSelect: () => setTab(0),
           },
           {
             label: 'Written',
-            count: REVIEWS.length,
+            count: written.length,
             active: tab === 1,
             onSelect: () => setTab(1),
           },
@@ -35,7 +78,7 @@ export function MyReviewsPage() {
       <div className="mx-auto w-full max-w-[1040px] px-page-gutter pt-3xl pb-[96px]">
         {tab === 0 ? (
           <div className="flex flex-col gap-[12px]">
-            {REVIEWS_AWAITING.map((item) => (
+            {awaiting.map((item) => (
               <article
                 key={item.name}
                 className="flex flex-wrap items-center gap-[18px] rounded-[20px] border border-border-default bg-surface-default px-[24px] py-[20px]"
@@ -67,7 +110,7 @@ export function MyReviewsPage() {
           </div>
         ) : (
           <ul className="flex flex-col gap-[12px]">
-            {REVIEWS.map((review) => (
+            {written.map((review) => (
               <li
                 key={review.event}
                 className="rounded-[20px] border border-border-default bg-surface-default px-[24px] py-[20px]"

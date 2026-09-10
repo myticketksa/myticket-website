@@ -1,14 +1,18 @@
+import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useGetEventsQuery } from '@/app/api/eventsApi'
+import { useGetOrdersQuery } from '@/app/api/ordersApi'
 import { StatusBadge } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { AccountSplit, TicketActionHeader } from '@/layouts'
-import { MY_TICKETS } from '@/pages/_account/fixtures'
+import { mapApiEventToCard } from '@/lib/api/mappers/events'
+import { MY_TICKETS, type TicketFixture } from '@/pages/_account/fixtures'
 import { CATALOG_EVENTS } from '@/pages/_guest/fixtures'
 import { slugify } from '@/pages/_guest/slugify'
 import { cn } from '@/lib/cn'
 
 /** Figma `207:9444` — three short event recommendations under the app promo. */
-const OTHERS_BOOKED = [
+const OTHERS_BOOKED_FIXTURE = [
   {
     title: 'Soundstorm Festival',
     meta: 'Thu 22 Oct · from SAR 450',
@@ -28,6 +32,48 @@ const OTHERS_BOOKED = [
     href: `/events/${slugify(CATALOG_EVENTS[6].title)}`,
   },
 ] as const
+
+function mapOrderToTicket(order: Record<string, unknown>): TicketFixture {
+  const id = String(order.id ?? order.order_id ?? '')
+  const title = String(
+    order.title ?? order.event_title ?? order.name ?? `Order ${id || '—'}`,
+  )
+  return {
+    id: id || title,
+    orderId: String(order.reference ?? order.order_number ?? id),
+    title,
+    meta: String(order.meta ?? order.venue ?? order.status ?? ''),
+    status: String(order.status ?? 'UPCOMING') as TicketFixture['status'],
+    cover: String(order.cover ?? order.image ?? MY_TICKETS[0]?.cover ?? ''),
+    countdown: order.countdown ? String(order.countdown) : undefined,
+    facts: Array.isArray(order.facts)
+      ? (order.facts as { label: string; value: string }[])
+      : [
+          { label: 'When', value: String(order.starts_at ?? order.date ?? '—') },
+          { label: 'Seats', value: String(order.seats ?? order.quantity ?? '—') },
+        ],
+    actions: (order.actions as TicketFixture['actions']) ?? ['qr'],
+    note: order.note ? String(order.note) : undefined,
+  }
+}
+
+function resolveTicket(
+  orders: Record<string, unknown>[] | undefined,
+  id: string,
+): TicketFixture {
+  if (orders && orders.length > 0) {
+    const match =
+      orders.find(
+        (order) =>
+          String(order.id ?? '') === id ||
+          String(order.order_id ?? '') === id ||
+          String(order.reference ?? '') === id ||
+          String(order.order_number ?? '') === id,
+      ) ?? orders[0]
+    return mapOrderToTicket(match)
+  }
+  return MY_TICKETS.find((item) => item.id === id) ?? MY_TICKETS[0]
+}
 
 const RULES = [
   {
@@ -87,7 +133,29 @@ function TicketQr({ seed }: { seed: number }) {
  */
 export function TicketPage() {
   const { id = 'winter-nights' } = useParams()
-  const ticket = MY_TICKETS.find((item) => item.id === id) ?? MY_TICKETS[0]
+  const { data: orders } = useGetOrdersQuery()
+  const { data: apiEvents } = useGetEventsQuery()
+
+  const ticket = useMemo(() => resolveTicket(orders, id), [orders, id])
+
+  const othersBooked = useMemo(() => {
+    if (apiEvents && apiEvents.length > 0) {
+      return apiEvents.slice(0, 3).map((event, index) => {
+        const mapped = mapApiEventToCard(event)
+        const fixture = OTHERS_BOOKED_FIXTURE[index] ?? OTHERS_BOOKED_FIXTURE[0]
+        const priceLabel = mapped.price.toLowerCase().startsWith('from')
+          ? mapped.price
+          : `from ${mapped.price}`
+        return {
+          title: mapped.title,
+          meta: [mapped.date, priceLabel].filter(Boolean).join(' · ') || fixture.meta,
+          image: mapped.image ?? fixture.image,
+          href: `/events/${mapped.slug}`,
+        }
+      })
+    }
+    return OTHERS_BOOKED_FIXTURE.map((item) => ({ ...item }))
+  }, [apiEvents])
 
   return (
     <>
@@ -167,7 +235,7 @@ export function TicketPage() {
             <div className="rounded-[20px] border border-border-default bg-surface-default p-[20px]">
               <p className="text-[15px] font-semibold text-ink-primary">Others also booked</p>
               <ul className="mt-[12px] flex flex-col gap-[12px]">
-                {OTHERS_BOOKED.map((item) => (
+                {othersBooked.map((item) => (
                   <li key={item.title}>
                     <Link
                       to={item.href}

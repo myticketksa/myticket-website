@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import type { ApiRecord as EventApiRecord } from '@/app/api/eventsApi'
+import type { ApiRecord as ExperienceApiRecord } from '@/app/api/experiencesApi'
+import type { ApiRecord as TalentApiRecord } from '@/app/api/talentsApi'
 import {
   AuctionCard,
   EventCard,
@@ -11,6 +14,10 @@ import { CategoryChip } from '@/components/data-display'
 import { ArrowRightIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
+import { mapCategoryLabel } from '@/lib/api/mappers/categories'
+import { mapApiEventToCard } from '@/lib/api/mappers/events'
+import { mapApiExperienceToCard } from '@/lib/api/mappers/experiences'
+import { mapApiTalentToCard } from '@/lib/api/mappers/talents'
 import { slugify } from '@/pages/_guest'
 import ctaBand from '@/assets/home/cta-band.jpg'
 import driftBlob from '@/assets/home/drift-blob.svg'
@@ -34,7 +41,14 @@ import { HomeSectionHeader } from './HomeSectionHeader'
 import { HomeTimeTabs } from './HomeTimeTabs'
 
 /** Limited public talent strip — avatar, name, discipline, rating only. */
-export function HomeTalents() {
+export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) {
+  const talents = useMemo(() => {
+    if (apiTalents && apiTalents.length > 0) {
+      return apiTalents.map(mapApiTalentToCard).slice(0, HOME_TALENTS.length)
+    }
+    return HOME_TALENTS.map((t) => ({ ...t, slug: slugify(t.name) }))
+  }, [apiTalents])
+
   return (
     <PageSection padTop={84} padBottom={0}>
       <HomeSectionHeader
@@ -45,20 +59,20 @@ export function HomeTalents() {
         link={{ label: 'Browse all talents', to: '/talents' }}
       />
       <div className="mt-[26px] grid grid-cols-2 gap-[18px] md:grid-cols-3 lg:grid-cols-5">
-        {HOME_TALENTS.map((talent, i) => (
+        {talents.map((talent, i) => (
           <Link
-            key={talent.name}
-            to={`/talents/${slugify(talent.name)}`}
+            key={'slug' in talent ? talent.slug : talent.name}
+            to={`/talents/${'slug' in talent ? talent.slug : slugify(talent.name)}`}
             className="min-w-0"
           >
             <TalentCard
               name={talent.name}
               discipline={talent.discipline}
               rating={talent.rating}
-              reviews={talent.reviews}
-              city={talent.city}
+              reviews={'reviews' in talent ? talent.reviews : ''}
+              city={'city' in talent ? talent.city : ''}
               verified={talent.verified}
-              image={HOME_TALENT_IMAGES[i]}
+              image={'image' in talent && talent.image ? talent.image : HOME_TALENT_IMAGES[i]}
               limited
             />
           </Link>
@@ -73,7 +87,17 @@ export function HomeTalents() {
  * Chips overflow the 1320 band and clip at the page shell edge — no scrollbar
  * (Figma `207:4446` is a static clipped row; "Full taxonomy" is the overflow exit).
  */
-export function HomeCategories() {
+export function HomeCategories({ apiCategories }: { apiCategories?: EventApiRecord[] }) {
+  const categories = useMemo(() => {
+    if (apiCategories && apiCategories.length > 0) {
+      return apiCategories.slice(0, HOME_CATEGORIES.length).map((row, index) => ({
+        label: mapCategoryLabel(row, HOME_CATEGORIES[index]?.label ?? 'Category'),
+        count: Number(row.count ?? row.events_count ?? HOME_CATEGORIES[index]?.count ?? 0) || undefined,
+      }))
+    }
+    return HOME_CATEGORIES
+  }, [apiCategories])
+
   return (
     <PageSection padTop={72} padBottom={0}>
       <HomeSectionHeader
@@ -85,7 +109,7 @@ export function HomeCategories() {
       />
       <div className="mt-[22px] -mr-page-gutter overflow-hidden">
         <div className="flex gap-[9px] pr-page-gutter">
-          {HOME_CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <CategoryChip
               key={cat.label}
               href={`/events?category=${encodeURIComponent(cat.label)}`}
@@ -114,12 +138,22 @@ function matchesEventWindow(
 }
 
 /** Figma `207:4459` — pad-top 60, time tabs + 2×4 EventCard Home. */
-export function HomeEvents() {
+export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
   const [tab, setTab] = useState<(typeof HOME_EVENT_TABS)[number]>('All')
-  const filtered = useMemo(
-    () => HOME_EVENTS.filter((event) => matchesEventWindow(event.window, tab)),
-    [tab],
-  )
+
+  const events = useMemo(() => {
+    if (apiEvents && apiEvents.length > 0) {
+      return apiEvents.map(mapApiEventToCard).slice(0, HOME_EVENTS.length)
+    }
+    return HOME_EVENTS.map((e) => ({ ...e, slug: slugify(e.title) }))
+  }, [apiEvents])
+
+  const filtered = useMemo(() => {
+    if (apiEvents && apiEvents.length > 0) return events
+    return events.filter((event) =>
+      'window' in event ? matchesEventWindow(event.window, tab) : true,
+    )
+  }, [apiEvents, events, tab])
 
   return (
     <PageSection padTop={60} padBottom={0}>
@@ -130,29 +164,26 @@ export function HomeEvents() {
         trailing={<HomeTimeTabs value={tab} onChange={setTab} />}
       />
       <div className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {filtered.map((event) => {
-          const i = HOME_EVENTS.findIndex((e) => e.title === event.title)
-          return (
-            <Link
-              key={event.title}
-              to={`/events/${slugify(event.title)}`}
-              className="min-w-0"
-            >
-              <EventCard
-                context="home"
-                date={event.date}
-                title={event.title}
-                venue={event.venue}
-                rating={event.rating}
-                attendance={event.attendance}
-                price={event.price}
-                category={event.category}
-                flag={'flag' in event ? event.flag : undefined}
-                image={HOME_EVENT_IMAGES[i]}
-              />
-            </Link>
-          )
-        })}
+        {filtered.map((event, i) => (
+          <Link
+            key={'slug' in event ? event.slug : event.title}
+            to={`/events/${'slug' in event ? event.slug : slugify(event.title)}`}
+            className="min-w-0"
+          >
+            <EventCard
+              context="home"
+              date={event.date}
+              title={event.title}
+              venue={event.venue}
+              rating={event.rating}
+              attendance={event.attendance}
+              price={event.price}
+              category={'category' in event ? event.category : undefined}
+              flag={'flag' in event ? event.flag : undefined}
+              image={'image' in event && event.image ? event.image : HOME_EVENT_IMAGES[i]}
+            />
+          </Link>
+        ))}
       </div>
     </PageSection>
   )
@@ -162,7 +193,51 @@ export function HomeEvents() {
  * Figma `207:4490` — pad-top 76. Pastel panel (radius 28) with a local 46px heading —
  * not `HomeSectionHeader` / `SectionHeader` — plus 3× FeaturedPanelCard.
  */
-export function HomeFeatured() {
+export function HomeFeatured({
+  apiAds,
+  apiEvents,
+}: {
+  apiAds?: EventApiRecord[]
+  apiEvents?: EventApiRecord[]
+}) {
+  const panels = useMemo(() => {
+    const fromAds = (apiAds ?? []).slice(0, 3).map((ad, i) => {
+      const fallback = HOME_FEATURED_PANELS[i]!
+      const title = String(ad.title ?? ad.name ?? fallback.title)
+      return {
+        date: String(ad.date ?? ad.meta ?? fallback.date),
+        title,
+        venue: String(ad.venue ?? ad.location ?? ad.subtitle ?? fallback.venue),
+        price: String(ad.price ?? ad.price_label ?? fallback.price),
+        meta: String(ad.rating_label ?? ad.meta ?? fallback.meta),
+        image: String(ad.image ?? ad.cover ?? ad.banner ?? '') || HOME_FEATURED_PANEL_IMAGES[i],
+        href: `/events/${slugify(title)}`,
+      }
+    })
+    if (fromAds.length >= 3) return fromAds
+
+    const fromEvents = (apiEvents ?? []).slice(0, 3).map((event, i) => {
+      const fallback = HOME_FEATURED_PANELS[i]!
+      const mapped = mapApiEventToCard(event)
+      return {
+        date: mapped.date || fallback.date,
+        title: mapped.title,
+        venue: mapped.venue || fallback.venue,
+        price: mapped.price.startsWith('From') ? mapped.price : `From ${mapped.price}`,
+        meta: mapped.rating !== '—' ? `${mapped.rating} · ${mapped.attendance || 'going'}` : fallback.meta,
+        image: mapped.image || HOME_FEATURED_PANEL_IMAGES[i],
+        href: `/events/${mapped.slug}`,
+      }
+    })
+    if (fromEvents.length >= 3) return fromEvents
+
+    return HOME_FEATURED_PANELS.map((panel, i) => ({
+      ...panel,
+      image: HOME_FEATURED_PANEL_IMAGES[i],
+      href: `/events/${slugify(panel.title)}`,
+    }))
+  }, [apiAds, apiEvents])
+
   return (
     <PageSection padTop={76} padBottom={0}>
       <div
@@ -192,15 +267,15 @@ export function HomeFeatured() {
         </div>
 
         <div className="relative grid grid-cols-1 gap-5 md:grid-cols-3">
-          {HOME_FEATURED_PANELS.map((panel, i) => (
-            <Link
-              key={panel.title}
-              to={`/events/${slugify(panel.title)}`}
-              className="min-w-0"
-            >
+          {panels.map((panel) => (
+            <Link key={panel.title} to={panel.href} className="min-w-0">
               <FeaturedPanelCard
-                {...panel}
-                image={HOME_FEATURED_PANEL_IMAGES[i]}
+                date={panel.date}
+                title={panel.title}
+                venue={panel.venue}
+                price={panel.price}
+                meta={panel.meta}
+                image={panel.image}
               />
             </Link>
           ))}
@@ -237,7 +312,14 @@ export function HomeAuctions() {
 }
 
 /** Figma `207:4522` — pad-top 88, 4× ExperienceCard Home. */
-export function HomeExperiences() {
+export function HomeExperiences({ apiExperiences }: { apiExperiences?: ExperienceApiRecord[] }) {
+  const experiences = useMemo(() => {
+    if (apiExperiences && apiExperiences.length > 0) {
+      return apiExperiences.map(mapApiExperienceToCard).slice(0, HOME_EXPERIENCES.length)
+    }
+    return HOME_EXPERIENCES.map((e) => ({ ...e, slug: slugify(e.title) }))
+  }, [apiExperiences])
+
   return (
     <PageSection padTop={88} padBottom={0}>
       <HomeSectionHeader
@@ -248,16 +330,21 @@ export function HomeExperiences() {
         link={{ label: 'Browse all experiences', to: '/experiences' }}
       />
       <div className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {HOME_EXPERIENCES.map((experience, i) => (
+        {experiences.map((experience, i) => (
           <Link
-            key={experience.title}
-            to={`/experiences/${slugify(experience.title)}`}
+            key={'slug' in experience ? experience.slug : experience.title}
+            to={`/experiences/${'slug' in experience ? experience.slug : slugify(experience.title)}`}
             className="min-w-0"
           >
             <ExperienceCard
               context="home"
-              {...experience}
-              image={HOME_EXPERIENCE_IMAGES[i]}
+              title={experience.title}
+              location={experience.location}
+              category={'category' in experience ? experience.category : undefined}
+              summary={'summary' in experience ? experience.summary : undefined}
+              rating={experience.rating}
+              reviews={'reviews' in experience ? experience.reviews : undefined}
+              image={'image' in experience && experience.image ? experience.image : HOME_EXPERIENCE_IMAGES[i]}
             />
           </Link>
         ))}

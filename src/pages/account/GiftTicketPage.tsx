@@ -1,15 +1,99 @@
-import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useMemo, useState, type FormEvent } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button, Field, TextInput, Textarea } from '@/components/ui'
 import { FilterChip } from '@/components/data-display'
 import { TicketActionHeader } from '@/layouts'
-import { MY_TICKETS } from '@/pages/_account/fixtures'
+import { MY_TICKETS, type TicketFixture } from '@/pages/_account/fixtures'
+import { useSendGiftTicketMutation } from '@/app/api/accountApis'
+import { useGetOrdersQuery } from '@/app/api/ordersApi'
+import { useAppDispatch } from '@/app/hooks'
+import { toastPushed } from '@/features/ui/uiSlice'
+import { apiErrorMessage } from '@/lib/api/unwrap'
+
+function parseOrderId(raw: unknown): number {
+  const num = Number(raw)
+  if (!Number.isNaN(num) && num > 0) return num
+  const match = String(raw ?? '').match(/(\d+)\s*$/)
+  return match ? Number(match[1]) : 0
+}
+
+function mapOrderToTicket(order: Record<string, unknown>): TicketFixture {
+  const id = String(order.id ?? order.order_id ?? '')
+  const title = String(
+    order.title ?? order.event_title ?? order.name ?? `Order ${id || '—'}`,
+  )
+  return {
+    id: id || title,
+    orderId: String(order.reference ?? order.order_number ?? id),
+    title,
+    meta: String(order.meta ?? order.venue ?? order.status ?? ''),
+    status: String(order.status ?? 'UPCOMING') as TicketFixture['status'],
+    cover: String(order.cover ?? order.image ?? MY_TICKETS[0]?.cover ?? ''),
+    countdown: order.countdown ? String(order.countdown) : undefined,
+    facts: Array.isArray(order.facts)
+      ? (order.facts as { label: string; value: string }[])
+      : [
+          { label: 'When', value: String(order.starts_at ?? order.date ?? '—') },
+          { label: 'Seats', value: String(order.seats ?? order.quantity ?? '—') },
+        ],
+    actions: (order.actions as TicketFixture['actions']) ?? ['qr'],
+    note: order.note ? String(order.note) : undefined,
+  }
+}
+
+function resolveTicket(
+  orders: Record<string, unknown>[] | undefined,
+  id: string,
+): TicketFixture {
+  if (orders && orders.length > 0) {
+    const match =
+      orders.find(
+        (order) =>
+          String(order.id ?? '') === id ||
+          String(order.order_id ?? '') === id ||
+          String(order.reference ?? '') === id ||
+          String(order.order_number ?? '') === id,
+      ) ?? orders[0]
+    return mapOrderToTicket(match)
+  }
+  return MY_TICKETS.find((item) => item.id === id) ?? MY_TICKETS[0]
+}
 
 /** Gift / transfer ticket — Figma `207:9806`. */
 export function GiftTicketPage() {
   const { id = 'winter-nights' } = useParams()
-  const ticket = MY_TICKETS.find((item) => item.id === id) ?? MY_TICKETS[0]
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const { data: orders } = useGetOrdersQuery()
+  const ticket = useMemo(() => resolveTicket(orders, id), [orders, id])
   const [mode, setMode] = useState<'email' | 'phone'>('email')
+  const [recipient, setRecipient] = useState('')
+  const [note, setNote] = useState('')
+  const [sendGift, sendState] = useSendGiftTicketMutation()
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    if (!recipient.trim()) {
+      dispatch(toastPushed('error', 'Enter an email or phone number'))
+      return
+    }
+
+    const orderId = parseOrderId(ticket.orderId)
+    const ticketIds = [parseOrderId(`${ticket.id}-2`) || 2]
+
+    try {
+      await sendGift({
+        orderId,
+        ticketIds,
+        recipientIdentifier: recipient.trim(),
+        note: note.trim() || undefined,
+      }).unwrap()
+      dispatch(toastPushed('success', 'Ticket sent'))
+      navigate(`/my-tickets/${ticket.id}`)
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not send ticket')))
+    }
+  }
 
   return (
     <>
@@ -24,7 +108,10 @@ export function GiftTicketPage() {
             name, their own QR code.
           </p>
 
-          <div className="mt-[30px] flex flex-col gap-xl rounded-[20px] border border-border-default bg-surface-default p-[26px]">
+          <form
+            className="mt-[30px] flex flex-col gap-xl rounded-[20px] border border-border-default bg-surface-default p-[26px]"
+            onSubmit={(event) => void handleSubmit(event)}
+          >
             <div>
               <p className="text-[13px] font-semibold text-ink-primary">Send it to</p>
               <div className="mt-[8px] flex flex-wrap gap-[8px]">
@@ -48,6 +135,9 @@ export function GiftTicketPage() {
                 className="mt-[10px]"
                 type={mode === 'email' ? 'email' : 'tel'}
                 placeholder={mode === 'email' ? 'friend@email.com' : '+966 5X XXX XXXX'}
+                value={recipient}
+                onChange={(event) => setRecipient(event.target.value)}
+                required
               />
               <p className="mt-[7px] text-[12.5px] text-ink-muted">
                 If they don&apos;t have a MyTicket account yet, we&apos;ll help them make one in a
@@ -69,6 +159,8 @@ export function GiftTicketPage() {
                 rows={3}
                 className="min-h-[88px]"
                 placeholder="Happy birthday! See you at the gate at 19:30"
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
               />
             </Field>
 
@@ -91,7 +183,9 @@ export function GiftTicketPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-md">
-              <Button size="lg">Send the ticket</Button>
+              <Button size="lg" type="submit" disabled={sendState.isLoading}>
+                Send the ticket
+              </Button>
               <Link
                 to={`/my-tickets/${ticket.id}`}
                 className="inline-flex h-[50px] items-center px-[18px] text-[14px] font-medium text-ink-secondary hover:text-ink-brand"
@@ -99,7 +193,7 @@ export function GiftTicketPage() {
                 Cancel
               </Link>
             </div>
-          </div>
+          </form>
         </div>
 
         <aside className="flex w-full shrink-0 flex-col gap-[14px] lg:w-[380px]">

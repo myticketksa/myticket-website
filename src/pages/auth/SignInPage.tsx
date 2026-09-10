@@ -1,15 +1,103 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
 import { ArrowLeftIcon } from '@/components/icons'
 import { Divider } from '@/components/data-display'
 import { Button, Checkbox, Field, TextInput } from '@/components/ui'
 import { cn } from '@/lib/cn'
+import {
+  useLoginMutation,
+  useRequestLoginCodeMutation,
+  useVerifyLoginCodeMutation,
+} from '@/app/api/authApi'
+import { useAppDispatch } from '@/app/hooks'
+import { credentialsSet } from '@/features/auth/authSlice'
+import { toastPushed } from '@/features/ui/uiSlice'
+import { apiErrorMessage } from '@/lib/api/unwrap'
+import {
+  otpVerifySchema,
+  signInSchema,
+  type OtpVerifyValues,
+  type SignInValues,
+} from '@/lib/validation/authSchemas'
 
 /**
  * Sign In — Figma `207:11907`. Form column only; hero lives in `AuthLayout`.
+ * Wired to Auth RTK endpoints (password + OTP).
  */
 export function SignInPage() {
-  const [keepSignedIn, setKeepSignedIn] = useState(false)
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const [mode, setMode] = useState<'password' | 'otp-request' | 'otp-verify'>('password')
+  const [login, loginState] = useLoginMutation()
+  const [requestCode, requestState] = useRequestLoginCodeMutation()
+  const [verifyCode, verifyState] = useVerifyLoginCodeMutation()
+
+  const passwordForm = useForm<SignInValues>({
+    resolver: yupResolver(signInSchema),
+    defaultValues: { identifier: '', password: '', keepSignedIn: true },
+  })
+
+  const otpForm = useForm<OtpVerifyValues>({
+    resolver: yupResolver(otpVerifySchema),
+    defaultValues: { identifier: '', code: '' },
+  })
+
+  async function onPasswordSubmit(values: SignInValues) {
+    try {
+      const session = await login({
+        identifier: values.identifier.trim(),
+        password: values.password,
+      }).unwrap()
+      dispatch(
+        credentialsSet({
+          token: session.access_token,
+          user: session.user,
+          persist: values.keepSignedIn !== false,
+        }),
+      )
+      dispatch(toastPushed('success', 'Signed in'))
+      navigate('/')
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not sign in')))
+    }
+  }
+
+  async function onRequestOtp() {
+    const identifier = passwordForm.getValues('identifier').trim()
+    if (!identifier) {
+      passwordForm.setError('identifier', { message: 'Enter your mobile number or email' })
+      return
+    }
+    try {
+      await requestCode({ identifier }).unwrap()
+      otpForm.setValue('identifier', identifier)
+      setMode('otp-verify')
+      dispatch(toastPushed('success', 'Code sent — check your messages'))
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not send code')))
+    }
+  }
+
+  async function onOtpSubmit(values: OtpVerifyValues) {
+    try {
+      const session = await verifyCode(values).unwrap()
+      dispatch(
+        credentialsSet({
+          token: session.access_token,
+          user: session.user,
+          persist: true,
+        }),
+      )
+      dispatch(toastPushed('success', 'Signed in'))
+      navigate('/')
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Invalid or expired code')))
+    }
+  }
+
+  const busy = loginState.isLoading || requestState.isLoading || verifyState.isLoading
 
   return (
     <div className="flex w-full flex-col">
@@ -32,77 +120,142 @@ export function SignInPage() {
         Sign in to pick up where you left off.
       </p>
 
-      <form
-        className="mt-[28px] flex flex-col"
-        onSubmit={(event) => event.preventDefault()}
-      >
-        <div className="flex flex-col gap-[14px]">
-          <Field label="Mobile number or email" htmlFor="sign-in-identity">
-            <TextInput
-              id="sign-in-identity"
-              name="identity"
-              type="text"
-              placeholder="5X XXX XXXX"
-              autoComplete="username"
-              className="h-[50px]"
-              leading={
-                <>
-                  <span className="shrink-0 text-[14px] font-medium text-ink-secondary">
-                    +966
-                  </span>
-                  <Divider orientation="vertical" tone="border" className="h-5" />
-                </>
-              }
-            />
-          </Field>
+      {mode !== 'otp-verify' ? (
+        <form
+          className="mt-[28px] flex flex-col"
+          onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+        >
+          <div className="flex flex-col gap-[14px]">
+            <Field
+              label="Mobile number or email"
+              htmlFor="sign-in-identity"
+              error={passwordForm.formState.errors.identifier?.message}
+            >
+              <TextInput
+                id="sign-in-identity"
+                type="text"
+                placeholder="5X XXX XXXX"
+                autoComplete="username"
+                className="h-[50px]"
+                invalid={Boolean(passwordForm.formState.errors.identifier)}
+                {...passwordForm.register('identifier')}
+                leading={
+                  <>
+                    <span className="shrink-0 text-[14px] font-medium text-ink-secondary">
+                      +966
+                    </span>
+                    <Divider orientation="vertical" tone="border" className="h-5" />
+                  </>
+                }
+              />
+            </Field>
 
-          <Field
-            label="Password"
-            htmlFor="sign-in-password"
-            labelAction={
-              <Link
-                to="/reset-password"
-                className="text-[13px] font-medium text-ink-brand"
+            {mode === 'password' && (
+              <Field
+                label="Password"
+                htmlFor="sign-in-password"
+                error={passwordForm.formState.errors.password?.message}
+                labelAction={
+                  <Link
+                    to="/reset-password"
+                    className="text-[13px] font-medium text-ink-brand"
+                  >
+                    Forgot password?
+                  </Link>
+                }
               >
-                Forgot password?
-              </Link>
-            }
+                <TextInput
+                  id="sign-in-password"
+                  type="password"
+                  autoComplete="current-password"
+                  className="h-[50px]"
+                  invalid={Boolean(passwordForm.formState.errors.password)}
+                  {...passwordForm.register('password')}
+                />
+              </Field>
+            )}
+          </div>
+
+          {mode === 'password' && (
+            <Checkbox
+              id="keep-signed-in"
+              className="mt-[18px]"
+              checked={passwordForm.watch('keepSignedIn')}
+              onCheckedChange={(value) =>
+                passwordForm.setValue('keepSignedIn', value === true)
+              }
+              label="Keep me signed in on this device"
+            />
+          )}
+
+          {mode === 'password' ? (
+            <>
+              <Button
+                type="submit"
+                size="lg"
+                loading={busy}
+                className="mt-[22px] h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
+              >
+                Sign in
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="lg"
+                loading={busy}
+                className="mt-md h-[52px] w-full rounded-[26px] border border-border-default text-[16px] font-semibold"
+                onClick={() => void onRequestOtp()}
+              >
+                Send me a one-time code instead
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              size="lg"
+              loading={busy}
+              className="mt-[22px] h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
+              onClick={() => void onRequestOtp()}
+            >
+              Send one-time code
+            </Button>
+          )}
+        </form>
+      ) : (
+        <form className="mt-[28px] flex flex-col" onSubmit={otpForm.handleSubmit(onOtpSubmit)}>
+          <Field
+            label="One-time code"
+            htmlFor="sign-in-otp"
+            error={otpForm.formState.errors.code?.message}
           >
             <TextInput
-              id="sign-in-password"
-              name="password"
-              type="password"
-              defaultValue="password123"
-              autoComplete="current-password"
+              id="sign-in-otp"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
               className="h-[50px]"
+              {...otpForm.register('code')}
             />
           </Field>
-        </div>
-
-        <Checkbox
-          id="keep-signed-in"
-          className="mt-[18px]"
-          checked={keepSignedIn}
-          onCheckedChange={(value) => setKeepSignedIn(value === true)}
-          label="Keep me signed in on this device"
-        />
-
-        <Button
-          type="submit"
-          size="lg"
-          className="mt-[22px] h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
-        >
-          Sign in
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          size="lg"
-          className="mt-md h-[52px] w-full rounded-[26px] border border-border-default text-[16px] font-semibold"
-        >
-          Send me a one-time code instead
-        </Button>
-      </form>
+          <Button
+            type="submit"
+            size="lg"
+            loading={busy}
+            className="mt-[22px] h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
+          >
+            Verify and sign in
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            className="mt-md h-[52px] w-full rounded-[26px] border border-border-default text-[16px] font-semibold"
+            onClick={() => setMode('password')}
+          >
+            Back to password
+          </Button>
+        </form>
+      )}
 
       <div className="mt-[26px] flex items-center gap-[14px]">
         <Divider tone="border" className="flex-1" />
@@ -129,8 +282,7 @@ export function SignInPage() {
           Looking for business paths?{' '}
           <Link to="/become-business" className="text-ink-brand underline-offset-2 hover:underline">
             Submit a vendor or talent request
-          </Link>
-          {' '}
+          </Link>{' '}
           after sign-in, or{' '}
           <Link to="/for-organizers" className="text-ink-brand underline-offset-2 hover:underline">
             contact us about organizer partnership

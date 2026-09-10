@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react'
+import { useGetExperienceCategoriesQuery, useGetExperiencesQuery } from '@/app/api/experiencesApi'
 import { ExperienceCard } from '@/components/cards'
 import { FilterChip } from '@/components/data-display'
 import { ChevronDownIcon, MinusIcon, PlusIcon } from '@/components/icons'
 import { Breadcrumbs } from '@/components/navigation'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
+import { mapCategoryLabels } from '@/lib/api/mappers/categories'
+import { mapApiExperienceToCard } from '@/lib/api/mappers/experiences'
 import {
   CATALOG_EXPERIENCES,
   CatalogPageHead,
@@ -30,14 +33,33 @@ const WHERE_OPTIONS = [
   ...CITY_FACETS.slice(0, 5).map((c) => c.label),
 ] as const
 
-/** Experiences directory — Figma `207:6795`. */
+/** Experiences directory — Figma `207:6795`. Experiences API with fixture fallback. */
 export function ExperiencesPage() {
   const [category, setCategory] = useState('All experiences')
   const [guests, setGuests] = useState(2)
   const [where, setWhere] = useState<(typeof WHERE_OPTIONS)[number]>('Anywhere in Saudi Arabia')
 
+  const { data: apiExperiences, isFetching, isError } = useGetExperiencesQuery()
+  const { data: apiCategories } = useGetExperienceCategoriesQuery()
+
+  const categoryChips = useMemo(
+    () =>
+      mapCategoryLabels(apiCategories, {
+        allLabel: 'All experiences',
+        fallback: CATEGORIES,
+      }),
+    [apiCategories],
+  )
+
+  const catalog = useMemo(() => {
+    if (apiExperiences && apiExperiences.length > 0) {
+      return apiExperiences.map(mapApiExperienceToCard)
+    }
+    return CATALOG_EXPERIENCES.map((exp) => ({ ...exp, slug: slugify(exp.title) }))
+  }, [apiExperiences])
+
   const filtered = useMemo(() => {
-    return CATALOG_EXPERIENCES.filter((exp) => {
+    return catalog.filter((exp) => {
       if (category !== 'All experiences') {
         const needle = category.toLowerCase().split(' ')[0]!
         if (!exp.meta.toLowerCase().includes(needle)) return false
@@ -48,7 +70,7 @@ export function ExperiencesPage() {
       }
       return true
     })
-  }, [category, where])
+  }, [catalog, category, where])
 
   const shown = filtered
 
@@ -66,7 +88,9 @@ export function ExperiencesPage() {
       <PageSection padTop={14} padBottom={0}>
         <CatalogPageHead
           title="Experiences, not just seats"
-          subtitle="Small-group things to do with a time slot and a guide — desert dinners, heritage walks, studio sessions. Pick a date, pick a time, done in three taps."
+          subtitle={`Small-group things to do with a time slot and a guide — desert dinners, heritage walks, studio sessions. Pick a date, pick a time, done in three taps.${
+            isError ? ' Showing local preview while the API is unreachable.' : ''
+          }${isFetching ? ' Updating…' : ''}`}
         />
 
         <div className="mt-3xl flex h-[72px] w-full items-center rounded-[18px] border border-border-default bg-surface-default px-[14px]">
@@ -141,7 +165,7 @@ export function ExperiencesPage() {
         </div>
 
         <div className="mt-xl flex flex-wrap gap-[9px]">
-          {CATEGORIES.map((label) => (
+          {categoryChips.map((label) => (
             <FilterChip
               key={label}
               selected={label === category}
@@ -156,7 +180,10 @@ export function ExperiencesPage() {
       <PageSection padTop={18} padBottom={0}>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {shown.slice(0, 8).map((exp) => (
-            <LinkedCard key={exp.title} to={`/experiences/${slugify(exp.title)}`}>
+            <LinkedCard
+              key={exp.slug ?? exp.title}
+              to={`/experiences/${exp.slug ?? slugify(exp.title)}`}
+            >
               <ExperienceCard
                 context="catalog"
                 title={exp.title}
@@ -165,7 +192,7 @@ export function ExperiencesPage() {
                 rating={exp.rating}
                 guests={exp.guests}
                 price={exp.price}
-                flag={'flag' in exp ? exp.flag : undefined}
+                flag={exp.flag}
                 image={exp.image}
               />
             </LinkedCard>

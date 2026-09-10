@@ -1,5 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import {
+  useAddFavoriteMutation,
+  useDeleteFavoriteMutation,
+  useGetFavoritesQuery,
+} from '@/app/api/accountApis'
+import { useGetEventDetailsQuery, useGetEventsQuery } from '@/app/api/eventsApi'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { selectIsAuthenticated } from '@/features/auth/authSlice'
+import { toastPushed } from '@/features/ui/uiSlice'
+import { apiErrorMessage } from '@/lib/api/unwrap'
 import { Avatar } from '@/components/data-display'
 import {
   ArrowUpRightIcon,
@@ -15,6 +25,11 @@ import {
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
+import {
+  mapApiEventToCard,
+  resolveEventFromList,
+  resolveEventId,
+} from '@/lib/api/mappers/events'
 import {
   CATALOG_EVENTS,
   DetailGallery,
@@ -90,13 +105,125 @@ const POLICIES = [
 const MAPS_URL =
   'https://www.google.com/maps/search/?api=1&query=King+Abdullah+Park,+Al+Malaz,+Riyadh+12836'
 
+function pickDetailString(record: Record<string, unknown> | undefined, keys: string[]): string | undefined {
+  if (!record) return undefined
+  for (const key of keys) {
+    const value = record[key]
+    if (value != null && value !== '') return String(value)
+  }
+  return undefined
+}
+
 /** Event detail — Figma `207:4797` continuous article + scroll-spy tabs. */
 export function EventDetailPage() {
   const { slug } = useParams()
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const isAuthenticated = useAppSelector(selectIsAuthenticated)
+  const slugOrId = slug ?? ''
   const [tab, setTab] = useState<Tab>('About')
   const scrollingToRef = useRef<string | null>(null)
-  const title =
-    CATALOG_EVENTS.find((e) => slugify(e.title) === slug)?.title ?? EVENT_DETAIL.title
+
+  const { data: apiEvents } = useGetEventsQuery()
+  const { data: favorites } = useGetFavoritesQuery(undefined, { skip: !isAuthenticated })
+  const [addFavorite, addFavState] = useAddFavoriteMutation()
+  const [deleteFavorite, delFavState] = useDeleteFavoriteMutation()
+
+  const catalog = useMemo(() => {
+    if (apiEvents && apiEvents.length > 0) {
+      return apiEvents.map(mapApiEventToCard)
+    }
+    return CATALOG_EVENTS.map((event) => ({ ...event, slug: slugify(event.title) }))
+  }, [apiEvents])
+
+  const resolvedId = useMemo(
+    () => resolveEventId(apiEvents, slugOrId),
+    [apiEvents, slugOrId],
+  )
+
+  const { data: apiDetail } = useGetEventDetailsQuery(resolvedId!, {
+    skip: !resolvedId,
+  })
+
+  const isSaved = useMemo(() => {
+    if (!resolvedId || !favorites?.length) return false
+    return favorites.some((item) => {
+      const id = item.id ?? item.event_id ?? item.eventId
+      return String(id) === String(resolvedId)
+    })
+  }, [favorites, resolvedId])
+
+  async function handleSave() {
+    if (!isAuthenticated) {
+      navigate('/sign-in')
+      return
+    }
+    if (!resolvedId) {
+      dispatch(toastPushed('error', 'Event is not available to save yet'))
+      return
+    }
+    try {
+      if (isSaved) {
+        await deleteFavorite(resolvedId).unwrap()
+        dispatch(toastPushed('success', 'Removed from saved'))
+      } else {
+        await addFavorite(resolvedId).unwrap()
+        dispatch(toastPushed('success', 'Saved'))
+      }
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not update saved')))
+    }
+  }
+
+  const listCard = useMemo(() => {
+    const fromCatalog = catalog.find(
+      (e) => e.slug === slugOrId || slugify(e.title) === slugOrId,
+    )
+    if (fromCatalog) return fromCatalog
+    if (apiEvents?.length) {
+      const raw = resolveEventFromList(apiEvents, slugOrId)
+      return raw ? mapApiEventToCard(raw) : undefined
+    }
+    return undefined
+  }, [apiEvents, catalog, slugOrId])
+
+  const detailCard = useMemo(() => {
+    if (apiDetail && Object.keys(apiDetail).length > 0) {
+      return mapApiEventToCard(apiDetail)
+    }
+    return undefined
+  }, [apiDetail])
+
+  const display = useMemo(
+    () => ({
+      title: detailCard?.title ?? listCard?.title ?? EVENT_DETAIL.title,
+      category: detailCard?.category ?? listCard?.category ?? EVENT_DETAIL.category,
+      flag: detailCard?.flag ?? listCard?.flag ?? EVENT_DETAIL.flag,
+      rating:
+        pickDetailString(apiDetail, ['rating_label', 'reviews_summary']) ??
+        (detailCard?.rating && detailCard.rating !== '—'
+          ? `${detailCard.rating} reviews`
+          : listCard?.rating
+            ? `${listCard.rating} reviews`
+            : EVENT_DETAIL.rating),
+      when:
+        pickDetailString(apiDetail, ['when', 'date_label', 'starts_at', 'datetime']) ??
+        listCard?.date ??
+        EVENT_DETAIL.when,
+      venue:
+        detailCard?.venue ||
+        listCard?.venue ||
+        EVENT_DETAIL.venue,
+      attendance:
+        detailCard?.attendance ||
+        listCard?.attendance ||
+        EVENT_DETAIL.attendance,
+      fromPrice: detailCard?.price ?? listCard?.price ?? EVENT_DETAIL.fromPrice,
+    }),
+    [apiDetail, detailCard, listCard],
+  )
+
+  const title = display.title
 
   useEffect(() => {
     const nodes = TABS.map((item) => document.getElementById(TAB_IDS[item])).filter(
@@ -151,9 +278,9 @@ export function EventDetailPage() {
 
       <PageSection padTop={16} padBottom={0}>
         <DetailGallery
-          category={EVENT_DETAIL.category}
-          flag={EVENT_DETAIL.flag}
-          mainImage={EVENT_DETAIL_GALLERY.main}
+          category={display.category}
+          flag={display.flag}
+          mainImage={detailCard?.image ?? listCard?.image ?? EVENT_DETAIL_GALLERY.main}
           thumbs={EVENT_DETAIL_GALLERY.thumbs}
         />
       </PageSection>
@@ -166,11 +293,11 @@ export function EventDetailPage() {
             <div className="mt-[14px] flex flex-wrap items-center gap-[18px] text-[15px]">
               <span className="flex items-center gap-[5px] font-semibold text-ink-primary">
                 <StarFillIcon size={15} />
-                {EVENT_DETAIL.rating}
+                {display.rating}
               </span>
-              <span className="text-ink-secondary">{EVENT_DETAIL.when}</span>
-              <span className="text-ink-secondary">{EVENT_DETAIL.venue}</span>
-              <span className="text-ink-secondary">{EVENT_DETAIL.attendance}</span>
+              <span className="text-ink-secondary">{display.when}</span>
+              <span className="text-ink-secondary">{display.venue}</span>
+              <span className="text-ink-secondary">{display.attendance}</span>
             </div>
 
             <div className="mt-[22px] flex flex-wrap gap-row-gap">
@@ -178,10 +305,10 @@ export function EventDetailPage() {
                 variant="secondary"
                 className="h-[40px] rounded-[20px] border px-lg"
                 icon={<HeartGlyphIcon size={16} />}
-                disabled
-                title="Save requires an account"
+                loading={addFavState.isLoading || delFavState.isLoading}
+                onClick={() => void handleSave()}
               >
-                Save
+                {isSaved ? 'Saved' : 'Save'}
               </Button>
               <Button
                 variant="secondary"
@@ -395,7 +522,7 @@ export function EventDetailPage() {
           </article>
 
           <StickyCtaCard
-            fromPrice={EVENT_DETAIL.fromPrice}
+            fromPrice={display.fromPrice}
             note={EVENT_DETAIL.salesClose}
             tiers={EVENT_DETAIL.tiers}
             totals={EVENT_DETAIL.totals}
@@ -423,11 +550,13 @@ export function EventDetailPage() {
         headingClassName="text-heading-h2-feature"
         link={{ label: 'All concerts in Riyadh', to: '/events' }}
       >
-        {CATALOG_EVENTS.filter((e) => e.title !== title)
+        {catalog
+          .filter((e) => e.title !== title)
           .slice(0, 4)
           .map((event) => (
             <SimilarEventCard
-              key={event.title}
+              key={event.slug ?? event.title}
+              slug={event.slug ?? slugify(event.title)}
               title={event.title}
               date={event.date}
               venue={event.venue}
@@ -446,6 +575,7 @@ export function EventDetailPage() {
  * (no heart / badges / attendance). Kept local until a DS similar card exists.
  */
 function SimilarEventCard({
+  slug: eventSlug,
   title,
   date,
   venue,
@@ -453,6 +583,7 @@ function SimilarEventCard({
   price,
   image,
 }: {
+  slug: string
   title: string
   date: string
   venue: string
@@ -462,7 +593,7 @@ function SimilarEventCard({
 }) {
   return (
     <Link
-      to={`/events/${slugify(title)}`}
+      to={`/events/${eventSlug}`}
       className="flex min-w-0 flex-col overflow-hidden rounded-[16px] border border-border-default bg-surface-default"
     >
       <div className="h-[170px] w-full overflow-hidden bg-bg-skeleton">

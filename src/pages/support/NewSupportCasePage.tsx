@@ -1,9 +1,13 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { PlusIcon } from '@/components/icons'
 import { Button, Field, Select, Textarea, TextInput } from '@/components/ui'
 import { FunnelHeader, PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
+import { useSendChatMessageMutation } from '@/app/api/accountApis'
+import { useAppDispatch } from '@/app/hooks'
+import { toastPushed } from '@/features/ui/uiSlice'
+import { apiErrorMessage } from '@/lib/api/unwrap'
 
 const KINDS = [
   {
@@ -20,10 +24,35 @@ const KINDS = [
 
 const URGENCY = ['Low', 'Normal', 'Urgent'] as const
 
-/** New support case — Figma `207:11781`. */
+/** New support case — Figma `207:11781`. Opens support chat (no cases CRUD API). */
 export function NewSupportCasePage() {
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const [sendMessage, sendState] = useSendChatMessageMutation()
   const [kind, setKind] = useState<(typeof KINDS)[number]['id']>('working')
   const [urgency, setUrgency] = useState<(typeof URGENCY)[number]>('Normal')
+  const [subject, setSubject] = useState('')
+  const [details, setDetails] = useState('')
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    const message = [
+      `[${kind === 'working' ? 'Issue' : 'Complaint'} · ${urgency}]`,
+      subject.trim() || 'Support request',
+      details.trim(),
+    ]
+      .filter(Boolean)
+      .join('\n\n')
+
+    try {
+      await sendMessage({ channel: 'support', message }).unwrap()
+      dispatch(toastPushed('success', 'Sent to support — continue in chat'))
+      navigate('/support/chat')
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not reach support')))
+      navigate('/support/chat')
+    }
+  }
 
   return (
     <>
@@ -72,7 +101,7 @@ export function NewSupportCasePage() {
 
           <form
             className="mt-[22px] flex flex-col gap-[20px] rounded-[22px] border border-border-default bg-surface-default p-[30px]"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={(event) => void handleSubmit(event)}
           >
             <div className="grid gap-[16px] sm:grid-cols-2">
               <Field label="What's it about?" htmlFor="about">
@@ -108,7 +137,12 @@ export function NewSupportCasePage() {
             </div>
 
             <Field label="Subject" htmlFor="subject">
-              <TextInput id="subject" placeholder="e.g. Paid twice for the same order" />
+              <TextInput
+                id="subject"
+                placeholder="e.g. Paid twice for the same order"
+                value={subject}
+                onChange={(event) => setSubject(event.target.value)}
+              />
             </Field>
 
             <Field label="What happened?" htmlFor="details">
@@ -116,6 +150,8 @@ export function NewSupportCasePage() {
                 id="details"
                 rows={5}
                 placeholder="The more detail, the faster we can help — what you did, what you expected, what happened instead."
+                value={details}
+                onChange={(event) => setDetails(event.target.value)}
               />
             </Field>
 
@@ -150,9 +186,9 @@ export function NewSupportCasePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-[12px]">
-              <Link to="/support/chat">
-                <Button size="lg">Submit the case</Button>
-              </Link>
+              <Button type="submit" size="lg" loading={sendState.isLoading}>
+                Submit the case
+              </Button>
               <p className="text-[13px] text-ink-muted">We usually reply within one working day.</p>
             </div>
           </form>

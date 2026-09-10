@@ -5,6 +5,11 @@ import { CheckIcon } from '@/components/icons'
 import { PriceDisplay } from '@/components/data-display'
 import { Button, Checkbox, Field, Radio, RadioGroup, TextInput } from '@/components/ui'
 import { cn } from '@/lib/cn'
+import { usePayOrderMutation, useCreateOrderMutation, useApplyPromoCodeMutation } from '@/app/api/ordersApi'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { selectAuthUser } from '@/features/auth/authSlice'
+import { toastPushed } from '@/features/ui/uiSlice'
+import { apiErrorMessage } from '@/lib/api/unwrap'
 
 type PaymentMethod = 'card' | 'apple' | 'tabby' | 'tamara' | 'wallet' | 'sadad'
 
@@ -44,11 +49,18 @@ function MethodMark({
  */
 export function CheckoutPage() {
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const user = useAppSelector(selectAuthUser)
+  const [payOrder, payState] = usePayOrderMutation()
+  const [createOrder, createState] = useCreateOrderMutation()
+  const [applyPromo, promoState] = useApplyPromoCodeMutation()
   const [method, setMethod] = useState<PaymentMethod>('tabby')
   const [assignGuests, setAssignGuests] = useState(false)
   const [acceptRefund, setAcceptRefund] = useState(true)
   const [sendReminders, setSendReminders] = useState(true)
   const [marketing, setMarketing] = useState(false)
+  const [promoCode, setPromoCode] = useState('')
+  const [promoApplied, setPromoApplied] = useState(false)
 
   const payLabels: Record<PaymentMethod, string> = {
     card: 'Pay now',
@@ -59,6 +71,86 @@ export function CheckoutPage() {
     sadad: 'Confirm SADAD reservation',
   }
   const payLabel = payLabels[method]
+  const paying = payState.isLoading || createState.isLoading
+
+  async function ensureOrderId(): Promise<number | null> {
+    const existing = Number(sessionStorage.getItem('myticket.pendingOrderId') || '')
+    if (existing) return existing
+
+    const eventId =
+      sessionStorage.getItem('myticket.eventId') ||
+      sessionStorage.getItem('myticket.checkoutEventId')
+    if (!eventId) return null
+
+    let seatIds: number[] = []
+    try {
+      const mock = JSON.parse(sessionStorage.getItem('myticket.mockHold') || 'null') as {
+        seatIds?: string[]
+      } | null
+      seatIds = (mock?.seatIds ?? [])
+        .map((id) => Number.parseInt(String(id).replace(/\D/g, ''), 10))
+        .filter((n) => Number.isFinite(n) && n > 0)
+    } catch {
+      seatIds = []
+    }
+
+    const created = await createOrder({
+      eventId,
+      body: {
+        items: [{ ticketId: 32, quantity: Math.max(1, seatIds.length || 2) }],
+        ...(seatIds.length > 0 ? { seatIds } : {}),
+      },
+    }).unwrap()
+
+    const orderId = Number(created.id ?? created.orderId ?? created.order_id)
+    if (!Number.isFinite(orderId) || orderId <= 0) return null
+    sessionStorage.setItem('myticket.pendingOrderId', String(orderId))
+    return orderId
+  }
+
+  async function handleApplyPromo() {
+    const code = promoCode.trim()
+    if (!code) {
+      dispatch(toastPushed('error', 'Enter a promo code'))
+      return
+    }
+    try {
+      const orderId = await ensureOrderId()
+      if (!orderId) {
+        dispatch(toastPushed('error', 'Create seats first so we can apply a promo'))
+        return
+      }
+      await applyPromo({ orderId, promoCode: code }).unwrap()
+      setPromoApplied(true)
+      dispatch(toastPushed('success', 'Promo applied'))
+    } catch (error) {
+      setPromoApplied(false)
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Promo could not be applied')))
+    }
+  }
+
+  async function handlePay() {
+    try {
+      let pendingOrderId = Number(sessionStorage.getItem('myticket.pendingOrderId') || '')
+      if (!pendingOrderId) {
+        pendingOrderId = (await ensureOrderId()) ?? 0
+      }
+      if (pendingOrderId) {
+        await payOrder({
+          orderId: pendingOrderId,
+          brand: method === 'wallet' ? 'WALLET' : 'CREDIT',
+        }).unwrap()
+        sessionStorage.setItem('myticket.lastOrderId', String(pendingOrderId))
+        sessionStorage.removeItem('myticket.pendingOrderId')
+        dispatch(toastPushed('success', 'Payment submitted'))
+        navigate(`/order-confirmation?orderId=${pendingOrderId}`)
+        return
+      }
+      navigate('/order-confirmation')
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Payment failed')))
+    }
+  }
 
   return (
     <div className="flex flex-col gap-[40px] lg:flex-row lg:items-start">
@@ -70,7 +162,9 @@ export function CheckoutPage() {
         <section className="mt-[30px] rounded-[18px] border border-border-default bg-surface-default p-[22px]">
           <div className="flex flex-wrap items-center justify-between gap-sm">
             <h2 className="text-[17px] font-semibold text-ink-primary">Ticket holder</h2>
-            <p className="text-[13px] text-ink-secondary">Signed in as Sara Al-Harbi</p>
+            <p className="text-[13px] text-ink-secondary">
+              Signed in as {user?.name ?? 'Sara Al-Harbi'}
+            </p>
           </div>
 
           <div className="mt-lg flex flex-col gap-[14px]">
@@ -79,7 +173,7 @@ export function CheckoutPage() {
                 <TextInput
                   id="checkout-name"
                   name="name"
-                  defaultValue="Sara Al-Harbi"
+                  defaultValue={user?.name ?? 'Sara Al-Harbi'}
                   className="bg-bg-page"
                 />
               </Field>
@@ -87,7 +181,7 @@ export function CheckoutPage() {
                 <TextInput
                   id="checkout-mobile"
                   name="mobile"
-                  defaultValue="+966 55 214 4417"
+                  defaultValue={user?.phone ?? '+966 55 214 4417'}
                   className="bg-bg-page"
                 />
               </Field>
@@ -97,7 +191,7 @@ export function CheckoutPage() {
                 id="checkout-email"
                 name="email"
                 type="email"
-                defaultValue="sara.alharbi@example.com"
+                defaultValue={user?.email ?? 'sara.alharbi@example.com'}
                 className="bg-bg-page"
               />
             </Field>
@@ -300,12 +394,19 @@ export function CheckoutPage() {
             <div className="mt-lg flex gap-sm">
               <TextInput
                 placeholder="Promo code"
+                value={promoCode}
+                onChange={(event) => {
+                  setPromoCode(event.target.value)
+                  setPromoApplied(false)
+                }}
                 className="h-11 flex-1 rounded-[11px] bg-bg-page text-[14px]"
               />
               <Button
                 type="button"
                 variant="secondary"
+                loading={promoState.isLoading}
                 className="h-11 rounded-[11px] border border-border-default px-[18px] text-[14px]"
+                onClick={() => void handleApplyPromo()}
               >
                 Apply
               </Button>
@@ -319,7 +420,9 @@ export function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">Promo code</span>
-                  <span className="text-ink-muted">None</span>
+                  <span className={promoApplied ? 'font-semibold text-ink-brand' : 'text-ink-muted'}>
+                    {promoApplied ? promoCode.trim().toUpperCase() : 'None'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">Service fee</span>
@@ -345,8 +448,9 @@ export function CheckoutPage() {
             <Button
               type="button"
               size="lg"
+              loading={paying}
               className="mt-[18px] h-[54px] w-full rounded-[27px] text-[16px] font-semibold"
-              onClick={() => navigate('/order-confirmation')}
+              onClick={() => void handlePay()}
             >
               {payLabel}
             </Button>

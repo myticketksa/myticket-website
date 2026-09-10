@@ -1,4 +1,7 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useLogoutMutation } from '@/app/api/authApi'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { credentialsCleared, selectAuthUser } from '@/features/auth/authSlice'
 import {
   ArrowRightIcon,
   BellRingingIcon,
@@ -87,21 +90,48 @@ const SETTINGS_TILES = [
  * Profile / account home — Figma `207:10412`.
  * Full-bleed under AccountLayout (no 964/320 split).
  */
+function initialsFromName(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || ACCOUNT_USER.initials
+  )
+}
+
 export function ProfilePage() {
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const user = useAppSelector(selectAuthUser)
+  const [logout, logoutState] = useLogoutMutation()
+  const displayName = user?.name ?? ACCOUNT_USER.name
+  const initials = user?.name ? initialsFromName(user.name) : ACCOUNT_USER.initials
+
+  async function handleSignOut() {
+    try {
+      await logout().unwrap()
+    } catch {
+      /* Clear local session even if the API call fails */
+    }
+    dispatch(credentialsCleared())
+    navigate('/sign-in')
+  }
+
   return (
     <>
       <PageSection padTop={40} padBottom={0}>
         <div className="flex flex-wrap items-center justify-between gap-xl rounded-[24px] border border-border-default bg-surface-default px-3xl py-3xl">
           <div className="flex items-center gap-xl">
             <Avatar
-              initials={ACCOUNT_USER.initials}
+              initials={initials}
               size="lg"
               className="!size-[84px] !bg-surface-inverse !text-[26px] !text-bg-page"
             />
             <div>
               <div className="flex items-center gap-sm">
                 <h1 className="text-[32px] font-extrabold tracking-[-0.8px] text-ink-primary">
-                  {ACCOUNT_USER.name}
+                  {displayName}
                 </h1>
                 <VerifiedIcon size={20} className="text-state-success" />
               </div>
@@ -324,7 +354,12 @@ export function ProfilePage() {
             <Button variant="secondary" size="sm">
               Manage devices
             </Button>
-            <Button variant="destructive" size="sm">
+            <Button
+              variant="destructive"
+              size="sm"
+              loading={logoutState.isLoading}
+              onClick={() => void handleSignOut()}
+            >
               Sign out
             </Button>
           </div>

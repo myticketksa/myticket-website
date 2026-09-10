@@ -1,9 +1,15 @@
+import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRightIcon, PlusIcon } from '@/components/icons'
 import { Button, TextInput } from '@/components/ui'
 import { FunnelHeader, PageSection } from '@/layouts'
+import {
+  useGetChatMessagesQuery,
+  useGetChatsQuery,
+  useSendChatMessageMutation,
+} from '@/app/api/accountApis'
 
-const MESSAGES = [
+const FALLBACK_MESSAGES = [
   {
     from: 'you' as const,
     body: 'Hi — I bought tickets but never got the confirmation email.',
@@ -33,8 +39,72 @@ const QUICK_LINKS = [
   'Gifting a ticket',
 ] as const
 
+type ChatMessage = {
+  from: 'you' | 'agent'
+  body: string
+  meta: string
+}
+
+function mapChatMessage(record: Record<string, unknown>, index: number): ChatMessage {
+  const fallback = FALLBACK_MESSAGES[index % FALLBACK_MESSAGES.length]
+  const sender = String(record.sender ?? record.from ?? record.role ?? '').toLowerCase()
+  const from: ChatMessage['from'] =
+    sender.includes('user') || sender.includes('you') || sender.includes('guest')
+      ? 'you'
+      : 'agent'
+  const author = String(record.author ?? record.agent_name ?? (from === 'you' ? 'You' : 'Support'))
+  const time = String(record.time ?? record.created_at ?? '')
+  return {
+    from,
+    body: String(record.body ?? record.message ?? record.content ?? fallback.body),
+    meta: time ? `${author} · ${time}` : `${author} · ${fallback.meta.split('·').pop()?.trim()}`,
+  }
+}
+
+function pickSupportChatId(chats: Record<string, unknown>[]): string | number | undefined {
+  const support = chats.find((chat) => {
+    const channel = String(chat.channel ?? chat.type ?? '').toLowerCase()
+    return channel.includes('support') || channel === ''
+  })
+  const chosen = support ?? chats[0]
+  const raw = chosen?.id ?? chosen?.chat_id ?? chosen?.chatId
+  if (typeof raw === 'string' || typeof raw === 'number') return raw
+  return undefined
+}
+
 /** Support chat — Figma `207:12302`. */
 export function SupportChatPage() {
+  const [draft, setDraft] = useState('')
+  const { data: chats } = useGetChatsQuery()
+  const chatId = useMemo(
+    () => (chats && chats.length > 0 ? pickSupportChatId(chats) : undefined),
+    [chats],
+  )
+  const { data: apiMessages } = useGetChatMessagesQuery(chatId ?? '', { skip: chatId == null })
+  const [sendMessage, sendState] = useSendChatMessageMutation()
+
+  const messages = useMemo(() => {
+    if (apiMessages && apiMessages.length > 0) return apiMessages.map(mapChatMessage)
+    return [...FALLBACK_MESSAGES]
+  }, [apiMessages])
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    const message = draft.trim()
+    if (!message) return
+
+    try {
+      await sendMessage({
+        chatId: chatId != null ? Number(chatId) : undefined,
+        channel: 'support',
+        message,
+      }).unwrap()
+      setDraft('')
+    } catch {
+      /* Keep UI unchanged on failure — user can retry */
+    }
+  }
+
   return (
     <>
       <FunnelHeader label="Live support" backHref="/help" backLabel="Help centre" />
@@ -64,7 +134,7 @@ export function SupportChatPage() {
                   Today · 21:32 — you&apos;re chatting as a guest of MyTicket
                 </span>
               </div>
-              {MESSAGES.map((msg) => (
+              {messages.map((msg) => (
                 <div
                   key={msg.meta + msg.body}
                   className={`flex flex-col ${msg.from === 'you' ? 'items-end' : 'items-start'}`}
@@ -86,13 +156,18 @@ export function SupportChatPage() {
 
             <form
               className="flex items-center gap-[10px] border-t border-border-divider px-[24px] py-[16px]"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={(event) => void handleSubmit(event)}
             >
-              <Button variant="icon" size="md" aria-label="Attach file">
+              <Button variant="icon" size="md" aria-label="Attach file" type="button">
                 <PlusIcon size={16} />
               </Button>
-              <TextInput className="flex-1 !rounded-[22px]" placeholder="Write a message…" />
-              <Button size="md" type="submit">
+              <TextInput
+                className="flex-1 !rounded-[22px]"
+                placeholder="Write a message…"
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+              />
+              <Button size="md" type="submit" disabled={sendState.isLoading || !draft.trim()}>
                 Send
               </Button>
             </form>

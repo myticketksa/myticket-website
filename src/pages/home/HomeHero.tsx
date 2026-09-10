@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import type { ApiRecord } from '@/app/api/eventsApi'
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -10,6 +11,7 @@ import { FeaturedHeroCard } from '@/components/cards'
 import { PopularChip } from '@/components/data-display'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
+import { mapApiEventToCard } from '@/lib/api/mappers/events'
 import { slugify } from '@/pages/_guest'
 import { HOME_FEATURED, HOME_POPULAR } from './home-data'
 import { HOME_HERO_IMAGES } from './home-media'
@@ -27,12 +29,6 @@ import { HOME_HERO_IMAGES } from './home-media'
  * not `FilterChip` / `CategoryChip`.
  */
 
-const FEATURED_SLIDES = [
-  HOME_FEATURED.slice(0, 2),
-  [HOME_FEATURED[1]!, HOME_FEATURED[0]!],
-  HOME_FEATURED.slice(0, 2),
-] as const
-
 const REGION_OPTIONS = [
   'All Saudi Arabia',
   'Riyadh',
@@ -40,11 +36,41 @@ const REGION_OPTIONS = [
   'Dammam',
 ] as const
 
-export function HomeHero() {
+export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
   const [slide, setSlide] = useState(0)
   const [region, setRegion] = useState<(typeof REGION_OPTIONS)[number]>('All Saudi Arabia')
-  const cards = FEATURED_SLIDES[slide] ?? FEATURED_SLIDES[0]
-  const slideCount = FEATURED_SLIDES.length
+
+  const featuredSource = useMemo(() => {
+    if (apiEvents && apiEvents.length > 0) {
+      return apiEvents.slice(0, 2).map((event) => {
+        const mapped = mapApiEventToCard(event)
+        return {
+          date: mapped.date,
+          title: mapped.title,
+          venue: mapped.venue,
+          rating: mapped.rating,
+          price: mapped.price,
+          category: mapped.category ?? 'Events',
+          flag: mapped.flag,
+          slug: mapped.slug,
+          image: mapped.image,
+        }
+      })
+    }
+    return HOME_FEATURED.map((f) => ({ ...f, slug: slugify(f.title), image: undefined as string | undefined }))
+  }, [apiEvents])
+
+  const featuredSlides = useMemo(() => {
+    if (featuredSource.length < 2) return [featuredSource]
+    return [
+      featuredSource.slice(0, 2),
+      [featuredSource[1]!, featuredSource[0]!],
+      featuredSource.slice(0, 2),
+    ] as const
+  }, [featuredSource])
+
+  const cards = featuredSlides[slide] ?? featuredSlides[0] ?? featuredSource.slice(0, 2)
+  const slideCount = featuredSlides.length
 
   const goPrev = () => setSlide((s) => (s - 1 + slideCount) % slideCount)
   const goNext = () => setSlide((s) => (s + 1) % slideCount)
@@ -181,12 +207,22 @@ export function HomeHero() {
               return (
                 <Link
                   key={`${slide}-${card.title}`}
-                  to={`/events/${slugify(card.title)}`}
+                  to={`/events/${'slug' in card && card.slug ? card.slug : slugify(card.title)}`}
                   className="min-w-0 flex-1"
                 >
                   <FeaturedHeroCard
-                    {...card}
-                    image={HOME_HERO_IMAGES[imageIndex >= 0 ? imageIndex : i]}
+                    date={card.date}
+                    title={card.title}
+                    venue={card.venue}
+                    rating={card.rating}
+                    price={card.price}
+                    category={card.category}
+                    flag={'flag' in card ? card.flag : undefined}
+                    image={
+                      'image' in card && card.image
+                        ? card.image
+                        : HOME_HERO_IMAGES[imageIndex >= 0 ? imageIndex : i]
+                    }
                     className="w-full"
                   />
                 </Link>
@@ -195,7 +231,7 @@ export function HomeHero() {
           </div>
 
           <div className="flex gap-[7px]" role="tablist" aria-label="Featured slides">
-            {FEATURED_SLIDES.map((_, i) => (
+            {featuredSlides.map((_, i) => (
               <button
                 key={i}
                 type="button"

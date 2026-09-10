@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChipMultiSelect,
@@ -16,6 +16,15 @@ import {
   joinOrDash,
 } from '@/pages/forms/apply-shared'
 import { useLocale } from '@/i18n/locale'
+import {
+  useApplyTalentMutation,
+  useGetCitiesQuery,
+  useGetPerformanceCategoriesQuery,
+} from '@/app/api/accountApis'
+import { useAppDispatch } from '@/app/hooks'
+import { toastPushed } from '@/features/ui/uiSlice'
+import { mapCategoryLabel } from '@/lib/api/mappers/categories'
+import { apiErrorMessage } from '@/lib/api/unwrap'
 
 const STEPS = ['Account', 'The performer', 'Portfolio', 'Categories & ID', 'Review'] as const
 
@@ -55,29 +64,51 @@ export function ApplyTalentPage() {
   const { roleLabel } = useLocale()
   const talent = roleLabel('talent')
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const [applyTalent, applyState] = useApplyTalentMutation()
+  const { data: apiCities } = useGetCitiesQuery()
+  const { data: apiCategories } = useGetPerformanceCategoriesQuery()
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<TalentDraft>(EMPTY_DRAFT)
 
+  const categoryOptions = useMemo(() => {
+    const fromApi = (apiCategories ?? []).map((row) => mapCategoryLabel(row)).filter(Boolean)
+    return fromApi.length > 0 ? fromApi : [...CATEGORY_OPTIONS]
+  }, [apiCategories])
+
+  const cityOptions = useMemo(() => {
+    const fromApi = (apiCities ?? []).map((row) => mapCategoryLabel(row)).filter(Boolean)
+    return fromApi.length > 0 ? fromApi : ['Riyadh', 'Jeddah', 'Dammam', 'Khobar', 'AlUla']
+  }, [apiCities])
+
   const lastStep = STEPS.length - 1
-  const cityLabel =
-    draft.city === 'jeddah'
-      ? 'Jeddah'
-      : draft.city === 'dammam'
-        ? 'Dammam'
-        : draft.city === 'khobar'
-          ? 'Khobar'
-          : 'Riyadh'
+  const cityLabel = draft.city
+    ? draft.city.charAt(0).toUpperCase() + draft.city.slice(1).replace(/-/g, ' ')
+    : '—'
 
   function patch(partial: Partial<TalentDraft>) {
     setDraft((prev) => ({ ...prev, ...partial }))
   }
 
-  function handleContinue() {
+  async function handleContinue() {
     if (step < lastStep) {
       setStep((prev) => prev + 1)
       return
     }
-    navigate('/application-submitted?role=talent')
+    const body = new FormData()
+    body.append('performer[stageName]', draft.stageName)
+    body.append('performer[biography]', draft.bio)
+    body.append('performer[homeCity]', draft.city)
+    for (const category of draft.categories) {
+      body.append('categories[performanceCategories][]', category)
+    }
+    try {
+      await applyTalent(body).unwrap()
+      dispatch(toastPushed('success', 'Talent request submitted'))
+      navigate('/application-submitted?role=talent')
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not submit request')))
+    }
   }
 
   function handleClear() {
@@ -101,8 +132,14 @@ export function ApplyTalentPage() {
       activeStep={step}
       backDisabled={step === 0}
       onBack={() => setStep((prev) => Math.max(0, prev - 1))}
-      onContinue={handleContinue}
-      continueLabel={step === lastStep ? 'Submit request' : 'Continue'}
+      onContinue={() => void handleContinue()}
+      continueLabel={
+        step === lastStep
+          ? applyState.isLoading
+            ? 'Submitting…'
+            : 'Submit request'
+          : 'Continue'
+      }
       trackHref="/my-talent-application"
       trackLabel={`Track your ${talent} request`}
       onClear={handleClear}
@@ -127,10 +164,11 @@ export function ApplyTalentPage() {
               value={draft.city}
               onChange={(event) => patch({ city: event.target.value })}
             >
-              <option value="riyadh">Riyadh</option>
-              <option value="jeddah">Jeddah</option>
-              <option value="dammam">Dammam</option>
-              <option value="khobar">Khobar</option>
+              {cityOptions.map((city) => (
+                <option key={city} value={city.toLowerCase().replace(/\s+/g, '-')}>
+                  {city}
+                </option>
+              ))}
             </Select>
           </Field>
           <Field label="Short bio" htmlFor="talent-bio">
@@ -175,7 +213,7 @@ export function ApplyTalentPage() {
           <ChipMultiSelect
             label="Performance categories"
             hint="Pick the crafts you actually deliver."
-            options={CATEGORY_OPTIONS}
+            options={categoryOptions}
             value={draft.categories}
             onChange={(categories) => patch({ categories })}
           />

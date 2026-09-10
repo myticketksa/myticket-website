@@ -1,10 +1,52 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowDownIcon, ArrowUpIcon, ClockIcon } from '@/components/icons'
 import { FilterChip } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { AccountPageHead, AccountSplit } from '@/layouts'
-import { ACCOUNT_USER, WALLET_TXNS } from '@/pages/_account/fixtures'
+import { ACCOUNT_USER, WALLET_TXNS, type WalletTxnFixture } from '@/pages/_account/fixtures'
+import { useGetWalletQuery, useTopUpWalletMutation } from '@/app/api/accountApis'
+import { useAppDispatch } from '@/app/hooks'
+import { toastPushed } from '@/features/ui/uiSlice'
+import { apiErrorMessage } from '@/lib/api/unwrap'
+
+function formatMoney(value: unknown, fallback: string) {
+  if (value == null || value === '') return fallback
+  const raw = String(value)
+  if (/sar/i.test(raw)) return raw
+  const num = Number(value)
+  if (!Number.isNaN(num)) return `SAR ${num.toFixed(2)}`
+  return raw
+}
+
+function mapWalletTxn(record: Record<string, unknown>, index: number): WalletTxnFixture {
+  const fallback = WALLET_TXNS[index % WALLET_TXNS.length]
+  const amountRaw = record.amount ?? record.value
+  const toneRaw = String(record.tone ?? record.type ?? record.direction ?? '').toLowerCase()
+  const tone: WalletTxnFixture['tone'] =
+    toneRaw.includes('pending') || record.pending
+      ? 'pending'
+      : toneRaw.includes('debit') || toneRaw.includes('out') || Number(amountRaw) < 0
+        ? 'debit'
+        : 'credit'
+
+  let amount = fallback.amount
+  if (amountRaw != null) {
+    const num = Number(amountRaw)
+    amount = Number.isNaN(num)
+      ? String(amountRaw)
+      : `${num >= 0 ? '+' : '−'} SAR ${Math.abs(num).toFixed(2)}`
+  }
+
+  return {
+    label: String(record.label ?? record.title ?? record.description ?? fallback.label),
+    detail: String(record.detail ?? record.reference ?? record.order_id ?? fallback.detail),
+    date: String(record.date ?? record.created_at ?? fallback.date),
+    amount,
+    status: String(record.status ?? fallback.status),
+    tone,
+  }
+}
 
 const FILTERS = ['All', 'Money in', 'Money out', 'Pending'] as const
 
@@ -71,6 +113,51 @@ function WalletAside() {
 /** Wallet — Figma `207:11086`. */
 export function WalletPage() {
   const [filter, setFilter] = useState(0)
+  const dispatch = useAppDispatch()
+  const { data: wallet } = useGetWalletQuery()
+  const [topUp, topUpState] = useTopUpWalletMutation()
+
+  const balances = useMemo(
+    () => ({
+      available: formatMoney(
+        wallet?.balance ?? wallet?.available ?? wallet?.available_balance,
+        ACCOUNT_USER.walletBalance,
+      ),
+      pending: formatMoney(
+        wallet?.pending ?? wallet?.pending_balance,
+        ACCOUNT_USER.walletPending,
+      ),
+      earnedYear: formatMoney(
+        wallet?.earned_year ?? wallet?.earnedYear ?? wallet?.year_earned,
+        ACCOUNT_USER.walletEarnedYear,
+      ),
+    }),
+    [wallet],
+  )
+
+  const transactions = useMemo(() => {
+    const list = wallet?.transactions ?? wallet?.activity ?? wallet?.items
+    if (Array.isArray(list) && list.length > 0) {
+      return (list as Record<string, unknown>[]).map(mapWalletTxn)
+    }
+    return WALLET_TXNS
+  }, [wallet])
+
+  const filteredTxns = useMemo(() => {
+    if (filter === 0) return transactions
+    if (filter === 1) return transactions.filter((txn) => txn.tone === 'credit')
+    if (filter === 2) return transactions.filter((txn) => txn.tone === 'debit')
+    return transactions.filter((txn) => txn.tone === 'pending')
+  }, [filter, transactions])
+
+  async function handleTopUp() {
+    try {
+      await topUp({ amount: 100, paymentMethod: 'CREDIT' }).unwrap()
+      dispatch(toastPushed('success', 'Top-up submitted'))
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Top-up failed')))
+    }
+  }
 
   return (
     <>
@@ -87,12 +174,14 @@ export function WalletPage() {
                 Available to spend
               </p>
               <p className="mt-[10px] text-[52px] leading-none font-extrabold tracking-[-1.56px]">
-                {ACCOUNT_USER.walletBalance}
+                {balances.available}
               </p>
               <div className="mt-[18px] flex flex-wrap gap-[9px]">
                 <Button
                   size="md"
                   className="h-[42px] rounded-[21px] bg-bg-page px-[18px] text-ink-primary hover:bg-bg-page hover:text-ink-brand"
+                  onClick={() => void handleTopUp()}
+                  disabled={topUpState.isLoading}
                 >
                   Add funds
                 </Button>
@@ -110,7 +199,7 @@ export function WalletPage() {
                 Pending
               </p>
               <p className="mt-[10px] text-[32px] leading-none font-extrabold tracking-[-0.96px] text-ink-primary">
-                {ACCOUNT_USER.walletPending}
+                {balances.pending}
               </p>
               <p className="mt-auto pt-lg text-[13px] leading-[1.45] text-ink-secondary">
                 Cashback clears the day after Winter Nights.
@@ -121,7 +210,7 @@ export function WalletPage() {
                 Earned this year
               </p>
               <p className="mt-[10px] text-[32px] leading-none font-extrabold tracking-[-0.96px] text-ink-primary">
-                {ACCOUNT_USER.walletEarnedYear}
+                {balances.earnedYear}
               </p>
               <p className="mt-auto pt-lg text-[13px] leading-[1.45] text-ink-secondary">
                 Cashback and resale, across 6 nights out.
@@ -154,9 +243,9 @@ export function WalletPage() {
             </div>
             <div className="h-px bg-border-divider" />
             <ul>
-              {WALLET_TXNS.map((txn) => (
+              {filteredTxns.map((txn) => (
                 <li
-                  key={txn.label}
+                  key={`${txn.label}-${txn.date}`}
                   className="flex flex-wrap items-center gap-lg border-b border-border-divider px-[22px] py-[15px] last:border-0"
                 >
                   <div

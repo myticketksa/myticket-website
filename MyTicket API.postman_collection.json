@@ -1,0 +1,4341 @@
+{
+  "info": {
+    "_postman_id": "441d4a4c-86ee-487d-8374-aedafbb29c97",
+    "name": "MyTicket API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "7403826"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Mohamed Hafiz\",\n    \"email\": \"mohamedelhaj.career@gmail.com\",\n    \"phone\": \"966368951323\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Register",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "default"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"phone\": \"966555555555\",\n    \"password\": \"password123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "server",
+                  "value": "nginx/1.24.0 (Ubuntu)",
+                  "name": "server",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json",
+                  "name": "content-type",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "transfer-encoding",
+                  "value": "chunked",
+                  "name": "transfer-encoding",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "connection",
+                  "value": "keep-alive",
+                  "name": "connection",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "no-cache, private",
+                  "name": "cache-control",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "date",
+                  "value": "Tue, 18 Aug 2026 14:19:03 GMT",
+                  "name": "date",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*",
+                  "name": "access-control-allow-origin",
+                  "description": "",
+                  "type": "text"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"success\",\n  \"data\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"mohamedelhaj.career@gmail.com\",\n    \"code\": \"922383\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register/verify-email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register",
+                "verify-email"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Verify Email",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "default"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"john.doe@example.com\",\n    \"code\": \"453708\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register/verify-email",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register",
+                    "verify-email"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "server",
+                  "value": "nginx/1.24.0 (Ubuntu)",
+                  "name": "server",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json",
+                  "name": "content-type",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "transfer-encoding",
+                  "value": "chunked",
+                  "name": "transfer-encoding",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "connection",
+                  "value": "keep-alive",
+                  "name": "connection",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "no-cache, private",
+                  "name": "cache-control",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "date",
+                  "value": "Tue, 18 Aug 2026 14:19:29 GMT",
+                  "name": "date",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*",
+                  "name": "access-control-allow-origin",
+                  "description": "",
+                  "type": "text"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"success\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john.doe@example.com\",\n      \"phone\": \"966555555555\",\n      \"role\": \"guest\",\n      \"emailVerified\": true,\n      \"created_at\": \"2026-08-18T14:19:01.000000Z\"\n    },\n    \"access_token\": \"1|A40H6tQUPRRUBCp0EAZ291esP6Yp6DjZj7a8iG2tc384cbbd\",\n    \"token_type\": \"Bearer\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"identifier\": \"mohamedelhaj.career@gmail.com\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Login",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "default"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"identifier\": \"john.doe@example.com\",\n    \"password\": \"password123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "server",
+                  "value": "nginx/1.24.0 (Ubuntu)",
+                  "name": "server",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json",
+                  "name": "content-type",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "transfer-encoding",
+                  "value": "chunked",
+                  "name": "transfer-encoding",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "connection",
+                  "value": "keep-alive",
+                  "name": "connection",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "no-cache, private",
+                  "name": "cache-control",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "date",
+                  "value": "Tue, 18 Aug 2026 14:22:04 GMT",
+                  "name": "date",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*",
+                  "name": "access-control-allow-origin",
+                  "description": "",
+                  "type": "text"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"success\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john.doe@example.com\",\n      \"phone\": \"966555555555\",\n      \"role\": \"guest\",\n      \"emailVerified\": true,\n      \"created_at\": \"2026-08-18T14:19:01.000000Z\"\n    },\n    \"access_token\": \"3|BOrTAMMJLSoXUnNAnMzSOdgtgH1cjo8pMvcSPPxddd6c2fc5\",\n    \"token_type\": \"Bearer\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"mohhafiz001@gmail.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/password/forgot",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login",
+                "password",
+                "forgot"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Forgot Password",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "default"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"john.doe@example.com\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login/password/forgot",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login",
+                    "password",
+                    "forgot"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "server",
+                  "value": "nginx/1.24.0 (Ubuntu)",
+                  "name": "server",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json",
+                  "name": "content-type",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "transfer-encoding",
+                  "value": "chunked",
+                  "name": "transfer-encoding",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "connection",
+                  "value": "keep-alive",
+                  "name": "connection",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "no-cache, private",
+                  "name": "cache-control",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "date",
+                  "value": "Wed, 19 Aug 2026 06:24:41 GMT",
+                  "name": "date",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*",
+                  "name": "access-control-allow-origin",
+                  "description": "",
+                  "type": "text"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"success\",\n  \"data\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"code\": \"123456\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"new_password\",\n    \"password_confirmation\": \"new_password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/password/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login",
+                "password",
+                "reset"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Reset Password",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "default"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"token\": \"f83be0df71839507ae6eb04dbbd0772ebb3a48fa7a4f070ca7d4d9a250f58bde\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"new_password\",\n    \"password_confirmation\": \"new_password\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login/password/reset",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login",
+                    "password",
+                    "reset"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "server",
+                  "value": "nginx/1.24.0 (Ubuntu)",
+                  "name": "server",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json",
+                  "name": "content-type",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "transfer-encoding",
+                  "value": "chunked",
+                  "name": "transfer-encoding",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "connection",
+                  "value": "keep-alive",
+                  "name": "connection",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "no-cache, private",
+                  "name": "cache-control",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "date",
+                  "value": "Wed, 19 Aug 2026 06:30:39 GMT",
+                  "name": "date",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*",
+                  "name": "access-control-allow-origin",
+                  "description": "",
+                  "type": "text"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"success\",\n  \"data\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Request Login Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"identifier\": \"john.doe@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/code/request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login",
+                "code",
+                "request"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Request Login Code",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "default"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"identifier\": \"john.doe@example.com\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login/code/request",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login",
+                    "code",
+                    "request"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "server",
+                  "value": "nginx/1.24.0 (Ubuntu)",
+                  "name": "server",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json",
+                  "name": "content-type",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "transfer-encoding",
+                  "value": "chunked",
+                  "name": "transfer-encoding",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "connection",
+                  "value": "keep-alive",
+                  "name": "connection",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "no-cache, private",
+                  "name": "cache-control",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "date",
+                  "value": "Wed, 19 Aug 2026 07:03:11 GMT",
+                  "name": "date",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*",
+                  "name": "access-control-allow-origin",
+                  "description": "",
+                  "type": "text"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"success\",\n  \"data\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify Login Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"identifier\": \"john.doe@example.com\",\n    \"code\": \"512913\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/code/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login",
+                "code",
+                "verify"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Verify Login Code",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "default"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"identifier\": \"john.doe@example.com\",\n    \"code\": \"512913\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login/code/verify",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login",
+                    "code",
+                    "verify"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "server",
+                  "value": "nginx/1.24.0 (Ubuntu)",
+                  "name": "server",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json",
+                  "name": "content-type",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "transfer-encoding",
+                  "value": "chunked",
+                  "name": "transfer-encoding",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "connection",
+                  "value": "keep-alive",
+                  "name": "connection",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "no-cache, private",
+                  "name": "cache-control",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "date",
+                  "value": "Wed, 19 Aug 2026 07:06:13 GMT",
+                  "name": "date",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*",
+                  "name": "access-control-allow-origin",
+                  "description": "",
+                  "type": "text"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"success\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john.doe@example.com\",\n      \"phone\": \"966555555555\",\n      \"role\": \"guest\",\n      \"emailVerified\": true,\n      \"created_at\": \"2026-08-18T14:19:01.000000Z\"\n    },\n    \"access_token\": \"4|gjlmTsdnyuyuF6oslbSCZyAxFHxG5Y18SyRLYmgm0a3f6d62\",\n    \"token_type\": \"Bearer\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_1cw4}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Logout",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "default"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "server",
+                  "value": "nginx/1.24.0 (Ubuntu)",
+                  "name": "server",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json",
+                  "name": "content-type",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "transfer-encoding",
+                  "value": "chunked",
+                  "name": "transfer-encoding",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "connection",
+                  "value": "keep-alive",
+                  "name": "connection",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "no-cache, private",
+                  "name": "cache-control",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "date",
+                  "value": "Wed, 19 Aug 2026 07:21:02 GMT",
+                  "name": "date",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*",
+                  "name": "access-control-allow-origin",
+                  "description": "",
+                  "type": "text"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"success\",\n  \"data\": \"Logged out successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ticketing flow (Used by the default user)",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "events"
+              ]
+            },
+            "description": "For filtration pass ?filters array like ?filters\\[category\\] and $filters\\[from\\] and so on.\n\nThose are the currently available filteration options\n\n- category for filtering by category id\n    \n- date for filtering by the exact start date\n    \n- from for filtering by a minimum starting date\n    \n- to for filtering by an upper limit date\n    \n- city for filtering by the city id\n    \n- price for filtering by a minimum price\n    \n- rating for filtering by a minimum rate\n    \n- free for getting free events\n    \n- latitude and longitude for filtering by the location, should be provided together (gives you the nearest events to the location info you provided)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/events/{eventId}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "events",
+                "{eventId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    //\"ticketId\": 8, // optional\n    //\"quantity\": 2, //optional\n    //\"seatIds\": [3], // required for seated events\n    //\"holdId\": \"a554990e-10ea-48b8-8640-bb57324d4c92\", // required for seated (assigned) events\n    \"items\": [\n        {\n            \"ticketId\": 32,\n            \"quantity\": 2\n        }\n    ], //optional\n    \"beneficiaries\": [\n      {\n        \"quantity_id\": 1,\n        \"name\": \"Mohamed\"\n      },\n      {\n       \"quantity_id\": 2,\n       \"name\": \"Ahmed\"\n      }\n     ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tickets/events/9/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "events",
+                "9",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/orders/{orderId}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "orders",
+                "{orderId}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pay For Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"orderId\": 88,\r\n    \"brand\": \"CREDIT\" // or \"WALLET\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tickets/orders/pay",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "orders",
+                "pay"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/orders/{orderId}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "orders",
+                "{orderId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Apply Promo Code",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": 1,\n  \"promoCode\": \"awXfgT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tickets/orders/promo/apply",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "orders",
+                "promo",
+                "apply"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "87|05XGg7OXT2IpCDfsm6pOWZ93PAfrRthsVdLgZURAe5f12ab3",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Business Role Applications",
+      "item": [
+        {
+          "name": "Organizer",
+          "item": [
+            {
+              "name": "Organizer Apply",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "publicPresence[publicName]",
+                      "type": "text",
+                      "value": "Night Owl Productions"
+                    },
+                    {
+                      "key": "publicPresence[logo]",
+                      "type": "file",
+                      "src": "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                    },
+                    {
+                      "key": "publicPresence[biography]",
+                      "type": "text",
+                      "value": "\nLorem ipsum dolor sit amet, consectetur adipiis, tesque fermentum fermentum scelerisque. In tincidunt sit amet nisi in sollicitudin. Mauris nisl nibh, ullamcorper non interdum ut, tincidunt a lectus. Nam tempus facilisis arcu vel euismod. Donec vestibulum libero quam. Sed vestibulum quam diam, id tincidunt enim malesuada vitae."
+                    },
+                    {
+                      "key": "publicPresence[website]",
+                      "type": "text",
+                      "description": "optional",
+                      "value": "https://myticket.sa"
+                    },
+                    {
+                      "key": "publicPresence[instagram]",
+                      "type": "text",
+                      "description": "optional",
+                      "value": "@myticketsa"
+                    },
+                    {
+                      "key": "entity[type]",
+                      "type": "text",
+                      "description": "company or individual",
+                      "value": "company"
+                    },
+                    {
+                      "key": "entity[companyName]",
+                      "type": "text",
+                      "description": "required if entity is company",
+                      "value": "My Ticket"
+                    },
+                    {
+                      "key": "entity[registrationNumber]",
+                      "type": "text",
+                      "description": "required if entity is company",
+                      "value": "1234567"
+                    },
+                    {
+                      "key": "entity[fullName]",
+                      "type": "text",
+                      "description": "required if entity is individual",
+                      "value": ""
+                    },
+                    {
+                      "key": "entity[idNumber]",
+                      "type": "text",
+                      "description": "required if entity is individual",
+                      "value": ""
+                    },
+                    {
+                      "key": "entity[regions][]",
+                      "type": "text",
+                      "description": "city id",
+                      "value": "1"
+                    },
+                    {
+                      "key": "entity[regions][]",
+                      "type": "text",
+                      "description": "city id",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "entity[contactEmail]",
+                      "type": "text",
+                      "value": "business@myticket.sa"
+                    },
+                    {
+                      "key": "entity[contactPhone]",
+                      "type": "text",
+                      "value": "+96651269782"
+                    },
+                    {
+                      "key": "verification[idDocument]",
+                      "type": "file",
+                      "description": "pdf or image",
+                      "src": "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                    },
+                    {
+                      "key": "verification[eventLicense]",
+                      "type": "file",
+                      "description": "optional, pdf or image",
+                      "src": "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                    },
+                    {
+                      "key": "verification[payoutBankCountry]",
+                      "type": "text",
+                      "value": "Saudi Arabia"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/applications/organizer",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "applications",
+                    "organizer"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Talent",
+          "item": [
+            {
+              "name": "Talent Apply",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "performer[stageName]",
+                      "value": "Sara Al-Harbi",
+                      "type": "text"
+                    },
+                    {
+                      "key": "performer[profilePhoto]",
+                      "type": "file",
+                      "src": [
+                        "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                      ]
+                    },
+                    {
+                      "key": "performer[biography]",
+                      "value": "Riyadh-based vocalist — Arabic pop and neo-soul. House bands, private nights and festival side stages.",
+                      "type": "text"
+                    },
+                    {
+                      "key": "performer[homeCity]",
+                      "value": "1",
+                      "type": "text",
+                      "description": "city id"
+                    },
+                    {
+                      "key": "portfolio[media][]",
+                      "type": "file",
+                      "description": "image or video",
+                      "src": [
+                        "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                      ]
+                    },
+                    {
+                      "key": "portfolio[media][]",
+                      "type": "file",
+                      "description": "image or video",
+                      "src": [
+                        "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                      ]
+                    },
+                    {
+                      "key": "categories[performanceCategories][]",
+                      "value": "1",
+                      "type": "text",
+                      "description": "performance category id"
+                    },
+                    {
+                      "key": "categories[performanceCategories][]",
+                      "value": "2",
+                      "type": "text",
+                      "description": "performance category id"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/applications/talent",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "applications",
+                    "talent"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Vendor",
+          "item": [
+            {
+              "name": "VendorApply",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "business[tradeName]",
+                      "type": "text",
+                      "value": "Desert Stage Co."
+                    },
+                    {
+                      "key": "business[CRnumber]",
+                      "type": "text",
+                      "value": "202405043"
+                    },
+                    {
+                      "key": "business[primaryCity]",
+                      "type": "text",
+                      "description": "city_id",
+                      "value": "3"
+                    },
+                    {
+                      "key": "business[address]",
+                      "type": "text",
+                      "value": "addres"
+                    },
+                    {
+                      "key": "business[logo]",
+                      "type": "file",
+                      "contentType": "image/png",
+                      "src": "D:\\Job\\Golara\\myticket\\myticket-logo-iRUEB1it.png"
+                    },
+                    {
+                      "key": "business[personalPhoto]",
+                      "type": "file",
+                      "description": "optional",
+                      "contentType": "image/png",
+                      "src": "D:\\Job\\Golara\\myticket\\myticket-logo-iRUEB1it.png"
+                    },
+                    {
+                      "key": "service[name]",
+                      "type": "text",
+                      "value": "Cutting-edge sounds and lights"
+                    },
+                    {
+                      "key": "service[description]",
+                      "type": "text",
+                      "value": "We rig sound and light for outdoor festivals across Riyadh and the Eastern Province."
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/applications/vendor",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "applications",
+                    "vendor"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Get My Application",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "applications"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "99|X8PAlpfz3Lw0qkoc81G8NMNshUMIDqrxAP56T0vp9082369e",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Cashier",
+      "item": [
+        {
+          "name": "Scan Event QR Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"code\": \"eyJpdiI6IjQvdFlRMDJNdy9mTjhoZjlRNWsyOUE9PSIsInZhbHVlIjoieEFHS0FyR0JKMStaQXkrdXBvV3FrK0cvMEZrY0ZhZG81NTZ2UVg2Qm15a1F6K0l2a2MrL2IzZGQ1bDlLcFR1aE8vQ3NHcFJtNEwrL2grRmsvZ0dVNjlRZEJ6NGtXS0NKOFZPQk9XeTY2R3hMWlEvTmEzUUwzQjFLT3dHY3EyZkIiLCJtYWMiOiIzNzI1MmVjMjJkZTA2NDc2MjMzNzcwNzFjMzRmYTc5N2I2YmI4NTEwNTVhMTNjNmRlYjdkYmIyNmNlYTY3M2UyIiwidGFnIjoiIn0=\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cashier/events/scan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cashier",
+                "events",
+                "scan"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "57|vjsGkRbcJmtGFPD2qEOzA2F8heBGPJpocE0GLG3qd162974e",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Favorites",
+      "item": [
+        {
+          "name": "Add Favorite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favorites/{eventId}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favorites",
+                "{eventId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Favorites",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favorites",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favorites"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Favorite",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favorites/{eventId}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favorites",
+                "{eventId}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{auth_secret_0kqb}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Talents (Used by the default user)",
+      "item": [
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "Assign Talent To Event",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/talents/{talentId}/events/{eventId}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "talents",
+                    "{talentId}",
+                    "events",
+                    "{eventId}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "66|SM1sBD8CCRHyJzxxu5ff26RmXhtasfBnNOc9XIrj40c07e87",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/talents/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talents",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Talents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/talents?filters[in]=1?filters[in]=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talents"
+              ],
+              "query": [
+                {
+                  "key": "filters[in]",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "For filtration pass ?filters array like ?filters\\[when\\] and $filters\\[in\\] and so on\n\nThose are the currently available filteration options\n\n- when can be week to get talents participating this week, month to get talents participating this month, and next to get talent participating after this month\n- in should be a city id to get talents participating at a given city\n- rating to filter by a minimum rating\n- myicket = true to filter by myticket discoveries\n- category is the category id"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Talent Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/talents/11",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talents",
+                "11"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Talent Previous Works",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/talents/11/previous-works",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talents",
+                "11",
+                "previous-works"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Talents Previous Works",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/talents/previous-works",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talents",
+                "previous-works"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Follow Talent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/talents/11/follow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talents",
+                "11",
+                "follow"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Unfollow Talent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/talents/9/unfollow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talents",
+                "9",
+                "unfollow"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Request Talent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"more_than_month\": false,\r\n    \"phone_number\": \"9555555555\",\r\n    \"requested_date\": \"10/09/2026\",\r\n    \"longitude\": \"1.02656\",\r\n    \"latitude\": \"1.6989\",\r\n    \"request_reason\": \"this is a reason\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/talents/request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "talents",
+                "request"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "67|03FEEtA9N2F86szycY1zqJODOnaVreAK4wJwcMYbb54065cb",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Wallet (Used by the default user)",
+      "item": [
+        {
+          "name": "Top up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"amount\": 10,\r\n    \"paymentMethod\": \"CREDIT\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallet/topup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wallet",
+                "topup"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Wallet Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wallet",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wallet"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{auth_secret_0z5l}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Seat Map",
+      "item": [
+        {
+          "name": "Get Event Seats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/seats/event/{eventId}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seats",
+                "event",
+                "{eventId}"
+              ]
+            },
+            "description": "Seat status can be available, held, reserved (order created), and sold (order paid)"
+          },
+          "response": []
+        },
+        {
+          "name": "Hold Seat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"seatIds\": [3],\r\n    \"ticketId\": 3\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/seats/event/{eventId}/hold",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seats",
+                "event",
+                "{eventId}",
+                "hold"
+              ]
+            },
+            "description": "holds will be automatically released after 10 minutes if not become reserved"
+          },
+          "response": []
+        },
+        {
+          "name": "Release Hold",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"holdId\": \"dd506339-967a-4649-8c07-6f628a323741\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/seats/event/{eventId}/release",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seats",
+                "event",
+                "{eventId}",
+                "release"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{auth_secret_1bkj}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Vendors (Used by the default user)",
+      "item": [
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendors/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendors",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Vendors",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendors"
+              ]
+            },
+            "description": "For filtration pass ?filters array like ?filters\\[category\\] and $filters\\[in\\] and so on\n\nThose are the currently available filteration options\n\n- category is the id of a service category\n    \n- in is a city id\n    \n- rating to filter by a minimum rating"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vendor Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendors/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendors",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Favorite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendors/2/favorite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendors",
+                "2",
+                "favorite"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Favorite",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendors/2/favorite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendors",
+                "2",
+                "favorite"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{auth_secret_0xjh}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Organizers (Used by the default user)",
+      "item": [
+        {
+          "name": "List Organizers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/organizers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "organizers"
+              ]
+            },
+            "description": "For filtration pass ?filters array like ?filters\\[in\\] and so on\n\nThose are the currently available filteration options\n\n- in is a city id"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Organizer Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/organizers/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "organizers",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Follow Organizer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/organizers/1/follow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "organizers",
+                "1",
+                "follow"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Unfollow Organizer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/organizers/1/unfollow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "organizers",
+                "1",
+                "unfollow"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{auth_secret_0xjh}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Generals",
+      "item": [
+        {
+          "name": "Get Cities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/generals/cities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "generals",
+                "cities"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Offered Services",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/generals/offered-services",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "generals",
+                "offered-services"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Performance Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/generals/performance-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "generals",
+                "performance-categories"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{auth_secret_0upj}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark As Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "applications/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/2/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "2",
+                "read"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All As Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read/all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "read",
+                "all"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "100|XF89FrDP8wB5vJNrlNTGr4OefPYmvlJfWE25rpVb7ed7006d",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Gift Tickets",
+      "item": [
+        {
+          "name": "Send A Gift (Sender)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"orderId\": 84,\r\n    \"ticketIds\": [9,10],\r\n    \"recipientIdentifier\": \"fuzta.saas@gmail.com\",\r\n    \"note\": \"this is a note\" //optional\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/gift-tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gift-tickets"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Gifted Tickets (Recipient)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0pmu}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/gift-tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gift-tickets"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Gifted Tickets (Sender)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/gift-tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gift-tickets"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Git Gifted Ticket Details (Recipient)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0pmu}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/gift-tickets/{giftTicketId}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gift-tickets",
+                "{giftTicketId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Claim Gifted Ticket (Recipient)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0pmu}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"claim_token\": \"df3bbd54-5691-46c3-a098-44b78c6a16dd\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/gift-tickets/{giftTicketId}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gift-tickets",
+                "{giftTicketId}"
+              ]
+            },
+            "description": "After successfully claiming a gifted ticket you will find the order alongside the qr payload with the gift details as well as with your orders."
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "89|MMQqjxup2cyzcdZVb9Z9TAWYoYVoVknCD34ne5vHfc4ae1c0",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Experiences",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experiences/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experiences",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Experiences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experiences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experiences"
+              ]
+            },
+            "description": "For filtration pass ?filters array like ?filters\\[where\\] and $filters\\[date\\] and so on\n\nThose are the currently available filteration options\n\n- where to filter by the city id that hosts the experience\n    \n- category to filter by the category id of the experience\n    \n- type which can either be attraction or activity\n    \n- latitude and longitude for filtering by the location, should be provided together (gives you the nearest experiences to the location info you provided)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Experience Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experiences/{experienceId}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experiences",
+                "{experienceId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Experience Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experiences/{experienceId}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experiences",
+                "{experienceId}",
+                "reviews"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Experience",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "category",
+                  "type": "text",
+                  "description": "category id",
+                  "value": "3"
+                },
+                {
+                  "key": "type",
+                  "type": "text",
+                  "description": "activity or attraction",
+                  "value": "activity"
+                },
+                {
+                  "key": "place[name_en]",
+                  "type": "text",
+                  "value": "Desert dinner under the starts"
+                },
+                {
+                  "key": "place[name_ar]",
+                  "type": "text",
+                  "description": "optional",
+                  "value": "الاسم بالعربي"
+                },
+                {
+                  "key": "place[latitude]",
+                  "type": "text",
+                  "value": "46.6753"
+                },
+                {
+                  "key": "place[longitude]",
+                  "type": "text",
+                  "value": "24.7136"
+                },
+                {
+                  "key": "place[region]",
+                  "type": "text",
+                  "value": "Riyadh"
+                },
+                {
+                  "key": "place[city]",
+                  "type": "text",
+                  "description": "city id",
+                  "value": "1"
+                },
+                {
+                  "key": "place[about_en]",
+                  "type": "text",
+                  "description": "optional",
+                  "value": "Lorem ipsum ....."
+                },
+                {
+                  "key": "place[about_ar]",
+                  "type": "text",
+                  "description": "optional",
+                  "value": "الوصف بالعربي"
+                },
+                {
+                  "key": "hours[0][dayOfWeek]",
+                  "type": "text",
+                  "description": "0 (sat) -> 6 (fri)",
+                  "value": "0"
+                },
+                {
+                  "key": "hours[0][open]",
+                  "type": "text",
+                  "value": "08:00"
+                },
+                {
+                  "key": "hours[0][close]",
+                  "type": "text",
+                  "value": "17:00"
+                },
+                {
+                  "key": "hours[0][isClosed]",
+                  "type": "text",
+                  "description": "boolean, required",
+                  "value": "0"
+                },
+                {
+                  "key": "services[]",
+                  "type": "text",
+                  "value": "First service"
+                },
+                {
+                  "key": "services[]",
+                  "type": "text",
+                  "value": "Second service"
+                },
+                {
+                  "key": "contacts[email]",
+                  "type": "text",
+                  "value": "example@myticket.sa"
+                },
+                {
+                  "key": "contacts[phone]",
+                  "type": "text",
+                  "value": "9665555555"
+                },
+                {
+                  "key": "contacts[website]",
+                  "type": "text",
+                  "description": "optional",
+                  "value": "https://myticket.sa"
+                },
+                {
+                  "key": "contacts[instagram]",
+                  "type": "text",
+                  "description": "optional",
+                  "value": "@myticket"
+                },
+                {
+                  "key": "photos[cover]",
+                  "type": "file",
+                  "src": "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                },
+                {
+                  "key": "photos[banner]",
+                  "type": "file",
+                  "src": "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                },
+                {
+                  "key": "photos[gallery][]",
+                  "type": "file",
+                  "src": "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                },
+                {
+                  "key": "photos[gallery][]",
+                  "type": "file",
+                  "src": "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                },
+                {
+                  "key": "maxGuests",
+                  "type": "text",
+                  "value": "8"
+                },
+                {
+                  "key": "price",
+                  "type": "text",
+                  "value": "180"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/experiences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experiences"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Submissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experiences/my-submissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experiences",
+                "my-submissions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Favorite Experience",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experiences/1/favorite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experiences",
+                "1",
+                "favorite"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Favorite Experience",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experiences/1/favorite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experiences",
+                "1",
+                "favorite"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "101|X5SEynpyUdEQtAtoMrIz1o2jLa8yN9ubn3bFknok3ec9ca69",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Account Deletion",
+      "item": [
+        {
+          "name": "Delete My Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"password\": \"my-password\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/account-deletion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "account-deletion"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Submit Review",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "default"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"type\": \"event\", // event, experience, vendor, talent\r\n    \"id\": 11,\r\n    \"rating\": 5, // int from 1 to 5\r\n    \"name\": \"hafiz\",\r\n    \"review\": \"good event\", // optional\r\n    \"comment\": \"a comment\" // optional\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews"
+              ]
+            },
+            "description": "Can also filter by type sending ?type= query param, can be event, experience, vendor, or talent"
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{auth_secret_1dmx}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Get Chats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chats"
+              ]
+            },
+            "description": "You can also filter the results by the channel using ?channel=support for example"
+          },
+          "response": []
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"chatId\": 17, //this is optional\r\n    \"channel\": \"support\", //currently only 'support' is supported\r\n    \"message\": \"hi there, what is your problem\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chats/send",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chats",
+                "send"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chats/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chats",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark As Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chats/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chats",
+                "read"
+              ]
+            },
+            "description": "To read a single message where you are the recipient send the param ?messageId={messageId} and to read a whole chat messages where you are the message recipient send the param ?chatId={chatId}"
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "88|73ORC3GQ6oderQGHzFCyYz49XoDdyRJtB7KwgAAR3f5b49b7",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Advertisements",
+      "item": [
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "Add Advertisement",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "title",
+                      "type": "text",
+                      "value": "First Advertisement"
+                    },
+                    {
+                      "key": "description",
+                      "type": "text",
+                      "value": "First Advertisement Description"
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "description": "optional",
+                      "src": "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                    },
+                    {
+                      "key": "video",
+                      "type": "file",
+                      "description": "optional",
+                      "value": null
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/advertisements",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "advertisements"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Advertisement",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/advertisements/4",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "advertisements",
+                    "4"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Advertisement",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "title",
+                      "type": "text",
+                      "value": "First Advertisement Updated"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/advertisements/4",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "advertisements",
+                    "4"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Toggle Advertisement Status",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/advertisements/4/toggle-status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "advertisements",
+                    "4",
+                    "toggle-status"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Advertisement",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "default"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/advertisements/4",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "advertisements",
+                    "4"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{auth_secret_0q8h}}",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Advertisements",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/advertisements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "advertisements"
+              ]
+            },
+            "description": "send ?type=image or ?type=video to filter by media type"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Organizer",
+      "item": [
+        {
+          "name": "Events",
+          "item": [
+            {
+              "name": "Get Categories",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/organizer/category",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "organizer",
+                    "category"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Venues",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/organizer/venue",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "organizer",
+                    "venue"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Event",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "category_id",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "venue_id",
+                      "value": "7",
+                      "type": "text"
+                    },
+                    {
+                      "key": "seeting_type",
+                      "value": "free",
+                      "type": "text",
+                      "description": "free or assigned"
+                    },
+                    {
+                      "key": "is_free",
+                      "value": "0",
+                      "type": "text",
+                      "description": "boolean"
+                    },
+                    {
+                      "key": "is_featured",
+                      "value": "0",
+                      "type": "text",
+                      "description": "boolean"
+                    },
+                    {
+                      "key": "starts_at",
+                      "value": "09/19/2026",
+                      "type": "text"
+                    },
+                    {
+                      "key": "ends_at",
+                      "value": "",
+                      "type": "text",
+                      "description": "optional"
+                    },
+                    {
+                      "key": "cover_image",
+                      "type": "file",
+                      "src": [
+                        "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                      ]
+                    },
+                    {
+                      "key": "banner_image",
+                      "type": "file",
+                      "src": [
+                        "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                      ]
+                    },
+                    {
+                      "key": "discount_type",
+                      "value": "",
+                      "type": "text",
+                      "description": "optional, fixed or percentage"
+                    },
+                    {
+                      "key": "discount_value",
+                      "value": "",
+                      "type": "text",
+                      "description": "optional"
+                    },
+                    {
+                      "key": "discount_starts_at",
+                      "value": "",
+                      "type": "text",
+                      "description": "optional"
+                    },
+                    {
+                      "key": "discount_ends_at",
+                      "value": "",
+                      "type": "text",
+                      "description": "optional"
+                    },
+                    {
+                      "key": "translations[0][locale]",
+                      "value": "en",
+                      "type": "text"
+                    },
+                    {
+                      "key": "translations[0][title]",
+                      "value": "Event 1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "translations[0][short_description]",
+                      "value": "Event 1 Short Desc",
+                      "type": "text"
+                    },
+                    {
+                      "key": "translations[0][description]",
+                      "value": "Event 1 Desc",
+                      "type": "text"
+                    },
+                    {
+                      "key": "ticketTypes[0][name]",
+                      "value": "VIP",
+                      "type": "text",
+                      "description": "required if seeting type is free"
+                    },
+                    {
+                      "key": "ticketTypes[0][price]",
+                      "value": "100",
+                      "type": "text"
+                    },
+                    {
+                      "key": "ticketTypes[0][quantity_total]",
+                      "value": "100",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/organizer/event",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "organizer",
+                    "event"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Events",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/organizer/event",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "organizer",
+                    "event"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Event",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/organizer/event/31",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "organizer",
+                    "event",
+                    "31"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Event",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "category_id",
+                      "value": "1",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "venue_id",
+                      "value": "7",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "seeting_type",
+                      "value": "free",
+                      "type": "text",
+                      "description": "free or assigned",
+                      "disabled": true
+                    },
+                    {
+                      "key": "is_free",
+                      "value": "0",
+                      "type": "text",
+                      "description": "boolean",
+                      "disabled": true
+                    },
+                    {
+                      "key": "is_featured",
+                      "value": "0",
+                      "type": "text",
+                      "description": "boolean",
+                      "disabled": true
+                    },
+                    {
+                      "key": "starts_at",
+                      "value": "09/19/2026",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "ends_at",
+                      "value": "",
+                      "type": "text",
+                      "description": "optional",
+                      "disabled": true
+                    },
+                    {
+                      "key": "cover_image",
+                      "type": "file",
+                      "src": [
+                        "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                      ],
+                      "disabled": true
+                    },
+                    {
+                      "key": "banner_image",
+                      "type": "file",
+                      "src": [
+                        "/D:/Job/Golara/myticket/myticket-logo-iRUEB1it.png"
+                      ],
+                      "disabled": true
+                    },
+                    {
+                      "key": "discount_type",
+                      "value": "",
+                      "type": "text",
+                      "description": "optional, fixed or percentage",
+                      "disabled": true
+                    },
+                    {
+                      "key": "discount_value",
+                      "value": "",
+                      "type": "text",
+                      "description": "optional",
+                      "disabled": true
+                    },
+                    {
+                      "key": "discount_starts_at",
+                      "value": "",
+                      "type": "text",
+                      "description": "optional",
+                      "disabled": true
+                    },
+                    {
+                      "key": "discount_ends_at",
+                      "value": "",
+                      "type": "text",
+                      "description": "optional",
+                      "disabled": true
+                    },
+                    {
+                      "key": "translations[0][locale]",
+                      "value": "en",
+                      "type": "text"
+                    },
+                    {
+                      "key": "translations[0][title]",
+                      "value": "Event 1 Updated",
+                      "type": "text"
+                    },
+                    {
+                      "key": "translations[0][short_description]",
+                      "value": "Event 1 Short Desc",
+                      "type": "text"
+                    },
+                    {
+                      "key": "translations[0][description]",
+                      "value": "Event 1 Desc",
+                      "type": "text"
+                    },
+                    {
+                      "key": "ticketTypes[0][name]",
+                      "value": "VIP",
+                      "type": "text",
+                      "description": "required if seeting type is free",
+                      "disabled": true
+                    },
+                    {
+                      "key": "ticketTypes[0][price]",
+                      "value": "100",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "ticketTypes[0][quantity_total]",
+                      "value": "100",
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/organizer/event/31",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "organizer",
+                    "event",
+                    "31"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Event",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/organizer/event/31",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "organizer",
+                    "event",
+                    "31"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "97|Tds5bCKIH2Fsy7O4z62GOpT74JnSXJ90pZ0Tfje81795c485",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Applications",
+          "item": [
+            {
+              "name": "Get Applications",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/applications",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "applications"
+                  ]
+                },
+                "description": "filter by status using ?status= with values pending, appoved, and rejected"
+              },
+              "response": []
+            },
+            {
+              "name": "Approve Application",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"applicationId\": 1\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/applications/approve",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "applications",
+                    "approve"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Reject Application",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"applicationId\": 2,\r\n    \"reason\": \"optional reason field\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/applications/reject",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "applications",
+                    "reject"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "98|ClW1okGExUVAVZ5GQg5xsfmlN2JoARkM2ejYbDtX81866d9c",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "auth_token",
+      "value": ""
+    },
+    {
+      "key": "baseUrl",
+      "value": ""
+    },
+    {
+      "key": "baseurl",
+      "value": ""
+    },
+    {
+      "key": "auth_secret_0pmu",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_1cw4",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_0q8h",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_1dqw",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_1dmx",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_17ww",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_0hh4",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_0upj",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_0xjh",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_1bkj",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_0z5l",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_0tcg",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_0kqb",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_0lc5",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_023v",
+      "secret": true
+    }
+  ]
+}

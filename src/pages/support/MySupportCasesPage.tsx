@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { StatusBadge, type StatusTone } from '@/components/data-display'
 import { PlusIcon } from '@/components/icons'
 import { Button, TextInput } from '@/components/ui'
 import { AccountPageHead, PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
+import { useGetChatsQuery } from '@/app/api/accountApis'
 
 type CaseKind = 'Case' | 'Complaint'
 
@@ -41,11 +42,6 @@ const CASES: SupportCase[] = [
         body: "Thanks Sara — I can see the approval. The payout batch failed a check on our side, so I've re-issued it manually. It should appear within 24 hours. Could you confirm once you see it?",
         meta: 'Noura · MyTicket Support · 1 Aug, 15:47',
       },
-      {
-        from: 'agent',
-        body: 'Just checking in — is the SAR 140 showing in your wallet now?',
-        meta: 'Noura · MyTicket Support · Today, 11:02',
-      },
     ],
   },
   {
@@ -62,56 +58,45 @@ const CASES: SupportCase[] = [
         body: "My QR for Winter Nights won't open when I'm offline — it just spins.",
         meta: 'You · 28 Jul, 19:10',
       },
-      {
-        from: 'agent',
-        body: "We've reproduced this on Android 14. A fix is shipping in the next app build — I'll ping you when it's live.",
-        meta: 'Lina · MyTicket Support · 29 Jul, 10:22',
-      },
-    ],
-  },
-  {
-    id: 'CM-1042',
-    kind: 'Complaint',
-    status: 'Being assessed',
-    statusTone: 'brandTint',
-    subject: 'Overcrowding at Gate 2, Desert Glow',
-    meta: 'Venue safety · can no longer be withdrawn',
-    detailMeta: 'Complaint CM-1042 · Venue safety · opened 20 Jul',
-    messages: [
-      {
-        from: 'you',
-        body: 'Gate 2 was dangerously crowded for Desert Glow — no stewards for twenty minutes.',
-        meta: 'You · 20 Jul, 23:40',
-      },
-    ],
-  },
-  {
-    id: 'CS-80412',
-    kind: 'Case',
-    status: 'Closed',
-    statusTone: 'inactive',
-    subject: 'Name spelt wrong on ticket',
-    meta: 'Resolved 12 Jun · can be reopened',
-    detailMeta: 'Case CS-80412 · Tickets · resolved 12 Jun',
-    messages: [
-      {
-        from: 'you',
-        body: 'My ticket shows “Sara Al Harby” instead of Al-Harbi.',
-        meta: 'You · 10 Jun, 09:15',
-      },
-      {
-        from: 'agent',
-        body: 'Fixed — re-issued QR with the correct spelling. Sorry for the slip.',
-        meta: 'Khalid · MyTicket Support · 12 Jun, 11:03',
-      },
     ],
   },
 ]
 
-/** My support cases — Figma `207:10155`. */
+function mapChatToCase(chat: Record<string, unknown>, index: number): SupportCase {
+  const id = String(chat.id ?? chat.chatId ?? `CHAT-${index + 1}`)
+  const subject = String(
+    chat.subject ?? chat.title ?? chat.last_message ?? `Support chat ${id}`,
+  )
+  return {
+    id,
+    kind: 'Case',
+    status: String(chat.status ?? 'Open'),
+    statusTone: 'brandTint',
+    subject,
+    meta: String(chat.updated_at ?? chat.meta ?? 'Support · chat'),
+    detailMeta: `Chat ${id}`,
+    messages: [
+      {
+        from: 'agent',
+        body: String(
+          chat.last_message ?? chat.preview ?? 'Open chat to continue this conversation.',
+        ),
+        meta: 'MyTicket Support',
+      },
+    ],
+  }
+}
+
+/** My support cases — Figma `207:10155`. Chats API when present (no cases CRUD). */
 export function MySupportCasesPage() {
-  const [activeId, setActiveId] = useState(CASES[0].id)
-  const active = CASES.find((c) => c.id === activeId) ?? CASES[0]
+  const { data: chats } = useGetChatsQuery()
+  const cases = useMemo(() => {
+    if (chats && chats.length > 0) return chats.map(mapChatToCase)
+    return CASES
+  }, [chats])
+
+  const [activeId, setActiveId] = useState(cases[0]?.id ?? CASES[0]!.id)
+  const active = cases.find((c) => c.id === activeId) ?? cases[0]!
 
   return (
     <>
@@ -138,7 +123,7 @@ export function MySupportCasesPage() {
       <PageSection padTop={0} padBottom={96}>
         <div className="flex flex-col gap-[24px] lg:flex-row lg:items-start">
           <ul className="flex w-full flex-col gap-[10px] lg:w-[420px]">
-            {CASES.map((item) => {
+            {cases.map((item) => {
               const selected = item.id === active.id
               return (
                 <li key={item.id}>
@@ -177,53 +162,38 @@ export function MySupportCasesPage() {
             <div className="flex flex-wrap items-center gap-[14px] border-b border-border-divider px-[26px] py-[20px]">
               <div className="min-w-0 flex-1">
                 <p className="text-[18px] font-bold text-ink-primary">{active.subject}</p>
-                <p className="mt-[2px] text-[13px] text-ink-muted">
-                  {active.detailMeta}
-                  {active.orderId && (
-                    <>
-                      {' '}
-                      <Link to="/my-tickets" className="font-semibold text-ink-brand">
-                        {active.orderId}
-                      </Link>
-                    </>
-                  )}
-                </p>
+                <p className="mt-[3px] text-[13px] text-ink-secondary">{active.detailMeta}</p>
               </div>
-              <StatusBadge tone={active.statusTone}>{active.status}</StatusBadge>
-              <Button variant="secondary" size="sm">
-                Close case
-              </Button>
+              <Link to="/support/chat">
+                <Button size="sm">Open chat</Button>
+              </Link>
             </div>
-
-            <div className="flex flex-1 flex-col gap-[16px] overflow-y-auto bg-bg-page px-[26px] py-[24px]">
-              {active.messages.map((msg) => (
+            <div className="flex flex-1 flex-col gap-[14px] overflow-y-auto px-[26px] py-[22px]">
+              {active.messages.map((message, index) => (
                 <div
-                  key={msg.meta + msg.body}
-                  className={`flex flex-col ${msg.from === 'you' ? 'items-end' : 'items-start'}`}
+                  key={`${active.id}-${index}`}
+                  className={cn(
+                    'max-w-[85%] rounded-[16px] px-[16px] py-[12px]',
+                    message.from === 'you'
+                      ? 'ml-auto bg-brand-gradient text-ink-inverse'
+                      : 'bg-bg-page text-ink-primary',
+                  )}
                 >
-                  <div
-                    className={
-                      msg.from === 'you'
-                        ? 'max-w-[90%] rounded-tl-[16px] rounded-tr-[16px] rounded-br-[4px] rounded-bl-[16px] bg-brand-gradient px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-inverse'
-                        : 'max-w-[90%] rounded-tl-[16px] rounded-tr-[16px] rounded-br-[16px] rounded-bl-[4px] border border-border-default bg-surface-default px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-primary'
-                    }
+                  <p className="text-[14px] leading-[1.5]">{message.body}</p>
+                  <p
+                    className={cn(
+                      'mt-[6px] text-[11.5px]',
+                      message.from === 'you' ? 'text-ink-inverse/80' : 'text-ink-muted',
+                    )}
                   >
-                    {msg.body}
-                  </div>
-                  <p className="mt-[5px] text-[11.5px] text-ink-muted">{msg.meta}</p>
+                    {message.meta}
+                  </p>
                 </div>
               ))}
             </div>
-
-            <form
-              className="flex gap-sm border-t border-border-divider p-lg"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <TextInput className="flex-1" placeholder="Write a reply…" />
-              <Button size="md" type="submit">
-                Send
-              </Button>
-            </form>
+            <div className="border-t border-border-divider px-[18px] py-[14px]">
+              <TextInput placeholder="Reply in chat…" className="h-[46px]" disabled />
+            </div>
           </div>
         </div>
       </PageSection>

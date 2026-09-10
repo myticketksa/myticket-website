@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   CheckIcon,
   CloseIcon,
@@ -10,7 +10,9 @@ import {
 } from '@/components/icons'
 import { Divider, FilterChip, PriceDisplay } from '@/components/data-display'
 import { Button } from '@/components/ui'
-import { cn } from '@/lib/cn'
+import { useGetEventsQuery } from '@/app/api/eventsApi'
+import { useGetEventSeatsQuery } from '@/app/api/seatsApi'
+import { resolveEventId } from '@/lib/api/mappers/events'
 
 type SeatStatus =
   | 'available'
@@ -290,15 +292,39 @@ function SeatBlock({
  */
 export function SeatSelectionPage() {
   const navigate = useNavigate()
+  const { slug } = useParams()
   const [zone, setZone] = useState<Zone>('all')
   const [zoom, setZoom] = useState(100)
   const [selected, setSelected] = useState<SelectedSeat[]>(INITIAL_SELECTED)
   const selectedIds = useMemo(() => new Set(selected.map((seat) => seat.id)), [selected])
 
+  const { data: apiEvents } = useGetEventsQuery()
+  const resolvedEventId = useMemo(
+    () => resolveEventId(apiEvents, slug ?? '') ?? (/^\d+$/.test(slug ?? '') ? slug : undefined),
+    [apiEvents, slug],
+  )
+  /** Prefetch seat inventory when API is up; map UI stays fixture until response shape is probed. */
+  useGetEventSeatsQuery(resolvedEventId!, { skip: !resolvedEventId })
+
   const subtotal = selected.reduce((sum, seat) => sum + seat.price, 0)
   const serviceFee = Math.round(subtotal * 0.05)
   const vat = Math.round((subtotal + serviceFee) * 0.15)
   const total = subtotal + serviceFee + vat
+
+  /** Hold stays mock until seats hold endpoint is confirmed in a future collection. */
+  function continueToCheckout() {
+    if (resolvedEventId) sessionStorage.setItem('myticket.eventId', resolvedEventId)
+    else if (slug) sessionStorage.setItem('myticket.eventId', slug)
+    sessionStorage.setItem(
+      'myticket.mockHold',
+      JSON.stringify({
+        seatIds: selected.map((seat) => seat.id),
+        total,
+        heldAt: Date.now(),
+      }),
+    )
+    navigate('/checkout')
+  }
 
   function toggleSeat(id: string, row: string, number: number, status: SeatStatus) {
     if (status === 'sold' || status === 'held') return
@@ -552,7 +578,7 @@ export function SeatSelectionPage() {
             size="lg"
             className="mt-lg h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
             disabled={selected.length === 0}
-            onClick={() => navigate('/checkout')}
+            onClick={continueToCheckout}
           >
             Continue to payment · SAR {total.toLocaleString('en-US')}
           </Button>

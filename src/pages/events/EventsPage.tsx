@@ -16,6 +16,9 @@ import {
   ResultsToolbar,
   slugify,
 } from '@/pages/_guest'
+import { useGetEventCategoriesQuery, useGetEventsQuery } from '@/app/api/eventsApi'
+import { mapCategoryLabels } from '@/lib/api/mappers/categories'
+import { mapApiEventToCard } from '@/lib/api/mappers/events'
 
 const SORT_MODES = [
   { key: 'date', label: 'Date — soonest' },
@@ -36,7 +39,6 @@ function parsePrice(price: string): number {
   return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY
 }
 
-/** Best-effort when filter — keep all when tokens aren't obvious. */
 function matchesWhen(date: string, when: string): boolean {
   if (when === 'Any date' || when === 'Today' || when === 'This week' || when === 'This month') {
     return true
@@ -47,9 +49,9 @@ function matchesWhen(date: string, when: string): boolean {
   return true
 }
 
-/** Events directory — Figma `207:4600`. Chrome via MainLayout. */
+/** Events directory — Figma `207:4600`. Events API with fixture fallback. */
 export function EventsPage() {
-  const [category, setCategory] = useState('Concerts')
+  const [category, setCategory] = useState('All events')
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [sortKey, setSortKey] = useState<SortKey>('date')
   const [filters, setFilters] = useState<FilterSidebarState>({
@@ -60,14 +62,33 @@ export function EventsPage() {
     maxPrice: 1500,
   })
 
+  const { data: apiEvents, isFetching, isError } = useGetEventsQuery()
+  const { data: apiCategories } = useGetEventCategoriesQuery()
+
+  const categoryChips = useMemo(
+    () =>
+      mapCategoryLabels(apiCategories, {
+        allLabel: 'All events',
+        fallback: EVENT_CATEGORY_CHIPS,
+      }),
+    [apiCategories],
+  )
+
+  const catalog = useMemo(() => {
+    if (apiEvents && apiEvents.length > 0) {
+      return apiEvents.map(mapApiEventToCard)
+    }
+    return CATALOG_EVENTS.map((event) => ({ ...event, slug: slugify(event.title) }))
+  }, [apiEvents])
+
   const filtered = useMemo(() => {
     const ratingFloor = parseRatingFloor(filters.rating)
     const freeOnly = filters.other.includes('Free entry only')
 
-    return CATALOG_EVENTS.filter((e) => {
+    return catalog.filter((e) => {
       if (category !== 'All events') {
         const needle = category.toLowerCase().replace(/s$/, '')
-        if (!e.category.toLowerCase().includes(needle)) return false
+        if (e.category && !e.category.toLowerCase().includes(needle)) return false
       }
       if (
         filters.cities.length > 0 &&
@@ -81,7 +102,7 @@ export function EventsPage() {
       if (parsePrice(e.price) > filters.maxPrice) return false
       return true
     })
-  }, [category, filters])
+  }, [catalog, category, filters])
 
   const shown = useMemo(() => {
     const list = [...filtered]
@@ -90,7 +111,6 @@ export function EventsPage() {
     } else if (sortKey === 'rating') {
       list.sort((a, b) => Number.parseFloat(b.rating) - Number.parseFloat(a.rating))
     }
-    // date: keep fixture order as soonest proxy
     return list
   }, [filtered, sortKey])
 
@@ -115,8 +135,10 @@ export function EventsPage() {
       <PageSection padTop={14} padBottom={0}>
         <CatalogPageHead
           title={`${category} in Saudi Arabia`}
-          subtitle={`${shown.length} ${category.toLowerCase()} on sale — arena shows, festival stages and intimate nights, from Riyadh to Jazan.`}
-          chips={EVENT_CATEGORY_CHIPS.map((label) => ({
+          subtitle={`${shown.length} ${category.toLowerCase()} on sale — arena shows, festival stages and intimate nights, from Riyadh to Jazan.${
+            isError ? ' Showing local preview while the API is unreachable.' : ''
+          }${isFetching ? ' Updating…' : ''}`}
+          chips={categoryChips.map((label) => ({
             label,
             selected: label === category || (label === 'All events' && category === 'All events'),
           }))}
@@ -162,7 +184,10 @@ export function EventsPage() {
             }
           >
             {shown.slice(0, 9).map((event) => (
-              <LinkedCard key={event.title} to={`/events/${slugify(event.title)}`}>
+              <LinkedCard
+                key={event.slug ?? event.title}
+                to={`/events/${event.slug ?? slugify(event.title)}`}
+              >
                 <EventCard {...event} context="catalog" />
               </LinkedCard>
             ))}

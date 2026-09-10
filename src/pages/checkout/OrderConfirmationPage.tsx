@@ -1,10 +1,12 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { useMemo } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import checkIcon from '@/assets/checkout/check-26.svg'
 import { DownloadIcon, ShareIcon } from '@/components/icons'
 import { Divider, PriceDisplay } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
+import { useGetOrderDetailsQuery } from '@/app/api/ordersApi'
 
 const TICKETS = [
   {
@@ -94,11 +96,80 @@ function TicketQr({ seed }: { seed: number }) {
   )
 }
 
+function resolveOrderId(searchParams: URLSearchParams) {
+  const fromQuery = searchParams.get('orderId')
+  if (fromQuery) return fromQuery
+  if (typeof sessionStorage === 'undefined') return ''
+  return (
+    sessionStorage.getItem('myticket.lastOrderId') ??
+    sessionStorage.getItem('myticket.pendingOrderId') ??
+    ''
+  )
+}
+
+function mapOrderTickets(order: Record<string, unknown>) {
+  const items = order.tickets ?? order.items ?? order.lines
+  if (Array.isArray(items) && items.length > 0) {
+    return (items as Record<string, unknown>[]).map((ticket, index) => ({
+      id: String(ticket.id ?? ticket.ticket_number ?? `MT-${index + 1}`),
+      seat: String(ticket.seat ?? ticket.seats ?? ticket.tier ?? '—'),
+      gate: String(ticket.gate ?? ticket.entry ?? 'Scan at gate'),
+    }))
+  }
+  return [...TICKETS]
+}
+
 /**
  * Order Confirmation — Figma `207:8462`. Uses `MainLayout` (SiteHeader + SiteFooter).
  */
 export function OrderConfirmationPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const orderId = resolveOrderId(searchParams)
+  const { data: order } = useGetOrderDetailsQuery(orderId, { skip: !orderId })
+
+  const view = useMemo(() => {
+    if (!order || Object.keys(order).length === 0) {
+      return {
+        email: 'sara@email.com',
+        ticketCount: 2,
+        reference: 'MT-2026-84193',
+        placedAt: '4 Aug 2026, 21:14',
+        eventTitle: 'Winter Nights: Live at King Abdullah Park',
+        eventMeta: 'Thu 8 Oct 2026 · 20:00 · King Abdullah Park, Riyadh',
+        tierLabel: 'GOLD · SEATED',
+        holder: 'Sara Alghamdi',
+        tickets: [...TICKETS],
+        subtotal: 'SAR 485.00',
+        serviceFee: 'SAR 28.00',
+        vat: 'SAR 75.00',
+        total: 'SAR 588.00',
+        walletPaid: 'SAR 120.00',
+        cardPaid: 'SAR 468.00',
+        cashback: 'SAR 21.00',
+      }
+    }
+
+    const tickets = mapOrderTickets(order)
+    return {
+      email: String(order.email ?? order.customer_email ?? 'sara@email.com'),
+      ticketCount: Number(order.quantity ?? tickets.length) || tickets.length,
+      reference: String(order.reference ?? order.order_number ?? order.id ?? orderId),
+      placedAt: String(order.created_at ?? order.placed_at ?? '—'),
+      eventTitle: String(order.event_title ?? order.title ?? order.name ?? 'Your event'),
+      eventMeta: String(order.event_meta ?? order.meta ?? order.venue ?? '—'),
+      tierLabel: String(order.tier_label ?? order.tier ?? 'TICKET'),
+      holder: String(order.holder ?? order.customer_name ?? 'Ticket holder'),
+      tickets,
+      subtotal: String(order.subtotal ?? order.items_total ?? '—'),
+      serviceFee: String(order.service_fee ?? order.fees ?? '—'),
+      vat: String(order.vat ?? order.tax ?? '—'),
+      total: String(order.total ?? order.amount ?? '—'),
+      walletPaid: String(order.wallet_paid ?? order.wallet_amount ?? '—'),
+      cardPaid: String(order.card_paid ?? order.card_amount ?? '—'),
+      cashback: String(order.cashback ?? order.cashback_earned ?? '—'),
+    }
+  }, [order, orderId])
 
   return (
     <PageSection padTop={52} padBottom={96}>
@@ -110,33 +181,31 @@ export function OrderConfirmationPage() {
           You&apos;re going.
         </h1>
         <p className="mt-[10px] max-w-[640px] text-[17px] leading-[1.5] text-ink-secondary">
-          Payment went through and your 2 tickets are ready. We&apos;ve emailed them to
-          sara@email.com too.
+          Payment went through and your {view.ticketCount} tickets are ready. We&apos;ve emailed them
+          to {view.email} too.
         </p>
         <p className="mt-[10px] text-[13.5px] font-bold">
           <span className="text-ink-muted">Order reference</span>{' '}
-          <span className="text-ink-primary">MT-2026-84193</span>{' '}
-          <span className="text-ink-muted">· 4 Aug 2026, 21:14</span>
+          <span className="text-ink-primary">{view.reference}</span>{' '}
+          <span className="text-ink-muted">· {view.placedAt}</span>
         </p>
       </div>
 
       <div className="mx-auto mt-[40px] flex max-w-[1040px] flex-col gap-[32px] lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-lg">
-          {TICKETS.map((ticket, index) => (
+          {view.tickets.map((ticket, index) => (
             <article
               key={ticket.id}
               className="flex overflow-hidden rounded-[20px] border border-border-default bg-surface-default"
             >
               <div className="min-w-0 flex-1 px-[26px] py-[22px]">
                 <p className="text-[12px] font-bold tracking-[0.96px] text-brand-gradient-end">
-                  GOLD · SEATED
+                  {view.tierLabel}
                 </p>
                 <h2 className="mt-[6px] text-[24px] leading-[1.1] font-extrabold tracking-[-0.6px] text-ink-primary">
-                  Winter Nights: Live at King Abdullah Park
+                  {view.eventTitle}
                 </h2>
-                <p className="mt-[6px] text-[14px] text-ink-secondary">
-                  Thu 8 Oct 2026 · 20:00 · King Abdullah Park, Riyadh
-                </p>
+                <p className="mt-[6px] text-[14px] text-ink-secondary">{view.eventMeta}</p>
                 <div className="mt-lg grid gap-[26px] sm:grid-cols-3">
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
@@ -148,7 +217,7 @@ export function OrderConfirmationPage() {
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
                       HOLDER
                     </p>
-                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">Sara Alghamdi</p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{view.holder}</p>
                   </div>
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
@@ -187,36 +256,38 @@ export function OrderConfirmationPage() {
             <h3 className="text-[15px] font-semibold text-ink-primary">What you paid</h3>
             <div className="mt-md flex flex-col gap-sm text-[14px]">
               <div className="flex justify-between gap-md">
-                <span className="text-ink-secondary">2 × Gold · Floor A</span>
-                <PriceDisplay context="row">SAR 485.00</PriceDisplay>
+                <span className="text-ink-secondary">
+                  {view.ticketCount} × {view.tierLabel}
+                </span>
+                <PriceDisplay context="row">{view.subtotal}</PriceDisplay>
               </div>
               <div className="flex justify-between gap-md">
                 <span className="text-ink-secondary">Service fee</span>
-                <PriceDisplay context="row">SAR 28.00</PriceDisplay>
+                <PriceDisplay context="row">{view.serviceFee}</PriceDisplay>
               </div>
               <div className="flex justify-between gap-md">
                 <span className="text-ink-secondary">VAT 15%</span>
-                <PriceDisplay context="row">SAR 75.00</PriceDisplay>
+                <PriceDisplay context="row">{view.vat}</PriceDisplay>
               </div>
             </div>
             <Divider tone="divider" className="my-md" />
             <div className="flex items-baseline justify-between">
               <span className="text-[15px] font-semibold text-ink-primary">Total</span>
-              <PriceDisplay context="amount">SAR 588.00</PriceDisplay>
+              <PriceDisplay context="amount">{view.total}</PriceDisplay>
             </div>
             <div className="mt-md flex flex-col gap-[6px] text-[13px] text-ink-secondary">
               <div className="flex justify-between">
                 <span>Wallet balance</span>
-                <span>SAR 120.00</span>
+                <span>{view.walletPaid}</span>
               </div>
               <div className="flex justify-between">
                 <span>Visa ···· 4417</span>
-                <span>SAR 468.00</span>
+                <span>{view.cardPaid}</span>
               </div>
             </div>
             <div className="mt-md flex items-center justify-between rounded-[14px] bg-bg-tint-brand px-lg py-[14px] text-[13px] font-semibold text-ink-brand-strong">
               <span>Cashback earned</span>
-              <span>+ SAR 21.00</span>
+              <span>+ {view.cashback}</span>
             </div>
           </div>
 

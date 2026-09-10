@@ -1,8 +1,36 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { StatusBadge, type StatusTone } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { AccountPageHead } from '@/layouts'
 import { SUBMISSIONS } from '@/pages/_account/fixtures'
+import { useGetMySubmissionsQuery } from '@/app/api/experiencesApi'
+
+interface SubmissionItem {
+  id: string
+  name: string
+  status: string
+  meta: string
+  note: string
+  cta: string
+  aux?: string
+  cover: string
+}
+
+function mapSubmission(record: Record<string, unknown>, index: number): SubmissionItem {
+  const fallback = SUBMISSIONS[index % SUBMISSIONS.length]
+  const status = String(record.status ?? record.state ?? fallback.status)
+  return {
+    id: String(record.id ?? record.reference ?? fallback.id),
+    name: String(record.name ?? record.title ?? fallback.name),
+    status,
+    meta: String(record.meta ?? record.location ?? record.submitted_at ?? fallback.meta),
+    note: String(record.note ?? record.message ?? fallback.note),
+    cta: String(record.cta ?? fallback.cta),
+    aux: record.aux ? String(record.aux) : 'aux' in fallback ? fallback.aux : undefined,
+    cover: String(record.cover ?? record.image ?? record.image_url ?? fallback.cover),
+  }
+}
 
 function submissionTone(status: string): StatusTone {
   if (status === 'Published') return 'successTint'
@@ -13,6 +41,12 @@ function submissionTone(status: string): StatusTone {
 
 /** My submissions — Figma `207:7362`. */
 export function MySubmissionsPage() {
+  const { data: submissions } = useGetMySubmissionsQuery()
+  const items = useMemo(() => {
+    if (submissions && submissions.length > 0) return submissions.map(mapSubmission)
+    return [...SUBMISSIONS]
+  }, [submissions])
+
   return (
     <>
       <AccountPageHead
@@ -29,7 +63,7 @@ export function MySubmissionsPage() {
 
       <div className="mx-auto w-full max-w-[1040px] px-page-gutter pt-3xl pb-[96px]">
         <ul className="flex flex-col gap-[14px]">
-          {SUBMISSIONS.map((item) => (
+          {items.map((item) => (
             <li
               key={item.id}
               className="flex flex-col gap-xl rounded-[20px] border border-border-default bg-surface-default px-[24px] py-[20px] sm:flex-row sm:items-center sm:gap-[20px]"
