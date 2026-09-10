@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import checkIcon from '@/assets/checkout/check-26.svg'
 import { DownloadIcon, ShareIcon } from '@/components/icons'
 import { Divider, PriceDisplay } from '@/components/data-display'
@@ -25,29 +25,65 @@ const NEXT_STEPS = [
   "We'll remind you an hour before doors with the gate and bag-policy notes.",
 ] as const
 
-/** Decorative QR stand-in — Figma draws a dense matrix; a seeded grid keeps the stub readable. */
+/** Dense QR-like matrix — Figma `207:8498` draws a seeded ~105px module grid (no lib in deps). */
 function TicketQr({ seed }: { seed: number }) {
-  const cells = Array.from({ length: 21 * 21 }, (_, index) => {
-    const x = index % 21
-    const y = Math.floor(index / 21)
+  const size = 41
+  const cells = Array.from({ length: size * size }, (_, index) => {
+    const x = index % size
+    const y = Math.floor(index / size)
+
+    const inFinder = (ox: number, oy: number) => {
+      const dx = x - ox
+      const dy = y - oy
+      if (dx < 0 || dy < 0 || dx > 6 || dy > 6) return null
+      if (dx === 0 || dy === 0 || dx === 6 || dy === 6) return true
+      if (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4) return true
+      return false
+    }
+
     const finder =
-      (x < 7 && y < 7) || (x > 13 && y < 7) || (x < 7 && y > 13)
-    const on = finder
-      ? x === 0 ||
-        y === 0 ||
-        x === 6 ||
-        y === 6 ||
-        (x > 13 && (x === 14 || x === 20 || y === 0 || y === 6)) ||
-        (y > 13 && (y === 14 || y === 20 || x === 0 || x === 6)) ||
-        (x >= 2 && x <= 4 && y >= 2 && y <= 4) ||
-        (x >= 16 && x <= 18 && y >= 2 && y <= 4) ||
-        (x >= 2 && x <= 4 && y >= 16 && y <= 18)
-      : ((x * 17 + y * 13 + seed * 7) % 5) > 1
-    return on
+      inFinder(0, 0) ??
+      inFinder(size - 7, 0) ??
+      inFinder(0, size - 7)
+    if (finder !== null) return finder
+
+    // Timing patterns
+    if (y === 6 && x >= 8 && x <= size - 9) return x % 2 === 0
+    if (x === 6 && y >= 8 && y <= size - 9) return y % 2 === 0
+
+    // Alignment pattern near bottom-right of data area
+    const ax = size - 9
+    const ay = size - 9
+    if (x >= ax - 2 && x <= ax + 2 && y >= ay - 2 && y <= ay + 2) {
+      const dx = Math.abs(x - ax)
+      const dy = Math.abs(y - ay)
+      if (dx === 2 || dy === 2) return true
+      if (dx === 0 && dy === 0) return true
+      return false
+    }
+
+    // Quiet-ish separator around finders stays mostly off
+    if (
+      (x === 7 && y < 8) ||
+      (y === 7 && x < 8) ||
+      (x === size - 8 && y < 8) ||
+      (y === 7 && x > size - 9) ||
+      (y === size - 8 && x < 8) ||
+      (x === 7 && y > size - 9)
+    ) {
+      return false
+    }
+
+    const n = (x * 17 + y * 13 + seed * 31 + x * y * 3) % 7
+    return n > 2
   })
 
   return (
-    <div className="grid size-[105px] grid-cols-[repeat(21,minmax(0,1fr))] gap-px bg-surface-default p-[2px]">
+    <div
+      className="grid size-[105px] gap-px bg-surface-default p-[2px]"
+      style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
+      aria-hidden
+    >
       {cells.map((on, index) => (
         <span
           key={index}
@@ -62,20 +98,22 @@ function TicketQr({ seed }: { seed: number }) {
  * Order Confirmation — Figma `207:8462`. Uses `MainLayout` (SiteHeader + SiteFooter).
  */
 export function OrderConfirmationPage() {
+  const navigate = useNavigate()
+
   return (
     <PageSection padTop={52} padBottom={96}>
       <div className="mx-auto flex max-w-[1040px] flex-col items-center text-center">
-        <div className="flex size-16 items-center justify-center rounded-[32px] bg-state-success-tint">
+        <div className="flex size-[64px] items-center justify-center rounded-[32px] bg-state-success-tint">
           <img src={checkIcon} alt="" className="size-[26px]" />
         </div>
         <h1 className="mt-[18px] text-[50px] leading-[1.02] font-extrabold tracking-[-1.75px] text-ink-primary">
           You&apos;re going.
         </h1>
-        <p className="mt-[10px] max-w-[640px] text-[17px] text-ink-secondary">
+        <p className="mt-[10px] max-w-[640px] text-[17px] leading-[1.5] text-ink-secondary">
           Payment went through and your 2 tickets are ready. We&apos;ve emailed them to
           sara@email.com too.
         </p>
-        <p className="mt-sm text-[13.5px] font-bold">
+        <p className="mt-[10px] text-[13.5px] font-bold">
           <span className="text-ink-muted">Order reference</span>{' '}
           <span className="text-ink-primary">MT-2026-84193</span>{' '}
           <span className="text-ink-muted">· 4 Aug 2026, 21:14</span>
@@ -104,19 +142,19 @@ export function OrderConfirmationPage() {
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
                       SEAT
                     </p>
-                    <p className="text-[15px] font-bold text-ink-primary">{ticket.seat}</p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{ticket.seat}</p>
                   </div>
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
                       HOLDER
                     </p>
-                    <p className="text-[15px] font-bold text-ink-primary">Sara Alghamdi</p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">Sara Alghamdi</p>
                   </div>
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
                       TICKET NO.
                     </p>
-                    <p className="text-[15px] font-bold text-ink-primary">{ticket.id}</p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{ticket.id}</p>
                   </div>
                 </div>
               </div>
@@ -131,13 +169,13 @@ export function OrderConfirmationPage() {
 
           <section className="rounded-[18px] border border-border-default bg-surface-default p-[22px]">
             <h3 className="text-[17px] font-semibold text-ink-primary">What happens next</h3>
-            <ol className="mt-lg flex flex-col gap-md">
+            <ol className="mt-lg flex flex-col gap-[14px]">
               {NEXT_STEPS.map((step, index) => (
                 <li key={step} className="flex items-start gap-[12px]">
                   <span className="flex size-[28px] shrink-0 items-center justify-center rounded-pill bg-bg-tint-brand text-[13px] font-bold text-ink-brand">
                     {index + 1}
                   </span>
-                  <p className="text-[14px] leading-[1.5] text-ink-primary">{step}</p>
+                  <p className="pt-[3px] text-[14px] leading-[1.5] text-ink-primary">{step}</p>
                 </li>
               ))}
             </ol>
@@ -150,7 +188,7 @@ export function OrderConfirmationPage() {
             <div className="mt-md flex flex-col gap-sm text-[14px]">
               <div className="flex justify-between gap-md">
                 <span className="text-ink-secondary">2 × Gold · Floor A</span>
-                <PriceDisplay context="row">SAR 560.00</PriceDisplay>
+                <PriceDisplay context="row">SAR 485.00</PriceDisplay>
               </div>
               <div className="flex justify-between gap-md">
                 <span className="text-ink-secondary">Service fee</span>
@@ -158,7 +196,7 @@ export function OrderConfirmationPage() {
               </div>
               <div className="flex justify-between gap-md">
                 <span className="text-ink-secondary">VAT 15%</span>
-                <PriceDisplay context="row">SAR 0.00</PriceDisplay>
+                <PriceDisplay context="row">SAR 75.00</PriceDisplay>
               </div>
             </div>
             <Divider tone="divider" className="my-md" />
@@ -182,16 +220,14 @@ export function OrderConfirmationPage() {
             </div>
           </div>
 
-          <Link
-            to="/my-tickets"
-            className={cn(
-              'inline-flex h-[50px] w-full items-center justify-center rounded-[25px]',
-              'bg-brand-gradient text-[15px] font-bold text-ink-inverse',
-              'hover:bg-none hover:bg-brand-primary',
-            )}
+          <Button
+            type="button"
+            size="lg"
+            className="h-[50px] w-full rounded-[25px] text-[15px] font-bold"
+            onClick={() => navigate('/my-tickets')}
           >
             Go to my tickets
-          </Link>
+          </Button>
 
           <div className="grid grid-cols-2 gap-sm">
             <Button type="button" variant="secondary" size="sm" icon={<DownloadIcon size={14} />}>

@@ -33,7 +33,7 @@ function WalletAside() {
         <p className="text-[15px] font-semibold text-ink-primary">Payment methods</p>
         <ul className="mt-md flex flex-col gap-[10px]">
           <li className="flex items-center gap-md rounded-[14px] border border-border-default px-[14px] py-md">
-            <span className="rounded-[6px] bg-[#1a1f71] px-[9px] py-[5px] text-[11px] font-bold text-ink-inverse">
+            <span className="rounded-[6px] bg-payment-visa px-[9px] py-[5px] text-[11px] font-bold text-ink-inverse">
               VISA
             </span>
             <div className="min-w-0">

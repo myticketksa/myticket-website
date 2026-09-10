@@ -43,10 +43,12 @@ const button = cva(
       { size: 'md', class: 'font-semibold' },
       { size: 'sm', class: 'font-semibold' },
       { variant: 'cardCta', size: 'sm', class: 'px-lg' },
-      // Icon buttons are square, so the horizontal padding is dropped.
-      { variant: 'icon', size: 'lg', class: 'w-btn-lg px-0' },
-      { variant: 'icon', size: 'md', class: 'w-btn-md px-0' },
-      { variant: 'icon', size: 'sm', class: 'w-btn-sm px-0' },
+      // Icon buttons are square — force equal sides and kill size padding so
+      // cva's `px-btn-pad-*` cannot widen them into pills (twMerge alone is not
+      // applied inside `cva()`).
+      { variant: 'icon', size: 'lg', class: 'aspect-square w-btn-lg !px-0' },
+      { variant: 'icon', size: 'md', class: 'aspect-square w-btn-md !px-0' },
+      { variant: 'icon', size: 'sm', class: 'aspect-square w-btn-sm !px-0' },
     ],
     defaultVariants: { variant: 'primary', size: 'md' },
   },

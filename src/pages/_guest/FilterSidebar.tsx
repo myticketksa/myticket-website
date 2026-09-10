@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { FilterChip } from '@/components/data-display'
 import { Checkbox } from '@/components/ui'
 import { cn } from '@/lib/cn'
@@ -24,16 +24,36 @@ export interface FilterGroup {
   trailing?: ReactNode
 }
 
+export type FilterSidebarState = {
+  when: string
+  cities: string[]
+  rating: string
+  other: string[]
+  /** Inclusive max ticket price in SAR; default 1500. */
+  maxPrice: number
+}
+
 export interface FilterSidebarProps {
   title?: string
   clearLabel?: string
   onClear?: () => void
+  /** Fired when default-shell filter state changes (and on clear). */
+  onChange?: (state: FilterSidebarState) => void
   /** When omitted, Events defaults (When / City / Price / Rating / Other). */
   groups?: FilterGroup[]
   width?: 268 | 252 | 244
   className?: string
   children?: ReactNode
+  /**
+   * When false, shell controls look inactive (no unexplained dead interactivity).
+   * Default true — pages that pass onChange should keep interactive.
+   */
+  interactive?: boolean
 }
+
+const FREE_ENTRY = 'Free entry only'
+const PRICE_MIN = 50
+const PRICE_MAX = 1500
 
 function FilterGroupLabel({ children }: { children: ReactNode }) {
   return (
@@ -47,19 +67,37 @@ export function FilterSidebar({
   title = 'Filters',
   clearLabel = 'Clear all',
   onClear,
+  onChange,
   groups,
   width = 268,
   className,
   children,
+  interactive = true,
 }: FilterSidebarProps) {
   const baseId = useId()
   const [when, setWhen] = useState('Any date')
   const [rating, setRating] = useState('Any')
   const [cities, setCities] = useState<string[]>([])
   const [other, setOther] = useState<string[]>([])
+  const [maxPrice, setMaxPrice] = useState(PRICE_MAX)
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
+
+  useEffect(() => {
+    onChangeRef.current?.({ when, cities, rating, other, maxPrice })
+  }, [when, cities, rating, other, maxPrice])
 
   const toggle = (list: string[], value: string, set: (next: string[]) => void) => {
     set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value])
+  }
+
+  const clear = () => {
+    setWhen('Any date')
+    setRating('Any')
+    setCities([])
+    setOther([])
+    setMaxPrice(PRICE_MAX)
+    onClear?.()
   }
 
   return (
@@ -74,14 +112,9 @@ export function FilterSidebar({
         <p className="text-[16px] font-semibold text-ink-primary">{title}</p>
         <button
           type="button"
-          onClick={() => {
-            setWhen('Any date')
-            setRating('Any')
-            setCities([])
-            setOther([])
-            onClear?.()
-          }}
-          className="text-[13px] font-semibold text-ink-brand"
+          disabled={!interactive}
+          onClick={clear}
+          className="text-[13px] font-semibold text-ink-brand disabled:cursor-not-allowed disabled:text-ink-disabled"
         >
           {clearLabel}
         </button>
@@ -101,7 +134,8 @@ export function FilterSidebar({
                     <FilterChip
                       key={opt.label}
                       selected={group.selected === opt.label}
-                      className="h-[32px] rounded-[16px] px-md text-[13px]"
+                      disabled={!interactive}
+                      className="h-[32px] rounded-[16px] px-md text-[13px] disabled:cursor-not-allowed disabled:opacity-55"
                     >
                       {opt.label}
                     </FilterChip>
@@ -117,6 +151,7 @@ export function FilterSidebar({
                       label={opt.label}
                       count={opt.count}
                       fullWidth
+                      disabled={!interactive}
                     />
                   ))}
                 </div>
@@ -127,14 +162,15 @@ export function FilterSidebar({
                     <FilterChip
                       key={opt.label}
                       selected={group.selected === opt.label}
-                      className="h-[34px] min-w-0 flex-1 rounded-[9px] px-md text-[13px] font-semibold"
+                      disabled={!interactive}
+                      className="h-[34px] min-w-0 flex-1 rounded-[9px] px-md text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-55"
                     >
                       {opt.label}
                     </FilterChip>
                   ))}
                 </div>
               )}
-              {group.kind === 'price' && <PriceSlider />}
+              {group.kind === 'price' && <PriceSlider disabled={!interactive} />}
               {group.kind === 'custom' && group.trailing}
             </div>
           ))
@@ -147,18 +183,26 @@ export function FilterSidebar({
                   <FilterChip
                     key={opt}
                     selected={when === opt}
-                    onClick={() => setWhen(opt)}
-                    className="h-[32px] rounded-[16px] px-md text-[13px]"
+                    disabled={!interactive}
+                    onClick={() => interactive && setWhen(opt)}
+                    className="h-[32px] rounded-[16px] px-md text-[13px] disabled:cursor-not-allowed disabled:opacity-55"
                   >
                     {opt}
                   </FilterChip>
                 ))}
               </div>
-              <div className="mt-row-gap flex gap-sm">
-                <div className="flex h-[36px] flex-1 items-center rounded-[9px] border border-border-default bg-bg-page px-row-gap text-[13px] text-ink-muted">
+              {/* Date shells — decorative until a real date picker is wired. */}
+              <div className="mt-row-gap flex gap-sm" title="Date range not available yet">
+                <div
+                  aria-disabled="true"
+                  className="flex h-[36px] flex-1 cursor-not-allowed items-center rounded-[9px] border border-border-default bg-bg-skeleton px-row-gap text-[13px] text-ink-disabled"
+                >
                   dd/mm/yyyy
                 </div>
-                <div className="flex h-[36px] flex-1 items-center rounded-[9px] border border-border-default bg-bg-page px-row-gap text-[13px] text-ink-muted">
+                <div
+                  aria-disabled="true"
+                  className="flex h-[36px] flex-1 cursor-not-allowed items-center rounded-[9px] border border-border-default bg-bg-skeleton px-row-gap text-[13px] text-ink-disabled"
+                >
                   dd/mm/yyyy
                 </div>
               </div>
@@ -176,8 +220,11 @@ export function FilterSidebar({
                     label={city.label}
                     count={city.count}
                     fullWidth
+                    disabled={!interactive}
                     checked={cities.includes(city.label)}
-                    onCheckedChange={() => toggle(cities, city.label, setCities)}
+                    onCheckedChange={() =>
+                      interactive && toggle(cities, city.label, setCities)
+                    }
                   />
                 ))}
               </div>
@@ -188,11 +235,27 @@ export function FilterSidebar({
             <div className="flex w-full flex-col">
               <div className="flex items-baseline justify-between">
                 <FilterGroupLabel>Price</FilterGroupLabel>
-                <p className="text-[13px] text-ink-secondary">Up to SAR 1,500</p>
+                <p className="text-[13px] text-ink-secondary">
+                  Up to SAR {maxPrice >= PRICE_MAX ? '1,500+' : maxPrice.toLocaleString('en-US')}
+                </p>
               </div>
-              <PriceSlider className="mt-[14px]" />
+              <PriceSlider
+                className="mt-[14px]"
+                value={maxPrice}
+                disabled={!interactive}
+                onChange={setMaxPrice}
+              />
               <div className="mt-md">
-                <Checkbox id={`${baseId}-free`} label="Free entry only" fullWidth />
+                <Checkbox
+                  id={`${baseId}-free`}
+                  label={FREE_ENTRY}
+                  fullWidth
+                  disabled={!interactive}
+                  checked={other.includes(FREE_ENTRY)}
+                  onCheckedChange={() =>
+                    interactive && toggle(other, FREE_ENTRY, setOther)
+                  }
+                />
               </div>
             </div>
 
@@ -205,8 +268,9 @@ export function FilterSidebar({
                   <FilterChip
                     key={opt}
                     selected={rating === opt}
-                    onClick={() => setRating(opt)}
-                    className="h-[34px] min-w-0 flex-1 rounded-[9px] px-md text-[13px] font-semibold"
+                    disabled={!interactive}
+                    onClick={() => interactive && setRating(opt)}
+                    className="h-[34px] min-w-0 flex-1 rounded-[9px] px-md text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-55"
                   >
                     {opt}
                   </FilterChip>
@@ -225,8 +289,11 @@ export function FilterSidebar({
                     id={`${baseId}-other-${i}`}
                     label={label}
                     fullWidth
+                    disabled={!interactive}
                     checked={other.includes(label)}
-                    onCheckedChange={() => toggle(other, label, setOther)}
+                    onCheckedChange={() =>
+                      interactive && toggle(other, label, setOther)
+                    }
                   />
                 ))}
               </div>
@@ -237,15 +304,45 @@ export function FilterSidebar({
   )
 }
 
-function PriceSlider({ className }: { className?: string }) {
+/** Max-price rail — Figma filled track; thumb position maps 50–1500 SAR. */
+function PriceSlider({
+  className,
+  disabled = false,
+  value = PRICE_MAX,
+  onChange,
+}: {
+  className?: string
+  disabled?: boolean
+  value?: number
+  onChange?: (value: number) => void
+}) {
+  const pct = ((value - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100
+
   return (
-    <div className={className}>
-      <div className="relative h-4 w-full overflow-hidden">
-        <div className="absolute top-1/2 right-0 left-0 h-1 -translate-y-1/2 rounded-[2px] bg-brand-primary" />
-        <div className="absolute top-1/2 right-0 size-[14px] -translate-y-1/2 rounded-full border-2 border-brand-primary bg-surface-default" />
+    <div
+      className={cn('relative', className, disabled && 'cursor-not-allowed opacity-55')}
+      aria-disabled={disabled}
+    >
+      <div className="relative h-4 w-full">
+        <div className="absolute top-1/2 right-0 left-0 h-1 -translate-y-1/2 rounded-[2px] bg-border-divider" />
+        <div
+          className="absolute top-1/2 left-0 h-1 -translate-y-1/2 rounded-[2px] bg-brand-primary"
+          style={{ width: `${pct}%` }}
+        />
+        <input
+          type="range"
+          min={PRICE_MIN}
+          max={PRICE_MAX}
+          step={25}
+          value={value}
+          disabled={disabled}
+          aria-label="Maximum price"
+          onChange={(e) => onChange?.(Number(e.target.value))}
+          className="absolute inset-0 z-10 m-0 h-full w-full cursor-pointer appearance-none bg-transparent disabled:cursor-not-allowed [&::-webkit-slider-thumb]:size-[14px] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-brand-primary [&::-webkit-slider-thumb]:bg-surface-default"
+        />
       </div>
       <div className="mt-xs flex justify-between text-[12px] text-ink-muted">
-        <span>SAR 50</span>
+        <span>SAR {PRICE_MIN}</span>
         <span>SAR 1,500+</span>
       </div>
     </div>

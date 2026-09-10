@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRightIcon, CheckGlyphIcon, MinusIcon, PlusIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
@@ -30,8 +30,12 @@ export interface StickyCtaCardProps {
   totals?: StickyCtaTotalLine[]
   total?: string
   primaryLabel?: string
+  /** Route for the primary CTA (e.g. event seats). Uses navigate when set. */
+  primaryTo?: string
   /** Omit / pass null to hide the secondary button (Events ticket rail). */
   secondaryLabel?: string | null
+  /** Route for the secondary CTA. Without it, the secondary button looks disabled. */
+  secondaryTo?: string
   footerNote?: string
   /** Content rendered below the main ticket card (resale / assurances). */
   aside?: ReactNode
@@ -39,7 +43,7 @@ export interface StickyCtaCardProps {
   className?: string
 }
 
-/** Sticky booking / enquiry card for detail asides — Events ticket rail Figma `207:5022`. */
+/** Sticky booking card for detail asides — Events ticket rail Figma `207:5022`. */
 export function StickyCtaCard({
   fromLabel = 'Tickets from',
   fromPrice,
@@ -48,12 +52,16 @@ export function StickyCtaCard({
   totals,
   total,
   primaryLabel = 'Choose your seats',
+  primaryTo,
   secondaryLabel = null,
+  secondaryTo,
   footerNote,
   aside,
   children,
   className,
 }: StickyCtaCardProps) {
+  const navigate = useNavigate()
+
   return (
     <div
       className={cn(
@@ -110,11 +118,15 @@ export function StickyCtaCard({
                   <p className="text-[12px] text-ink-muted">
                     {tier.maxLabel ?? 'Max 6 per order'}
                   </p>
-                  <div className="flex items-center gap-row-gap">
+                  <div
+                    className="flex items-center gap-row-gap opacity-55"
+                    title="Seat quantities are chosen on the hall map"
+                  >
                     <button
                       type="button"
                       aria-label="Decrease quantity"
-                      className="flex size-[30px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default"
+                      disabled
+                      className="flex size-[30px] cursor-not-allowed items-center justify-center rounded-[15px] border border-border-default bg-surface-default text-ink-disabled"
                     >
                       <MinusIcon size={16} />
                     </button>
@@ -124,7 +136,8 @@ export function StickyCtaCard({
                     <button
                       type="button"
                       aria-label="Increase quantity"
-                      className="flex size-[30px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default text-[16px] text-ink-primary"
+                      disabled
+                      className="flex size-[30px] cursor-not-allowed items-center justify-center rounded-[15px] border border-border-default bg-surface-default text-[16px] text-ink-disabled"
                     >
                       <PlusIcon size={16} />
                     </button>
@@ -179,11 +192,21 @@ export function StickyCtaCard({
           <Button
             size="lg"
             className="h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
+            disabled={!primaryTo}
+            title={primaryTo ? undefined : 'Action not available yet'}
+            onClick={primaryTo ? () => navigate(primaryTo) : undefined}
           >
             {primaryLabel}
           </Button>
           {secondaryLabel ? (
-            <Button variant="secondary" size="lg" className="w-full">
+            <Button
+              variant="secondary"
+              size="lg"
+              className="w-full"
+              disabled={!secondaryTo}
+              title={secondaryTo ? undefined : 'Not available yet'}
+              onClick={secondaryTo ? () => navigate(secondaryTo) : undefined}
+            >
               {secondaryLabel}
             </Button>
           ) : null}

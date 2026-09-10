@@ -14,14 +14,14 @@ export function AboutPage() {
         narrow
         eyebrow="About MyTicket"
         title="Saudi Arabia is going out. We hold the tickets."
-        subtitle="MyTicket is where people across the Kingdom find live experiences — concerts, sports, festivals, theatre, family days, and places worth the drive — and buy their way in with one tap. Behind the curtain, we're also where the industry gets built: organizers, performers and event services finding each other in one marketplace."
+        subtitle="MyTicket is where people across the Kingdom find live experiences — concerts, sports, festivals, theatre, family days, and places worth the drive — and buy their way in with one tap. Behind the curtain we partner with organizers through our office, and review vendor and talent requests from guest accounts."
       />
       <MarketingStats
         stats={[
           { value: '2.1M', label: 'guests with an account' },
           { value: '1,400+', label: 'events ticketed this year' },
           { value: '13', label: 'regions with live events' },
-          { value: '5,000+', label: 'talents & vendors listed' },
+          { value: '5,000+', label: 'talents reviewed' },
         ]}
       />
       <MarketingCardGrid
@@ -41,10 +41,9 @@ export function AboutPage() {
             title: 'For the people making the nights',
             body: (
               <p>
-                Organizers sell to an audience that&apos;s already browsing. Performers get
-                discovered on merit — portfolio, reviews, verified identity. Service businesses win
-                work on proof instead of connections. Every business account is reviewed by our
-                team before it goes live, which is exactly why the other side trusts it.
+                Organizers partner with us through an office contract — we create their account after
+                agreement. Performers and service businesses submit a request from a guest account;
+                our team reviews it, and contact happens outside the platform when there is a fit.
               </p>
             ),
           },
@@ -54,7 +53,6 @@ export function AboutPage() {
               <p>
                 A platform fee on each ticket — always shown as its own line, never hidden in the
                 price — and a commission when a ticket resells at auction. That&apos;s it.
-                Marketplace introductions between organizers, talents and vendors are free.
               </p>
             ),
           },

@@ -8,17 +8,17 @@ import { SAVED_ITEMS } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
 
 const SEGMENTS = ['Favourites', 'Waitlists', 'Following'] as const
-const FILTERS = ['All', 'Events', 'Experiences', 'Talents', 'Vendors'] as const
+const FILTERS = ['All', 'Events', 'Experiences', 'Talents'] as const
 
-/** Saved / favourites — Figma `207:8057`. */
+/** Saved / favourites — Figma `207:8057`. Segments live below the head (not AccountTabBar). */
 export function SavedPage() {
   const [segment, setSegment] = useState(0)
   const [filter, setFilter] = useState(0)
 
-  const kindMap = ['All', 'Event', 'Experience', 'Talent', 'Vendor'] as const
+  const kindMap = ['All', 'Event', 'Experience', 'Talent'] as const
   const items =
     filter === 0
-      ? SAVED_ITEMS
+      ? SAVED_ITEMS.filter((item) => item.kind !== 'Vendor')
       : SAVED_ITEMS.filter((item) => item.kind === kindMap[filter])
 
   return (
@@ -27,6 +27,7 @@ export function SavedPage() {
         eyebrow="Your account"
         title="Saved"
         subtitle="Everything you've hearted, the sold-out nights you're waiting on, and the people you follow."
+        className="border-b-0"
         actions={
           <Link to="/settings">
             <Button variant="secondary" size="md">
@@ -37,22 +38,24 @@ export function SavedPage() {
       />
 
       <PageSection padTop={0} padBottom={96}>
-        <div className="inline-flex gap-[6px] rounded-[26px] border-[1.5px] border-border-default bg-surface-default p-[5px]">
-          {SEGMENTS.map((label, index) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => setSegment(index)}
-              className={cn(
-                'h-[40px] rounded-[20px] px-3xl text-[14px] font-bold transition-colors',
-                segment === index
-                  ? 'bg-brand-gradient text-ink-inverse'
-                  : 'text-ink-secondary hover:text-ink-primary',
-              )}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="pt-[10px]">
+          <div className="inline-flex gap-[6px] rounded-[26px] border-[1.5px] border-border-default bg-surface-default p-[5px]">
+            {SEGMENTS.map((label, index) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setSegment(index)}
+                className={cn(
+                  'h-[40px] rounded-[20px] px-3xl text-[14px] font-bold transition-colors',
+                  segment === index
+                    ? 'bg-brand-gradient text-ink-inverse'
+                    : 'text-ink-secondary hover:text-ink-primary',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="mt-[26px] flex flex-wrap gap-sm">
@@ -91,7 +94,7 @@ export function SavedPage() {
                 <p
                   className={cn(
                     'text-[12px] font-extrabold tracking-[0.6px]',
-                    item.kind === 'Experience' || item.kind === 'Talent' || item.kind === 'Vendor'
+                    item.kind === 'Experience' || item.kind === 'Talent'
                       ? 'text-ink-brand-mid'
                       : 'text-ink-brand',
                   )}

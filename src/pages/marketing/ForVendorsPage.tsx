@@ -1,3 +1,4 @@
+import { useLocale } from '@/i18n/locale'
 import {
   RoleBenefitsSection,
   RoleClosingCta,
@@ -7,117 +8,115 @@ import {
   RoleStepCheckLine,
   RoleStepsSection,
 } from '@/pages/_account/MarketingShell'
-import { ROLE_VENDOR_HERO } from '@/pages/_account/role-media'
 
-/** For vendors — Figma `207:12388`. */
+/** For vendors — submit request, admin review, contact outside platform. */
 export function ForVendorsPage() {
+  const { roleLabel } = useLocale()
+  const vendor = roleLabel('vendor')
+
   return (
     <>
       <RoleLandingHero
-        eyebrow="MyTicket for vendors"
+        eyebrow={`MyTicket for ${vendor}`}
         title="Every event needs what you do."
-        subtitle="Sound, light, catering, security, staging — organizers on MyTicket hire for hundreds of events a month. A verified storefront puts your business in the room where those decisions happen."
-        primaryCta={{ label: 'Apply — about 10 minutes', to: '/apply/vendor' }}
-        secondaryCta={{ label: 'See vendors on MyTicket', to: '/vendors' }}
+        subtitle={`Sound, light, catering, security, staging — submit a ${vendor} request for our team to review. If accepted, we reach out outside the platform when a match comes up. You stay a guest on MyTicket.`}
+        primaryCta={{ label: 'Submit a request', to: '/apply/vendor' }}
+        secondaryCta={{ label: 'See all business paths', to: '/become-business' }}
         stats={[
-          { value: '1,200+', label: 'vendors listed' },
-          { value: '340', label: 'events hiring this month' },
-          { value: '0%', label: 'commission on your contracts' },
+          { value: '2–5 days', label: 'typical admin review' },
+          { value: 'Guest', label: 'login stays unchanged' },
+          { value: 'Off-platform', label: 'contact after accept' },
         ]}
         imageryLabel="Imagery — crew rigging a stage"
-        imagerySrc={ROLE_VENDOR_HERO}
       />
       <RoleBenefitsSection
         items={[
           {
-            title: 'Organizers come to you',
-            body: 'They filter by service, coverage area and rating while planning real, dated events — so every enquiry arrives with a venue, a date and a genuine budget behind it.',
+            title: 'A request, not a storefront',
+            body: 'You fill a short form. There is no public vendor directory for organizers to browse inside MyTicket.',
           },
           {
-            title: 'Proof beats promises',
-            body: "Your storefront carries verified credentials, photos of past setups, the events you've worked, and reviews from the organizers who hired you.",
+            title: 'Admin decides',
+            body: 'Our team accepts or rejects each request. Status stays visible on your guest account — pending, accepted, or rejected.',
           },
           {
-            title: 'One thread per job',
-            body: 'Briefs, questions, quotes and attachments stay in one conversation — and completed work converts into a public review that wins the next one.',
+            title: 'Contact outside MyTicket',
+            body: 'When we need your services, we contact you directly. Quotes and contracts stay between you and our team — not an in-app thread.',
           },
         ]}
       />
       <RoleStepsSection
         steps={[
           {
-            title: 'Apply',
-            body: 'Five parts, ~10 minutes. Licence and work photos carry it.',
+            title: 'Submit',
+            body: 'Short form from your guest account — licence and work photos help.',
           },
           {
-            title: 'Get verified',
+            title: 'Get reviewed',
             body: (
               <>
                 Credentials checked,{' '}
-                <RoleStepCheckLine>badge earned — 2–5 working days.</RoleStepCheckLine>
+                <RoleStepCheckLine>decision in 2–5 working days.</RoleStepCheckLine>
               </>
             ),
           },
           {
-            title: 'Go live',
-            body: 'Your storefront appears in the vendors directory, filterable by service and area.',
+            title: 'Track status',
+            body: 'Follow pending / accepted / rejected on your account.',
           },
           {
-            title: 'Quote the work',
-            body: 'Enquiries arrive with the event brief. Accept what fits, on your terms.',
+            title: 'We reach out',
+            body: 'If accepted, contact happens outside the platform when needed.',
           },
           {
-            title: 'Deliver & grow',
-            body: 'Completed jobs unlock organizer reviews and show on your event history.',
+            title: 'Keep being a guest',
+            body: 'Tickets, wallet and reviews never change with this request.',
           },
         ]}
       />
       <RoleMoneyAndNeeds
         moneyRows={[
-          { label: 'Your storefront', value: 'Free, always' },
-          {
-            label: 'Your contracts',
-            value: '100% yours — agreed directly with the organizer',
-          },
-          { label: "MyTicket's cut", value: 'None on marketplace work' },
+          { label: 'Submitting a request', value: 'Free' },
+          { label: 'Separate login role', value: 'None — guest only' },
+          { label: 'In-app booking', value: 'Not available' },
         ]}
-        moneyFootnote="MyTicket introduces you and hosts the conversation. Quotes, invoicing and payment stay between you and the organizer — we're upfront about that boundary on every enquiry."
+        moneyFootnote="MyTicket reviews your request for our own roster. There is no organizer browse-and-book flow or commission on off-platform work."
         needItems={[
-          'Business licence or credentials — verified for the badge',
+          'Business licence or credentials',
           'Government ID of the person responsible',
           'At least one photo of real previous work',
           'Your services, coverage area and business story',
         ]}
-        needNoteBody="Every vendor is checked in 2–5 working days — organizers book you faster because the vetting is already done."
+        needNoteBody="Every request is checked in 2–5 working days. Acceptance does not create a vendor login."
       />
       <RoleFaqSection
         items={[
           {
-            question: 'Does MyTicket take a commission on my contracts?',
+            question: 'Do I get a vendor account after acceptance?',
             answer:
-              'No. Marketplace work is commission-free — you agree scope and price directly with the organizer and invoice them directly. MyTicket earns from ticket sales, not your contracts.',
+              'No. You keep the same guest login. Acceptance means our team may contact you outside MyTicket when your services are needed.',
           },
           {
-            question: "My service isn't in the category list.",
+            question: 'Can organizers browse and book me here?',
             answer:
-              'Pick the closest category and describe what you actually offer in your storefront. If we need a new category for your craft, our review team will add it during verification.',
+              'No. There is no public vendor directory. Matching and contact are handled by MyTicket outside the guest app.',
           },
           {
             question: 'How large does my business need to be?',
             answer:
-              "There's no minimum size. Solo operators and full crews both list — what matters is real credentials and photos of work you've actually delivered.",
+              "There's no minimum size. Solo operators and full crews both apply — what matters is real credentials and photos of work you've delivered.",
           },
           {
-            question: 'Can I use the same account to buy tickets?',
+            question: 'Can I still buy tickets?',
             answer:
-              'Yes. Your guest account carries the vendor role. Tickets, wallet and reviews stay untouched when you apply.',
+              'Yes. Submitting a request never changes tickets, wallet or reviews on your guest account.',
           },
         ]}
       />
       <RoleClosingCta
-        title="Somewhere, an organizer needs exactly your kit."
-        subtitle="Ten minutes to apply, 2–5 days to review — then they can find you."
-        buttonLabel="Start your application"
+        title="Ready to be on our radar?"
+        subtitle="A few minutes to submit, 2–5 days to review — then we contact you if there's a fit."
+        buttonLabel="Submit your request"
         buttonTo="/apply/vendor"
       />
     </>

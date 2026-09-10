@@ -12,7 +12,7 @@ const DOCS = [
       '2 · Tickets & purchases',
       '3 · Refunds & cancellations',
       '4 · Resale & gifting',
-      '5 · The marketplace boundary',
+      '5 · Business applications',
       '6 · Wallet & money',
     ],
     sections: [
@@ -33,8 +33,8 @@ const DOCS = [
         body: 'Tickets may be resold only through the MyTicket auction, where the transfer is verified and the seller pays a 10% commission. Tickets bought outside MyTicket carry no guarantee and may be refused at the gate. Gifting transfers ownership permanently once the recipient claims; gifted and auction-won tickets cannot be re-gifted or resold.',
       },
       {
-        title: '5 · The marketplace boundary',
-        body: 'MyTicket introduces organizers to talents and vendors and hosts their conversations. We do not broker, guarantee, or arbitrate the work itself — contracts, pricing, invoicing and payment happen directly between the parties. Reviews reflect the experience of real counterparties and must stay factual.',
+        title: '5 · Business applications',
+        body: 'Vendors and talents may submit a request from a guest account for MyTicket to review. That does not create a separate login role. Organizer accounts are created only after an office agreement. Guests do not browse organizer or vendor directories to book services inside the product.',
       },
       {
         title: '6 · Wallet & money',
@@ -60,7 +60,7 @@ const DOCS = [
       },
       {
         title: '2 · How we use it',
-        body: 'Data powers the product you asked for: tickets, waitlists, wallet, marketplace introductions and customer support. We do not sell personal data.',
+        body: 'Data powers the product you asked for: tickets, waitlists, wallet, business applications and customer support. We do not sell personal data.',
       },
       {
         title: '3 · Who we share with',

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { FilterChip, StatusBadge } from '@/components/data-display'
 import { StarFillIcon } from '@/components/icons'
@@ -18,12 +18,11 @@ import {
 } from '@/pages/_guest'
 
 const TABS = [
-  { label: 'All', count: 7 },
-  { label: 'Events', count: 2 },
-  { label: 'Talents', count: 1 },
-  { label: 'Experiences', count: 1 },
-  { label: 'Auctions', count: 1 },
-  { label: 'Vendors & organizers', count: 2 },
+  { label: 'All', count: 5, kinds: null },
+  { label: 'Events', count: 2, kinds: ['Event'] },
+  { label: 'Talents', count: 1, kinds: ['Talent'] },
+  { label: 'Experiences', count: 1, kinds: ['Experience'] },
+  { label: 'Auctions', count: 1, kinds: ['Auction'] },
 ] as const
 
 const SUGGESTIONS = [
@@ -95,30 +94,6 @@ const RESULTS = [
     image: SEARCH_RESULT_IMAGES[4],
     mediaRounded: 'rounded-[12px]',
   },
-  {
-    kind: 'Organizer',
-    title: 'Riyadh Season',
-    meta: 'Entertainment season · 84 events',
-    blurb: 'The Kingdom’s flagship entertainment calendar across Boulevard and beyond.',
-    price: '1.2M followers',
-    rating: '4.8',
-    cta: 'View organizer',
-    to: `/organizers/${slugify('Riyadh Season')}`,
-    image: SEARCH_RESULT_IMAGES[5],
-    mediaRounded: 'rounded-[12px]',
-  },
-  {
-    kind: 'Vendor',
-    title: 'Nova Stage Systems',
-    meta: 'Staging · Rigging · Lighting',
-    blurb: 'Kingdom-wide production vendor for arenas, festivals and private majlis.',
-    price: 'From SAR 9,000',
-    rating: '4.9',
-    cta: 'View vendor',
-    to: `/vendors/${slugify('Nova Stage Systems')}`,
-    image: SEARCH_RESULT_IMAGES[6],
-    mediaRounded: 'rounded-[12px]',
-  },
 ] as const
 
 const RELATED = [
@@ -130,12 +105,64 @@ const RELATED = [
   'Family shows',
 ] as const
 
+const CITY_OPTIONS = [
+  { label: 'Riyadh', count: 5 },
+  { label: 'Jeddah', count: 1 },
+  { label: 'AlUla', count: 1 },
+  { label: 'Dammam', count: 0 },
+] as const
+
+function parsePrice(price: string): number {
+  const n = Number.parseFloat(price.replace(/[^\d.]/g, ''))
+  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY
+}
+
 /** Search results — Figma `207:5205`. */
 export function SearchResultsPage() {
+  const baseId = useId()
   const [params] = useSearchParams()
   const query = params.get('q') || 'riyadh season'
-  const [tab, setTab] = useState('All')
+  const [tab, setTab] = useState<(typeof TABS)[number]['label']>('All')
   const [sort, setSort] = useState('Most relevant')
+  const [cities, setCities] = useState<string[]>(['Riyadh'])
+
+  const toggleCity = (label: string) => {
+    setCities((prev) =>
+      prev.includes(label) ? prev.filter((c) => c !== label) : [...prev, label],
+    )
+  }
+
+  const activeTab = TABS.find((t) => t.label === tab) ?? TABS[0]
+  const filtered = useMemo(() => {
+    let list = !activeTab.kinds
+      ? [...RESULTS]
+      : RESULTS.filter((r) => (activeTab.kinds as readonly string[]).includes(r.kind))
+
+    if (cities.length > 0) {
+      list = list.filter((r) => {
+        const hay = `${r.meta} ${r.title} ${r.blurb}`.toLowerCase()
+        return cities.some((c) => hay.includes(c.toLowerCase()))
+      })
+    }
+
+    if (sort === 'Price') {
+      list = [...list].sort((a, b) => parsePrice(a.price) - parsePrice(b.price))
+    } else if (sort === 'Soonest') {
+      // Fixture order already approximates soonest within the set.
+      list = [...list]
+    }
+
+    return list
+  }, [activeTab, cities, sort])
+
+  const tabCounts = useMemo(() => {
+    return TABS.map((t) => ({
+      ...t,
+      count: t.kinds
+        ? RESULTS.filter((r) => (t.kinds as readonly string[]).includes(r.kind)).length
+        : RESULTS.length,
+    }))
+  }, [])
 
   return (
     <>
@@ -152,11 +179,17 @@ export function SearchResultsPage() {
       <PageSection padTop={14} padBottom={0}>
         <h1 className="text-heading-h2 text-ink-primary">Results for “{query}”</h1>
         <p className="mt-[6px] text-[15px] text-ink-secondary">
-          7 matches across events, talents, experiences and the marketplace.
+          {RESULTS.length} matches across events, talents, experiences and auctions.
         </p>
         <div className="mt-xl flex flex-wrap gap-[8px]">
           {SUGGESTIONS.map((s) => (
-            <FilterChip key={s} className="h-[32px] rounded-[16px] px-md text-[13px]">
+            <FilterChip
+              key={s}
+              className="h-[32px] rounded-[16px] px-md text-[13px]"
+              onClick={() => {
+                window.location.href = `/search?q=${encodeURIComponent(s)}`
+              }}
+            >
               {s}
             </FilterChip>
           ))}
@@ -166,7 +199,7 @@ export function SearchResultsPage() {
           `Tab` (14.5px / ink-brand-mid). Count badges are local to this frame.
         */}
         <DetailSectionTabs className="mt-[18px] gap-0 border-border-default" aria-label="Result types">
-          {TABS.map((t) => (
+          {tabCounts.map((t) => (
             <DetailSectionTab
               key={t.label}
               active={tab === t.label}
@@ -186,7 +219,31 @@ export function SearchResultsPage() {
         <CatalogBody
           filterWidth={244}
           filters={
-            <FilterSidebar title="Refine" clearLabel="Reset" width={244}>
+            <FilterSidebar
+              title="Refine"
+              clearLabel="Reset"
+              width={244}
+              interactive
+              onClear={() => setCities([])}
+            >
+              <div>
+                <p className="pt-[15px] text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
+                  City
+                </p>
+                <div className="mt-[11px] flex flex-col gap-[9px]">
+                  {CITY_OPTIONS.map((opt, i) => (
+                    <Checkbox
+                      key={opt.label}
+                      id={`${baseId}-city-${i}`}
+                      label={opt.label}
+                      count={opt.count}
+                      fullWidth
+                      checked={cities.includes(opt.label)}
+                      onCheckedChange={() => toggleCity(opt.label)}
+                    />
+                  ))}
+                </div>
+              </div>
               {(
                 [
                   {
@@ -196,15 +253,6 @@ export function SearchResultsPage() {
                       { label: 'This week', count: 3 },
                       { label: 'This month', count: 5 },
                       { label: 'Any time' },
-                    ],
-                  },
-                  {
-                    label: 'City',
-                    options: [
-                      { label: 'Riyadh', count: 5 },
-                      { label: 'Jeddah', count: 1 },
-                      { label: 'AlUla', count: 1 },
-                      { label: 'Dammam', count: 0 },
                     ],
                   },
                   {
@@ -227,19 +275,19 @@ export function SearchResultsPage() {
                   },
                 ] as const
               ).map((group) => (
-                <div key={group.label}>
+                <div key={group.label} title="Not applied yet">
                   <p className="pt-[15px] text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
                     {group.label}
                   </p>
-                  <div className="mt-[11px] flex flex-col gap-[9px]">
+                  <div className="mt-[11px] flex flex-col gap-[9px] opacity-55">
                     {group.options.map((opt, i) => (
                       <Checkbox
                         key={opt.label}
-                        id={`search-${group.label}-${i}`}
+                        id={`${baseId}-${group.label}-${i}`}
                         label={opt.label}
                         count={'count' in opt ? opt.count : undefined}
                         fullWidth
-                        defaultChecked={opt.label === 'Riyadh'}
+                        disabled
                       />
                     ))}
                   </div>
@@ -249,8 +297,11 @@ export function SearchResultsPage() {
           }
         >
           <ResultsToolbar
-            countLabel="7 results"
-            activeFilter="Riyadh"
+            countLabel={`${filtered.length} result${filtered.length === 1 ? '' : 's'}`}
+            activeFilter={cities.length === 1 ? cities[0] : undefined}
+            onClearFilter={
+              cities.length === 1 ? () => setCities([]) : undefined
+            }
             showViewToggle={false}
             trailing={
               <div className="flex items-center gap-[8px]">
@@ -269,19 +320,19 @@ export function SearchResultsPage() {
             }
           />
 
-          <div className="mt-lg flex flex-col gap-[12px]">
-            {RESULTS.map((result) => (
+          <div className="mt-lg flex flex-col gap-[10px]">
+            {filtered.map((result) => (
               <Link
                 key={result.title}
                 to={result.to}
-                className="flex gap-0 overflow-hidden rounded-[18px] border border-border-default bg-surface-default"
+                className="flex gap-0 overflow-hidden rounded-[16px] border border-border-default bg-surface-default"
               >
                 <div
-                  className={`m-lg h-[118px] w-[168px] shrink-0 overflow-hidden ${result.mediaRounded}`}
+                  className={`m-[14px] h-[118px] w-[168px] shrink-0 overflow-hidden ${result.mediaRounded}`}
                 >
                   <img src={result.image} alt="" className="size-full object-cover" />
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col py-lg pr-lg">
+                <div className="flex min-w-0 flex-1 flex-col justify-center py-[14px] pr-[14px]">
                   <div className="flex items-center gap-[8px]">
                     <StatusBadge tone="neutralOutline">{result.kind}</StatusBadge>
                     {'flag' in result && result.flag && (
@@ -290,14 +341,14 @@ export function SearchResultsPage() {
                       </span>
                     )}
                   </div>
-                  <h3 className="mt-[7px] text-[22px] leading-[1.2] font-extrabold tracking-[-0.4px] text-ink-primary">
+                  <h3 className="mt-[6px] text-[20px] leading-[1.2] font-extrabold tracking-[-0.35px] text-ink-primary">
                     {result.title}
                   </h3>
-                  <p className="mt-[5px] text-[14px] text-ink-secondary">{result.meta}</p>
-                  <p className="mt-[9px] max-w-[620px] text-[14px] text-ink-secondary">
+                  <p className="mt-[4px] text-[13px] text-ink-secondary">{result.meta}</p>
+                  <p className="mt-[6px] max-w-[620px] text-[13px] leading-[1.45] text-ink-secondary">
                     {result.blurb}
                   </p>
-                  <div className="mt-[12px] flex items-center justify-between">
+                  <div className="mt-[10px] flex items-center justify-between">
                     <div className="flex items-center gap-[14px] text-[13px]">
                       <span className="font-semibold text-ink-primary">{result.price}</span>
                       {result.kind !== 'Auction' ? (
@@ -309,7 +360,7 @@ export function SearchResultsPage() {
                         <span className="text-ink-muted">{result.rating}</span>
                       )}
                     </div>
-                    <Button size="sm" variant="secondary">
+                    <Button size="sm" variant="secondary" tabIndex={-1}>
                       {result.cta}
                     </Button>
                   </div>
@@ -318,11 +369,20 @@ export function SearchResultsPage() {
             ))}
           </div>
 
-          <div className="mt-[26px] flex justify-center">
-            <Button variant="secondary" className="h-[44px] rounded-[22px] px-[22px]">
-              Show more results
-            </Button>
-          </div>
+          {filtered.length < RESULTS.length && (
+            <div className="mt-[26px] flex justify-center">
+              <Button
+                variant="secondary"
+                className="h-[44px] rounded-[22px] px-[22px]"
+                onClick={() => {
+                  setTab('All')
+                  setCities([])
+                }}
+              >
+                Show all results
+              </Button>
+            </div>
+          )}
 
           <div className="mt-[34px]">
             <p className="text-[14px] font-medium text-ink-secondary">
@@ -330,7 +390,13 @@ export function SearchResultsPage() {
             </p>
             <div className="mt-md flex flex-wrap gap-[9px]">
               {RELATED.map((label) => (
-                <FilterChip key={label} className="h-[36px] rounded-[18px] text-[13px]">
+                <FilterChip
+                  key={label}
+                  className="h-[36px] rounded-[18px] text-[13px]"
+                  onClick={() => {
+                    window.location.href = `/search?q=${encodeURIComponent(label)}`
+                  }}
+                >
                   {label}
                 </FilterChip>
               ))}

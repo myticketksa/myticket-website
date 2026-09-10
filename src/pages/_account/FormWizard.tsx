@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon } from '@/components/icons'
+import { Logo } from '@/components/navigation'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
@@ -24,6 +25,7 @@ export function FormWizardShell({
   trackLabel = 'Track your submissions',
   headerRight,
   showFooterLinks = true,
+  onClear,
 }: {
   eyebrow?: string
   title: string
@@ -45,25 +47,30 @@ export function FormWizardShell({
   trackLabel?: string
   headerRight?: ReactNode
   showFooterLinks?: boolean
+  onClear?: () => void
 }) {
   const disableBack = backDisabled ?? activeStep === 0
 
   return (
     <>
-      {(eyebrow || headerRight) && (
-        <div className="border-b border-border-default">
-          <div className="mx-auto flex h-[72px] w-full max-w-[1120px] items-center justify-between px-[40px]">
-            <p className="text-[13px] font-bold tracking-[1.04px] text-ink-muted uppercase">
-              {eyebrow}
-            </p>
-            {headerRight ?? (
-              <button type="button" className="text-[14px] font-semibold text-ink-secondary">
-                Save & exit
-              </button>
-            )}
-          </div>
+      <div className="border-b border-border-default bg-bg-page">
+        <div className="mx-auto flex h-[72px] w-full max-w-[var(--container-page)] items-center justify-between px-page-gutter">
+          <Link to="/" className="shrink-0" aria-label="MyTicket home">
+            <Logo height={36} />
+          </Link>
+          <p className="text-[13px] font-bold tracking-[1.04px] text-ink-muted uppercase">
+            {eyebrow ?? 'Application'}
+          </p>
+          {headerRight ?? (
+            <Link
+              to="/"
+              className="text-[14px] font-semibold text-ink-secondary hover:text-ink-brand"
+            >
+              Save & exit
+            </Link>
+          )}
         </div>
-      )}
+      </div>
 
       <PageSection padTop={44} padBottom={96}>
         <div className="mx-auto w-full max-w-[720px]">
@@ -155,7 +162,11 @@ export function FormWizardShell({
                   <span className="font-semibold text-ink-brand">{trackLabel}</span>
                 )}
               </p>
-              <button type="button" className="font-semibold text-state-danger">
+              <button
+                type="button"
+                className="font-semibold text-state-danger"
+                onClick={onClear}
+              >
                 Clear and start over
               </button>
             </div>

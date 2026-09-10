@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeftIcon, PlusIcon } from '@/components/icons'
+import { PlusIcon } from '@/components/icons'
 import { Button, Field, Select, Textarea, TextInput } from '@/components/ui'
-import { PageSection } from '@/layouts'
+import { FunnelHeader, PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
 
 const KINDS = [
@@ -27,20 +27,11 @@ export function NewSupportCasePage() {
 
   return (
     <>
-      <div className="border-b border-border-default">
-        <div className="mx-auto flex h-[72px] w-full max-w-[var(--container-page)] items-center justify-between px-page-gutter">
-          <p className="text-[13px] font-bold tracking-[1.04px] text-ink-muted uppercase">
-            Raise something with us
-          </p>
-          <Link
-            to="/support"
-            className="inline-flex items-center gap-[5px] text-[14px] font-semibold text-ink-secondary hover:text-ink-brand"
-          >
-            <ArrowLeftIcon size={14} />
-            My support cases
-          </Link>
-        </div>
-      </div>
+      <FunnelHeader
+        label="Raise something with us"
+        backHref="/support"
+        backLabel="My support cases"
+      />
 
       <PageSection padTop={44} padBottom={96}>
         <div className="mx-auto w-full max-w-[720px]">
@@ -150,7 +141,7 @@ export function NewSupportCasePage() {
                 </p>
                 <button
                   type="button"
-                  className="flex h-[46px] w-full items-center justify-center gap-[6px] rounded-[12px] border-[1.5px] border-dashed border-[#e0c6b4] bg-bg-page text-[13.5px] font-semibold text-ink-secondary"
+                  className="flex h-[46px] w-full items-center justify-center gap-[6px] rounded-[12px] border-[1.5px] border-dashed border-border-dashed bg-bg-page text-[13.5px] font-semibold text-ink-secondary"
                 >
                   <PlusIcon size={14} weight="bold" />
                   Add a screenshot or file

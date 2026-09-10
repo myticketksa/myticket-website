@@ -23,7 +23,7 @@ export function FileDropButton({
       type="button"
       className={cn(
         'flex min-h-[46px] w-full flex-col items-center justify-center gap-[4px] rounded-[12px]',
-        'border-[1.5px] border-dashed border-[#e0c6b4] bg-bg-page px-[14px] py-[12px]',
+        'border-[1.5px] border-dashed border-border-dashed bg-bg-page px-[14px] py-[12px]',
         'text-[13.5px] font-semibold text-ink-secondary',
         'transition-colors hover:border-border-focus hover:text-ink-primary',
         className,

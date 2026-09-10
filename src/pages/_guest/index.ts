@@ -20,29 +20,22 @@ export {
   EXPERIENCE_DETAIL_NEARBY,
 } from './experiences-media'
 export {
-  ORGANIZER_COVER_IMAGES,
-  ORGANIZER_MARK_IMAGES,
-  ORGANIZER_DETAIL_COVER,
-  ORGANIZER_DETAIL_MARK,
-  ORGANIZER_DETAIL_EVENT_IMAGES,
-} from './organizers-media'
-export {
   AUCTION_EVENT_COVER,
   AUCTION_LISTING_IMAGES,
 } from './auctions-media'
 export { SEARCH_RESULT_IMAGES } from './search-media'
-export {
-  VENDOR_DETAIL_MEDIA,
-  VENDOR_DIRECTORY,
-  VENDOR_DIRECTORY_IMAGES,
-} from './vendors-media'
 export {
   CatalogPageHead,
   CatalogSaveAlertActions,
   type CatalogChip,
   type CatalogPageHeadProps,
 } from './CatalogPageHead'
-export { FilterSidebar, type FilterGroup, type FilterSidebarProps } from './FilterSidebar'
+export {
+  FilterSidebar,
+  type FilterGroup,
+  type FilterSidebarProps,
+  type FilterSidebarState,
+} from './FilterSidebar'
 export { ResultsToolbar, type ResultsToolbarProps } from './ResultsToolbar'
 export { CatalogPager, type CatalogPagerProps } from './CatalogPager'
 export { CatalogBody, type CatalogBodyProps } from './CatalogBody'

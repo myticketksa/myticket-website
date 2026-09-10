@@ -1,7 +1,9 @@
 /**
- * Role-landing hero photography. Figma `207:12388` / `12611` / `12768` leave the
- * hero slot as ImagePlaceholder; we fill it with committed MyTicket photography
- * that matches each slot caption (crew / sold-out show / performer).
+ * Optional role-landing hero photography.
+ *
+ * Figma `207:12388` / `12611` / `12768` draw the hero slot as ImagePlaceholder
+ * with a caption. Pass these into `RoleLandingHero` via `imagerySrc` only when
+ * product opts into real photos; default pages leave the prop unset.
  */
 import vendorHero from '@/assets/home/cta-band.jpg'
 import organizerHero from '@/assets/organizers/detail-cover.jpg'

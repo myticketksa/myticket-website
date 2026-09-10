@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   CheckIcon,
   CloseIcon,
@@ -12,7 +12,16 @@ import { Divider, FilterChip, PriceDisplay } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 
-type SeatStatus = 'available' | 'vip' | 'gold' | 'silver' | 'bronze' | 'sold' | 'held' | 'selected' | 'accessible'
+type SeatStatus =
+  | 'available'
+  | 'vip'
+  | 'gold'
+  | 'silver'
+  | 'bronze'
+  | 'sold'
+  | 'held'
+  | 'selected'
+  | 'accessible'
 type Zone = 'all' | 'vip' | 'gold' | 'silver' | 'bronze'
 
 interface SelectedSeat {
@@ -32,12 +41,16 @@ const ZONES: { id: Zone; label: string }[] = [
 
 const PRICE_TIERS = [
   { tone: 'bg-seat-vip', label: 'VIP front rows', left: '34 left', price: 'SAR 680+' },
-  { tone: 'bg-brand-primary', label: 'Gold', left: '32 left', price: 'SAR 480+' },
-  { tone: 'bg-seat-silver', label: 'Silver', left: '117 left', price: 'SAR 260+' },
-  { tone: 'bg-seat-bronze', label: 'Bronze rear', left: '73 left', price: 'SAR 180+' },
+  { tone: 'bg-brand-identity-end', label: 'Gold', left: '32 left', price: 'SAR 480+' },
+  { tone: 'bg-ink-brand', label: 'Silver', left: '117 left', price: 'SAR 260+' },
+  { tone: 'bg-ink-secondary', label: 'Bronze rear', left: '73 left', price: 'SAR 180+' },
 ] as const
 
-/** Compact seat-map fixture — enough rows to read like the Figma hall. */
+const ZOOM_MIN = 75
+const ZOOM_MAX = 150
+const ZOOM_STEP = 25
+
+/** Dense hall fixture — closer to Figma `207:7446` capacity with aisle gaps. */
 function buildRow(row: string, pattern: SeatStatus[]): { id: string; status: SeatStatus }[] {
   return pattern.map((status, index) => ({
     id: `${row}${index + 1}`,
@@ -45,83 +58,92 @@ function buildRow(row: string, pattern: SeatStatus[]): { id: string; status: Sea
   }))
 }
 
+function patternFrom(
+  length: number,
+  base: SeatStatus,
+  sold: number[],
+  extras: Record<number, SeatStatus> = {},
+): SeatStatus[] {
+  return Array.from({ length }, (_, i) => {
+    if (extras[i]) return extras[i]
+    if (sold.includes(i)) return 'sold'
+    return base
+  })
+}
+
+function scatterSold(length: number, seed: number, every = 7): number[] {
+  return Array.from({ length }, (_, i) => i).filter((i) => (i * 3 + seed) % every === 0)
+}
+
 const FLOOR_ROWS: { row: string; seats: ReturnType<typeof buildRow> }[] = [
   {
     row: 'A',
-    seats: buildRow(
-      'A',
-      Array.from({ length: 24 }, (_, i) =>
-        [4, 7, 10, 15, 18, 21].includes(i) ? 'sold' : 'vip',
-      ),
-    ),
+    seats: buildRow('A', patternFrom(36, 'vip', scatterSold(36, 1, 6), { 18: 'held' })),
   },
   {
     row: 'B',
-    seats: buildRow(
-      'B',
-      Array.from({ length: 24 }, (_, i) => {
-        if (i === 4) return 'held'
-        if ([0, 3, 8, 14, 19].includes(i)) return 'sold'
-        return 'vip'
-      }),
-    ),
+    seats: buildRow('B', patternFrom(36, 'vip', scatterSold(36, 2, 6), { 10: 'held' })),
   },
   {
     row: 'C',
     seats: buildRow(
       'C',
-      Array.from({ length: 24 }, (_, i) => {
-        if ([2, 6, 15, 20].includes(i)) return 'sold'
-        if (i < 4) return 'vip'
+      Array.from({ length: 38 }, (_, i) => {
+        if (scatterSold(38, 3, 9).includes(i)) return 'sold'
+        if (i < 8) return 'vip'
         return 'gold'
       }),
     ),
   },
   {
     row: 'D',
-    seats: buildRow(
-      'D',
-      Array.from({ length: 24 }, (_, i) => ([3, 9, 16].includes(i) ? 'sold' : 'gold')),
-    ),
+    seats: buildRow('D', patternFrom(38, 'gold', scatterSold(38, 4, 8), { 19: 'held' })),
   },
   {
     row: 'E',
-    seats: buildRow(
-      'E',
-      Array.from({ length: 24 }, (_, i) => ([1, 11, 18].includes(i) ? 'sold' : 'gold')),
-    ),
+    seats: buildRow('E', patternFrom(38, 'gold', scatterSold(38, 5, 8))),
   },
   {
     row: 'F',
-    seats: buildRow(
-      'F',
-      Array.from({ length: 24 }, (_, i) => ([5, 14].includes(i) ? 'sold' : 'gold')),
-    ),
+    seats: buildRow('F', patternFrom(38, 'gold', scatterSold(38, 6, 7), { 12: 'accessible' })),
+  },
+  {
+    row: 'G',
+    seats: buildRow('G', patternFrom(40, 'gold', scatterSold(40, 7, 8))),
+  },
+  {
+    row: 'H',
+    seats: buildRow('H', patternFrom(40, 'gold', scatterSold(40, 8, 7), { 22: 'held' })),
   },
 ]
 
-const MEZZ_ROWS = ['G', 'H', 'I', 'J', 'K'].map((row, rowIndex) => ({
+const MEZZ_ROWS = ['I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'].map((row, rowIndex) => ({
   row,
   seats: buildRow(
     row,
-    Array.from({ length: 28 }, (_, i) => {
-      if ((i + rowIndex) % 7 === 0) return 'sold'
-      if (i === 20 && row === 'H') return 'accessible'
+    Array.from({ length: 44 }, (_, i) => {
+      if ((i + rowIndex * 3) % 7 === 0) return 'sold'
+      if (i === 28 && row === 'J') return 'accessible'
+      if (i === 11 && row === 'L') return 'held'
+      if (i === 33 && row === 'N') return 'held'
       return 'silver'
     }),
   ),
 }))
 
-const UPPER_ROWS = ['L', 'M', 'N'].map((row, rowIndex) => ({
+const UPPER_ROWS = ['Q', 'R', 'S', 'T', 'U', 'V'].map((row, rowIndex) => ({
   row,
   seats: buildRow(
     row,
-    Array.from({ length: 30 }, (_, i) => {
-      if ((i + rowIndex) % 5 === 0) return 'sold'
+    Array.from({ length: 48 }, (_, i) => {
+      if ((i + rowIndex * 2) % 5 === 0) return 'sold'
+      if (i === 20 && row === 'R') return 'accessible'
       return 'bronze'
     }),
   ),
 }))
+
+const ALL_SEAT_ROWS = [...FLOOR_ROWS, ...MEZZ_ROWS, ...UPPER_ROWS]
 
 const INITIAL_SELECTED: SelectedSeat[] = [
   {
@@ -138,16 +160,23 @@ const INITIAL_SELECTED: SelectedSeat[] = [
   },
 ]
 
+function seatMeta(status: SeatStatus): { price: number; category: string } {
+  if (status === 'vip') return { price: 680, category: 'VIP · Floor – Block A' }
+  if (status === 'silver') return { price: 260, category: 'Silver · Mezzanine – Block B' }
+  if (status === 'bronze') return { price: 180, category: 'Bronze · Upper Tier – Block C' }
+  return { price: 520, category: 'Gold · Floor – Block A' }
+}
+
 function seatClass(status: SeatStatus) {
   switch (status) {
     case 'vip':
       return 'border-seat-vip bg-seat-vip-tint'
     case 'gold':
-      return 'border-brand-primary bg-seat-gold-tint'
+      return 'border-ink-brand bg-bg-tint-brand'
     case 'silver':
       return 'border-seat-silver bg-seat-silver-tint'
     case 'bronze':
-      return 'border-ink-muted bg-seat-bronze-tint'
+      return 'border-ink-secondary bg-border-divider'
     case 'sold':
       return 'border-border-default bg-seat-sold'
     case 'held':
@@ -179,12 +208,12 @@ function SeatButton({
       disabled={!interactive}
       onClick={onClick}
       className={cn(
-        'flex size-[19px] items-center justify-center rounded-[5px] border',
+        'flex size-[15px] items-center justify-center rounded-[4px] border',
         seatClass(status),
         !interactive && 'cursor-not-allowed',
       )}
     >
-      {status === 'selected' && <CheckIcon size={10} className="text-ink-inverse" />}
+      {status === 'selected' && <CheckIcon size={9} className="text-ink-inverse" />}
     </button>
   )
 }
@@ -211,40 +240,46 @@ function SeatBlock({
         <Divider tone="divider" className="flex-1" />
         <p className="text-[12px] text-ink-muted">{range}</p>
       </div>
-      <div className="mt-md flex flex-col items-center gap-[6px]">
-        {rows.map(({ row, seats }) => (
-          <div key={row} className="flex items-center gap-[10px]">
-            <span className="w-[18px] text-right text-[11px] font-semibold text-ink-muted">
-              {row}
-            </span>
-            <div className="flex gap-[4px]">
-              {seats.map((seat, index) => {
-                const status = selectedIds.has(seat.id) ? 'selected' : seat.status
-                const zoneMatch =
-                  zone === 'all' ||
-                  status === 'selected' ||
-                  status === zone ||
-                  (status !== 'vip' &&
-                    status !== 'gold' &&
-                    status !== 'silver' &&
-                    status !== 'bronze')
-                return (
-                  <span
-                    key={seat.id}
-                    className={cn(!zoneMatch && 'opacity-30')}
-                  >
-                    <SeatButton
-                      status={status}
-                      label={`${row}${index + 1}`}
-                      onClick={() => onToggle(seat.id, row, index + 1, seat.status)}
-                    />
-                  </span>
-                )
-              })}
+      <div className="mt-md flex flex-col items-center gap-[5px]">
+        {rows.map(({ row, seats }) => {
+          const aisle = Math.floor(seats.length / 2)
+          return (
+            <div key={row} className="flex items-center gap-[8px]">
+              <span className="w-[16px] text-right text-[10px] font-semibold text-ink-muted">
+                {row}
+              </span>
+              <div className="flex gap-[3px]">
+                {seats.map((seat, index) => {
+                  const status = selectedIds.has(seat.id) ? 'selected' : seat.status
+                  const zoneMatch =
+                    zone === 'all' ||
+                    status === 'selected' ||
+                    status === zone ||
+                    (status !== 'vip' &&
+                      status !== 'gold' &&
+                      status !== 'silver' &&
+                      status !== 'bronze')
+                  return (
+                    <span
+                      key={seat.id}
+                      className={cn(
+                        !zoneMatch && 'opacity-30',
+                        index === aisle && 'ml-[10px]',
+                      )}
+                    >
+                      <SeatButton
+                        status={status}
+                        label={`${row}${index + 1}`}
+                        onClick={() => onToggle(seat.id, row, index + 1, seat.status)}
+                      />
+                    </span>
+                  )
+                })}
+              </div>
+              <span className="w-[16px] text-[10px] font-semibold text-ink-muted">{row}</span>
             </div>
-            <span className="w-[18px] text-[11px] font-semibold text-ink-muted">{row}</span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
@@ -254,7 +289,9 @@ function SeatBlock({
  * Seat Selection — Figma `207:7446`. Purchase header comes from `PurchaseLayout`.
  */
 export function SeatSelectionPage() {
+  const navigate = useNavigate()
   const [zone, setZone] = useState<Zone>('all')
+  const [zoom, setZoom] = useState(100)
   const [selected, setSelected] = useState<SelectedSeat[]>(INITIAL_SELECTED)
   const selectedIds = useMemo(() => new Set(selected.map((seat) => seat.id)), [selected])
 
@@ -272,16 +309,7 @@ export function SeatSelectionPage() {
       }
       if (current.length >= 6) return current
 
-      const price =
-        status === 'vip' ? 680 : status === 'gold' || status === 'selected' ? 520 : status === 'silver' ? 260 : 180
-      const category =
-        status === 'vip'
-          ? 'VIP · Floor – Block A'
-          : status === 'silver'
-            ? 'Silver · Mezzanine – Block B'
-            : status === 'bronze'
-              ? 'Bronze · Upper Tier – Block C'
-              : 'Gold · Floor – Block A'
+      const { price, category } = seatMeta(status === 'selected' ? 'gold' : status)
 
       return [
         ...current,
@@ -293,6 +321,39 @@ export function SeatSelectionPage() {
         },
       ]
     })
+  }
+
+  function pickBestAvailable() {
+    const preferred: SeatStatus[] =
+      zone === 'all' ? ['gold', 'vip', 'silver', 'bronze'] : [zone]
+    const need = 2
+    const picks: SelectedSeat[] = []
+
+    for (const status of preferred) {
+      for (const { row, seats } of ALL_SEAT_ROWS) {
+        for (let i = 0; i < seats.length; i++) {
+          const run: { id: string; index: number; status: SeatStatus }[] = []
+          for (let j = i; j < seats.length && run.length < need; j++) {
+            const seat = seats[j]
+            if (seat.status !== status) break
+            run.push({ id: seat.id, index: j + 1, status: seat.status })
+          }
+          if (run.length === need) {
+            for (const seat of run) {
+              const { price, category } = seatMeta(seat.status)
+              picks.push({
+                id: seat.id,
+                label: `Row ${row}, seat ${seat.index}`,
+                category,
+                price,
+              })
+            }
+            setSelected(picks)
+            return
+          }
+        }
+      }
+    }
   }
 
   return (
@@ -320,25 +381,41 @@ export function SeatSelectionPage() {
               variant="secondary"
               icon={<SparkleIcon size={16} />}
               className="h-[34px] rounded-[17px] bg-bg-page px-[14px]"
+              onClick={pickBestAvailable}
             >
               Pick best available
             </Button>
             <div className="flex items-center gap-[4px] rounded-[17px] border border-border-default p-[4px]">
-              <button type="button" className="flex size-[26px] items-center justify-center rounded-[13px]" aria-label="Zoom out">
+              <button
+                type="button"
+                className="flex h-[26px] w-[28px] items-center justify-center rounded-[13px] text-ink-primary disabled:cursor-not-allowed disabled:text-ink-disabled"
+                aria-label="Zoom out"
+                disabled={zoom <= ZOOM_MIN}
+                onClick={() => setZoom((z) => Math.max(ZOOM_MIN, z - ZOOM_STEP))}
+              >
                 <MinusIcon size={15} />
               </button>
               <span className="w-[34px] text-center text-[12px] font-semibold text-ink-secondary">
-                100%
+                {zoom}%
               </span>
-              <button type="button" className="flex size-[26px] items-center justify-center rounded-[13px]" aria-label="Zoom in">
+              <button
+                type="button"
+                className="flex h-[26px] w-[28px] items-center justify-center rounded-[13px] text-ink-primary disabled:cursor-not-allowed disabled:text-ink-disabled"
+                aria-label="Zoom in"
+                disabled={zoom >= ZOOM_MAX}
+                onClick={() => setZoom((z) => Math.min(ZOOM_MAX, z + ZOOM_STEP))}
+              >
                 <PlusIcon size={15} />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-b from-bg-page via-surface-default via-[55%] to-surface-default px-2xl pt-[30px] pb-[26px]">
-          <div className="mx-auto flex w-full max-w-[860px] flex-col items-center">
+        <div className="overflow-auto bg-gradient-to-b from-bg-page via-surface-default via-[55%] to-surface-default px-2xl pt-[30px] pb-[26px]">
+          <div
+            className="mx-auto flex w-full max-w-[980px] origin-top flex-col items-center transition-transform duration-normal ease-standard"
+            style={{ transform: `scale(${zoom / 100})` }}
+          >
             <div className="flex h-[46px] w-full items-center justify-center rounded-b-[46px] bg-surface-inverse">
               <p className="text-[13px] font-bold tracking-[3.64px] text-bg-page">STAGE</p>
             </div>
@@ -470,37 +547,35 @@ export function SeatSelectionPage() {
             <PriceDisplay context="stat">SAR {total.toLocaleString('en-US')}</PriceDisplay>
           </div>
 
-          <Link
-            to="/checkout"
-            className={cn(
-              'mt-lg inline-flex h-[52px] w-full items-center justify-center rounded-[26px]',
-              'bg-brand-gradient text-[16px] font-semibold text-ink-inverse',
-              'hover:bg-none hover:bg-brand-primary',
-              selected.length === 0 && 'pointer-events-none opacity-50',
-            )}
-            aria-disabled={selected.length === 0}
+          <Button
+            type="button"
+            size="lg"
+            className="mt-lg h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
+            disabled={selected.length === 0}
+            onClick={() => navigate('/checkout')}
           >
             Continue to payment · SAR {total.toLocaleString('en-US')}
-          </Link>
+          </Button>
           <p className="mt-md text-center text-[12px] leading-[1.5] text-ink-muted">
             Seats are held for 10 minutes. Maximum 6 per order.
           </p>
         </div>
 
         <div className="rounded-[18px] border border-border-default bg-surface-default p-[18px]">
-          <h3 className="text-[15px] font-semibold text-ink-primary">Seat prices in this hall</h3>
+          <h3 className="text-[14px] font-semibold text-ink-primary">Seat prices in this hall</h3>
           <ul className="mt-md flex flex-col gap-[10px]">
             {PRICE_TIERS.map((tier) => (
               <li key={tier.label} className="flex items-center gap-[10px]">
-                <span className={cn('size-[10px] rounded-full', tier.tone)} />
+                <span className={cn('size-[13px] rounded-[4px]', tier.tone)} />
                 <span className="flex-1 text-[13px] text-ink-primary">{tier.label}</span>
-                <span className="text-[12px] text-ink-muted">{tier.left}</span>
+                <span className="text-[13px] text-ink-secondary">{tier.left}</span>
                 <span className="text-[13px] font-semibold text-ink-primary">{tier.price}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-md text-[12px] leading-[1.5] text-ink-muted">
-            Prices are per seat and vary by row within each zone.
+          <p className="mt-md border-t border-border-divider pt-md text-[12px] leading-[1.5] text-ink-secondary">
+            Prices are per seat and vary by row — front rows cost more than the same tier further
+            back.
           </p>
         </div>
 

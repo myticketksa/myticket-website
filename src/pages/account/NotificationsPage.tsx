@@ -15,12 +15,11 @@ import { NOTIFICATIONS, type NotificationFixture } from '@/pages/_account/fixtur
 import { cn } from '@/lib/cn'
 
 const FILTERS: { id: string; label: string; count?: number }[] = [
-  { id: 'all', label: 'All', count: 3 },
+  { id: 'all', label: 'All', count: 2 },
   { id: 'tickets', label: 'Tickets & orders', count: 1 },
   { id: 'waitlists', label: 'Waitlists', count: 1 },
   { id: 'prices', label: 'Prices & auction' },
   { id: 'following', label: 'Following' },
-  { id: 'enquiries', label: 'Enquiries', count: 1 },
 ]
 
 function NotificationIcon({ icon }: { icon: NotificationFixture['icon'] }) {
@@ -75,7 +74,7 @@ export function NotificationsPage() {
       <AccountPageHead
         eyebrow="Your account"
         title="Notifications"
-        subtitle="3 unread · 9 in the last seven days"
+        subtitle="2 unread · 8 in the last seven days"
         actions={
           <>
             <Button variant="secondary" size="md">
@@ -121,8 +120,8 @@ export function NotificationsPage() {
                       className={cn(
                         'flex flex-col gap-lg rounded-[20px] border px-xl py-[18px] sm:flex-row sm:items-start',
                         item.unread
-                          ? 'border-[#ffc8ae] bg-surface-default'
-                          : 'border-border-default bg-[#fffbf8]',
+                          ? 'border-border-brand-soft bg-surface-default'
+                          : 'border-border-default bg-bg-page',
                       )}
                     >
                       <NotificationIcon icon={item.icon} />

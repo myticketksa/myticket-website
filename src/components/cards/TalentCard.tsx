@@ -36,6 +36,8 @@ export interface TalentCardProps {
   /** Headline under the APPEARING NEXT rule. */
   nextEvent?: string
   verified?: boolean
+  /** Public guest browse: avatar/media, name, discipline, rating only. */
+  limited?: boolean
   image?: string
   className?: string
 }
@@ -49,6 +51,7 @@ export function TalentCard({
   nextLabel,
   nextEvent,
   verified = true,
+  limited = false,
   image,
   className,
 }: TalentCardProps) {
@@ -66,7 +69,7 @@ export function TalentCard({
           <ImagePlaceholder ratio="fill" caption="Event imagery 16:10" />
         )}
 
-        {nextLabel && (
+        {!limited && nextLabel && (
           <p className="absolute top-[10px] left-[10px] rounded-[12px] bg-surface-default px-[10px] py-[5px] text-[11px] font-bold text-ink-primary">
             {nextLabel}
           </p>
@@ -85,12 +88,16 @@ export function TalentCard({
           <span className="flex items-start gap-xs text-ink-primary">
             <StarFillIcon className="mt-[1px] shrink-0" />
             <span className="text-[13px] font-bold">{rating}</span>
-            <span className="text-[13px] font-medium text-ink-muted">({reviews})</span>
+            {!limited && (
+              <span className="text-[13px] font-medium text-ink-muted">({reviews})</span>
+            )}
           </span>
-          <span className="text-[13px] font-medium text-ink-secondary">{city}</span>
+          {!limited && (
+            <span className="text-[13px] font-medium text-ink-secondary">{city}</span>
+          )}
         </div>
 
-        {nextEvent && (
+        {!limited && nextEvent && (
           <>
             <Divider className="my-[11px]" />
             <p className="text-[11px] font-bold tracking-[0.66px] text-brand-gradient-end uppercase">
@@ -146,6 +153,8 @@ export interface TalentDirectoryCardProps {
   image?: string
   onGetTickets?: () => void
   onFollow?: () => void
+  /** Public guest browse: name, discipline, rating only — no hire CTAs. */
+  limited?: boolean
   className?: string
 }
 
@@ -159,6 +168,7 @@ export function TalentDirectoryCard({
   image,
   onGetTickets,
   onFollow,
+  limited = false,
   className,
 }: TalentDirectoryCardProps) {
   return (
@@ -186,9 +196,11 @@ export function TalentDirectoryCard({
       <div className="flex grow flex-col px-lg pt-lg pb-[18px]">
         <h3 className="text-[18px] font-semibold text-ink-primary">{name}</h3>
         <p className="mt-[6px] text-[14px] text-ink-secondary">{discipline}</p>
-        <p className="mt-[6px] text-[13px] text-ink-muted">{meta}</p>
+        {!limited && meta ? (
+          <p className="mt-[6px] text-[13px] text-ink-muted">{meta}</p>
+        ) : null}
 
-        {nextShow && (
+        {!limited && nextShow && (
           <div className="mt-[10px] rounded-[12px] border border-border-divider bg-bg-page px-md py-[11px]">
             <p className="text-[11px] font-bold tracking-[0.66px] text-ink-muted uppercase">
               Next show
@@ -198,18 +210,20 @@ export function TalentDirectoryCard({
           </div>
         )}
 
-        <div className="mt-auto flex w-full gap-sm pt-md">
-          <Button className="h-[40px] flex-1 rounded-[20px]" onClick={onGetTickets}>
-            Get tickets
-          </Button>
-          <Button
-            variant="secondary"
-            className="h-[40px] rounded-[20px] px-[14px]"
-            onClick={onFollow}
-          >
-            Follow
-          </Button>
-        </div>
+        {!limited && (
+          <div className="mt-auto flex w-full gap-sm pt-md">
+            <Button className="h-[40px] flex-1 rounded-[20px]" onClick={onGetTickets}>
+              Get tickets
+            </Button>
+            <Button
+              variant="secondary"
+              className="h-[40px] rounded-[20px] px-[14px]"
+              onClick={onFollow}
+            >
+              Follow
+            </Button>
+          </div>
+        )}
       </div>
     </article>
   )

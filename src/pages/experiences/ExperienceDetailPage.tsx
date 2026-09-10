@@ -57,8 +57,12 @@ export function ExperienceDetailPage() {
               <span className="text-ink-secondary">Up to 12 guests</span>
             </div>
             <div className="mt-[22px] flex gap-row-gap">
-              <Button variant="secondary">Save</Button>
-              <Button variant="secondary">Share</Button>
+              <Button variant="secondary" disabled title="Save requires an account">
+                Save
+              </Button>
+              <Button variant="secondary" disabled title="Share not available yet">
+                Share
+              </Button>
             </div>
 
             <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">About</h2>
@@ -87,9 +91,14 @@ export function ExperienceDetailPage() {
               </div>
               <div className="flex items-center justify-between gap-lg px-lg py-md">
                 <p className="text-[14px] text-ink-secondary">{experience.place}</p>
-                <Button variant="secondary" className="h-[36px] rounded-[18px] px-lg">
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(experience.place)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-[36px] items-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand"
+                >
                   Open in maps
-                </Button>
+                </a>
               </div>
             </div>
           </article>
@@ -100,6 +109,7 @@ export function ExperienceDetailPage() {
             note="Per guest · select a date to confirm"
             primaryLabel="Check availability"
             secondaryLabel="Ask the host"
+            secondaryTo="/support/new"
           />
         </div>
       </PageSection>

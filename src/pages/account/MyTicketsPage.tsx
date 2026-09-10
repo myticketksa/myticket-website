@@ -57,7 +57,7 @@ export function MyTicketsPage() {
               key={ticket.id}
               className="flex overflow-hidden rounded-[20px] border border-border-default bg-surface-default"
             >
-              <div className="relative w-[160px] shrink-0 self-stretch sm:w-[208px]">
+              <div className="relative w-[148px] shrink-0 self-stretch sm:w-[196px]">
                 <img
                   src={ticket.cover}
                   alt=""
@@ -69,7 +69,7 @@ export function MyTicketsPage() {
                   </span>
                 )}
               </div>
-              <div className="flex min-w-0 flex-1 flex-col px-xl py-xl">
+              <div className="flex min-w-0 flex-1 flex-col px-[22px] py-[20px]">
                 <div className="flex flex-wrap items-center gap-[9px]">
                   <StatusBadge tone={statusTone(ticket.status)}>{ticket.status}</StatusBadge>
                   <span className="text-[12px] text-ink-muted">Order {ticket.orderId}</span>
@@ -81,9 +81,9 @@ export function MyTicketsPage() {
                   {ticket.title}
                 </Link>
                 <p className="mt-[5px] text-[14px] text-ink-secondary">{ticket.meta}</p>
-                <div className="mt-lg flex gap-lg border-y border-border-divider py-[14px]">
+                <div className="mt-lg grid grid-cols-2 gap-lg border-y border-border-divider py-[14px] sm:grid-cols-4">
                   {ticket.facts.map((fact) => (
-                    <div key={fact.label} className="min-w-0 flex-1">
+                    <div key={fact.label} className="min-w-0">
                       <p className="text-[11px] font-bold tracking-[0.07em] text-ink-muted uppercase">
                         {fact.label}
                       </p>

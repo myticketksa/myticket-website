@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useLocale } from '@/i18n/locale'
 import { cn } from '@/lib/cn'
 import { Logo } from './Logo'
 
@@ -31,55 +32,10 @@ import { Logo } from './Logo'
  * verbatim. The `href`s are the obvious slugs and still need reconciling against the
  * router once the route table lands.
  */
-const COLUMNS = [
-  {
-    heading: 'Platform',
-    links: [
-      { label: 'Events', href: '/events' },
-      { label: 'Experiences', href: '/experiences' },
-      { label: 'Talents', href: '/talents' },
-      { label: 'Vendors', href: '/vendors' },
-      { label: 'Organizers', href: '/organizers' },
-      { label: 'Auction', href: '/auctions' },
-    ],
-  },
-  {
-    heading: 'Account',
-    links: [
-      { label: 'My tickets', href: '/my-tickets' },
-      { label: 'Favourites & waitlists', href: '/saved' },
-      { label: 'My enquiries', href: '/my-enquiries' },
-      { label: 'Wallet', href: '/wallet' },
-      { label: 'My reviews', href: '/my-reviews' },
-      { label: 'Settings', href: '/settings' },
-    ],
-  },
-  {
-    heading: 'Support',
-    links: [
-      { label: 'About MyTicket', href: '/about' },
-      { label: 'Help centre', href: '/help' },
-      { label: 'Contact us', href: '/support/new' },
-      { label: 'Terms of service', href: '/legal' },
-      { label: 'Privacy policy', href: '/legal' },
-      { label: 'Cookie policy', href: '/legal' },
-    ],
-  },
-  {
-    heading: 'Business',
-    links: [
-      { label: 'Become an organizer', href: '/apply/organizer' },
-      { label: 'Become a talent', href: '/apply/talent' },
-      { label: 'Become a vendor', href: '/apply/vendor' },
-      { label: 'Business sign in', href: '/sign-in' },
-    ],
-  },
-] as const
-
 const SOCIAL = ['Instagram', 'X', 'TikTok', 'YouTube'] as const
 
 const BLURB =
-  'The Saudi platform for live experiences — and the marketplace where the people who make them find each other.'
+  'The Saudi platform for live experiences — find events, book tickets, and follow the artists you love.'
 
 export interface SiteFooterProps {
   size?: 'full' | 'minimal'
@@ -87,6 +43,54 @@ export interface SiteFooterProps {
 }
 
 export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
+  const { roleLabel } = useLocale()
+  const organizer = roleLabel('organizer')
+  const vendor = roleLabel('vendor')
+  const talent = roleLabel('talent')
+
+  const columns = [
+    {
+      heading: 'Platform',
+      links: [
+        { label: 'Events', href: '/events' },
+        { label: 'Experiences', href: '/experiences' },
+        { label: 'Talents', href: '/talents' },
+        { label: 'Auction', href: '/auctions' },
+      ],
+    },
+    {
+      heading: 'Account',
+      links: [
+        { label: 'My tickets', href: '/my-tickets' },
+        { label: 'Favourites & waitlists', href: '/saved' },
+        { label: 'Wallet', href: '/wallet' },
+        { label: 'My reviews', href: '/my-reviews' },
+        { label: 'My submissions', href: '/my-submissions' },
+        { label: 'Settings', href: '/settings' },
+      ],
+    },
+    {
+      heading: 'Support',
+      links: [
+        { label: 'About MyTicket', href: '/about' },
+        { label: 'Help centre', href: '/help' },
+        { label: 'Contact us', href: '/support/new' },
+        { label: 'Terms of service', href: '/legal' },
+        { label: 'Privacy policy', href: '/legal' },
+        { label: 'Cookie policy', href: '/legal' },
+      ],
+    },
+    {
+      heading: 'Business',
+      links: [
+        { label: `For ${organizer}`, href: '/for-organizers' },
+        { label: `Become a ${talent}`, href: '/apply/talent' },
+        { label: `Become a ${vendor}`, href: '/apply/vendor' },
+        { label: 'Business paths', href: '/become-business' },
+      ],
+    },
+  ] as const
+
   return (
     <footer
       className={cn(
@@ -129,7 +133,7 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
             </div>
           </div>
 
-          {COLUMNS.map((column) => (
+          {columns.map((column) => (
             <nav key={column.heading} aria-label={column.heading} className="flex flex-col items-start">
               <p className="text-label-overline mb-[14px] text-ink-brand-mid">{column.heading}</p>
               <ul className="flex w-full flex-col items-start gap-[9px]">

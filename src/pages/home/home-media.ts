@@ -24,16 +24,6 @@ import experience1 from '@/assets/home/experience-1.jpg'
 import experience2 from '@/assets/home/experience-2.jpg'
 import experience3 from '@/assets/home/experience-3.jpg'
 import experience4 from '@/assets/home/experience-4.jpg'
-import organizer1 from '@/assets/home/organizer-1.jpg'
-import organizer2 from '@/assets/home/organizer-2.jpg'
-import organizer3 from '@/assets/home/organizer-3.jpg'
-import organizer4 from '@/assets/home/organizer-4.jpg'
-import organizer5 from '@/assets/home/organizer-5.jpg'
-import organizer6 from '@/assets/home/organizer-6.jpg'
-import vendor1 from '@/assets/home/vendor-1.jpg'
-import vendor2 from '@/assets/home/vendor-2.jpg'
-import vendor3 from '@/assets/home/vendor-3.jpg'
-import vendor5 from '@/assets/home/vendor-5.jpg'
 
 export const HOME_HERO_IMAGES = [heroFeatured1, heroFeatured2] as const
 export const HOME_TALENT_IMAGES = [talent1, talent2, talent3, talent4, talent5] as const
@@ -57,21 +47,4 @@ export const HOME_EXPERIENCE_IMAGES = [
   experience2,
   experience3,
   experience4,
-] as const
-export const HOME_ORGANIZER_AVATARS = [
-  organizer1,
-  organizer2,
-  organizer3,
-  organizer4,
-  organizer5,
-  organizer6,
-] as const
-/** Index 3 and 5 are ImagePlaceholder in Figma — leave undefined so the card draws the gradient. */
-export const HOME_VENDOR_IMAGES = [
-  vendor1,
-  vendor2,
-  vendor3,
-  undefined,
-  vendor5,
-  undefined,
 ] as const

@@ -118,7 +118,7 @@ export function RefundRequestPage() {
 
         <aside className="flex w-full shrink-0 flex-col gap-[14px] lg:w-[380px]">
           <div className="overflow-hidden rounded-[20px] border border-border-default bg-surface-default">
-            <div className="relative h-[189px] bg-gradient-to-br from-[#e8ddd6] to-[#d8ccc4]">
+            <div className="relative h-[189px] bg-placeholder-gradient">
               <img
                 src={ticket.cover}
                 alt=""
@@ -162,7 +162,7 @@ export function RefundRequestPage() {
                       className={cn(
                         'size-[10px] shrink-0 rounded-[5px] border-2',
                         step.active
-                          ? 'border-[#ffd9c4] bg-ink-brand'
+                          ? 'border-border-brand-wash bg-ink-brand'
                           : 'border-border-default bg-surface-default',
                       )}
                     />

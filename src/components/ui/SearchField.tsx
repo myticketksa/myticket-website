@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import type { InputHTMLAttributes } from 'react'
 import { cn } from '@/lib/cn'
-import { SearchIcon } from '@/components/icons'
+import { MagnifyingGlassIcon } from '@/components/icons'
 import { fieldShell } from './TextInput'
 
 /**
@@ -52,14 +52,14 @@ export function SearchField({
         aria-label={props['aria-label'] ?? 'Search'}
         className={cn(search({ size: variant }), 'text-ink-brand', className)}
       >
-        <SearchIcon size={GLYPH.icon} />
+        <MagnifyingGlassIcon size={GLYPH.icon} />
       </button>
     )
   }
 
   return (
     <div className={cn(search({ size: variant }), className)}>
-      <SearchIcon size={GLYPH[variant]} className="shrink-0 text-ink-brand" />
+      <MagnifyingGlassIcon size={GLYPH[variant]} className="shrink-0 text-ink-brand" />
       <input
         type="search"
         placeholder={placeholder}

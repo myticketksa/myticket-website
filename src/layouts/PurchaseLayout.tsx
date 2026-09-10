@@ -11,8 +11,9 @@ import { cn } from '@/lib/cn'
  * Back pair, optional logo or event title, three numbered steps, hold timer.
  * Seat Selection shows the event title; Checkout shows the logo.
  *
- * Figma (`207:7446` / `207:8228`) paints only the current step in brand; prior
- * and upcoming steps share the muted divider style (no green “done” chip).
+ * Figma (`207:7446` / `207:8228`) paints only the current step with the identity
+ * gradient; prior and upcoming steps share the muted divider style (no green
+ * “done” chip).
  */
 export interface PurchaseHeaderProps {
   backLabel?: string
@@ -82,7 +83,8 @@ export function PurchaseHeader({
               <span
                 className={cn(
                   'flex size-[22px] items-center justify-center rounded-[11px] text-[12px] font-bold',
-                  step.state === 'current' && 'bg-brand-gradient text-ink-inverse',
+                  // Figma `207:8228` / `207:7446`: current dot uses identity ramp, not brand.
+                  step.state === 'current' && 'bg-identity-gradient text-ink-inverse',
                   step.state === 'upcoming' && 'bg-border-divider text-ink-muted',
                 )}
               >

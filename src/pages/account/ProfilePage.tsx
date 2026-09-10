@@ -96,7 +96,7 @@ export function ProfilePage() {
             <Avatar
               initials={ACCOUNT_USER.initials}
               size="lg"
-              className="!size-[72px] !bg-surface-inverse !text-[22px] !text-bg-page"
+              className="!size-[84px] !bg-surface-inverse !text-[26px] !text-bg-page"
             />
             <div>
               <div className="flex items-center gap-sm">
@@ -304,7 +304,8 @@ export function ProfilePage() {
                 <div>
                   <p className="text-[16px] font-bold text-ink-primary">Become a business</p>
                   <p className="mt-xs text-[13px] text-ink-secondary">
-                    Organizer, talent or vendor — apply once, get reviewed by our team.
+                    Vendor or talent request — submit once, track admin review. Organizer partnership
+                    is arranged through our office.
                   </p>
                 </div>
               </div>

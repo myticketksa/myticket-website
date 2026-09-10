@@ -38,10 +38,8 @@ import {
   FeaturedHeroCard,
   FeaturedPanelCard,
   LoadingCard,
-  OrganizerCard,
   TalentCard,
   TalentDirectoryCard,
-  VendorCard,
 } from '@/components/cards'
 import { SectionHeader } from '@/components/sections'
 import {
@@ -349,41 +347,15 @@ export function ProbeRoute() {
             highestBid="SAR 1,240"
             buyNow="SAR 1,800"
           />
-          <OrganizerCard name="Riyadh Season" events="84" rating="4.8" />
         </div>
-        <OrganizerCard
-          context="directory"
-          name="Riyadh Season"
-          events="84"
-          rating="4.8"
-          category="Festivals & seasons"
-          followers="128k"
-        />
-      </div>
-
-      <div className="mt-8 grid max-w-[1060px] items-start gap-6 md:grid-cols-2">
-        <VendorCard
-          name="Najd Staging"
-          services="Staging · Rigging · Lighting"
-          rating="4.9"
-          coverage="Covers Riyadh · Jeddah"
-        />
-        <VendorCard
-          context="directory"
-          name="Najd Staging"
-          services="Catering · VIP hosting"
-          rating="4.9"
-          meta="128 events · Riyadh"
-          price="SAR 4,500"
-        />
       </div>
 
       <h2 className="text-heading-h2 mt-14 text-ink-primary">Section header</h2>
       <div className="mt-6 max-w-[1320px]">
         <SectionHeader
           overline="02 · Talents"
-          heading="Book the people who make the night"
-          lede="Singers, oud players, comperes and DJs — each with a verified profile, real reviews and the dates they are already booked."
+          heading="Artists guests follow"
+          lede="Limited public profiles — avatar, name, craft and rating. Booking contact stays with MyTicket off-platform."
           link={{ label: 'See the full selection', href: '#' }}
         />
       </div>

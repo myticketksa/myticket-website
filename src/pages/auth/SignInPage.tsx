@@ -110,14 +110,14 @@ export function SignInPage() {
         <Divider tone="border" className="flex-1" />
       </div>
 
-      <div className="mt-[26px] flex gap-[10px]">
+      <div className="mt-[14px] flex gap-[10px]">
         {(['Apple', 'Google', 'Nafath'] as const).map((provider) => (
           <Button
             key={provider}
             type="button"
             variant="secondary"
             size="md"
-            className="h-12 flex-1 rounded-[24px] border border-border-default font-semibold"
+            className="h-12 flex-1 rounded-[24px] border border-border-default bg-surface-default font-semibold"
           >
             {provider}
           </Button>
@@ -126,12 +126,16 @@ export function SignInPage() {
 
       <div className="mt-[28px] rounded-[14px] border border-border-default bg-bg-warm px-lg py-[14px]">
         <p className="text-[13px] leading-[1.5] text-ink-body">
-          Organizer, talent or vendor?{' '}
+          Looking for business paths?{' '}
           <Link to="/become-business" className="text-ink-brand underline-offset-2 hover:underline">
-            Sign in to the business portal
+            Submit a vendor or talent request
           </Link>
           {' '}
-          — a separate account with its own dashboard.
+          after sign-in, or{' '}
+          <Link to="/for-organizers" className="text-ink-brand underline-offset-2 hover:underline">
+            contact us about organizer partnership
+          </Link>
+          .
         </p>
       </div>
 

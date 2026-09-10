@@ -6,9 +6,7 @@ import {
   HOME_AUCTIONS,
   HOME_EVENTS,
   HOME_EXPERIENCES,
-  HOME_ORGANIZERS,
   HOME_TALENTS,
-  HOME_VENDORS,
 } from '@/pages/home/home-data'
 import { AUCTION_LISTING_IMAGES } from './auctions-media'
 import {
@@ -17,12 +15,7 @@ import {
   EVENT_DETAIL_ORGANIZER_AVATAR,
 } from './events-media'
 import { EXPERIENCE_CATALOG_IMAGES } from './experiences-media'
-import {
-  ORGANIZER_COVER_IMAGES,
-  ORGANIZER_MARK_IMAGES,
-} from './organizers-media'
 import { TALENT_CATALOG_IMAGES } from './talents-media'
-import { VENDOR_DIRECTORY_IMAGES } from './vendors-media'
 
 export const EVENT_CATEGORY_CHIPS = [
   'All events',
@@ -332,30 +325,6 @@ export const CATALOG_EXPERIENCES = [
   })),
 ]
 
-export const CATALOG_VENDORS = HOME_VENDORS.map((v, i) => ({
-  name: v.name,
-  services: v.services,
-  rating: v.rating,
-  meta: `${v.coverage} · 120+ reviews`,
-  price: 'SAR 9,000',
-  verified: v.verified,
-  image: VENDOR_DIRECTORY_IMAGES[i % VENDOR_DIRECTORY_IMAGES.length],
-}))
-
-export const CATALOG_ORGANIZERS = HOME_ORGANIZERS.map((o, i) => ({
-  name: o.name,
-  events: o.events,
-  rating: o.rating,
-  category:
-    i % 2 === 0
-      ? 'Entertainment season · Riyadh'
-      : 'Sports & culture · Kingdom-wide',
-  followers: ['1.2M', '840k', '620k', '210k', '180k', '95k'][i] ?? '50k',
-  verified: true,
-  cover: ORGANIZER_COVER_IMAGES[i],
-  avatar: ORGANIZER_MARK_IMAGES[i],
-}))
-
 const CATALOG_AUCTION_EXTRAS = [
   {
     seatInfo: 'Block B · Row 12 · Seats 8–9 together',
@@ -558,4 +527,4 @@ export const EVENT_DETAIL = {
   ],
 }
 
-export { HOME_AUCTIONS, HOME_EVENTS, HOME_EXPERIENCES, HOME_ORGANIZERS, HOME_TALENTS, HOME_VENDORS }
+export { HOME_AUCTIONS, HOME_EVENTS, HOME_EXPERIENCES, HOME_TALENTS }

@@ -3,83 +3,73 @@ import {
   CheckIcon,
   MagnifyingGlassIcon,
   StorefrontIcon,
-  TicketIcon,
   UserIcon,
 } from '@/components/icons'
 import { Button } from '@/components/ui'
+import { useLocale } from '@/i18n/locale'
 import { PageSection } from '@/layouts'
 import type { ReactNode } from 'react'
 
-const PATHS: {
-  title: string
-  body: string
-  points: string[]
-  need: string
-  href: string
-  cta: string
-  icon: ReactNode
-}[] = [
-  {
-    title: 'Organizer',
-    body: 'Put on the nights everyone else queues for — concerts, matches, festivals, workshops.',
-    points: [
-      'Create events and sell tickets with seated or free-seating plans',
-      'Ticket money collected for you, paid out on schedule',
-      'Find and hire talents & vendors in the marketplace',
-    ],
-    need: 'ID, business registration or licence, and your story as a producer.',
-    href: '/apply/organizer',
-    cta: 'Apply as an organizer',
-    icon: <TicketIcon size={24} />,
-  },
-  {
-    title: 'Talent',
-    body: 'Singer, band, comedian, speaker, DJ — get discovered and booked by real organizers.',
-    points: [
-      'A public profile with your portfolio, reviews and availability',
-      'Enquiries come to you — you accept, decline, and set your terms',
-      'Appear on event lineups across Saudi Arabia',
-    ],
-    need: 'ID, at least one portfolio piece, and a bio worth booking.',
-    href: '/apply/talent',
-    cta: 'Apply as a talent',
-    icon: <UserIcon size={24} />,
-  },
-  {
-    title: 'Vendor',
-    body: 'Sound, light, catering, security, staging — the services every event is built on.',
-    points: [
-      'A storefront for your services, coverage area and past work',
-      'Direct enquiries from organizers planning real events',
-      'Verified credentials badge once our team checks your licence',
-    ],
-    need: 'ID, business licence, and photos of previous work.',
-    href: '/apply/vendor',
-    cta: 'Apply as a vendor',
-    icon: <StorefrontIcon size={24} />,
-  },
-]
-
-/** Become a business chooser — Figma `207:10047`. */
+/** Become a business chooser — vendor & talent request paths only. */
 export function BecomeBusinessPage() {
+  const { roleLabel } = useLocale()
+  const vendor = roleLabel('vendor')
+  const talent = roleLabel('talent')
+
+  const PATHS: {
+    title: string
+    body: string
+    points: string[]
+    need: string
+    href: string
+    cta: string
+    icon: ReactNode
+  }[] = [
+    {
+      title: talent,
+      body: 'Singer, band, comedian, speaker, DJ — submit your details for our team to review.',
+      points: [
+        'Fill a short request form from your guest account',
+        'Admin reviews and accepts or rejects — no login role change',
+        'If accepted, we contact you outside the platform when needed',
+      ],
+      need: 'ID, at least one portfolio piece, and a short bio.',
+      href: '/apply/talent',
+      cta: `Submit ${talent} request`,
+      icon: <UserIcon size={24} />,
+    },
+    {
+      title: vendor,
+      body: 'Sound, light, catering, security, staging — tell us what you provide.',
+      points: [
+        'Fill a short request form from your guest account',
+        'Admin reviews and accepts or rejects — no login role change',
+        'If accepted, we contact you outside the platform when needed',
+      ],
+      need: 'ID, business licence, and photos of previous work.',
+      href: '/apply/vendor',
+      cta: `Submit ${vendor} request`,
+      icon: <StorefrontIcon size={24} />,
+    },
+  ]
+
   return (
     <>
       <PageSection padTop={48} padBottom={0} className="text-center">
         <p className="text-[12px] font-bold tracking-[1.08px] text-ink-brand-mid uppercase">
-          Your account · Go professional
+          Your account · Business request
         </p>
         <h1 className="mx-auto mt-[10px] max-w-[720px] text-[44px] leading-[1.03] font-extrabold tracking-[-1.75px] text-ink-primary sm:text-[50px]">
-          You&apos;ve been in the crowd. Ready for the other side?
+          Submit a request. Stay a guest.
         </h1>
         <p className="mx-auto mt-[14px] max-w-[620px] text-[17px] text-ink-secondary">
-          Your MyTicket account can carry one business role alongside everything you already do as a
-          guest. Every application is reviewed by our team — typically 2–5 working days — and
-          you&apos;ll hear back either way.
+          {vendor} and {talent} paths are request forms only. Our team reviews each submission —
+          typically 2–5 working days — and you keep buying tickets as a guest either way.
         </p>
       </PageSection>
 
       <PageSection padTop={36} padBottom={96}>
-        <div className="mx-auto grid max-w-[1040px] gap-[18px] md:grid-cols-3">
+        <div className="mx-auto grid max-w-[1040px] gap-[18px] md:grid-cols-2">
           {PATHS.map((path) => (
             <div
               key={path.title}
@@ -123,22 +113,26 @@ export function BecomeBusinessPage() {
             <p className="flex flex-1 gap-[12px] text-[13px] leading-[1.55] text-ink-secondary">
               <MagnifyingGlassIcon size={17} className="mt-[2px] shrink-0 text-ink-brand" />
               <span>
-                <span className="font-bold text-ink-primary">Reviewed first, always.</span> Every
-                application is checked by a person on our team before any profile goes live.
+                <span className="font-bold text-ink-primary">Admin review only.</span> Accepted
+                requests do not unlock a separate login — contact happens outside MyTicket.
               </span>
             </p>
             <p className="flex flex-1 gap-[12px] text-[13px] leading-[1.55] text-ink-secondary">
               <CheckIcon size={17} weight="bold" className="mt-[2px] shrink-0 text-ink-brand" />
               <span>
-                <span className="font-bold text-ink-primary">One role per account.</span> You keep
-                buying tickets as a guest — the business workspace is added alongside.
+                <span className="font-bold text-ink-primary">Organizing events?</span> Partnerships
+                are arranged through our office — see{' '}
+                <Link to="/for-organizers" className="font-semibold text-ink-brand">
+                  for organizers
+                </Link>
+                .
               </span>
             </p>
           </div>
         </div>
 
         <p className="mt-3xl text-center text-[14px] text-ink-secondary">
-          Already have a business account?{' '}
+          Already have an account?{' '}
           <Link to="/sign-in" className="font-semibold text-ink-brand">
             Sign in
           </Link>

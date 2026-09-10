@@ -1,3 +1,4 @@
+import { useLocale } from '@/i18n/locale'
 import {
   RoleBenefitsSection,
   RoleClosingCta,
@@ -6,63 +7,64 @@ import {
   RoleMoneyAndNeeds,
   RoleStepsSection,
 } from '@/pages/_account/MarketingShell'
-import { ROLE_ORGANIZER_HERO } from '@/pages/_account/role-media'
 
-/** For organizers — Figma `207:12611`. */
+/** For organizers — office partnership; no self-serve apply wizard. */
 export function ForOrganizersPage() {
+  const { roleLabel } = useLocale()
+  const organizer = roleLabel('organizer')
+
   return (
     <>
       <RoleLandingHero
-        eyebrow="MyTicket for organizers"
+        eyebrow={`MyTicket for ${organizer}`}
         title="You make the night. We'll fill it."
-        subtitle="Sell tickets to the audience already browsing MyTicket every day, hire your lineup and crew in one marketplace, and let us handle the money, the QR codes and the gate."
-        primaryCta={{ label: 'Apply — about 15 minutes', to: '/apply/organizer' }}
-        secondaryCta={{ label: 'See organizers on MyTicket', to: '/organizers' }}
+        subtitle={`Sell tickets to the audience already browsing MyTicket. ${organizer} accounts are created after an office contract — not through a self-serve form.`}
+        primaryCta={{ label: 'Contact partnerships', to: '/support/new' }}
+        secondaryCta={{ label: 'How onboarding works', to: '/apply/organizer' }}
         stats={[
           { value: '1,400+', label: 'events sold this year' },
           { value: '2.1M', label: 'guests buying on MyTicket' },
-          { value: '2–5 days', label: 'application review' },
+          { value: 'Office', label: 'contract then account' },
         ]}
         imageryLabel="Imagery — organizer at a sold-out show"
-        imagerySrc={ROLE_ORGANIZER_HERO}
       />
       <RoleBenefitsSection
         items={[
           {
             title: "An audience that's already here",
-            body: 'Your events surface in search, categories, favourites and waitlist alerts across the busiest live-events platform in the Kingdom — no ad budget required to be found.',
+            body: 'Your events surface in search, categories, favourites and waitlist alerts across the busiest live-events platform in the Kingdom.',
           },
           {
             title: 'Ticketing without the headache',
             body: 'Seated maps or free seating, purchase limits, QR entry, gifting, refunds and resale — all built, all handled, all under your own refund policy.',
           },
           {
-            title: 'Your lineup and crew, one marketplace',
-            body: 'Browse verified talents and vendors, see their reviews from other organizers, and hire through one conversation thread.',
+            title: 'Partnership, not a directory',
+            body: 'Lineup and crew are arranged with MyTicket outside the guest app. Guests never browse organizer or vendor directories to book services.',
           },
         ]}
       />
       <RoleStepsSection
         steps={[
           {
-            title: 'Apply',
-            body: 'Five parts, ~15 minutes. Progress saves as you go.',
+            title: 'Talk to us',
+            body: 'Reach partnerships — office visit and contract come first.',
           },
           {
-            title: 'Get reviewed',
-            body: 'Our team verifies your ID and registration in 2–5 working days.',
+            title: 'Sign the agreement',
+            body: 'Terms are set in person with our team.',
+          },
+          {
+            title: 'We create your account',
+            body: 'Admin provisions the organizer workspace after the contract.',
           },
           {
             title: 'Build your event',
-            body: 'Venue, tickets, seat plan, lineup, refund policy — in the business workspace.',
-          },
-          {
-            title: 'We approve, you sell',
-            body: "Each event is checked, then it's live to millions of guests.",
+            body: 'Venue, tickets, seat plan, refund policy — in your workspace.',
           },
           {
             title: 'Run the night, get paid',
-            body: 'QR scanning at the gate, sales live on your phone, payouts weekly.',
+            body: 'QR at the gate, sales on your phone, payouts on schedule.',
           },
         ]}
       />
@@ -78,19 +80,19 @@ export function ForOrganizersPage() {
         ]}
         moneyFootnote="All ticket money flows through MyTicket — buyers never pay you directly, and every riyal is accounted for in your dashboard."
         needItems={[
+          'Office meeting and signed partnership contract',
           'Government ID — national ID, iqama or passport',
-          'Commercial registration or event licence',
-          "Your public name, logo and a producer's biography",
+          'Commercial registration or event licence where required',
           'Operating region and business contact details',
         ]}
-        needNoteBody="Every application is checked by our team in 2–5 working days — that vetting is why guests trust the events they find here."
+        needNoteBody="There is no online organizer application. Accounts are created by admin after the office agreement."
       />
       <RoleFaqSection
         items={[
           {
-            question: 'Do I need a registered company?',
+            question: 'Can I apply online as an organizer?',
             answer:
-              "No — individuals can organize too. A company needs its commercial registration; an individual applies with their own ID and, where the event type requires it, a permit. Our review team tells you exactly what's missing rather than declining outright.",
+              'No self-serve form. Contact partnerships, complete the office contract, then our admin team creates your account.',
           },
           {
             question: 'Who sets ticket prices and the refund policy?',
@@ -103,17 +105,17 @@ export function ForOrganizersPage() {
               'Payouts run weekly to your registered Saudi bank account. Sales, refunds and fees are itemised in your dashboard before each transfer.',
           },
           {
-            question: 'Can I still buy tickets as a guest?',
+            question: 'Is there a talent or vendor directory for organizers?',
             answer:
-              'Yes. Becoming an organizer adds a business workspace to the same account — your tickets, wallet and favourites stay exactly as they are.',
+              'No. Matching and contact for talent and vendors are handled by MyTicket outside the guest app — not by organizers browsing directories.',
           },
         ]}
       />
       <RoleClosingCta
-        title="Your first event could be on sale next week."
-        subtitle="Fifteen minutes to apply, 2–5 days to review, then the stage is yours."
-        buttonLabel="Start your application"
-        buttonTo="/apply/organizer"
+        title="Ready to partner?"
+        subtitle="Start with a conversation — office contract first, account next."
+        buttonLabel="Contact partnerships"
+        buttonTo="/support/new"
       />
     </>
   )

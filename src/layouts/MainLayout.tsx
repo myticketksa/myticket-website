@@ -13,16 +13,12 @@ import { SiteFooter, SiteHeader } from '@/components/navigation'
 const LISTING_ACTIVE: Record<string, string> = {
   events: 'Events',
   talents: 'Talents',
-  organizers: 'Organizers',
-  vendors: 'Vendors',
   experiences: 'Experiences',
 }
 
 const DETAIL_SECTION: Record<string, string> = {
   events: 'Events',
   talents: 'Talents',
-  organizers: 'Organizers',
-  vendors: 'Vendors',
   experiences: 'Experiences',
 }
 

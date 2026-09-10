@@ -73,5 +73,7 @@ export {
   Sparkle as SparkleIcon,
   ArrowDown as ArrowDownIcon,
   ArrowUp as ArrowUpIcon,
+  ArrowCounterClockwise as ArrowCounterClockwiseIcon,
   HourglassMedium as HourglassIcon,
+  UserCircle as UserCircleIcon,
 } from '@phosphor-icons/react'

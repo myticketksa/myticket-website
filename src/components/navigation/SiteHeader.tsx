@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Avatar, CountBadge } from '@/components/data-display'
 import { BellIcon, HeartGlyphIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
+import { useLocale } from '@/i18n/locale'
 import { cn } from '@/lib/cn'
 import { Logo } from './Logo'
 import { NavItem } from './NavItem'
@@ -89,24 +90,27 @@ export interface SiteHeaderProps {
 const DEFAULT_NAV: HeaderNavLink[] = [
   { label: 'Events', href: '/events' },
   { label: 'Talents', href: '/talents' },
-  { label: 'Organizers', href: '/organizers' },
-  { label: 'Vendors', href: '/vendors' },
   { label: 'Experiences', href: '/experiences' },
 ]
 
 /**
  * h36, padding `0 13`, 1.5px border, pill radius, 13px/700 Cairo. Not the DS
- * `LanguagePill`, which is h32 / 12 / 12px.
+ * `LanguagePill`, which is h32 / 12 / 12px. Toggles en ↔ ar and document dir.
  */
 function HeaderLanguagePill() {
+  const { locale, toggleLocale } = useLocale()
+  const nextLabel = locale === 'en' ? 'العربية' : 'English'
+
   return (
     <button
       type="button"
-      lang="ar"
+      lang={locale === 'en' ? 'ar' : 'en'}
       dir="auto"
+      onClick={toggleLocale}
+      aria-label={locale === 'en' ? 'Switch to Arabic' : 'Switch to English'}
       className="font-arabic inline-flex h-[36px] shrink-0 items-center justify-center rounded-pill border-[1.5px] border-border-default bg-surface-default px-[13px] text-[13px] font-bold whitespace-nowrap text-ink-secondary"
     >
-      العربية
+      {nextLabel}
     </button>
   )
 }

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeftIcon, ArrowRightIcon, PlusIcon } from '@/components/icons'
+import { ArrowRightIcon, PlusIcon } from '@/components/icons'
 import { Button, TextInput } from '@/components/ui'
-import { PageSection } from '@/layouts'
+import { FunnelHeader, PageSection } from '@/layouts'
 
 const MESSAGES = [
   {
@@ -37,20 +37,7 @@ const QUICK_LINKS = [
 export function SupportChatPage() {
   return (
     <>
-      <div className="border-b border-border-default">
-        <div className="mx-auto flex h-[72px] w-full max-w-[var(--container-page)] items-center justify-between px-page-gutter">
-          <p className="text-[13px] font-bold tracking-[1.04px] text-ink-muted uppercase">
-            Live support
-          </p>
-          <Link
-            to="/help"
-            className="inline-flex items-center gap-[5px] text-[14px] font-semibold text-ink-secondary hover:text-ink-brand"
-          >
-            <ArrowLeftIcon size={14} />
-            Help centre
-          </Link>
-        </div>
-      </div>
+      <FunnelHeader label="Live support" backHref="/help" backLabel="Help centre" />
 
       <PageSection padTop={40} padBottom={96}>
         <div className="flex flex-col items-start gap-[28px] lg:flex-row">

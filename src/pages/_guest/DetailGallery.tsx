@@ -10,7 +10,9 @@ export interface DetailGalleryProps {
   className?: string
 }
 
-/** Detail hero gallery: main photo + 3 thumbs — Figma `207:4809`. */
+/** Detail hero gallery: main photo + 3 thumbs — Figma `207:4809`.
+ * Category pill is `--bg-page` at 94% (not dark/translucent); flag is brand-end.
+ */
 export function DetailGallery({
   category,
   flag,

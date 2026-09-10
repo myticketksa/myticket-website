@@ -12,6 +12,9 @@ export { PurchaseLayout, PurchaseHeader, type PurchaseLayoutProps, type Purchase
 export {
   TicketActionLayout,
   TicketActionHeader,
+  FunnelLayout,
+  FunnelHeader,
   type TicketActionHeaderProps,
+  type FunnelHeaderProps,
 } from './TicketActionLayout'
 export { PageSection, type PageSectionProps } from './PageSection'

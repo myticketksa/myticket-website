@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { StatCard } from '@/components/cards'
 import { FilterChip, StatusBadge } from '@/components/data-display'
 import { Breadcrumbs } from '@/components/navigation'
 import { Button } from '@/components/ui'
@@ -43,6 +44,23 @@ const STEPS = [
 export function AuctionPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('Ending soon')
 
+  const listings = useMemo(() => {
+    if (filter === 'Seats together') {
+      return CATALOG_AUCTIONS.filter((l) => /seats|together|–|-/i.test(l.seatInfo))
+    }
+    if (filter === 'My watchlist') {
+      return CATALOG_AUCTIONS.slice(0, 3)
+    }
+    if (filter === 'Under face value') {
+      return CATALOG_AUCTIONS.filter((l) => {
+        const bid = Number(l.highestBid.replace(/[^\d]/g, ''))
+        const face = Number(l.faceValue.replace(/[^\d]/g, ''))
+        return bid > 0 && face > 0 && bid < face
+      })
+    }
+    return CATALOG_AUCTIONS
+  }, [filter])
+
   return (
     <>
       <PageSection padTop={26} padBottom={0}>
@@ -56,11 +74,11 @@ export function AuctionPage() {
 
       <PageSection padTop={14} padBottom={0}>
         <CatalogPageHead
-          eyebrow="Resale marketplace"
+          eyebrow="Resale auction"
           title="Ticket auction"
           subtitle="Verified fan-to-fan transfers for sold-out nights. Bid, buy now, or list a ticket you can no longer use."
           actions={
-            <Button size="lg" className="shrink-0">
+            <Button size="lg" className="shrink-0" disabled title="Listing opens from My Tickets">
               List a ticket for sale
             </Button>
           }
@@ -70,18 +88,11 @@ export function AuctionPage() {
       <PageSection padTop={26} padBottom={0}>
         <div className="grid grid-cols-2 gap-lg lg:grid-cols-4">
           {KPIS.map((kpi) => (
-            <div
-              key={kpi.label}
-              className="rounded-[16px] border border-border-default bg-surface-default p-[18px]"
-            >
-              <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-                {kpi.label}
-              </p>
-              <p className="mt-sm text-[32px] font-extrabold tracking-[-0.8px] text-ink-primary tabular-nums">
+            <StatCard key={kpi.label} label={kpi.label} caption={kpi.note}>
+              <p className="text-[32px] font-extrabold tracking-[-0.8px] text-ink-primary tabular-nums">
                 {kpi.value}
               </p>
-              <p className="mt-[3px] text-[13px] text-ink-secondary">{kpi.note}</p>
-            </div>
+            </StatCard>
           ))}
         </div>
       </PageSection>
@@ -103,7 +114,7 @@ export function AuctionPage() {
                 ))}
               </div>
               <ResultsToolbar
-                countLabel={`${CATALOG_AUCTIONS.length} live listings`}
+                countLabel={`${listings.length} live listings`}
                 showViewToggle={false}
                 sortValue="Ending soon"
                 className="w-auto shrink-0"
@@ -111,7 +122,7 @@ export function AuctionPage() {
             </div>
 
             <div className="mt-lg flex flex-col gap-[14px]">
-              {CATALOG_AUCTIONS.map((listing) => (
+              {listings.map((listing) => (
                 <Link
                   key={listing.title}
                   to={`/auctions/${slugify(listing.title)}`}
@@ -174,8 +185,13 @@ export function AuctionPage() {
                         Face value {listing.faceValue}
                       </p>
                       <div className="mt-auto flex flex-col gap-sm pt-md">
-                        <Button className="h-[40px] rounded-[20px]">Place a bid</Button>
-                        <Button variant="secondary" className="h-[40px] rounded-[20px]">
+                        <Button className="pointer-events-none h-[40px] rounded-[20px]">
+                          Place a bid
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          className="pointer-events-none h-[40px] rounded-[20px]"
+                        >
                           Buy now
                         </Button>
                       </div>
@@ -217,7 +233,11 @@ export function AuctionPage() {
                 List your ticket on the auction. Money is held until the buyer receives a
                 verified transfer.
               </p>
-              <Button className="mt-lg h-[46px] w-full rounded-[23px] bg-bg-page text-ink-primary hover:bg-bg-page">
+              <Button
+                className="mt-lg h-[46px] w-full rounded-[23px] bg-bg-page text-ink-primary hover:bg-bg-page"
+                disabled
+                title="Listing opens from My Tickets"
+              >
                 List a ticket
               </Button>
             </div>

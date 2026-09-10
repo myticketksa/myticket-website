@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { RouterProvider } from 'react-router-dom'
 import { store } from '@/app/store'
+import { LocaleProvider } from '@/i18n/locale'
 import { router } from '@/routes/router'
 import '@fontsource-variable/manrope'
 import '@fontsource-variable/cairo'
@@ -11,7 +12,9 @@ import '@/styles/globals.css'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-      <RouterProvider router={router} />
+      <LocaleProvider>
+        <RouterProvider router={router} />
+      </LocaleProvider>
     </Provider>
   </StrictMode>,
 )

@@ -12,7 +12,7 @@ export function StarIcon({ size = 24, ...props }: IconProps) {
       focusable="false"
       {...props}
     >
-      <path d="M12 2L15 8.6L22 9.5L16.8 14.3L18.3 21L12 17.5L5.7 21L7.2 14.3L2 9.5L9 8.6L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="M12 2L15 8.6L22 9.5L16.8 14.3L18.3 21L12 17.5L5.7 21L7.2 14.3L2 9.5L9 8.6L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }

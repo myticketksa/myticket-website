@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import driftBlob from '@/assets/home/drift-blob.svg'
 import coverAlula from '@/assets/marketing/404-alula.png'
 import coverComedy from '@/assets/marketing/404-comedy.jpg'
 import coverOud from '@/assets/marketing/404-oud.jpg'
@@ -51,8 +52,14 @@ export function NotFoundPage() {
   }
 
   return (
-    <PageSection padTop={84} padBottom={72}>
-      <div className="grid items-center gap-[60px] lg:grid-cols-[minmax(0,645px)_minmax(0,615px)]">
+    <PageSection padTop={84} padBottom={72} className="relative overflow-hidden">
+      <img
+        src={driftBlob}
+        alt=""
+        aria-hidden
+        className="pointer-events-none absolute top-[-160px] right-[-120px] size-[520px]"
+      />
+      <div className="relative grid items-center gap-[60px] lg:grid-cols-[minmax(0,645px)_minmax(0,615px)]">
         <div>
           <p className="bg-brand-gradient bg-clip-text text-[96px] leading-[0.86] font-extrabold tracking-[-5px] text-transparent sm:text-[132px] sm:tracking-[-7.92px]">
             404

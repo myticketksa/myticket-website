@@ -1,12 +1,11 @@
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   AuctionCard,
   EventCard,
   ExperienceCard,
   FeaturedPanelCard,
-  OrganizerCard,
   TalentCard,
-  VendorCard,
 } from '@/components/cards'
 import { CategoryChip } from '@/components/data-display'
 import { ArrowRightIcon } from '@/components/icons'
@@ -19,24 +18,22 @@ import {
   HOME_AUCTIONS,
   HOME_CATEGORIES,
   HOME_EVENTS,
+  HOME_EVENT_TABS,
   HOME_EXPERIENCES,
   HOME_FEATURED_PANELS,
-  HOME_ORGANIZERS,
   HOME_TALENTS,
-  HOME_VENDORS,
+  type HomeEventWindow,
 } from './home-data'
 import {
   HOME_EVENT_IMAGES,
   HOME_EXPERIENCE_IMAGES,
   HOME_FEATURED_PANEL_IMAGES,
-  HOME_ORGANIZER_AVATARS,
   HOME_TALENT_IMAGES,
-  HOME_VENDOR_IMAGES,
 } from './home-media'
 import { HomeSectionHeader } from './HomeSectionHeader'
 import { HomeTimeTabs } from './HomeTimeTabs'
 
-/** Figma `207:4416` — pad-top 84, 5× TalentCard Home, gap 18. */
+/** Limited public talent strip — avatar, name, discipline, rating only. */
 export function HomeTalents() {
   return (
     <PageSection padTop={84} padBottom={0}>
@@ -54,7 +51,16 @@ export function HomeTalents() {
             to={`/talents/${slugify(talent.name)}`}
             className="min-w-0"
           >
-            <TalentCard {...talent} image={HOME_TALENT_IMAGES[i]} />
+            <TalentCard
+              name={talent.name}
+              discipline={talent.discipline}
+              rating={talent.rating}
+              reviews={talent.reviews}
+              city={talent.city}
+              verified={talent.verified}
+              image={HOME_TALENT_IMAGES[i]}
+              limited
+            />
           </Link>
         ))}
       </div>
@@ -62,7 +68,11 @@ export function HomeTalents() {
   )
 }
 
-/** Figma `207:4434` — pad-top 72, CategoryChip row (may overflow). */
+/**
+ * Figma `207:4434` — pad-top 72, CategoryChip row.
+ * Chips overflow the 1320 band and clip at the page shell edge — no scrollbar
+ * (Figma `207:4446` is a static clipped row; "Full taxonomy" is the overflow exit).
+ */
 export function HomeCategories() {
   return (
     <PageSection padTop={72} padBottom={0}>
@@ -70,47 +80,79 @@ export function HomeCategories() {
         overline="What's on"
         heading="Browse by category"
         lede="Seventeen categories, from stadium football to heritage walks."
+        ledeMaxWidth={null}
         link={{ label: 'Full taxonomy', to: '/events' }}
       />
-      <div className="mt-[22px] flex gap-[9px] overflow-x-auto pb-xs">
-        {HOME_CATEGORIES.map((cat) => (
-          <CategoryChip
-            key={cat.label}
-            href={`/events?category=${encodeURIComponent(cat.label)}`}
-            count={cat.count}
-          >
-            {cat.label}
-          </CategoryChip>
-        ))}
+      <div className="mt-[22px] -mr-page-gutter overflow-hidden">
+        <div className="flex gap-[9px] pr-page-gutter">
+          {HOME_CATEGORIES.map((cat) => (
+            <CategoryChip
+              key={cat.label}
+              href={`/events?category=${encodeURIComponent(cat.label)}`}
+              count={cat.count}
+              className="shrink-0"
+            >
+              {cat.label}
+            </CategoryChip>
+          ))}
+        </div>
       </div>
     </PageSection>
   )
 }
 
+function matchesEventWindow(
+  window: HomeEventWindow,
+  tab: (typeof HOME_EVENT_TABS)[number],
+) {
+  if (tab === 'All') return true
+  if (tab === 'Today') return window === 'today'
+  if (tab === 'This weekend') return window === 'weekend'
+  if (tab === 'This week') return window === 'week' || window === 'weekend' || window === 'today'
+  if (tab === 'This month') return true
+  return true
+}
+
 /** Figma `207:4459` — pad-top 60, time tabs + 2×4 EventCard Home. */
 export function HomeEvents() {
+  const [tab, setTab] = useState<(typeof HOME_EVENT_TABS)[number]>('All')
+  const filtered = useMemo(
+    () => HOME_EVENTS.filter((event) => matchesEventWindow(event.window, tab)),
+    [tab],
+  )
+
   return (
     <PageSection padTop={60} padBottom={0}>
       <HomeSectionHeader
         overline="On sale now"
         heading="Upcoming events"
-        lede="8 of 1,284 events · updated a moment ago"
-        trailing={<HomeTimeTabs />}
+        lede={`${filtered.length} of 1,284 events · updated a moment ago`}
+        trailing={<HomeTimeTabs value={tab} onChange={setTab} />}
       />
       <div className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {HOME_EVENTS.map((event, i) => (
-          <Link
-            key={event.title}
-            to={`/events/${slugify(event.title)}`}
-            className="min-w-0"
-          >
-            <EventCard
-              context="home"
-              {...event}
-              image={HOME_EVENT_IMAGES[i]}
-            />
-          </Link>
-        ))}
+        {filtered.map((event) => {
+          const i = HOME_EVENTS.findIndex((e) => e.title === event.title)
+          return (
+            <Link
+              key={event.title}
+              to={`/events/${slugify(event.title)}`}
+              className="min-w-0"
+            >
+              <EventCard
+                context="home"
+                date={event.date}
+                title={event.title}
+                venue={event.venue}
+                rating={event.rating}
+                attendance={event.attendance}
+                price={event.price}
+                category={event.category}
+                flag={'flag' in event ? event.flag : undefined}
+                image={HOME_EVENT_IMAGES[i]}
+              />
+            </Link>
+          )
+        })}
       </div>
     </PageSection>
   )
@@ -124,7 +166,7 @@ export function HomeFeatured() {
   return (
     <PageSection padTop={76} padBottom={0}>
       <div
-        className="relative flex flex-col gap-[28px] overflow-hidden rounded-[28px] border border-border-default bg-home-featured px-[46px] pt-[46px] pb-[50px]"
+        className="relative flex flex-col gap-[28px] overflow-hidden rounded-[28px] border border-[#f7dfd3] bg-home-featured px-[46px] pt-[46px] pb-[50px]"
       >
         <img
           src={driftBlob}
@@ -176,6 +218,7 @@ export function HomeAuctions() {
         overline="Resale auction"
         heading="Tickets ending soonest"
         lede="Real tickets, transferred to you by their owner. MyTicket handles the money and takes a 10% commission from the seller."
+        ledeMaxWidth={560}
         link={{ label: 'All auction listings', to: '/auctions' }}
       />
       <div className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -185,7 +228,7 @@ export function HomeAuctions() {
             to={`/auctions/${slugify(auction.title)}`}
             className="min-w-0"
           >
-            <AuctionCard {...auction} className="min-h-[214px]" />
+            <AuctionCard {...auction} className="h-[214px]" />
           </Link>
         ))}
       </div>
@@ -201,6 +244,7 @@ export function HomeExperiences() {
         overline="Open year-round"
         heading="Experiences & destinations"
         lede="Places worth the drive — open now, all year round."
+        ledeMaxWidth={null}
         link={{ label: 'Browse all experiences', to: '/experiences' }}
       />
       <div className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -214,65 +258,6 @@ export function HomeExperiences() {
               context="home"
               {...experience}
               image={HOME_EXPERIENCE_IMAGES[i]}
-            />
-          </Link>
-        ))}
-      </div>
-    </PageSection>
-  )
-}
-
-/** Figma `207:4539` — pad-top 88, 6× OrganizerCard tile. */
-export function HomeOrganizers() {
-  return (
-    <PageSection padTop={88} padBottom={0}>
-      <HomeSectionHeader
-        overline="Who's behind it"
-        heading="Organizers to follow"
-        lede="The people behind the biggest calendars in the Kingdom."
-        link={{ label: 'Browse all organizers', to: '/organizers' }}
-      />
-      <div className="mt-[22px] grid grid-cols-2 gap-lg sm:grid-cols-3 lg:grid-cols-6">
-        {HOME_ORGANIZERS.map((org, i) => (
-          <Link
-            key={org.name}
-            to={`/organizers/${slugify(org.name)}`}
-            className="min-w-0"
-          >
-            <OrganizerCard
-              context="tile"
-              {...org}
-              avatar={HOME_ORGANIZER_AVATARS[i]}
-              className="min-h-[222px]"
-            />
-          </Link>
-        ))}
-      </div>
-    </PageSection>
-  )
-}
-
-/** Figma `207:4558` — pad-top 88, 2×3 VendorCard row. */
-export function HomeVendors() {
-  return (
-    <PageSection padTop={88} padBottom={0}>
-      <HomeSectionHeader
-        overline="Vendor marketplace"
-        heading="Hosting something of your own?"
-        lede="Caterers, photographers, decorators and crews you can message for a wedding, majlis or graduation night."
-        link={{ label: 'Browse all vendors', to: '/vendors' }}
-      />
-      <div className="mt-[22px] grid grid-cols-1 gap-[18px] md:grid-cols-2 lg:grid-cols-3">
-        {HOME_VENDORS.map((vendor, i) => (
-          <Link
-            key={vendor.name}
-            to={`/vendors/${slugify(vendor.name)}`}
-            className="min-w-0"
-          >
-            <VendorCard
-              context="row"
-              {...vendor}
-              image={HOME_VENDOR_IMAGES[i]}
             />
           </Link>
         ))}
@@ -310,7 +295,7 @@ export function HomeCta() {
           className="absolute inset-0"
           style={{
             backgroundImage:
-              'linear-gradient(121deg, rgba(25, 16, 8, 0.9) 29%, rgba(196, 51, 11, 0.42) 93%)',
+              'linear-gradient(121deg, color-mix(in srgb, var(--color-ink-primary) 90%, transparent) 29%, color-mix(in srgb, var(--color-ink-brand-strong) 42%, transparent) 93%)',
           }}
         />
 
@@ -318,7 +303,7 @@ export function HomeCta() {
           <h2 className="text-display-cta text-ink-inverse">
             Create an account and keep every ticket in one place.
           </h2>
-          <p className="mt-lg max-w-[640px] text-[17px] leading-[1.55] font-medium text-ink-inverse">
+          <p className="mt-lg text-[17px] leading-[1.55] font-medium text-ink-inverse">
             Save what you like, get told when tickets drop, hold your wallet balance and
             cashback, and carry your QR codes with you.
           </p>
@@ -345,17 +330,17 @@ export function HomeCta() {
   )
 }
 
-/** Figma `207:4592` — pad 72 top / 96 bottom. Industry strip with three text links. */
+/** Guest business strip — partnerships + Vendor/Talent submit forms (no marketplace). */
 export function HomeBusinessStrip() {
   return (
     <PageSection padTop={72} padBottom={96}>
       <div className="flex flex-col items-start gap-lg overflow-hidden rounded-[16px] border border-border-default bg-surface-default px-2xl py-lg sm:flex-row sm:items-center">
         <p className="min-w-0 flex-1 text-[14px] leading-normal text-ink-muted">
-          <span className="font-bold text-ink-primary">On the other side of the ticket?</span>
+          <span className="font-bold text-ink-primary">Working behind the ticket?</span>
           <span className="text-ink-secondary">
             {' '}
-            Organize events, perform, or supply the crew — MyTicket is where the industry
-            works too.
+            Organizers partner with us through the office. Talents and vendors can submit a
+            request from their guest account — we review and follow up outside the app.
           </span>
         </p>
         <div className="flex shrink-0 flex-wrap gap-lg text-[13.5px] font-bold text-brand-identity-end">

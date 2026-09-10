@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import eventThumb from '@/assets/checkout/event-thumb.png'
 import { CheckIcon } from '@/components/icons'
 import { PriceDisplay } from '@/components/data-display'
@@ -43,11 +43,22 @@ function MethodMark({
  * Checkout — Figma `207:8228`. Purchase header comes from `PurchaseLayout`.
  */
 export function CheckoutPage() {
+  const navigate = useNavigate()
   const [method, setMethod] = useState<PaymentMethod>('tabby')
   const [assignGuests, setAssignGuests] = useState(false)
   const [acceptRefund, setAcceptRefund] = useState(true)
   const [sendReminders, setSendReminders] = useState(true)
   const [marketing, setMarketing] = useState(false)
+
+  const payLabels: Record<PaymentMethod, string> = {
+    card: 'Pay now',
+    apple: 'Pay with Apple Pay',
+    tabby: 'Pay with Tabby',
+    tamara: 'Pay with Tamara',
+    wallet: 'Pay with wallet',
+    sadad: 'Confirm SADAD reservation',
+  }
+  const payLabel = payLabels[method]
 
   return (
     <div className="flex flex-col gap-[40px] lg:flex-row lg:items-start">
@@ -184,10 +195,12 @@ export function CheckoutPage() {
               title="Tamara"
               subtitle="Pay in 3, or pay in full in 30 days"
               leading={
-                <MethodMark className="bg-[#f7c3bd] text-[#4a1208]">tamara</MethodMark>
+                <MethodMark className="bg-payment-tamara text-payment-tamara-ink">
+                  tamara
+                </MethodMark>
               }
               trailing={
-                <span className="rounded-[13px] bg-[#fdecea] px-[10px] py-[5px] text-[12px] font-semibold text-[#b8231a]">
+                <span className="rounded-[13px] bg-payment-tamara-badge px-[10px] py-[5px] text-[12px] font-semibold text-payment-tamara-badge-ink">
                   Sharia compliant
                 </span>
               }
@@ -243,7 +256,7 @@ export function CheckoutPage() {
       </div>
 
       <aside className="flex w-full shrink-0 flex-col gap-[14px] lg:w-[400px]">
-        <div className="overflow-hidden rounded-[20px] border border-border-default bg-surface-default shadow-[0px_18px_40px_-26px_rgba(25,16,8,0.3),0px_1px_2px_0px_rgba(25,16,8,0.04)]">
+        <div className="overflow-hidden rounded-[20px] border border-border-default bg-surface-default shadow-checkout-summary">
           <div className="flex gap-[14px] border-b border-border-divider p-[18px]">
             <img
               src={eventThumb}
@@ -299,7 +312,7 @@ export function CheckoutPage() {
             </div>
 
             <div className="mt-lg border-t border-border-divider pt-[14px]">
-              <div className="flex flex-col gap-sm text-[14px]">
+              <div className="flex flex-col gap-[8px] text-[14px]">
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">2 seats</span>
                   <PriceDisplay context="row">SAR 1,040</PriceDisplay>
@@ -318,27 +331,25 @@ export function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="mt-md flex items-baseline justify-between border-t border-border-divider pt-[10px]">
+              <div className="mt-[12px] flex items-baseline justify-between border-t border-border-divider pt-[12px]">
                 <span className="text-[16px] font-semibold text-ink-primary">Total due</span>
-                <PriceDisplay context="stat" className="text-[26px]">
+                <PriceDisplay context="stat" className="text-[26px] font-extrabold">
                   SAR 1,256
                 </PriceDisplay>
               </div>
-              <p className="mt-sm text-[13px] font-semibold text-ink-brand">
+              <p className="mt-[8px] text-[13px] font-semibold text-ink-brand">
                 Pay SAR 314 today, then 3 monthly payments
               </p>
             </div>
 
-            <Link
-              to="/order-confirmation"
-              className={cn(
-                'mt-[18px] inline-flex h-[54px] w-full items-center justify-center rounded-[27px]',
-                'bg-brand-gradient text-[16px] font-semibold text-ink-inverse',
-                'hover:bg-none hover:bg-brand-primary',
-              )}
+            <Button
+              type="button"
+              size="lg"
+              className="mt-[18px] h-[54px] w-full rounded-[27px] text-[16px] font-semibold"
+              onClick={() => navigate('/order-confirmation')}
             >
-              Pay with Tabby
-            </Link>
+              {payLabel}
+            </Button>
             <p className="mt-[10px] text-center text-[12px] leading-[1.5] text-ink-muted">
               You&apos;ll earn SAR 21 cashback into your MyTicket wallet after the event.
             </p>
@@ -382,8 +393,8 @@ function PaymentCard({
       className={cn(
         'flex cursor-pointer flex-col rounded-[15px] border px-[18px] py-lg',
         selected
-          ? 'border-ink-brand bg-[#fff8f4]'
-          : 'border-border-default bg-surface-default',
+          ? 'border-[1.5px] border-ink-brand bg-payment-selected'
+          : 'border-[1.5px] border-border-default bg-surface-default',
       )}
     >
       <div className="flex items-center gap-[14px]">

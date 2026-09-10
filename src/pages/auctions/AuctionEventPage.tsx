@@ -185,8 +185,10 @@ function ListingRow({ listing }: { listing: SeatListing }) {
         {listing.kind === 'own' ? (
           <>
             <Button
-              variant="secondary"
-              className="h-[40px] w-full rounded-[20px] border-[1.5px] font-bold text-[#c4261b] hover:border-border-default hover:text-[#c4261b]"
+              variant="destructive"
+              className="h-[40px] w-full rounded-[20px] font-bold"
+              disabled
+              title="Cancel from My auction activity"
             >
               Cancel listing
             </Button>
@@ -196,14 +198,20 @@ function ListingRow({ listing }: { listing: SeatListing }) {
           </>
         ) : (
           <>
-            <Button className="h-[40px] w-full rounded-[20px] text-[13.5px] font-bold">
+            <Button
+              className="h-[40px] w-full rounded-[20px] text-[13.5px] font-bold"
+              disabled
+              title="Bidding opens when you sign in"
+            >
               Bid · min {listing.minBid}
             </Button>
             {listing.buyNow ? (
               <Button
                 variant="secondary"
                 size="sm"
-                className="h-[36px] w-full rounded-[18px] border bg-bg-page text-[13px]"
+                disabled
+                title="Buy now opens when you sign in"
+                className="h-[36px] w-full rounded-[18px] border bg-bg-page text-[13px] disabled:cursor-default disabled:opacity-100"
               >
                 Buy now · {listing.buyNow}
               </Button>
@@ -228,6 +236,9 @@ function ListingRow({ listing }: { listing: SeatListing }) {
 export function AuctionEventPage() {
   const { slug } = useParams()
   const [filter, setFilter] = useState<ListingFilter>('all')
+  const [sortMode, setSortMode] = useState<'ending' | 'price-low' | 'price-high' | 'bids'>(
+    'ending',
+  )
 
   const event =
     CATALOG_AUCTIONS.find((a) => slugify(a.title) === slug) ?? CATALOG_AUCTIONS[0]
@@ -246,13 +257,43 @@ export function AuctionEventPage() {
           meta: row.meta.replace(/Gold|Silver/, event.category === 'SPORTS' ? 'Stand' : 'Tier'),
         }))
 
-    return source.filter((row) => {
+    const filtered = source.filter((row) => {
       if (filter === 'together') return Boolean(row.seatsTogether)
       if (filter === 'buyNow') return row.buyNow != null
       if (filter === 'mine') return Boolean(row.yours)
       return true
     })
-  }, [event.category, event.title, filter, isWinterNights])
+
+    const parseSar = (value: string) => Number.parseFloat(value.replace(/[^\d.]/g, '')) || 0
+    const endsSeconds = (endsIn: string) => {
+      if (endsIn.includes('d')) {
+        const days = Number.parseInt(endsIn, 10) || 0
+        return days * 86400
+      }
+      const [h = '0', m = '0', s = '0'] = endsIn.split(':')
+      return Number(h) * 3600 + Number(m) * 60 + Number(s)
+    }
+
+    return [...filtered].sort((a, b) => {
+      if (sortMode === 'price-low') return parseSar(a.highestBid) - parseSar(b.highestBid)
+      if (sortMode === 'price-high') return parseSar(b.highestBid) - parseSar(a.highestBid)
+      if (sortMode === 'bids') return b.bids - a.bids
+      return endsSeconds(a.endsIn) - endsSeconds(b.endsIn)
+    })
+  }, [event.category, event.title, filter, isWinterNights, sortMode])
+
+  const sortLabels = {
+    ending: 'Ending soonest',
+    'price-low': 'Price — low to high',
+    'price-high': 'Price — high to low',
+    bids: 'Most bids',
+  } as const
+
+  const cycleSort = () => {
+    const keys = Object.keys(sortLabels) as (keyof typeof sortLabels)[]
+    const idx = keys.indexOf(sortMode)
+    setSortMode(keys[(idx + 1) % keys.length]!)
+  }
 
   const filterLabels = FILTERS.map((f) =>
     f.id === 'all' ? { ...f, label: `All ${WINTER_NIGHTS_LISTINGS.length} listings` } : f,
@@ -351,9 +392,10 @@ export function AuctionEventPage() {
             <span className="text-[13.5px] text-ink-secondary">Sort</span>
             <button
               type="button"
-              className="flex h-[36px] items-center gap-sm rounded-[10px] border border-border-default bg-surface-default px-[10px] text-[13.5px] text-ink-primary"
+              onClick={cycleSort}
+              className="flex h-[36px] items-center gap-sm rounded-[10px] border border-border-default bg-surface-default px-[10px] text-[13.5px] text-ink-primary hover:border-border-brand"
             >
-              Ending soonest
+              {sortLabels[sortMode]}
               <ChevronDownIcon size={12} />
             </button>
           </div>

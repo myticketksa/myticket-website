@@ -1,3 +1,4 @@
+import { useLocale } from '@/i18n/locale'
 import {
   RoleBenefitsSection,
   RoleClosingCta,
@@ -7,117 +8,115 @@ import {
   RoleStepCheckLine,
   RoleStepsSection,
 } from '@/pages/_account/MarketingShell'
-import { ROLE_TALENT_HERO } from '@/pages/_account/role-media'
 
-/** For talents — Figma `207:12768`. */
+/** For talents — submit request, admin review, contact outside platform. */
 export function ForTalentsPage() {
+  const { roleLabel } = useLocale()
+  const talent = roleLabel('talent')
+
   return (
     <>
       <RoleLandingHero
-        eyebrow="MyTicket for talents"
-        title="Get booked for the stages you deserve."
-        subtitle="One profile puts you in front of every organizer planning an event in Saudi Arabia — with your portfolio, your reviews, and enquiries that come straight to you."
-        primaryCta={{ label: 'Apply — about 10 minutes', to: '/apply/talent' }}
-        secondaryCta={{ label: 'See talents on MyTicket', to: '/talents' }}
+        eyebrow={`MyTicket for ${talent}`}
+        title="Share your craft with our team."
+        subtitle={`Submit a ${talent} request for admin review. Guests can still see a limited public profile (avatar, name, craft, rate) — booking and contact happen outside the platform.`}
+        primaryCta={{ label: 'Submit a request', to: '/apply/talent' }}
+        secondaryCta={{ label: 'See all business paths', to: '/become-business' }}
         stats={[
-          { value: '3,800+', label: 'performers listed' },
-          { value: '900+', label: 'organizers hiring' },
-          { value: '0%', label: 'commission on your fee' },
+          { value: '2–5 days', label: 'typical admin review' },
+          { value: 'Guest', label: 'login stays unchanged' },
+          { value: 'Off-platform', label: 'contact after accept' },
         ]}
         imageryLabel="Imagery — performer on stage"
-        imagerySrc={ROLE_TALENT_HERO}
       />
       <RoleBenefitsSection
         items={[
           {
-            title: 'Found by the right people',
-            body: 'Organizers filter by category, city, rating and availability. Your profile — portfolio, reviews, verified badge — is your pitch, working around the clock.',
+            title: 'A request, not a booking inbox',
+            body: 'You submit details for our team. There is no organizer booking flow or messaging thread inside the guest app.',
           },
           {
-            title: 'Enquiries on your terms',
-            body: "Requests come to you with the event, dates and brief. Accept, decline, or talk it through — you're never auto-booked, and you set your own fee.",
+            title: 'Admin decides',
+            body: 'We accept or reject each request. Track pending, accepted, or rejected from your guest account.',
           },
           {
-            title: 'A track record that compounds',
-            body: 'Every completed engagement adds a review from a real organizer, and every lineup you join links back to your profile from the event page.',
+            title: 'Limited public presence',
+            body: 'Guests may see a slim profile. Matching and contracts are handled by MyTicket outside the platform.',
           },
         ]}
       />
       <RoleStepsSection
         steps={[
           {
-            title: 'Apply',
-            body: 'Five parts, ~10 minutes. Your portfolio is the heart of it.',
+            title: 'Submit',
+            body: 'Short form — portfolio is the heart of it.',
           },
           {
-            title: 'Get verified',
+            title: 'Get reviewed',
             body: (
               <>
                 ID checked, profile reviewed,{' '}
-                <RoleStepCheckLine>badge earned — 2–5 working days.</RoleStepCheckLine>
+                <RoleStepCheckLine>decision in 2–5 working days.</RoleStepCheckLine>
               </>
             ),
           },
           {
-            title: 'Go live',
-            body: 'Your profile appears in the talents directory, filterable by what you do.',
+            title: 'Track status',
+            body: 'Follow pending / accepted / rejected on your account.',
           },
           {
-            title: 'Talk to organizers',
-            body: 'Enquiries arrive with the brief. Accept the ones that fit.',
+            title: 'We reach out',
+            body: 'If accepted, contact happens outside MyTicket when needed.',
           },
           {
-            title: 'Perform & grow',
-            body: 'Work marked complete unlocks a review, building your name for the next booking.',
+            title: 'Keep being a guest',
+            body: 'Tickets, wallet and reviews never change with this request.',
           },
         ]}
       />
       <RoleMoneyAndNeeds
         moneyRows={[
-          { label: 'Your profile', value: 'Free, always' },
-          {
-            label: 'Your performance fee',
-            value: '100% yours — agreed directly with the organizer',
-          },
-          { label: "MyTicket's cut", value: 'None on marketplace work' },
+          { label: 'Submitting a request', value: 'Free' },
+          { label: 'Separate login role', value: 'None — guest only' },
+          { label: 'In-app booking', value: 'Not available' },
         ]}
-        moneyFootnote="MyTicket introduces you and hosts the conversation. Contracts, pricing and payment are between you and the organizer — we're upfront about that boundary on every enquiry."
+        moneyFootnote="MyTicket reviews your request for our own roster. Fees and contracts after contact are agreed off-platform."
         needItems={[
-          'Government ID — for the verified badge',
+          'Government ID',
           'At least one portfolio piece — a live video works hardest',
-          'Stage name, photo and a biography worth booking',
-          'Your performance categories, city and travel preference',
+          'Stage name, photo and a short biography',
+          'Your performance categories and city',
         ]}
-        needNoteBody="Every profile is checked in 2–5 working days — organizers hire with confidence because everyone here is real."
+        needNoteBody="Every request is checked in 2–5 working days. Acceptance does not create a talent login."
       />
       <RoleFaqSection
         items={[
           {
-            question: 'Does MyTicket take a cut of my performance fee?',
+            question: 'Do I get a talent account after acceptance?',
             answer:
-              'No. Marketplace introductions are free — your fee is agreed directly with the organizer and paid directly by them. MyTicket earns from ticket sales, not from your work.',
+              'No. You keep the same guest login. Acceptance means our team may contact you outside MyTicket when there is a fit.',
           },
           {
-            question: 'What if my profile is thin at the start?',
+            question: 'Can organizers book me from MyTicket?',
             answer:
-              'One strong portfolio piece and a clear bio are enough to go live. Reviews compound after each completed booking — thin profiles get hired when the work is real.',
+              'No. There is no in-app booking flow. Guests may see a limited profile; booking contact is handled by MyTicket off-platform.',
           },
           {
-            question: 'Can I control where I appear?',
+            question: 'What if my portfolio is thin at the start?',
             answer:
-              'Yes. Set your cities, travel preference and availability so organizers only see you when the brief fits.',
+              'One strong piece and a clear bio are enough to submit. Our team will tell you if more is needed.',
           },
           {
-            question: 'I already buy tickets on MyTicket. Do I need a new account?',
+            question: 'I already buy tickets. Do I need a new account?',
             answer:
-              'No. Apply with the same account — your guest history stays, and the talent role is added on top.',
+              'No. Submit with the same guest account — history stays, and no extra role login is added.',
           },
         ]}
       />
       <RoleClosingCta
-        title="The next lineup is being booked right now."
-        subtitle="Ten minutes to apply, 2–5 days to review — then organizers can find you."
-        buttonLabel="Start your application"
+        title="Ready to submit?"
+        subtitle="A few minutes to apply, 2–5 days to review — then we contact you if there's a fit."
+        buttonLabel="Submit your request"
         buttonTo="/apply/talent"
       />
     </>

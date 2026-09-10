@@ -1,16 +1,14 @@
 import type { ReactNode } from 'react'
 import { Outlet } from 'react-router-dom'
-import { SiteFooter, SiteHeader, Tab, TabList } from '@/components/navigation'
+import { AccountTabBar, AccountTabBarItem, SiteFooter, SiteHeader } from '@/components/navigation'
 import { cn } from '@/lib/cn'
 
 /**
  * Account page head — title row + tab bar. Shared across ~seventeen account, ticket-action
  * and support screens.
  *
- * The tab bar is **46 tall with counts** and is distinct from the design-system `Tabs`
- * atom (`207:2841`, 31 tall). The architecture doc calls this out explicitly: do not force
- * account tabs into the DS atom. Here we still compose `Tab` / `TabList` for the item
- * chrome and let the page supply the 46-tall rail layout around them.
+ * The tab bar is **46 tall with count chips** (`AccountTabBar`) and is distinct from the
+ * design-system `Tabs` atom (`207:2841`, 31 tall). Verified on My Tickets `207:9469`.
  */
 export interface AccountTab {
   label: string
@@ -37,10 +35,18 @@ export function AccountPageHead({
   tabs,
   className,
 }: AccountPageHeadProps) {
+  const hasTabs = Boolean(tabs && tabs.length > 0)
+
   return (
-    <div className={cn('w-full border-b border-border-default bg-bg-page', className)}>
+    <div
+      className={cn(
+        'w-full bg-bg-page',
+        !hasTabs && 'border-b border-border-default',
+        className,
+      )}
+    >
       <div className="mx-auto w-full max-w-[var(--container-page)] px-page-gutter pt-4xl">
-        <div className="flex items-end justify-between gap-4xl pb-xl">
+        <div className={cn('flex items-end justify-between gap-4xl', !hasTabs && 'pb-xl')}>
           <div className="flex min-w-0 flex-col gap-sm">
             {eyebrow && (
               <p className="text-label-overline text-ink-brand-mid">{eyebrow}</p>
@@ -51,10 +57,10 @@ export function AccountPageHead({
           {actions && <div className="flex shrink-0 items-center gap-sm">{actions}</div>}
         </div>
 
-        {tabs && tabs.length > 0 && (
-          <TabList className="gap-[22px]">
-            {tabs.map((tab) => (
-              <Tab
+        {hasTabs && (
+          <AccountTabBar className="mt-[26px]" aria-label="Account sections">
+            {tabs!.map((tab) => (
+              <AccountTabBarItem
                 key={String(tab.label)}
                 label={tab.label}
                 count={tab.count}
@@ -62,7 +68,7 @@ export function AccountPageHead({
                 onClick={tab.onSelect}
               />
             ))}
-          </TabList>
+          </AccountTabBar>
         )}
       </div>
     </div>

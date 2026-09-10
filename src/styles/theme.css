@@ -48,7 +48,16 @@
   --color-border-divider: #f7e9e1;
   --color-border-focus: #f25f2c;
   --color-border-brand: #f25f2c;
+  /* Soft peach outline (unread cards, open FAQ) — distinct from focus orange. */
+  --color-border-brand-soft: #ffc8ae;
+  /* Active step wash on ticket-action timelines. */
+  --color-border-brand-wash: #ffd9c4;
+  /* Dashed upload / attachment dropzones — unbound on support + forms. */
+  --color-border-dashed: #e0c6b4;
   --color-border-danger: #dc3a2a;
+
+  /* Payment brand marks (Wallet aside) — unbound in Figma variables. */
+  --color-payment-visa: #1a1f71;
 
   /* brand */
   --color-brand-primary: #f25f2c;
@@ -60,6 +69,7 @@
   /* semantic state */
   --color-state-success: #1b8a5a;
   --color-state-success-tint: #eaf6ef;
+  --color-state-success-border: #bfe3cf;
   --color-state-danger: #dc3a2a;
   --color-state-danger-tint: #fff8f6;
   --color-state-danger-deep: #a31c13;
@@ -85,6 +95,13 @@
   --color-seat-bronze-tint: #f3ebe6;
   --color-seat-sold: #f7e4dc;
 
+  /* Checkout payment partners — unbound hex on Figma `207:8228`. */
+  --color-payment-selected: #fff8f4;
+  --color-payment-tamara: #f7c3bd;
+  --color-payment-tamara-ink: #4a1208;
+  --color-payment-tamara-badge: #fdecea;
+  --color-payment-tamara-badge-ink: #b8231a;
+
   /* Home "Featured events" pastel panel — Figma `207:4490`. */
   --background-image-home-featured: linear-gradient(
     148deg,
@@ -92,6 +109,21 @@
     #ffe6d8 47%,
     #f4e9ff 86%
   );
+
+  /* Help aside "Report a problem" — Figma `207:12293`. */
+  --background-image-help-report: linear-gradient(
+    155deg,
+    #fff2ea 14.645%,
+    #ffe6d8 85.355%
+  );
+
+  /* Checkout summary card lift — Figma `207:8228`. */
+  --shadow-checkout-summary: 0 18px 40px -26px rgb(25 16 8 / 0.3),
+    0 1px 2px 0 rgb(25 16 8 / 0.04);
+
+  /* Help search field lift — Figma `207:12154`. */
+  --shadow-help-search: 0 22px 48px -26px rgb(242 95 44 / 0.5),
+    0 2px 4px 0 rgb(25 16 8 / 0.04);
 
   /* ------------------------------------------------------------- spacing */
   --spacing-xs: 4px;

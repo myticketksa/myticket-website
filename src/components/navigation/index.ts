@@ -16,6 +16,12 @@ export {
  */
 export { Tab, TabList, type TabProps, type TabListProps } from './Tabs'
 export {
+  AccountTabBar,
+  AccountTabBarItem,
+  type AccountTabBarProps,
+  type AccountTabBarItemProps,
+} from './AccountTabBar'
+export {
   DetailSectionTab,
   DetailSectionTabs,
   type DetailSectionTabProps,

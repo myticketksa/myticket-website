@@ -106,25 +106,44 @@ export function EventCard({
           <p
             className={cn(
               'absolute top-[10px] left-[10px] rounded-[12px] px-[9px] py-xs text-[11px] font-semibold text-ink-inverse',
-              // Figma paints age flags (`18+`) with `--ink-brand`; urgency uses gradient-end.
-              flag === '18+' ? 'bg-ink-brand' : 'bg-brand-gradient-end',
+              // Figma paints age flags (`18+`) and schedule flags (`Today`) with `--ink-brand`;
+              // urgency uses gradient-end.
+              flag === '18+' || flag === 'Today'
+                ? 'bg-ink-brand'
+                : 'bg-brand-gradient-end',
             )}
           >
             {flag}
           </p>
         )}
 
-        <button
-          type="button"
-          aria-label="Save event"
-          onClick={onToggleFavourite}
-          className={cn(
-            'absolute top-[10px] right-[10px] flex size-[32px] items-center justify-center text-ink-primary',
-            isHome ? 'rounded-icon-btn bg-surface-default' : 'rounded-[16px] bg-bg-page/94',
-          )}
-        >
-          <HeartGlyphIcon size={isHome ? 15 : 14} />
-        </button>
+        {onToggleFavourite ? (
+          <button
+            type="button"
+            aria-label="Save event"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onToggleFavourite()
+            }}
+            className={cn(
+              'absolute top-[10px] right-[10px] flex size-[32px] items-center justify-center text-ink-primary',
+              isHome ? 'rounded-icon-btn bg-surface-default' : 'rounded-[16px] bg-bg-page/94',
+            )}
+          >
+            <HeartGlyphIcon size={isHome ? 15 : 14} />
+          </button>
+        ) : (
+          <span
+            aria-hidden
+            className={cn(
+              'pointer-events-none absolute top-[10px] right-[10px] flex size-[32px] items-center justify-center text-ink-primary',
+              isHome ? 'rounded-icon-btn bg-surface-default' : 'rounded-[16px] bg-bg-page/94',
+            )}
+          >
+            <HeartGlyphIcon size={isHome ? 15 : 14} />
+          </span>
+        )}
 
         {category && (
           <p className="absolute bottom-[10px] left-[10px] rounded-[12px] bg-surface-inverse px-[9px] py-xs text-[11px] font-semibold text-bg-page">

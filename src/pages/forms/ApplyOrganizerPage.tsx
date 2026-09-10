@@ -1,258 +1,104 @@
-import { useState } from 'react'
-import {
-  ChipMultiSelect,
-  Field,
-  FileDropButton,
-  Radio,
-  RadioGroup,
-  Select,
-  Textarea,
-  TextInput,
-} from '@/components/ui'
-import { FormWizardShell } from '@/pages/_account/FormWizard'
-import {
-  AccountDonePanel,
-  ReviewSummary,
-  ReviewTerms,
-  joinOrDash,
-  useApplyWizard,
-} from '@/pages/forms/apply-shared'
+import { Link } from 'react-router-dom'
+import { CheckIcon } from '@/components/icons'
+import { Button } from '@/components/ui'
+import { useLocale } from '@/i18n/locale'
+import { FunnelHeader, PageSection } from '@/layouts'
 
-const STEPS = ['Account', 'Public presence', 'The entity', 'Verification', 'Review'] as const
-
-const REGIONS = ['Riyadh', 'Makkah', 'Madinah', 'Eastern Province', 'Asir', 'Other'] as const
-
-/** Apply organizer — Figma `207:11424` (step labels); steps 2–5 inferred from need list. */
+/**
+ * Organizer partnership — office contract, not a self-serve apply wizard.
+ * Route `/apply/organizer` kept for existing links; content is contact-first.
+ */
 export function ApplyOrganizerPage() {
-  const wizard = useApplyWizard(STEPS.length)
-  const [publicName, setPublicName] = useState('Night Owl Productions')
-  const [bio, setBio] = useState(
-    'We produce late-night concerts and warehouse sets across Riyadh — seating plans, door ops and a roster that sells out.',
-  )
-  const [website, setWebsite] = useState('')
-  const [instagram, setInstagram] = useState('')
-  const [entityType, setEntityType] = useState('company')
-  const [legalName, setLegalName] = useState('')
-  const [registration, setRegistration] = useState('')
-  const [contactEmail, setContactEmail] = useState('sara@email.com')
-  const [contactPhone, setContactPhone] = useState('+966 5•• ••• 812')
-  const [regions, setRegions] = useState<string[]>(['Riyadh'])
-  const [terms, setTerms] = useState(false)
+  const { roleLabel } = useLocale()
+  const organizer = roleLabel('organizer')
+
+  const steps = [
+    {
+      title: 'Meet at the office',
+      body: 'Partnership starts with a real conversation and a signed contract — not an online form.',
+    },
+    {
+      title: 'Agreement in place',
+      body: 'Once terms are set, our team prepares your organizer workspace behind the scenes.',
+    },
+    {
+      title: 'Admin creates your account',
+      body: 'You do not self-register as an organizer. We create the account after the office agreement.',
+    },
+  ]
 
   return (
-    <FormWizardShell
-      eyebrow="Organizer application"
-      title="Apply to organize events."
-      subtitle="Five short parts. Your progress saves as you go, so you can leave and come back."
-      notice={
-        <p>
-          <span className="font-bold text-ink-brand-strong">Reviewed before approval.</span> Our
-          team checks every organizer application — typically 2–5 working days. Knowing that now
-          beats finding out at the end.
-        </p>
-      }
-      steps={[...STEPS]}
-      activeStep={wizard.step}
-      onBack={wizard.onBack}
-      backDisabled={wizard.backDisabled}
-      onContinue={wizard.onContinue}
-      continueLabel={wizard.continueLabel}
-      trackHref="/my-submissions"
-      trackLabel="Track your applications"
-    >
-      {wizard.step === 0 && (
-        <div className="flex flex-col gap-[16px]">
-          <AccountDonePanel subtitle="sara@email.com · +966 5•• ••• 812 · Your tickets, wallet and reviews stay exactly as they are." />
-          <p className="text-[13.5px] leading-[1.55] text-ink-secondary">
-            Applying without an account? You&apos;d create one here first — name, email, phone and a
-            password. Signed-in guests skip straight to the next part.
+    <>
+      <FunnelHeader
+        label={`${organizer} partnership`}
+        backHref="/for-organizers"
+        backLabel="Back to for organizers"
+      />
+
+      <PageSection padTop={48} padBottom={96}>
+        <div className="mx-auto max-w-[720px]">
+          <p className="text-[12px] font-bold tracking-[1.08px] text-ink-brand-mid uppercase">
+            Office partnership
           </p>
-        </div>
-      )}
-
-      {wizard.step === 1 && (
-        <div className="flex flex-col gap-xl">
-          <Field label="Public name" htmlFor="org-public">
-            <TextInput
-              id="org-public"
-              value={publicName}
-              onChange={(event) => setPublicName(event.target.value)}
-            />
-          </Field>
-          <div>
-            <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">Logo</p>
-            <FileDropButton label="Upload logo" hint="PNG or JPG, square works best" />
-          </div>
-          <Field
-            label="Producer biography"
-            htmlFor="org-bio"
-            counter={`${bio.length} / 600 · min 80`}
-          >
-            <Textarea
-              id="org-bio"
-              rows={4}
-              value={bio}
-              onChange={(event) => setBio(event.target.value)}
-            />
-          </Field>
-          <div className="grid gap-md sm:grid-cols-2">
-            <Field
-              label={
-                <>
-                  Website <span className="font-medium text-ink-muted">— optional</span>
-                </>
-              }
-              htmlFor="org-web"
-            >
-              <TextInput
-                id="org-web"
-                placeholder="https://"
-                value={website}
-                onChange={(event) => setWebsite(event.target.value)}
-              />
-            </Field>
-            <Field
-              label={
-                <>
-                  Instagram <span className="font-medium text-ink-muted">— optional</span>
-                </>
-              }
-              htmlFor="org-ig"
-            >
-              <TextInput
-                id="org-ig"
-                placeholder="@handle"
-                value={instagram}
-                onChange={(event) => setInstagram(event.target.value)}
-              />
-            </Field>
-          </div>
-        </div>
-      )}
-
-      {wizard.step === 2 && (
-        <div className="flex flex-col gap-xl">
-          <div>
-            <p className="mb-[10px] text-[13px] font-semibold text-ink-primary">Entity type</p>
-            <RadioGroup
-              value={entityType}
-              onValueChange={setEntityType}
-              className="flex flex-col gap-[10px]"
-            >
-              <Radio value="company" id="entity-company" label="Registered company" />
-              <Radio value="individual" id="entity-individual" label="Individual organizer" />
-            </RadioGroup>
-          </div>
-          <Field
-            label={entityType === 'company' ? 'Legal company name' : 'Full legal name'}
-            htmlFor="org-legal"
-          >
-            <TextInput
-              id="org-legal"
-              value={legalName}
-              onChange={(event) => setLegalName(event.target.value)}
-              placeholder={
-                entityType === 'company' ? 'As on commercial registration' : 'As on government ID'
-              }
-            />
-          </Field>
-          <Field
-            label={
-              entityType === 'company' ? 'Commercial registration number' : 'National ID / iqama'
-            }
-            htmlFor="org-reg"
-          >
-            <TextInput
-              id="org-reg"
-              value={registration}
-              onChange={(event) => setRegistration(event.target.value)}
-            />
-          </Field>
-          <ChipMultiSelect
-            label="Operating regions"
-            options={REGIONS}
-            value={regions}
-            onChange={setRegions}
-          />
-          <div className="grid gap-md sm:grid-cols-2">
-            <Field label="Business contact email" htmlFor="org-email">
-              <TextInput
-                id="org-email"
-                type="email"
-                value={contactEmail}
-                onChange={(event) => setContactEmail(event.target.value)}
-              />
-            </Field>
-            <Field label="Business phone" htmlFor="org-phone">
-              <TextInput
-                id="org-phone"
-                value={contactPhone}
-                onChange={(event) => setContactPhone(event.target.value)}
-              />
-            </Field>
-          </div>
-        </div>
-      )}
-
-      {wizard.step === 3 && (
-        <div className="flex flex-col gap-xl">
-          <p className="text-[13.5px] leading-[1.55] text-ink-secondary">
-            Upload clear scans. If something&apos;s missing we&apos;ll message you rather than
-            decline outright.
+          <h1 className="mt-[10px] text-[42px] leading-[1.04] font-extrabold tracking-[-1.47px] text-ink-primary">
+            Become a {organizer} through our office.
+          </h1>
+          <p className="mt-[12px] text-[16.5px] leading-[1.6] text-ink-secondary">
+            There is no self-serve application. Organizer accounts are created by MyTicket after a
+            contract is signed at our office. Guests keep buying tickets as usual until then.
           </p>
-          <div>
-            <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
-              Government ID
+
+          <ol className="mt-[32px] flex flex-col gap-[14px]">
+            {steps.map((step, index) => (
+              <li
+                key={step.title}
+                className="flex gap-[14px] rounded-[18px] border border-border-default bg-surface-default px-[22px] py-[18px]"
+              >
+                <span className="flex size-[36px] shrink-0 items-center justify-center rounded-[12px] bg-bg-tint-brand text-[14px] font-extrabold text-ink-brand">
+                  {index + 1}
+                </span>
+                <div>
+                  <p className="text-[16px] font-bold text-ink-primary">{step.title}</p>
+                  <p className="mt-[4px] text-[14px] leading-[1.55] text-ink-secondary">
+                    {step.body}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-[28px] rounded-[18px] border border-border-default bg-bg-warm px-[22px] py-[20px]">
+            <p className="flex gap-[10px] text-[14px] leading-[1.55] text-ink-secondary">
+              <CheckIcon size={16} weight="bold" className="mt-[2px] shrink-0 text-ink-brand" />
+              <span>
+                Ready to talk? Open a support case or email the partnerships desk — we&apos;ll
+                schedule the office visit.
+              </span>
             </p>
-            <FileDropButton
-              label="Upload national ID, iqama or passport"
-              hint="PDF or image, up to 10 MB"
-            />
           </div>
-          <div>
-            <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
-              {entityType === 'company'
-                ? 'Commercial registration or event licence'
-                : 'Event permit or licence (if you have one)'}
-            </p>
-            <FileDropButton
-              label="Upload registration or licence"
-              hint="Optional for individuals when the event type allows"
-            />
-          </div>
-          <Field label="Preferred payout bank country" htmlFor="org-bank">
-            <Select id="org-bank" defaultValue="sa">
-              <option value="sa">Saudi Arabia</option>
-            </Select>
-          </Field>
-        </div>
-      )}
 
-      {wizard.step === 4 && (
-        <div className="flex flex-col gap-xl">
-          <ReviewSummary
-            rows={[
-              { label: 'Public name', value: publicName || '—' },
-              {
-                label: 'Entity',
-                value: entityType === 'company' ? 'Registered company' : 'Individual',
-              },
-              { label: 'Regions', value: joinOrDash(regions) },
-              { label: 'Contact', value: contactEmail || '—' },
-              { label: 'Registration', value: registration || 'Add on step 3' },
-            ]}
-          />
-          <p className="text-[13.5px] leading-[1.55] text-ink-secondary">
-            After approval you&apos;ll build events in the business workspace — venue, tickets, seat
-            plan and refund policy.
+          <div className="mt-[24px] flex flex-col gap-[10px] sm:flex-row">
+            <Link to="/support/new" className="flex-1">
+              <Button size="lg" className="w-full">
+                Contact partnerships
+              </Button>
+            </Link>
+            <a href="mailto:partnerships@myticket.sa" className="flex-1">
+              <Button size="lg" variant="secondary" className="w-full">
+                Email partnerships@myticket.sa
+              </Button>
+            </a>
+          </div>
+
+          <p className="mt-[20px] text-center text-[14px] text-ink-secondary">
+            Learn more on{' '}
+            <Link to="/for-organizers" className="font-semibold text-ink-brand">
+              For {organizer}
+            </Link>
+            .
           </p>
-          <ReviewTerms
-            checked={terms}
-            onCheckedChange={setTerms}
-            label="I confirm this information is accurate and I agree to the organizer terms and payout rules."
-          />
         </div>
-      )}
-    </FormWizardShell>
+      </PageSection>
+    </>
   )
 }

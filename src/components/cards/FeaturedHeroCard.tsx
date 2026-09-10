@@ -118,14 +118,27 @@ export function FeaturedHeroCard({
           )}
         </div>
 
-        <button
-          type="button"
-          aria-label="Save event"
-          onClick={onToggleFavourite}
-          className="flex size-icon-btn shrink-0 items-center justify-center rounded-icon-btn bg-surface-default text-ink-primary"
-        >
-          <HeartGlyphIcon size={15} />
-        </button>
+        {onToggleFavourite ? (
+          <button
+            type="button"
+            aria-label="Save event"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onToggleFavourite()
+            }}
+            className="flex size-icon-btn shrink-0 items-center justify-center rounded-icon-btn bg-surface-default text-ink-primary"
+          >
+            <HeartGlyphIcon size={15} />
+          </button>
+        ) : (
+          <span
+            aria-hidden
+            className="pointer-events-none flex size-icon-btn shrink-0 items-center justify-center rounded-icon-btn bg-surface-default text-ink-primary"
+          >
+            <HeartGlyphIcon size={15} />
+          </span>
+        )}
       </div>
 
       <div className="relative flex w-full flex-col items-start">
@@ -149,13 +162,23 @@ export function FeaturedHeroCard({
             <span className="text-[19px] font-extrabold tabular-nums">{price}</span>
           </p>
 
-          <button
-            type="button"
-            onClick={onTickets}
-            className="flex h-[38px] shrink-0 items-center justify-center rounded-[19px] bg-identity-gradient px-[18px] text-[13px] font-bold text-ink-inverse"
-          >
-            Tickets
-          </button>
+          {onTickets ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onTickets()
+              }}
+              className="flex h-[38px] shrink-0 items-center justify-center rounded-[19px] bg-identity-gradient px-[18px] text-[13px] font-bold text-ink-inverse"
+            >
+              Tickets
+            </button>
+          ) : (
+            <span className="pointer-events-none flex h-[38px] shrink-0 items-center justify-center rounded-[19px] bg-identity-gradient px-[18px] text-[13px] font-bold text-ink-inverse">
+              Tickets
+            </span>
+          )}
         </div>
       </div>
     </article>

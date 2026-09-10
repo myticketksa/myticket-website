@@ -17,6 +17,11 @@ export interface HomeSectionHeaderProps {
   lede?: ReactNode
   /** Defaults to `--brand-gradient-end` (Events / most rails). Pass `brand` for Talents. */
   overlineTone?: 'mid' | 'brand'
+  /**
+   * Lede max-width. Figma auctions use 560; talents use 520. Pass `null` for
+   * unconstrained (categories / experiences heading group). Default 520.
+   */
+  ledeMaxWidth?: number | null
   link?: { label: ReactNode; to: string }
   /** Replaces the text link — Events puts its time-tab shell here. */
   trailing?: ReactNode
@@ -28,6 +33,7 @@ export function HomeSectionHeader({
   heading,
   lede,
   overlineTone = 'mid',
+  ledeMaxWidth = 520,
   link,
   trailing,
   className,
@@ -45,7 +51,10 @@ export function HomeSectionHeader({
         </p>
         <h2 className="text-heading-h2-home mt-[10px] text-ink-primary">{heading}</h2>
         {lede && (
-          <p className="mt-sm max-w-[520px] text-[16px] font-medium text-ink-secondary">
+          <p
+            className="mt-sm text-[16px] font-medium text-ink-secondary"
+            style={ledeMaxWidth == null ? undefined : { maxWidth: ledeMaxWidth }}
+          >
             {lede}
           </p>
         )}

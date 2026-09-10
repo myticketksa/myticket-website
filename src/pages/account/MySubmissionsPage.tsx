@@ -34,7 +34,7 @@ export function MySubmissionsPage() {
               key={item.id}
               className="flex flex-col gap-xl rounded-[20px] border border-border-default bg-surface-default px-[24px] py-[20px] sm:flex-row sm:items-center sm:gap-[20px]"
             >
-              <div className="relative h-[90px] w-full shrink-0 overflow-hidden rounded-[12px] bg-gradient-to-br from-[#e8ddd6] to-[#d8ccc4] sm:w-[120px]">
+              <div className="relative h-[90px] w-full shrink-0 overflow-hidden rounded-[12px] bg-placeholder-gradient sm:w-[120px]">
                 <img src={item.cover} alt="" className="absolute inset-0 size-full object-cover" />
               </div>
               <div className="min-w-0 flex-1">

@@ -94,8 +94,9 @@ export const MY_TICKETS: TicketFixture[] = [
 export const ACCOUNT_NAV_LINKS = [
   { label: 'Favourites', meta: '14 saved', href: '/saved' },
   { label: 'Waitlists', meta: '2 waiting', href: '/saved' },
-  { label: 'My enquiries', meta: '1 open', href: '/my-enquiries' },
   { label: 'My reviews', meta: '6 written', href: '/my-reviews' },
+  { label: 'Vendor application', meta: 'Track status', href: '/my-vendor-application' },
+  { label: 'Talent application', meta: 'Track status', href: '/my-talent-application' },
   { label: 'Payment methods', meta: '3 saved', href: '/settings' },
 ] as const
 
@@ -195,13 +196,13 @@ export const SAVED_ITEMS: SavedItemFixture[] = [
     cover: SAVED_COVERS[5],
   },
   {
-    title: 'StageCraft KSA',
-    kind: 'Vendor',
-    when: 'PRODUCTION',
-    place: 'Riyadh · Jeddah',
-    price: 'Hire',
-    cta: 'Enquire',
-    href: '/vendors/stagecraft',
+    title: 'Riyadh Season Pass',
+    kind: 'Event',
+    when: 'MULTI-DATE',
+    place: 'Riyadh',
+    price: 'SAR 450',
+    cta: 'Get tickets',
+    href: '/events',
     cover: SAVED_COVERS[6],
   },
   {
@@ -222,7 +223,7 @@ export interface NotificationFixture {
   time: string
   unread: boolean
   group: 'TODAY' | 'YESTERDAY' | 'EARLIER'
-  category: 'all' | 'tickets' | 'waitlists' | 'prices' | 'following' | 'enquiries'
+  category: 'all' | 'tickets' | 'waitlists' | 'prices' | 'following'
   tag?: string
   cta?: string
   icon: 'star' | 'mail' | 'ticket' | 'price' | 'heart'
@@ -239,16 +240,6 @@ export const NOTIFICATIONS: NotificationFixture[] = [
     tag: 'Act now',
     cta: 'Claim ticket',
     icon: 'star',
-  },
-  {
-    title: 'Nova Stage Systems replied to your enquiry',
-    body: "They've sent a quote for the 14 November corporate night — SAR 82,400 including the LED backdrop you asked about.",
-    time: '2 hours ago',
-    unread: true,
-    group: 'TODAY',
-    category: 'enquiries',
-    cta: 'Read reply',
-    icon: 'mail',
   },
   {
     title: 'Your ticket for tonight is ready',

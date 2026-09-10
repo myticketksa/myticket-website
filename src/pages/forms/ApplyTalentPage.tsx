@@ -1,13 +1,12 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   ChipMultiSelect,
   Field,
   FileDropButton,
-  Radio,
-  RadioGroup,
   Select,
-  Textarea,
   TextInput,
+  Textarea,
 } from '@/components/ui'
 import { FormWizardShell } from '@/pages/_account/FormWizard'
 import {
@@ -15,12 +14,12 @@ import {
   ReviewSummary,
   ReviewTerms,
   joinOrDash,
-  useApplyWizard,
 } from '@/pages/forms/apply-shared'
+import { useLocale } from '@/i18n/locale'
 
 const STEPS = ['Account', 'The performer', 'Portfolio', 'Categories & ID', 'Review'] as const
 
-const CATEGORIES = [
+const CATEGORY_OPTIONS = [
   'Singer',
   'Band',
   'DJ',
@@ -28,198 +27,197 @@ const CATEGORIES = [
   'Speaker',
   'Dancer',
   'Host / MC',
-  'Other',
+  'Instrumentalist',
 ] as const
 
-/** Apply talent — Figma `207:11482` (step labels); steps 2–5 inferred from need list. */
+type TalentDraft = {
+  stageName: string
+  city: string
+  bio: string
+  portfolioLink: string
+  categories: string[]
+  idNumber: string
+  terms: boolean
+}
+
+const EMPTY_DRAFT: TalentDraft = {
+  stageName: '',
+  city: 'riyadh',
+  bio: '',
+  portfolioLink: '',
+  categories: [],
+  idNumber: '',
+  terms: false,
+}
+
+/** Apply talent — multi-step request for admin review; guest login unchanged. */
 export function ApplyTalentPage() {
-  const wizard = useApplyWizard(STEPS.length)
-  const [stageName, setStageName] = useState('Sara Al-Harbi')
-  const [bio, setBio] = useState(
-    'Riyadh-based vocalist — Arabic pop and neo-soul. House bands, private nights and festival side stages.',
-  )
-  const [city, setCity] = useState('riyadh')
-  const [travel, setTravel] = useState('region')
-  const [reelUrl, setReelUrl] = useState('')
-  const [highlights, setHighlights] = useState('')
-  const [categories, setCategories] = useState<string[]>(['Singer'])
-  const [terms, setTerms] = useState(false)
+  const { roleLabel } = useLocale()
+  const talent = roleLabel('talent')
+  const navigate = useNavigate()
+  const [step, setStep] = useState(0)
+  const [draft, setDraft] = useState<TalentDraft>(EMPTY_DRAFT)
+
+  const lastStep = STEPS.length - 1
+  const cityLabel =
+    draft.city === 'jeddah'
+      ? 'Jeddah'
+      : draft.city === 'dammam'
+        ? 'Dammam'
+        : draft.city === 'khobar'
+          ? 'Khobar'
+          : 'Riyadh'
+
+  function patch(partial: Partial<TalentDraft>) {
+    setDraft((prev) => ({ ...prev, ...partial }))
+  }
+
+  function handleContinue() {
+    if (step < lastStep) {
+      setStep((prev) => prev + 1)
+      return
+    }
+    navigate('/application-submitted?role=talent')
+  }
+
+  function handleClear() {
+    setDraft(EMPTY_DRAFT)
+    setStep(0)
+  }
 
   return (
     <FormWizardShell
-      eyebrow="Talent application"
-      title="Apply to perform."
-      subtitle="Five short parts, saved as you go. Your portfolio does most of the talking — give it your best material."
+      eyebrow={`${talent} request`}
+      title={`Submit a ${talent} request.`}
+      subtitle="Share your portfolio basics. Our team reviews every request — typically 2–5 working days. You stay signed in as a guest; acceptance does not unlock a separate login."
       notice={
         <p>
-          <span className="font-bold text-ink-brand-strong">Reviewed before approval.</span> Every
-          talent profile is checked by our team — typically 2–5 working days.
+          <span className="font-bold text-ink-brand-strong">Admin review only.</span> If accepted,
+          we contact you outside the platform when a match comes up — there is no in-app booking
+          flow.
         </p>
       }
       steps={[...STEPS]}
-      activeStep={wizard.step}
-      onBack={wizard.onBack}
-      backDisabled={wizard.backDisabled}
-      onContinue={wizard.onContinue}
-      continueLabel={wizard.continueLabel}
-      trackHref="/my-submissions"
-      trackLabel="Track your applications"
+      activeStep={step}
+      backDisabled={step === 0}
+      onBack={() => setStep((prev) => Math.max(0, prev - 1))}
+      onContinue={handleContinue}
+      continueLabel={step === lastStep ? 'Submit request' : 'Continue'}
+      trackHref="/my-talent-application"
+      trackLabel={`Track your ${talent} request`}
+      onClear={handleClear}
     >
-      {wizard.step === 0 && (
-        <AccountDonePanel subtitle="Your guest account carries the talent role. Tickets, wallet and reviews stay untouched." />
+      {step === 0 && (
+        <AccountDonePanel subtitle="Your guest account stays a guest. Tickets, wallet and reviews stay untouched — this form is a request only." />
       )}
 
-      {wizard.step === 1 && (
+      {step === 1 && (
         <div className="flex flex-col gap-xl">
-          <Field label="Stage name" htmlFor="talent-stage">
+          <Field label="Stage / performer name" htmlFor="talent-stage-name">
             <TextInput
-              id="talent-stage"
-              value={stageName}
-              onChange={(event) => setStageName(event.target.value)}
+              id="talent-stage-name"
+              value={draft.stageName}
+              onChange={(event) => patch({ stageName: event.target.value })}
+              placeholder="How guests should see you"
             />
           </Field>
-          <div>
-            <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">Profile photo</p>
-            <FileDropButton label="Upload a clear headshot or stage photo" hint="PNG or JPG" />
-          </div>
-          <Field
-            label="Biography"
-            htmlFor="talent-bio"
-            counter={`${bio.length} / 600 · min 80`}
-          >
+          <Field label="Home city" htmlFor="talent-city">
+            <Select
+              id="talent-city"
+              value={draft.city}
+              onChange={(event) => patch({ city: event.target.value })}
+            >
+              <option value="riyadh">Riyadh</option>
+              <option value="jeddah">Jeddah</option>
+              <option value="dammam">Dammam</option>
+              <option value="khobar">Khobar</option>
+            </Select>
+          </Field>
+          <Field label="Short bio" htmlFor="talent-bio">
             <Textarea
               id="talent-bio"
               rows={4}
-              value={bio}
-              onChange={(event) => setBio(event.target.value)}
+              value={draft.bio}
+              onChange={(event) => patch({ bio: event.target.value })}
+              placeholder="Who you are on stage, what you play or perform, and a highlight gig."
             />
           </Field>
-          <div className="grid gap-md sm:grid-cols-2">
-            <Field label="Home city" htmlFor="talent-city">
-              <Select
-                id="talent-city"
-                value={city}
-                onChange={(event) => setCity(event.target.value)}
-              >
-                <option value="riyadh">Riyadh</option>
-                <option value="jeddah">Jeddah</option>
-                <option value="dammam">Dammam</option>
-                <option value="khobar">Khobar</option>
-              </Select>
-            </Field>
-            <div>
-              <p className="mb-[10px] text-[13px] font-semibold text-ink-primary">
-                Travel preference
-              </p>
-              <RadioGroup
-                value={travel}
-                onValueChange={setTravel}
-                className="flex flex-col gap-[8px]"
-              >
-                <Radio value="city" id="travel-city" label="Home city only" />
-                <Radio value="region" id="travel-region" label="Within my region" />
-                <Radio value="ksa" id="travel-ksa" label="Anywhere in KSA" />
-              </RadioGroup>
-            </div>
-          </div>
         </div>
       )}
 
-      {wizard.step === 2 && (
+      {step === 2 && (
         <div className="flex flex-col gap-xl">
-          <Field
-            label={
-              <>
-                Best live video or reel{' '}
-                <span className="font-medium text-ink-muted">— URL</span>
-              </>
-            }
-            htmlFor="talent-reel"
-          >
-            <TextInput
-              id="talent-reel"
-              placeholder="YouTube, Instagram or Vimeo link"
-              value={reelUrl}
-              onChange={(event) => setReelUrl(event.target.value)}
-            />
-          </Field>
           <div>
             <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
-              Portfolio photos or clips
+              Portfolio piece
+            </p>
+            <p className="mb-[10px] text-[13px] text-ink-secondary">
+              A live video works hardest — photo or clip of a real performance.
             </p>
             <FileDropButton
-              label="Add at least one portfolio piece"
-              hint="Live video works hardest — images welcome too"
+              label="Upload a portfolio piece"
+              hint="Video or image · max 25 MB"
             />
           </div>
-          <Field
-            label={
-              <>
-                Notable past gigs{' '}
-                <span className="font-medium text-ink-muted">— optional</span>
-              </>
-            }
-            htmlFor="talent-highlights"
-          >
-            <Textarea
-              id="talent-highlights"
-              rows={3}
-              placeholder="Festival names, venues, residencies — anything organizers would recognize."
-              value={highlights}
-              onChange={(event) => setHighlights(event.target.value)}
+          <Field label="Portfolio link (optional)" htmlFor="talent-link">
+            <TextInput
+              id="talent-link"
+              value={draft.portfolioLink}
+              onChange={(event) => patch({ portfolioLink: event.target.value })}
+              placeholder="YouTube, Instagram, SoundCloud…"
             />
           </Field>
         </div>
       )}
 
-      {wizard.step === 3 && (
+      {step === 3 && (
         <div className="flex flex-col gap-xl">
           <ChipMultiSelect
             label="Performance categories"
-            hint="Organizers filter by these — pick every fit."
-            options={CATEGORIES}
-            value={categories}
-            onChange={setCategories}
+            hint="Pick the crafts you actually deliver."
+            options={CATEGORY_OPTIONS}
+            value={draft.categories}
+            onChange={(categories) => patch({ categories })}
           />
-          <div>
-            <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
-              Government ID — for the verified badge
-            </p>
-            <FileDropButton
-              label="Upload national ID, iqama or passport"
-              hint="PDF or image, up to 10 MB"
+          <Field label="Government ID / Iqama" htmlFor="talent-id">
+            <TextInput
+              id="talent-id"
+              value={draft.idNumber}
+              onChange={(event) => patch({ idNumber: event.target.value })}
+              placeholder="National ID or Iqama number"
             />
+          </Field>
+          <div>
+            <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">Photo of your ID</p>
+            <FileDropButton label="Upload ID photo" hint="PDF or image · max 10 MB" />
           </div>
         </div>
       )}
 
-      {wizard.step === 4 && (
+      {step === 4 && (
         <div className="flex flex-col gap-xl">
           <ReviewSummary
             rows={[
-              { label: 'Stage name', value: stageName || '—' },
-              { label: 'City', value: city },
-              { label: 'Categories', value: joinOrDash(categories) },
               {
-                label: 'Travel',
-                value:
-                  travel === 'city'
-                    ? 'Home city only'
-                    : travel === 'region'
-                      ? 'Within my region'
-                      : 'Anywhere in KSA',
+                label: 'Stage name',
+                value: draft.stageName.trim() || 'Not set yet',
               },
-              { label: 'Portfolio', value: reelUrl || 'Upload on step 3' },
+              { label: 'City', value: cityLabel },
+              { label: 'Categories', value: joinOrDash(draft.categories) },
+              {
+                label: 'Portfolio link',
+                value: draft.portfolioLink.trim() || 'None added',
+              },
+              {
+                label: 'ID on file',
+                value: draft.idNumber.trim() ? 'Provided' : 'Not set yet',
+              },
             ]}
           />
-          <p className="text-[13.5px] leading-[1.55] text-ink-secondary">
-            Once approved, your profile goes live in the talents directory — filterable by what you
-            do and where you&apos;ll travel.
-          </p>
           <ReviewTerms
-            checked={terms}
-            onCheckedChange={setTerms}
-            label="I confirm this information is accurate and I agree to the talent marketplace terms."
+            checked={draft.terms}
+            onCheckedChange={(terms) => patch({ terms })}
+            label="I confirm this information is accurate. I understand acceptance does not create a talent login, and booking contact after review happens outside MyTicket."
           />
         </div>
       )}

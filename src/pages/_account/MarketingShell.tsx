@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { CheckIcon, MinusIcon, PlusIcon } from '@/components/icons'
+import { ImagePlaceholder } from '@/components/data-display'
+import { CheckIcon, MinusIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
@@ -152,20 +153,25 @@ export function RoleLandingHero({
   primaryCta: { label: string; to: string }
   secondaryCta: { label: string; to: string }
   stats: RoleLandingStat[]
+  /** Figma ImagePlaceholder caption for the hero slot. */
   imageryLabel: string
+  /**
+   * Optional photography override. Figma SOT leaves the slot as ImagePlaceholder;
+   * pass a committed asset only when product opts into real imagery.
+   */
   imagerySrc?: string
 }) {
   return (
     <PageSection padTop={64} padBottom={0}>
-      <div className="flex flex-col items-center gap-[48px] lg:flex-row lg:items-center">
+      <div className="flex flex-col items-center gap-[40px] lg:flex-row lg:items-center lg:gap-[48px]">
         <div className="min-w-0 flex-1 lg:max-w-[666px]">
           <p className="text-[12px] font-bold tracking-[1.08px] text-ink-brand-mid uppercase">
             {eyebrow}
           </p>
-          <h1 className="mt-[12px] text-[44px] leading-[1.02] font-extrabold tracking-[-1.8px] text-ink-primary sm:text-[58px] sm:tracking-[-2.03px]">
+          <h1 className="mt-[14px] text-[44px] leading-[1.02] font-extrabold tracking-[-1.8px] text-ink-primary sm:text-[56px] sm:tracking-[-2.03px]">
             {title}
           </h1>
-          <p className="mt-[18px] max-w-[540px] text-[17px] leading-[1.6] text-ink-secondary">
+          <p className="mt-[16px] max-w-[540px] text-[17px] leading-[1.6] text-ink-secondary">
             {subtitle}
           </p>
           <div className="mt-[26px] flex flex-wrap gap-[12px]">
@@ -184,22 +190,12 @@ export function RoleLandingHero({
                 <p className="text-[26px] font-extrabold tracking-[-0.52px] text-ink-primary">
                   {stat.value}
                 </p>
-                <p className="text-[12.5px] text-ink-muted">{stat.label}</p>
+                <p className="mt-[2px] text-[12.5px] text-ink-muted">{stat.label}</p>
               </div>
             ))}
           </div>
         </div>
-        <div
-          className="relative flex h-[320px] w-full shrink-0 items-center justify-center overflow-hidden rounded-[24px] lg:h-[454px] lg:w-[606px]"
-          style={
-            imagerySrc
-              ? undefined
-              : {
-                  backgroundImage:
-                    'linear-gradient(165deg, var(--color-neutral-placeholder-start) 11%, var(--color-neutral-placeholder-end) 89%)',
-                }
-          }
-        >
+        <div className="relative h-[320px] w-full shrink-0 overflow-hidden rounded-[24px] lg:h-[454px] lg:w-[606px]">
           {imagerySrc ? (
             <img
               src={imagerySrc}
@@ -207,7 +203,11 @@ export function RoleLandingHero({
               className="absolute inset-0 size-full object-cover"
             />
           ) : (
-            <p className="text-[13px] font-semibold text-ink-muted">{imageryLabel}</p>
+            <ImagePlaceholder
+              ratio="fill"
+              caption={imageryLabel}
+              className="rounded-[24px] text-[13px]"
+            />
           )}
         </div>
       </div>
@@ -374,7 +374,12 @@ export function RoleFaqSection({
                 {isOpen ? (
                   <MinusIcon size={18} className="shrink-0 text-ink-brand" />
                 ) : (
-                  <PlusIcon size={18} weight="bold" className="shrink-0 text-ink-brand" />
+                  <span
+                    aria-hidden
+                    className="shrink-0 text-[18px] leading-none font-bold text-ink-brand"
+                  >
+                    +
+                  </span>
                 )}
               </button>
               {isOpen && (

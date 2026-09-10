@@ -1,25 +1,28 @@
-import { Link } from 'react-router-dom'
-import { ArrowLeftIcon, ArrowUpRightIcon, SuccessIcon } from '@/components/icons'
-import { PageSection } from '@/layouts'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowUpRightIcon, SuccessIcon } from '@/components/icons'
+import { useLocale, type RoleKey } from '@/i18n/locale'
+import { FunnelHeader, PageSection } from '@/layouts'
+
+function resolveRole(raw: string | null): 'vendor' | 'talent' {
+  return raw === 'talent' ? 'talent' : 'vendor'
+}
 
 /** Application submitted — Figma `207:11329`. */
 export function ApplicationSubmittedPage() {
+  const [params] = useSearchParams()
+  const roleKey = resolveRole(params.get('role'))
+  const { roleLabel } = useLocale()
+  const role = roleLabel(roleKey as RoleKey)
+  const statusHref =
+    roleKey === 'talent' ? '/my-talent-application' : '/my-vendor-application'
+
   return (
     <>
-      <div className="border-b border-border-default">
-        <div className="mx-auto flex h-[72px] w-full max-w-[var(--container-page)] items-center justify-between px-page-gutter">
-          <p className="text-[13px] font-bold tracking-[1.04px] text-ink-muted uppercase">
-            Application received
-          </p>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-[5px] text-[14px] font-semibold text-ink-secondary hover:text-ink-brand"
-          >
-            <ArrowLeftIcon size={14} />
-            Back to MyTicket
-          </Link>
-        </div>
-      </div>
+      <FunnelHeader
+        label="Request received"
+        backHref="/"
+        backLabel="Back to MyTicket"
+      />
 
       <PageSection padTop={64} padBottom={96}>
         <div className="mx-auto flex max-w-[600px] flex-col items-center text-center">
@@ -30,9 +33,9 @@ export function ApplicationSubmittedPage() {
             It&apos;s with our team.
           </h1>
           <p className="mt-[12px] text-[16.5px] leading-[1.6] text-ink-secondary">
-            Your organizer application is in. We review every application by hand — expect an answer
-            within <span className="font-bold text-ink-primary">2–5 working days</span>, by
-            notification and email.
+            Your {role} request is in. We review every submission by hand — expect an answer within{' '}
+            <span className="font-bold text-ink-primary">2–5 working days</span>, by notification
+            and email. You remain a guest; acceptance does not change your login.
           </p>
           <p className="mt-[10px] text-[13.5px] font-bold text-ink-muted">
             Application reference <span className="text-ink-primary">APP-2026-1187</span>
@@ -51,15 +54,15 @@ export function ApplicationSubmittedPage() {
               <li className="flex gap-[12px]">
                 <span className="font-extrabold text-ink-brand">·</span>
                 <span>
-                  <span className="font-bold text-ink-primary">Follow your application</span> on the
-                  business site — you&apos;ll find its live status there.
+                  <span className="font-bold text-ink-primary">Follow your request status</span> on
+                  your account — pending, accepted, or rejected.
                 </span>
               </li>
               <li className="flex gap-[12px]">
                 <span className="font-extrabold text-ink-brand">·</span>
                 <span>
                   <span className="font-bold text-ink-primary">If we need anything,</span> we&apos;ll
-                  message you rather than decline — check your notifications.
+                  reach out — contact after acceptance happens outside the platform.
                 </span>
               </li>
             </ul>
@@ -67,10 +70,10 @@ export function ApplicationSubmittedPage() {
 
           <div className="mt-[20px] flex w-full max-w-[420px] flex-col gap-[10px]">
             <Link
-              to="/my-submissions"
+              to={statusHref}
               className="inline-flex h-btn-lg w-full items-center justify-center gap-control-gap rounded-btn-lg bg-brand-gradient px-btn-pad-lg text-[15px] font-bold text-ink-inverse"
             >
-              Follow it on the business site
+              Track your {role} request
               <ArrowUpRightIcon size={15} />
             </Link>
             <Link

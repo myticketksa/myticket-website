@@ -1,0 +1,376 @@
+{
+  "capturedAt": "2026-09-09T05:07:26.747Z",
+  "baseUrl": "http://127.0.0.1:5173",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "count": 51,
+  "failed": 0,
+  "results": [
+    {
+      "slug": "home",
+      "route": "/",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\home.png"
+    },
+    {
+      "slug": "events",
+      "route": "/events",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\events.png"
+    },
+    {
+      "slug": "event-detail",
+      "route": "/events/winter-nights",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\event-detail.png"
+    },
+    {
+      "slug": "search",
+      "route": "/search",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\search.png"
+    },
+    {
+      "slug": "talents",
+      "route": "/talents",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\talents.png"
+    },
+    {
+      "slug": "talent-detail",
+      "route": "/talents/layla-hassan",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\talent-detail.png"
+    },
+    {
+      "slug": "experiences",
+      "route": "/experiences",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\experiences.png"
+    },
+    {
+      "slug": "experience-detail",
+      "route": "/experiences/desert-stargazing",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\experience-detail.png"
+    },
+    {
+      "slug": "vendors",
+      "route": "/vendors",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\vendors.png"
+    },
+    {
+      "slug": "vendor-detail",
+      "route": "/vendors/catering-co",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\vendor-detail.png"
+    },
+    {
+      "slug": "organizers",
+      "route": "/organizers",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\organizers.png"
+    },
+    {
+      "slug": "organizer-detail",
+      "route": "/organizers/riyadh-live",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\organizer-detail.png"
+    },
+    {
+      "slug": "auctions",
+      "route": "/auctions",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\auctions.png"
+    },
+    {
+      "slug": "auction-detail",
+      "route": "/auctions/vip-table",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\auction-detail.png"
+    },
+    {
+      "slug": "seats",
+      "route": "/events/winter-nights/seats",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\seats.png"
+    },
+    {
+      "slug": "checkout",
+      "route": "/checkout",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\checkout.png"
+    },
+    {
+      "slug": "order-confirmation",
+      "route": "/order-confirmation",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\order-confirmation.png"
+    },
+    {
+      "slug": "sign-in",
+      "route": "/sign-in",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\sign-in.png"
+    },
+    {
+      "slug": "register",
+      "route": "/register",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\register.png"
+    },
+    {
+      "slug": "reset-password",
+      "route": "/reset-password",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\reset-password.png"
+    },
+    {
+      "slug": "profile",
+      "route": "/profile",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\profile.png"
+    },
+    {
+      "slug": "settings",
+      "route": "/settings",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\settings.png"
+    },
+    {
+      "slug": "my-tickets",
+      "route": "/my-tickets",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\my-tickets.png"
+    },
+    {
+      "slug": "ticket-detail",
+      "route": "/my-tickets/winter-nights",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\ticket-detail.png"
+    },
+    {
+      "slug": "saved",
+      "route": "/saved",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\saved.png"
+    },
+    {
+      "slug": "notifications",
+      "route": "/notifications",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\notifications.png"
+    },
+    {
+      "slug": "wallet",
+      "route": "/wallet",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\wallet.png"
+    },
+    {
+      "slug": "my-reviews",
+      "route": "/my-reviews",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\my-reviews.png"
+    },
+    {
+      "slug": "my-enquiries",
+      "route": "/my-enquiries",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\my-enquiries.png"
+    },
+    {
+      "slug": "my-submissions",
+      "route": "/my-submissions",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\my-submissions.png"
+    },
+    {
+      "slug": "my-auction-activity",
+      "route": "/my-auction-activity",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\my-auction-activity.png"
+    },
+    {
+      "slug": "resell",
+      "route": "/my-tickets/winter-nights/resell",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\resell.png"
+    },
+    {
+      "slug": "gift",
+      "route": "/my-tickets/winter-nights/gift",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\gift.png"
+    },
+    {
+      "slug": "refund",
+      "route": "/my-tickets/winter-nights/refund",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\refund.png"
+    },
+    {
+      "slug": "submit-experience",
+      "route": "/submit-experience",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\submit-experience.png"
+    },
+    {
+      "slug": "become-business",
+      "route": "/become-business",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\become-business.png"
+    },
+    {
+      "slug": "apply-vendor",
+      "route": "/apply/vendor",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\apply-vendor.png"
+    },
+    {
+      "slug": "apply-organizer",
+      "route": "/apply/organizer",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\apply-organizer.png"
+    },
+    {
+      "slug": "apply-talent",
+      "route": "/apply/talent",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\apply-talent.png"
+    },
+    {
+      "slug": "application-submitted",
+      "route": "/application-submitted",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\application-submitted.png"
+    },
+    {
+      "slug": "support",
+      "route": "/support",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\support.png"
+    },
+    {
+      "slug": "support-new",
+      "route": "/support/new",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\support-new.png"
+    },
+    {
+      "slug": "support-chat",
+      "route": "/support/chat",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\support-chat.png"
+    },
+    {
+      "slug": "about",
+      "route": "/about",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\about.png"
+    },
+    {
+      "slug": "help",
+      "route": "/help",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\help.png"
+    },
+    {
+      "slug": "legal",
+      "route": "/legal",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\legal.png"
+    },
+    {
+      "slug": "for-vendors",
+      "route": "/for-vendors",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\for-vendors.png"
+    },
+    {
+      "slug": "for-organizers",
+      "route": "/for-organizers",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\for-organizers.png"
+    },
+    {
+      "slug": "for-talents",
+      "route": "/for-talents",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\for-talents.png"
+    },
+    {
+      "slug": "maintenance",
+      "route": "/maintenance",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\maintenance.png"
+    },
+    {
+      "slug": "not-found",
+      "route": "/this-route-does-not-exist-404",
+      "status": 200,
+      "ok": true,
+      "file": "qa\\browser\\not-found.png"
+    }
+  ],
+  "p2Notes": [
+    "Apply wizards: inactive step labels 2–5 remain as progress chrome without invented form bodies (Figma SOT).",
+    "Settings undrawn panes: sidebar chrome matches Figma; content stays Personal + Email/phone only.",
+    "Date-range shells in FilterSidebar stay decorative (no calendar yet).",
+    "Auction Bid/Buy remain preventDefault shells until payments backend.",
+    "Catalog filters (city/rating/when/price/sort) and auction listing sort are now wired."
+  ]
+}

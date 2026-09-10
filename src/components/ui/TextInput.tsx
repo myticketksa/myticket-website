@@ -11,7 +11,7 @@ import { cn } from '@/lib/cn'
  * design; compensating for it would shift the text.
  */
 export const fieldShell = [
-  'w-full rounded-input bg-surface-default px-field-pad text-[15px] leading-[1.55]',
+  'w-full rounded-input bg-surface-default px-field-pad text-[15px] leading-[1.55] font-medium',
   'border border-border-default text-ink-primary',
   'transition-colors duration-normal ease-standard',
   'placeholder:text-ink-muted',

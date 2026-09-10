@@ -1,12 +1,9 @@
-import { Link, Outlet, useParams } from 'react-router-dom'
-import { ArrowLeftIcon } from '@/components/icons'
-import { Logo, SiteFooter } from '@/components/navigation'
-import { cn } from '@/lib/cn'
+import { useParams } from 'react-router-dom'
+import { FunnelHeader, FunnelLayout, type FunnelHeaderProps } from './FunnelLayout'
 
 /**
  * Ticket-action flow header — Logo · LABEL · Back to ticket.
  * Verified on Resell `207:9700`, Gift `207:9806`, Refund `207:9879`.
- * Distinct from SiteHeader and PurchaseHeader.
  */
 export interface TicketActionHeaderProps {
   label: string
@@ -25,42 +22,18 @@ export function TicketActionHeader({
   const href = backHref ?? `/my-tickets/${id}`
 
   return (
-    <header
-      className={cn(
-        'flex h-[72px] w-full items-center border-b border-border-default bg-bg-page',
-        className,
-      )}
-    >
-      <div className="mx-auto flex h-full w-full max-w-[var(--container-page)] items-center justify-between px-page-gutter">
-        <Link to="/" className="shrink-0" aria-label="MyTicket home">
-          <Logo height={36} />
-        </Link>
-        <p className="text-[13px] font-bold tracking-[1.04px] text-ink-muted uppercase">
-          {label}
-        </p>
-        <Link
-          to={href}
-          className="flex shrink-0 items-center gap-[5px] text-[14px] font-semibold text-ink-secondary hover:text-ink-brand"
-        >
-          <ArrowLeftIcon size={14} />
-          {backLabel}
-        </Link>
-      </div>
-    </header>
+    <FunnelHeader
+      label={label}
+      backHref={href}
+      backLabel={backLabel}
+      className={className}
+    />
   )
 }
 
-/**
- * Pattern for Resell / Gift / Refund — page owns TicketActionHeader + body;
- * shell supplies SiteFooter. No SiteHeader (Figma draws the action chrome).
- */
+/** Alias of FunnelLayout for Resell / Gift / Refund routes. */
 export function TicketActionLayout() {
-  return (
-    <div className="flex min-h-dvh flex-col bg-bg-page">
-      <div className="flex flex-1 flex-col">
-        <Outlet />
-      </div>
-      <SiteFooter />
-    </div>
-  )
+  return <FunnelLayout />
 }
+
+export { FunnelLayout, FunnelHeader, type FunnelHeaderProps }
