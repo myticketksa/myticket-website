@@ -97,6 +97,18 @@ export const accountApis = baseApi.injectEndpoints({
       transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
       invalidatesTags: ['Ticket', 'Order'],
     }),
+    claimGiftTicket: build.mutation<
+      ApiRecord,
+      { giftTicketId: string | number; claim_token: string }
+    >({
+      query: ({ giftTicketId, claim_token }) => ({
+        url: `/gift-tickets/${giftTicketId}`,
+        method: 'POST',
+        body: { claim_token },
+      }),
+      transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
+      invalidatesTags: ['Ticket', 'Order'],
+    }),
     getGiftTickets: build.query<ApiRecord[], void>({
       query: () => '/gift-tickets',
       transformResponse: (response: unknown) => asList<ApiRecord>(response),
@@ -153,6 +165,7 @@ export const {
   useGetMyReviewsQuery,
   useSubmitReviewMutation,
   useSendGiftTicketMutation,
+  useClaimGiftTicketMutation,
   useGetGiftTicketsQuery,
   useGetChatsQuery,
   useSendChatMessageMutation,

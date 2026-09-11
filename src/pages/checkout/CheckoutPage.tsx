@@ -9,6 +9,7 @@ import { usePayOrderMutation, useCreateOrderMutation, useApplyPromoCodeMutation 
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
+import { parsePureNumericIds } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
 type PaymentMethod = 'card' | 'apple' | 'tabby' | 'tamara' | 'wallet' | 'sadad'
@@ -61,6 +62,7 @@ export function CheckoutPage() {
   const [marketing, setMarketing] = useState(false)
   const [promoCode, setPromoCode] = useState('')
   const [promoApplied, setPromoApplied] = useState(false)
+  const [guestNames, setGuestNames] = useState(['', ''])
 
   const payLabels: Record<PaymentMethod, string> = {
     card: 'Pay now',
@@ -82,24 +84,65 @@ export function CheckoutPage() {
       sessionStorage.getItem('myticket.checkoutEventId')
     if (!eventId) return null
 
+    let selectedCount = 2
     let seatIds: number[] = []
+    let holdId: string | undefined
+    let ticketId: number | undefined
+
     try {
       const mock = JSON.parse(sessionStorage.getItem('myticket.mockHold') || 'null') as {
-        seatIds?: string[]
+        seatIds?: unknown[]
+        holdId?: string
+        ticketId?: number | string
+        total?: number
       } | null
-      seatIds = (mock?.seatIds ?? [])
-        .map((id) => Number.parseInt(String(id).replace(/\D/g, ''), 10))
-        .filter((n) => Number.isFinite(n) && n > 0)
+      selectedCount = Math.max(1, mock?.seatIds?.length ?? 2)
+      // Only forward API numeric seat ids — never parse fixture labels like "C11".
+      seatIds = parsePureNumericIds(mock?.seatIds)
+      if (mock?.holdId) holdId = String(mock.holdId)
+      if (mock?.ticketId != null && /^\d+$/.test(String(mock.ticketId))) {
+        ticketId = Number(mock.ticketId)
+      }
     } catch {
-      seatIds = []
+      selectedCount = 2
+    }
+
+    const storedTicketId = sessionStorage.getItem('myticket.ticketId')
+    if (!ticketId && storedTicketId && /^\d+$/.test(storedTicketId)) {
+      ticketId = Number(storedTicketId)
+    }
+
+    const body: {
+      items?: { ticketId: number; quantity: number }[]
+      beneficiaries?: { quantity_id: number; name: string }[]
+      seatIds?: number[]
+      holdId?: string
+      ticketId?: number
+      quantity?: number
+    } = {
+      quantity: selectedCount,
+    }
+
+    if (ticketId) {
+      body.ticketId = ticketId
+      body.items = [{ ticketId, quantity: selectedCount }]
+    }
+    if (seatIds.length > 0) body.seatIds = seatIds
+    if (holdId) body.holdId = holdId
+
+    if (assignGuests) {
+      const beneficiaries = guestNames
+        .map((name, index) => ({
+          quantity_id: index + 1,
+          name: name.trim() || user?.name || `Guest ${index + 1}`,
+        }))
+        .slice(0, selectedCount)
+      if (beneficiaries.length > 0) body.beneficiaries = beneficiaries
     }
 
     const created = await createOrder({
       eventId,
-      body: {
-        items: [{ ticketId: 32, quantity: Math.max(1, seatIds.length || 2) }],
-        ...(seatIds.length > 0 ? { seatIds } : {}),
-      },
+      body,
     }).unwrap()
 
     const orderId = Number(created.id ?? created.orderId ?? created.order_id)
@@ -204,6 +247,25 @@ export function CheckoutPage() {
             onCheckedChange={(value) => setAssignGuests(value === true)}
             label="Assign each seat to a different guest (they get their own QR code)"
           />
+          {assignGuests && (
+            <div className="mt-[14px] grid gap-[14px] md:grid-cols-2">
+              {guestNames.map((name, index) => (
+                <Field key={index} label={`Guest ${index + 1}`} htmlFor={`guest-${index}`}>
+                  <TextInput
+                    id={`guest-${index}`}
+                    value={name}
+                    onChange={(event) => {
+                      const next = [...guestNames]
+                      next[index] = event.target.value
+                      setGuestNames(next)
+                    }}
+                    placeholder={user?.name ?? 'Guest full name'}
+                    className="bg-bg-page"
+                  />
+                </Field>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="mt-[18px] rounded-[18px] border border-border-default bg-surface-default p-[22px]">

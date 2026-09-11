@@ -8,14 +8,12 @@ import { useSendGiftTicketMutation } from '@/app/api/accountApis'
 import { useGetOrdersQuery } from '@/app/api/ordersApi'
 import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
+import {
+  extractOrderId,
+  extractOrderTicketIds,
+  normalizeAuthIdentifier,
+} from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
-
-function parseOrderId(raw: unknown): number {
-  const num = Number(raw)
-  if (!Number.isNaN(num) && num > 0) return num
-  const match = String(raw ?? '').match(/(\d+)\s*$/)
-  return match ? Number(match[1]) : 0
-}
 
 function mapOrderToTicket(order: Record<string, unknown>): TicketFixture {
   const id = String(order.id ?? order.order_id ?? '')
@@ -41,21 +39,28 @@ function mapOrderToTicket(order: Record<string, unknown>): TicketFixture {
   }
 }
 
+function resolveOrder(
+  orders: Record<string, unknown>[] | undefined,
+  id: string,
+): Record<string, unknown> | undefined {
+  if (!orders?.length) return undefined
+  return (
+    orders.find(
+      (order) =>
+        String(order.id ?? '') === id ||
+        String(order.order_id ?? '') === id ||
+        String(order.reference ?? '') === id ||
+        String(order.order_number ?? '') === id,
+    ) ?? orders[0]
+  )
+}
+
 function resolveTicket(
   orders: Record<string, unknown>[] | undefined,
   id: string,
 ): TicketFixture {
-  if (orders && orders.length > 0) {
-    const match =
-      orders.find(
-        (order) =>
-          String(order.id ?? '') === id ||
-          String(order.order_id ?? '') === id ||
-          String(order.reference ?? '') === id ||
-          String(order.order_number ?? '') === id,
-      ) ?? orders[0]
-    return mapOrderToTicket(match)
-  }
+  const match = resolveOrder(orders, id)
+  if (match) return mapOrderToTicket(match)
   return MY_TICKETS.find((item) => item.id === id) ?? MY_TICKETS[0]
 }
 
@@ -65,6 +70,7 @@ export function GiftTicketPage() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { data: orders } = useGetOrdersQuery()
+  const order = useMemo(() => resolveOrder(orders, id), [orders, id])
   const ticket = useMemo(() => resolveTicket(orders, id), [orders, id])
   const [mode, setMode] = useState<'email' | 'phone'>('email')
   const [recipient, setRecipient] = useState('')
@@ -78,14 +84,23 @@ export function GiftTicketPage() {
       return
     }
 
-    const orderId = parseOrderId(ticket.orderId)
-    const ticketIds = [parseOrderId(`${ticket.id}-2`) || 2]
+    const orderId = extractOrderId(order)
+    const ticketIds = extractOrderTicketIds(order)
+    if (!orderId || ticketIds.length === 0) {
+      dispatch(
+        toastPushed(
+          'error',
+          'This order is not ready to gift yet — open it from My tickets after purchase',
+        ),
+      )
+      return
+    }
 
     try {
       await sendGift({
         orderId,
         ticketIds,
-        recipientIdentifier: recipient.trim(),
+        recipientIdentifier: normalizeAuthIdentifier(recipient),
         note: note.trim() || undefined,
       }).unwrap()
       dispatch(toastPushed('success', 'Ticket sent'))

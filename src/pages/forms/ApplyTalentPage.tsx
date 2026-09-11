@@ -23,43 +23,56 @@ import {
 } from '@/app/api/accountApis'
 import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
-import { mapCategoryLabel } from '@/lib/api/mappers/categories'
+import { mapApiIdLabelOptions, type IdLabelOption } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
 const STEPS = ['Account', 'The performer', 'Portfolio', 'Categories & ID', 'Review'] as const
 
-const CATEGORY_OPTIONS = [
-  'Singer',
-  'Band',
-  'DJ',
-  'Comedian',
-  'Speaker',
-  'Dancer',
-  'Host / MC',
-  'Instrumentalist',
-] as const
+const FALLBACK_CATEGORIES: IdLabelOption[] = [
+  { value: '1', label: 'Singer' },
+  { value: '2', label: 'Band' },
+  { value: '3', label: 'DJ' },
+  { value: '4', label: 'Comedian' },
+  { value: '5', label: 'Speaker' },
+  { value: '6', label: 'Dancer' },
+  { value: '7', label: 'Host / MC' },
+  { value: '8', label: 'Instrumentalist' },
+]
+
+const FALLBACK_CITIES: IdLabelOption[] = [
+  { value: '1', label: 'Riyadh' },
+  { value: '2', label: 'Jeddah' },
+  { value: '3', label: 'Dammam' },
+  { value: '4', label: 'Khobar' },
+]
 
 type TalentDraft = {
   stageName: string
-  city: string
+  cityId: string
   bio: string
   portfolioLink: string
-  categories: string[]
+  /** Postman `categories[performanceCategories][]` expects numeric ids. */
+  categoryIds: string[]
   idNumber: string
+  /** Postman `performer[profilePhoto]` — ID photo doubles as profile when set. */
+  profilePhoto?: File
+  portfolioMedia: File[]
   terms: boolean
 }
 
 const EMPTY_DRAFT: TalentDraft = {
   stageName: '',
-  city: 'riyadh',
+  cityId: '1',
   bio: '',
   portfolioLink: '',
-  categories: [],
+  categoryIds: [],
   idNumber: '',
+  profilePhoto: undefined,
+  portfolioMedia: [],
   terms: false,
 }
 
-/** Apply talent — multi-step request for admin review; guest login unchanged. */
+/** Apply talent — FormData keys match Postman `POST /applications/talent`. */
 export function ApplyTalentPage() {
   const { roleLabel } = useLocale()
   const talent = roleLabel('talent')
@@ -71,20 +84,22 @@ export function ApplyTalentPage() {
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<TalentDraft>(EMPTY_DRAFT)
 
-  const categoryOptions = useMemo(() => {
-    const fromApi = (apiCategories ?? []).map((row) => mapCategoryLabel(row)).filter(Boolean)
-    return fromApi.length > 0 ? fromApi : [...CATEGORY_OPTIONS]
-  }, [apiCategories])
+  const categoryOptions = useMemo(
+    () => mapApiIdLabelOptions(apiCategories, FALLBACK_CATEGORIES),
+    [apiCategories],
+  )
 
-  const cityOptions = useMemo(() => {
-    const fromApi = (apiCities ?? []).map((row) => mapCategoryLabel(row)).filter(Boolean)
-    return fromApi.length > 0 ? fromApi : ['Riyadh', 'Jeddah', 'Dammam', 'Khobar', 'AlUla']
-  }, [apiCities])
+  const cityOptions = useMemo(
+    () => mapApiIdLabelOptions(apiCities, FALLBACK_CITIES),
+    [apiCities],
+  )
 
   const lastStep = STEPS.length - 1
-  const cityLabel = draft.city
-    ? draft.city.charAt(0).toUpperCase() + draft.city.slice(1).replace(/-/g, ' ')
-    : '—'
+  const cityLabel =
+    cityOptions.find((city) => city.value === draft.cityId)?.label ?? draft.cityId
+  const categoryLabels = draft.categoryIds.map(
+    (id) => categoryOptions.find((option) => option.value === id)?.label ?? id,
+  )
 
   function patch(partial: Partial<TalentDraft>) {
     setDraft((prev) => ({ ...prev, ...partial }))
@@ -95,13 +110,19 @@ export function ApplyTalentPage() {
       setStep((prev) => prev + 1)
       return
     }
+
     const body = new FormData()
-    body.append('performer[stageName]', draft.stageName)
-    body.append('performer[biography]', draft.bio)
-    body.append('performer[homeCity]', draft.city)
-    for (const category of draft.categories) {
-      body.append('categories[performanceCategories][]', category)
+    body.append('performer[stageName]', draft.stageName.trim())
+    body.append('performer[biography]', draft.bio.trim())
+    body.append('performer[homeCity]', draft.cityId)
+    if (draft.profilePhoto) body.append('performer[profilePhoto]', draft.profilePhoto)
+    for (const file of draft.portfolioMedia) {
+      body.append('portfolio[media][]', file)
     }
+    for (const categoryId of draft.categoryIds) {
+      body.append('categories[performanceCategories][]', categoryId)
+    }
+
     try {
       await applyTalent(body).unwrap()
       dispatch(toastPushed('success', 'Talent request submitted'))
@@ -161,12 +182,12 @@ export function ApplyTalentPage() {
           <Field label="Home city" htmlFor="talent-city">
             <Select
               id="talent-city"
-              value={draft.city}
-              onChange={(event) => patch({ city: event.target.value })}
+              value={draft.cityId}
+              onChange={(event) => patch({ cityId: event.target.value })}
             >
               {cityOptions.map((city) => (
-                <option key={city} value={city.toLowerCase().replace(/\s+/g, '-')}>
-                  {city}
+                <option key={city.value} value={city.value}>
+                  {city.label}
                 </option>
               ))}
             </Select>
@@ -195,6 +216,14 @@ export function ApplyTalentPage() {
             <FileDropButton
               label="Upload a portfolio piece"
               hint="Video or image · max 25 MB"
+              accept="image/*,video/*"
+              multiple
+              fileName={
+                draft.portfolioMedia.length
+                  ? `${draft.portfolioMedia.length} file${draft.portfolioMedia.length > 1 ? 's' : ''} selected`
+                  : undefined
+              }
+              onFiles={(files) => patch({ portfolioMedia: files })}
             />
           </div>
           <Field label="Portfolio link (optional)" htmlFor="talent-link">
@@ -214,8 +243,8 @@ export function ApplyTalentPage() {
             label="Performance categories"
             hint="Pick the crafts you actually deliver."
             options={categoryOptions}
-            value={draft.categories}
-            onChange={(categories) => patch({ categories })}
+            value={draft.categoryIds}
+            onChange={(categoryIds) => patch({ categoryIds })}
           />
           <Field label="Government ID / Iqama" htmlFor="talent-id">
             <TextInput
@@ -227,7 +256,13 @@ export function ApplyTalentPage() {
           </Field>
           <div>
             <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">Photo of your ID</p>
-            <FileDropButton label="Upload ID photo" hint="PDF or image · max 10 MB" />
+            <FileDropButton
+              label="Upload ID photo"
+              hint="PDF or image · max 10 MB"
+              accept="image/*,.pdf"
+              fileName={draft.profilePhoto?.name}
+              onFiles={(files) => patch({ profilePhoto: files[0] })}
+            />
           </div>
         </div>
       )}
@@ -241,7 +276,7 @@ export function ApplyTalentPage() {
                 value: draft.stageName.trim() || 'Not set yet',
               },
               { label: 'City', value: cityLabel },
-              { label: 'Categories', value: joinOrDash(draft.categories) },
+              { label: 'Categories', value: joinOrDash(categoryLabels) },
               {
                 label: 'Portfolio link',
                 value: draft.portfolioLink.trim() || 'None added',

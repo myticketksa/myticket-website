@@ -31,6 +31,9 @@ Additional Postman collections will be added later. Leave these rows empty until
 | Catalog categories | `/`, `/events`, `/talents`, `/experiences` | **Done** | | API categories with fixture fallback |
 | Favorites on detail | event/experience detail | **Done** | | |
 | Promo apply | `/checkout` | **Done** | | |
+| Submit review | `/my-reviews` | **Done** | | Postman `POST /reviews` |
+| Claim gift | `/gift/claim/:id` | **Done** | | `claim_token` body |
+| Cancel unpaid order | `/my-tickets/:id` | **Done** | | When status is pending/unpaid |
 | _(next collection)_ | | **Undone** | | Add rows as needed |
 
 **Probe script:** `node scripts/probe-guest-api.mjs` (requires API up). Writes `docs/api/RESPONSE-SCHEMAS.md` + `probe-results.json`.

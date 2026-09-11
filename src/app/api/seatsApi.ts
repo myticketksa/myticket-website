@@ -10,10 +10,7 @@ export const seatsApi = baseApi.injectEndpoints({
       transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
       providesTags: (_r, _e, id) => [{ type: 'Event', id: `seats-${id}` }],
     }),
-    /**
-     * Present in Postman but **not wired in the UI**.
-     * SeatSelectionPage keeps a local mock hold until this contract is probed + approved.
-     */
+    /** Soft-wired from SeatSelection when seat ids are pure numeric + ticketId is known. */
     holdSeats: build.mutation<
       ApiRecord,
       { eventId: string | number; seatIds: number[]; ticketId: number }

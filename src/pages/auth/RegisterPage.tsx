@@ -13,13 +13,14 @@ import { apiErrorMessage } from '@/lib/api/unwrap'
 import {
   otpVerifySchema,
   registerSchema,
-  splitIdentity,
+  toRegisterPayload,
   type OtpVerifyValues,
   type RegisterValues,
 } from '@/lib/validation/authSchemas'
 
 /**
- * Register — customer-only signup. Wired to register + verify-email APIs.
+ * Register — customer-only signup.
+ * Body matches Postman `POST /auth/register`: name, email, phone, password.
  */
 export function RegisterPage() {
   const navigate = useNavigate()
@@ -32,7 +33,8 @@ export function RegisterPage() {
     resolver: yupResolver(registerSchema),
     defaultValues: {
       name: '',
-      identity: '',
+      email: '',
+      phone: '',
       password: '',
       acceptedTerms: false,
     },
@@ -44,15 +46,10 @@ export function RegisterPage() {
   })
 
   async function onRegister(values: RegisterValues) {
-    const { email, phone } = splitIdentity(values.identity)
+    const body = toRegisterPayload(values)
     try {
-      await registerUser({
-        name: values.name.trim(),
-        email: email ?? (phone ? `${phone}@phone.myticket.local` : undefined),
-        phone: phone ?? email,
-        password: values.password,
-      }).unwrap()
-      verifyForm.setValue('identifier', email ?? values.identity.trim())
+      await registerUser(body).unwrap()
+      verifyForm.setValue('identifier', body.email)
       setStep('verify')
       dispatch(toastPushed('success', 'Check your email for a verification code'))
     } catch (error) {
@@ -63,9 +60,7 @@ export function RegisterPage() {
   async function onVerify(values: OtpVerifyValues) {
     try {
       const session = await verifyEmail({
-        email: values.identifier.includes('@')
-          ? values.identifier
-          : form.getValues('identity'),
+        email: values.identifier.trim() || form.getValues('email').trim(),
         code: values.code,
       }).unwrap()
       dispatch(
@@ -78,7 +73,7 @@ export function RegisterPage() {
       dispatch(toastPushed('success', 'Account verified'))
       navigate('/')
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not verify email')))
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not verify')))
     }
   }
 
@@ -135,17 +130,33 @@ export function RegisterPage() {
             </Field>
 
             <Field
-              label="Mobile number or email"
-              htmlFor="register-identity"
-              error={form.formState.errors.identity?.message}
+              label="Email"
+              htmlFor="register-email"
+              error={form.formState.errors.email?.message}
             >
               <TextInput
-                id="register-identity"
-                type="text"
-                placeholder="5X XXX XXXX"
-                autoComplete="username"
+                id="register-email"
+                type="email"
+                placeholder="you@email.com"
+                autoComplete="email"
                 className="h-[50px]"
-                {...form.register('identity')}
+                {...form.register('email')}
+              />
+            </Field>
+
+            <Field
+              label="Mobile number"
+              htmlFor="register-phone"
+              error={form.formState.errors.phone?.message}
+            >
+              <TextInput
+                id="register-phone"
+                type="tel"
+                inputMode="tel"
+                placeholder="5X XXX XXXX"
+                autoComplete="tel"
+                className="h-[50px]"
+                {...form.register('phone')}
                 leading={
                   <>
                     <span className="shrink-0 text-[14px] font-medium text-ink-secondary">

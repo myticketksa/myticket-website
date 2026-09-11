@@ -1,11 +1,15 @@
 import { useMemo } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useGetEventsQuery } from '@/app/api/eventsApi'
-import { useGetOrdersQuery } from '@/app/api/ordersApi'
+import { useCancelOrderMutation, useGetOrdersQuery } from '@/app/api/ordersApi'
 import { StatusBadge } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { AccountSplit, TicketActionHeader } from '@/layouts'
+import { useAppDispatch } from '@/app/hooks'
+import { toastPushed } from '@/features/ui/uiSlice'
 import { mapApiEventToCard } from '@/lib/api/mappers/events'
+import { extractOrderId } from '@/lib/api/formPayload'
+import { apiErrorMessage } from '@/lib/api/unwrap'
 import { MY_TICKETS, type TicketFixture } from '@/pages/_account/fixtures'
 import { CATALOG_EVENTS } from '@/pages/_guest/fixtures'
 import { slugify } from '@/pages/_guest/slugify'
@@ -57,22 +61,41 @@ function mapOrderToTicket(order: Record<string, unknown>): TicketFixture {
   }
 }
 
+function resolveOrder(
+  orders: Record<string, unknown>[] | undefined,
+  id: string,
+): Record<string, unknown> | undefined {
+  if (!orders?.length) return undefined
+  return (
+    orders.find(
+      (order) =>
+        String(order.id ?? '') === id ||
+        String(order.order_id ?? '') === id ||
+        String(order.reference ?? '') === id ||
+        String(order.order_number ?? '') === id,
+    ) ?? orders[0]
+  )
+}
+
 function resolveTicket(
   orders: Record<string, unknown>[] | undefined,
   id: string,
 ): TicketFixture {
-  if (orders && orders.length > 0) {
-    const match =
-      orders.find(
-        (order) =>
-          String(order.id ?? '') === id ||
-          String(order.order_id ?? '') === id ||
-          String(order.reference ?? '') === id ||
-          String(order.order_number ?? '') === id,
-      ) ?? orders[0]
-    return mapOrderToTicket(match)
-  }
+  const match = resolveOrder(orders, id)
+  if (match) return mapOrderToTicket(match)
   return MY_TICKETS.find((item) => item.id === id) ?? MY_TICKETS[0]
+}
+
+function isCancellable(order: Record<string, unknown> | undefined) {
+  if (!order) return false
+  const status = String(order.status ?? '').toLowerCase()
+  return (
+    status.includes('pending') ||
+    status.includes('unpaid') ||
+    status.includes('await') ||
+    status.includes('draft') ||
+    status.includes('created')
+  )
 }
 
 const RULES = [
@@ -133,10 +156,30 @@ function TicketQr({ seed }: { seed: number }) {
  */
 export function TicketPage() {
   const { id = 'winter-nights' } = useParams()
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const { data: orders } = useGetOrdersQuery()
   const { data: apiEvents } = useGetEventsQuery()
+  const [cancelOrder, cancelState] = useCancelOrderMutation()
 
+  const order = useMemo(() => resolveOrder(orders, id), [orders, id])
   const ticket = useMemo(() => resolveTicket(orders, id), [orders, id])
+  const canCancel = isCancellable(order)
+
+  async function handleCancel() {
+    const orderId = extractOrderId(order)
+    if (!orderId) {
+      dispatch(toastPushed('error', 'Order is not available to cancel'))
+      return
+    }
+    try {
+      await cancelOrder(orderId).unwrap()
+      dispatch(toastPushed('success', 'Order cancelled'))
+      navigate('/my-tickets')
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not cancel order')))
+    }
+  }
 
   const othersBooked = useMemo(() => {
     if (apiEvents && apiEvents.length > 0) {
@@ -319,6 +362,17 @@ export function TicketPage() {
                         Transfer to a guest
                       </Button>
                     </Link>
+                    {canCancel && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-[36px] rounded-[18px] bg-bg-page px-[14px] text-state-danger"
+                        loading={cancelState.isLoading}
+                        onClick={() => void handleCancel()}
+                      >
+                        Cancel order
+                      </Button>
+                    )}
                     <Link to={`/my-tickets/${ticket.id}/refund`}>
                       <Button
                         variant="secondary"

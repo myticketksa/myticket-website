@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRightIcon, PlusIcon } from '@/components/icons'
 import { Button, TextInput } from '@/components/ui'
@@ -6,6 +6,7 @@ import { FunnelHeader, PageSection } from '@/layouts'
 import {
   useGetChatMessagesQuery,
   useGetChatsQuery,
+  useMarkChatsReadMutation,
   useSendChatMessageMutation,
 } from '@/app/api/accountApis'
 
@@ -82,6 +83,12 @@ export function SupportChatPage() {
   )
   const { data: apiMessages } = useGetChatMessagesQuery(chatId ?? '', { skip: chatId == null })
   const [sendMessage, sendState] = useSendChatMessageMutation()
+  const [markRead] = useMarkChatsReadMutation()
+
+  useEffect(() => {
+    if (chatId == null) return
+    void markRead({ chatIds: [Number(chatId)] })
+  }, [chatId, markRead])
 
   const messages = useMemo(() => {
     if (apiMessages && apiMessages.length > 0) return apiMessages.map(mapChatMessage)

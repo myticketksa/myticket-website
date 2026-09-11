@@ -23,57 +23,63 @@ import {
 } from '@/app/api/accountApis'
 import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
-import { mapCategoryLabel } from '@/lib/api/mappers/categories'
+import { mapApiIdLabelOptions, type IdLabelOption } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
 const STEPS = ['Account', 'The business', 'Services', 'Credentials & work', 'Review'] as const
 
-const SERVICE_OPTIONS = [
-  'Sound',
-  'Lighting',
-  'Staging',
-  'Catering',
-  'Security',
-  'AV / LED',
-  'Decor',
-  'Transport',
-] as const
+const FALLBACK_SERVICES: IdLabelOption[] = [
+  { value: 'Sound', label: 'Sound' },
+  { value: 'Lighting', label: 'Lighting' },
+  { value: 'Staging', label: 'Staging' },
+  { value: 'Catering', label: 'Catering' },
+  { value: 'Security', label: 'Security' },
+  { value: 'AV / LED', label: 'AV / LED' },
+  { value: 'Decor', label: 'Decor' },
+  { value: 'Transport', label: 'Transport' },
+]
 
-const CITY_OPTIONS = [
-  'Riyadh',
-  'Jeddah',
-  'Dammam',
-  'Khobar',
-  'AlUla',
-  'Abha',
-  'Nationwide',
-] as const
+const FALLBACK_CITIES: IdLabelOption[] = [
+  { value: '1', label: 'Riyadh' },
+  { value: '2', label: 'Jeddah' },
+  { value: '3', label: 'Dammam' },
+  { value: '4', label: 'Khobar' },
+]
 
 type VendorDraft = {
   businessName: string
-  region: string
-  city: string
+  cityId: string
+  address: string
   story: string
+  /** service[name] is free text in Postman — store selected service labels/names. */
   services: string[]
   coverage: string[]
   contactName: string
-  idNumber: string
+  crNumber: string
+  /** Postman `business[logo]` */
+  logo?: File
+  /** Postman `business[personalPhoto]` — reused for work photos first file */
+  personalPhoto?: File
+  workPhotos: File[]
   terms: boolean
 }
 
 const EMPTY_DRAFT: VendorDraft = {
   businessName: '',
-  region: 'riyadh-region',
-  city: 'riyadh',
+  cityId: '1',
+  address: '',
   story: '',
   services: [],
   coverage: [],
   contactName: '',
-  idNumber: '',
+  crNumber: '',
+  logo: undefined,
+  personalPhoto: undefined,
+  workPhotos: [],
   terms: false,
 }
 
-/** Apply vendor — multi-step request for admin review; guest login unchanged. */
+/** Apply vendor — FormData keys match Postman `POST /applications/vendor`. */
 export function ApplyVendorPage() {
   const { roleLabel } = useLocale()
   const vendor = roleLabel('vendor')
@@ -85,31 +91,22 @@ export function ApplyVendorPage() {
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<VendorDraft>(EMPTY_DRAFT)
 
-  const serviceOptions = useMemo(() => {
-    const fromApi = (apiServices ?? []).map((row) => mapCategoryLabel(row)).filter(Boolean)
-    return fromApi.length > 0 ? fromApi : [...SERVICE_OPTIONS]
-  }, [apiServices])
+  const serviceOptions = useMemo(
+    () => mapApiIdLabelOptions(apiServices, FALLBACK_SERVICES),
+    [apiServices],
+  )
 
-  const cityOptions = useMemo(() => {
-    const fromApi = (apiCities ?? []).map((row) => mapCategoryLabel(row)).filter(Boolean)
-    return fromApi.length > 0 ? fromApi : [...CITY_OPTIONS]
-  }, [apiCities])
+  const cityOptions = useMemo(
+    () => mapApiIdLabelOptions(apiCities, FALLBACK_CITIES),
+    [apiCities],
+  )
 
   const lastStep = STEPS.length - 1
-  const regionLabel =
-    draft.region === 'makkah'
-      ? 'Makkah Region'
-      : draft.region === 'eastern'
-        ? 'Eastern Province'
-        : 'Riyadh Region'
   const cityLabel =
-    draft.city === 'jeddah'
-      ? 'Jeddah'
-      : draft.city === 'dammam'
-        ? 'Dammam'
-        : draft.city === 'diriyah'
-          ? 'Diriyah'
-          : 'Riyadh'
+    cityOptions.find((city) => city.value === draft.cityId)?.label ?? draft.cityId
+  const serviceLabels = draft.services.map(
+    (value) => serviceOptions.find((option) => option.value === value)?.label ?? value,
+  )
 
   function patch(partial: Partial<VendorDraft>) {
     setDraft((prev) => ({ ...prev, ...partial }))
@@ -120,16 +117,29 @@ export function ApplyVendorPage() {
       setStep((prev) => prev + 1)
       return
     }
+
+    const serviceName =
+      serviceLabels[0] ??
+      draft.services[0] ??
+      'General services'
+    const serviceDescription =
+      draft.story.trim() ||
+      (serviceLabels.length ? serviceLabels.join(', ') : 'Vendor services')
+
     const body = new FormData()
-    body.append('business[tradeName]', draft.businessName)
-    body.append('business[CRnumber]', draft.idNumber || 'pending')
-    body.append('business[primaryCity]', draft.city)
-    body.append('business[address]', draft.story.slice(0, 120) || 'Saudi Arabia')
-    body.append('service[name]', draft.services[0] ?? 'General services')
+    body.append('business[tradeName]', draft.businessName.trim())
+    body.append('business[CRnumber]', draft.crNumber.trim() || 'pending')
+    body.append('business[primaryCity]', draft.cityId)
     body.append(
-      'service[description]',
-      draft.story || draft.services.join(', ') || 'Vendor services',
+      'business[address]',
+      draft.address.trim() || draft.story.trim().slice(0, 120) || 'Saudi Arabia',
     )
+    body.append('service[name]', serviceName)
+    body.append('service[description]', serviceDescription)
+    if (draft.logo) body.append('business[logo]', draft.logo)
+    if (draft.personalPhoto) body.append('business[personalPhoto]', draft.personalPhoto)
+    else if (draft.workPhotos[0]) body.append('business[personalPhoto]', draft.workPhotos[0])
+
     try {
       await applyVendor(body).unwrap()
       dispatch(toastPushed('success', 'Vendor request submitted'))
@@ -186,30 +196,27 @@ export function ApplyVendorPage() {
               placeholder="e.g. Nova Stage Systems"
             />
           </Field>
-          <div>
-            <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">Where are you based?</p>
-            <div className="grid gap-md sm:grid-cols-2">
-              <Select
-                value={draft.region}
-                onChange={(event) => patch({ region: event.target.value })}
-                aria-label="Region"
-              >
-                <option value="riyadh-region">Riyadh Region</option>
-                <option value="makkah">Makkah Region</option>
-                <option value="eastern">Eastern Province</option>
-              </Select>
-              <Select
-                value={draft.city}
-                onChange={(event) => patch({ city: event.target.value })}
-                aria-label="City"
-              >
-                <option value="riyadh">Riyadh</option>
-                <option value="diriyah">Diriyah</option>
-                <option value="jeddah">Jeddah</option>
-                <option value="dammam">Dammam</option>
-              </Select>
-            </div>
-          </div>
+          <Field label="Primary city" htmlFor="vendor-city">
+            <Select
+              id="vendor-city"
+              value={draft.cityId}
+              onChange={(event) => patch({ cityId: event.target.value })}
+            >
+              {cityOptions.map((city) => (
+                <option key={city.value} value={city.value}>
+                  {city.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Business address" htmlFor="vendor-address">
+            <TextInput
+              id="vendor-address"
+              value={draft.address}
+              onChange={(event) => patch({ address: event.target.value })}
+              placeholder="Street, district, city"
+            />
+          </Field>
           <Field label="Tell us about the business" htmlFor="vendor-story">
             <Textarea
               id="vendor-story"
@@ -251,12 +258,12 @@ export function ApplyVendorPage() {
 
       {step === 3 && (
         <div className="flex flex-col gap-xl">
-          <Field label="Government ID / Iqama of the responsible person" htmlFor="vendor-id">
+          <Field label="Commercial registration (CR) number" htmlFor="vendor-cr">
             <TextInput
-              id="vendor-id"
-              value={draft.idNumber}
-              onChange={(event) => patch({ idNumber: event.target.value })}
-              placeholder="National ID or Iqama number"
+              id="vendor-cr"
+              value={draft.crNumber}
+              onChange={(event) => patch({ crNumber: event.target.value })}
+              placeholder="e.g. 202405043"
             />
           </Field>
           <div>
@@ -266,6 +273,9 @@ export function ApplyVendorPage() {
             <FileDropButton
               label="Upload licence or credential"
               hint="PDF or image · max 10 MB"
+              accept="image/*,.pdf"
+              fileName={draft.logo?.name}
+              onFiles={(files) => patch({ logo: files[0] })}
             />
           </div>
           <div>
@@ -276,6 +286,19 @@ export function ApplyVendorPage() {
               label="Add at least one work photo"
               hint="Shows of stages, catering setups, security posts — real jobs"
               icon="plus"
+              accept="image/*"
+              multiple
+              fileName={
+                draft.workPhotos.length
+                  ? `${draft.workPhotos.length} file${draft.workPhotos.length > 1 ? 's' : ''} selected`
+                  : draft.personalPhoto?.name
+              }
+              onFiles={(files) =>
+                patch({
+                  workPhotos: files,
+                  personalPhoto: files[0] ?? draft.personalPhoto,
+                })
+              }
             />
           </div>
         </div>
@@ -289,16 +312,23 @@ export function ApplyVendorPage() {
                 label: 'Business',
                 value: draft.businessName.trim() || 'Not set yet',
               },
-              { label: 'Location', value: `${cityLabel}, ${regionLabel}` },
-              { label: 'Services', value: joinOrDash(draft.services) },
-              { label: 'Coverage', value: joinOrDash(draft.coverage) },
+              { label: 'City', value: cityLabel },
+              { label: 'Services', value: joinOrDash(serviceLabels) },
+              {
+                label: 'Coverage',
+                value: joinOrDash(
+                  draft.coverage.map(
+                    (id) => cityOptions.find((city) => city.value === id)?.label ?? id,
+                  ),
+                ),
+              },
               {
                 label: 'Contact',
                 value: draft.contactName.trim() || 'Not set yet',
               },
               {
-                label: 'ID on file',
-                value: draft.idNumber.trim() ? 'Provided' : 'Not set yet',
+                label: 'CR number',
+                value: draft.crNumber.trim() || 'Not set yet',
               },
             ]}
           />

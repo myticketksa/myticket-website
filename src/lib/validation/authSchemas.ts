@@ -1,4 +1,5 @@
 import * as yup from 'yup'
+import { normalizeAuthIdentifier, normalizeSaudiPhone } from '@/lib/api/formPayload'
 
 export const signInSchema = yup.object({
   identifier: yup.string().trim().required('Enter your mobile number or email'),
@@ -8,9 +9,18 @@ export const signInSchema = yup.object({
 
 export type SignInValues = yup.InferType<typeof signInSchema>
 
+/** Matches Postman `POST /auth/register`: name, email, phone, password. */
 export const registerSchema = yup.object({
   name: yup.string().trim().required('Enter your full name'),
-  identity: yup.string().trim().required('Enter your mobile number or email'),
+  email: yup.string().trim().email('Enter a valid email').required('Enter your email'),
+  phone: yup
+    .string()
+    .trim()
+    .required('Enter your mobile number')
+    .test('phone', 'Enter a valid Saudi mobile number', (value) => {
+      const digits = normalizeSaudiPhone(value ?? '')
+      return /^9665\d{8}$/.test(digits)
+    }),
   password: yup
     .string()
     .min(8, 'Use at least 8 characters')
@@ -51,11 +61,23 @@ export const otpVerifySchema = yup.object({
 
 export type OtpVerifyValues = yup.InferType<typeof otpVerifySchema>
 
-/** Split the single identity field into email vs phone for register. */
+/** @deprecated Prefer explicit email + phone fields for register. */
 export function splitIdentity(identity: string): { email?: string; phone?: string } {
   const value = identity.trim()
   if (value.includes('@')) return { email: value }
-  const digits = value.replace(/\D/g, '')
-  const phone = digits.startsWith('966') ? digits : `966${digits.replace(/^0/, '')}`
-  return { phone }
+  const phone = normalizeSaudiPhone(value)
+  return phone ? { phone } : {}
+}
+
+export function toRegisterPayload(values: RegisterValues) {
+  return {
+    name: values.name.trim(),
+    email: values.email.trim(),
+    phone: normalizeSaudiPhone(values.phone),
+    password: values.password,
+  }
+}
+
+export function toLoginIdentifier(identifier: string) {
+  return normalizeAuthIdentifier(identifier)
 }

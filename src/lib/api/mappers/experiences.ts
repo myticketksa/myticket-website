@@ -1,47 +1,33 @@
 import type { ExperienceCardProps } from '@/components/cards'
 import { slugify } from '@/pages/_guest/slugify'
+import {
+  formatMoneySar,
+  localizedString,
+  nestedValue,
+  pickLocalized,
+} from '@/lib/api/locale'
 
 type ApiRecord = Record<string, unknown>
-
-function str(value: unknown, fallback = ''): string {
-  if (value == null) return fallback
-  return String(value)
-}
-
-function pick(record: ApiRecord, keys: string[], fallback = ''): string {
-  for (const key of keys) {
-    const value = record[key]
-    if (value != null && value !== '') return str(value)
-  }
-  return fallback
-}
-
-function nested(record: ApiRecord, path: string[]): unknown {
-  let current: unknown = record
-  for (const key of path) {
-    if (!current || typeof current !== 'object') return undefined
-    current = (current as ApiRecord)[key]
-  }
-  return current
-}
 
 function formatRating(value: unknown): string {
   if (value == null || value === '') return '—'
   const n = Number(value)
-  return Number.isFinite(n) ? n.toFixed(1) : str(value)
+  return Number.isFinite(n) ? n.toFixed(1) : localizedString(value, '—')
 }
 
 function tagsFrom(record: ApiRecord): string[] {
   const raw = record.tags ?? record.services ?? record.categories
   if (!Array.isArray(raw)) return []
-  return raw.map((item) => {
-    if (typeof item === 'string') return item
-    if (item && typeof item === 'object') {
-      const obj = item as ApiRecord
-      return pick(obj, ['name', 'label', 'title'], str(item))
-    }
-    return str(item)
-  }).filter(Boolean).slice(0, 2)
+  return raw
+    .map((item) => {
+      if (typeof item === 'string') return item
+      if (item && typeof item === 'object') {
+        return localizedString(item) || pickLocalized(item as ApiRecord, ['name', 'label', 'title'])
+      }
+      return localizedString(item)
+    })
+    .filter(Boolean)
+    .slice(0, 2)
 }
 
 export type MappedExperience = ExperienceCardProps & {
@@ -54,62 +40,60 @@ export type MappedExperience = ExperienceCardProps & {
 
 /** Map flexible experience API rows into card props; keep fixtures usable as fallback. */
 export function mapApiExperienceToCard(exp: ApiRecord): MappedExperience {
-  const title = pick(exp, ['title', 'name', 'name_en'], 'Untitled experience')
-  const slug = pick(exp, ['slug']) || slugify(title) || str(exp.id)
+  const title = pickLocalized(exp, ['title', 'name', 'name_en'], 'Untitled experience')
+  const slug = pickLocalized(exp, ['slug']) || slugify(title) || String(exp.id ?? '')
 
   const location =
-    pick(exp, ['location', 'region']) ||
-    str(nested(exp, ['place', 'name_en'])) ||
-    str(nested(exp, ['place', 'name'])) ||
-    pick(exp, ['place_name'], '')
+    pickLocalized(exp, ['location', 'region']) ||
+    localizedString(nestedValue(exp, ['place', 'name_en'])) ||
+    localizedString(nestedValue(exp, ['place', 'name'])) ||
+    pickLocalized(exp, ['place_name'], '')
 
   const place =
-    pick(exp, ['place', 'place_name']) ||
-    location.split(',')[0]?.trim() ||
-    location
+    typeof exp.place === 'string'
+      ? exp.place
+      : pickLocalized(exp, ['place_name']) ||
+        localizedString(exp.place) ||
+        location.split(',')[0]?.trim() ||
+        location
 
   const category =
-    pick(exp, ['category', 'category_name', 'type']) ||
-    str(nested(exp, ['category', 'name']))
+    pickLocalized(exp, ['category', 'category_name', 'type']) ||
+    localizedString(nestedValue(exp, ['category', 'name']))
 
-  const duration = pick(exp, ['duration', 'duration_label', 'type_label'])
-  const meta = pick(exp, ['meta']) || (category && duration ? `${category} · ${duration}` : category)
+  const duration = pickLocalized(exp, ['duration', 'duration_label', 'type_label'])
+  const meta = pickLocalized(exp, ['meta']) || (category && duration ? `${category} · ${duration}` : category)
 
   const ratingVal = formatRating(exp.rating ?? exp.average_rating)
-  const reviewCount = pick(exp, ['reviews_count', 'review_count'])
+  const reviewCount = pickLocalized(exp, ['raters', 'reviews_count', 'review_count'])
   const rating = reviewCount ? `${ratingVal} (${reviewCount})` : ratingVal
 
   const maxGuests = exp.maxGuests ?? exp.max_guests ?? exp.max_guests_count
   const guests =
     maxGuests != null && maxGuests !== ''
       ? `Max ${maxGuests} guests`
-      : pick(exp, ['guests', 'guests_label'])
+      : pickLocalized(exp, ['guests', 'guests_label'])
 
-  const priceRaw = exp.price ?? exp.from_price ?? exp.price_per_person
-  const price =
-    typeof priceRaw === 'number'
-      ? `SAR ${priceRaw}`
-      : pick(exp, ['price', 'price_label'], priceRaw != null ? `SAR ${priceRaw}` : 'SAR —')
+  const price = formatMoneySar(exp.price ?? exp.from_price ?? exp.price_per_person)
 
   const tags = tagsFrom(exp)
-  const flag = pick(exp, ['flag', 'badge', 'status_label'])
+  const flag = pickLocalized(exp, ['flag', 'badge', 'status_label'])
   const image =
-    pick(exp, ['image', 'cover', 'cover_image', 'banner', 'thumbnail']) ||
-    str(nested(exp, ['photos', 'cover'])) ||
+    pickLocalized(exp, ['cover', 'banner', 'image', 'cover_image', 'thumbnail']) ||
+    localizedString(nestedValue(exp, ['photos', 'cover'])) ||
     undefined
 
   const summary =
-    pick(exp, ['summary', 'about', 'about_en', 'description']) ||
-    str(nested(exp, ['place', 'about_en'])) ||
+    pickLocalized(exp, ['summary', 'description']) ||
+    localizedString(exp.about) ||
+    localizedString(nestedValue(exp, ['place', 'about_en'])) ||
     undefined
 
-  const reviewsRaw = pick(exp, ['reviews_label'])
-  const reviews =
-    reviewsRaw ||
-    (reviewCount ? `${reviewCount} reviews` : undefined)
+  const reviewsRaw = pickLocalized(exp, ['reviews_label'])
+  const reviews = reviewsRaw || (reviewCount ? `${reviewCount} reviews` : undefined)
 
   return {
-    id: exp.id != null ? str(exp.id) : undefined,
+    id: exp.id != null ? String(exp.id) : undefined,
     slug,
     title,
     location,
@@ -134,7 +118,7 @@ export function resolveExperienceFromList(
 ): ApiRecord | undefined {
   if (!experiences?.length) return undefined
   if (/^\d+$/.test(slugOrId)) {
-    return experiences.find((e) => str(e.id) === slugOrId)
+    return experiences.find((e) => String(e.id) === slugOrId)
   }
   return experiences.find((e) => {
     const mapped = mapApiExperienceToCard(e)
@@ -148,5 +132,5 @@ export function resolveExperienceId(
 ): string | undefined {
   if (/^\d+$/.test(slugOrId)) return slugOrId
   const match = resolveExperienceFromList(experiences, slugOrId)
-  return match?.id != null ? str(match.id) : undefined
+  return match?.id != null ? String(match.id) : undefined
 }

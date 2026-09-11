@@ -1,10 +1,17 @@
+import { localizedString } from '@/lib/api/locale'
+
 type ApiRecord = Record<string, unknown>
 
 /** Normalize category / taxonomy rows from guest list endpoints. */
 export function mapCategoryLabel(record: ApiRecord, fallback = ''): string {
-  const label = record.name ?? record.title ?? record.label ?? record.category ?? record.name_en
-  if (label != null && String(label).trim()) return String(label).trim()
-  return fallback
+  return (
+    localizedString(record.name) ||
+    localizedString(record.title) ||
+    localizedString(record.label) ||
+    localizedString(record.category) ||
+    localizedString(record.name_en) ||
+    fallback
+  )
 }
 
 export function mapCategoryLabels(

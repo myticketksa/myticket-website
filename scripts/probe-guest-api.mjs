@@ -6,6 +6,8 @@
  *   node scripts/probe-guest-api.mjs
  *   VITE_API_BASE_URL=https://staging.example.com node scripts/probe-guest-api.mjs
  *
+ * Loads `.env` from the repo root when present (VITE_API_BASE_URL).
+ *
  * Credentials (override with env):
  *   API_IDENTIFIER / API_PASSWORD
  *
@@ -14,16 +16,41 @@
  *   docs/api/RESPONSE-SCHEMAS.md  (summary)
  */
 
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from node:url'
+import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
-const baseUrl = (process.env.VITE_API_BASE_URL || process.env.API_BASE_URL || 'http://localhost:8000').replace(
-  /\/$/,
-  '',
-)
+
+/** Minimal `.env` loader — only sets keys that are not already in process.env. */
+function loadEnvFile(filePath) {
+  if (!existsSync(filePath)) return
+  const text = readFileSync(filePath, 'utf8')
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eq = trimmed.indexOf('=')
+    if (eq <= 0) continue
+    const key = trimmed.slice(0, eq).trim()
+    let value = trimmed.slice(eq + 1).trim()
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1)
+    }
+    if (!(key in process.env)) process.env[key] = value
+  }
+}
+
+loadEnvFile(join(root, '.env'))
+
+const baseUrl = (
+  process.env.VITE_API_BASE_URL ||
+  process.env.API_BASE_URL ||
+  'http://localhost:8000'
+).replace(/\/$/, '')
 const identifier = process.env.API_IDENTIFIER || 'mohamedelhaj.career@gmail.com'
 const password = process.env.API_PASSWORD || 'password123'
 
@@ -45,7 +72,7 @@ const ENDPOINTS = [
     method: 'GET',
     path: '/seats/event/{eventId}',
     auth: true,
-    note: 'Read only — hold stays mock in UI until confirmed',
+    note: 'Prefetch in UI; map still fixture until overlay is mapped',
   },
   {
     name: 'Hold Seat',
@@ -53,11 +80,11 @@ const ENDPOINTS = [
     path: '/seats/event/{eventId}/hold',
     auth: true,
     skip: true,
-    note: 'SKIPPED — UI keeps mock hold until this endpoint is approved',
+    note: 'SKIPPED in probe — UI soft-holds when seat ids are pure numeric',
   },
-  { name: 'Cities', method: 'GET', path: '/generals/cities' },
-  { name: 'Offered Services', method: 'GET', path: '/generals/offered-services' },
-  { name: 'Performance Categories', method: 'GET', path: '/generals/performance-categories' },
+  { name: 'Cities', method: 'GET', path: '/generals/cities', auth: true },
+  { name: 'Offered Services', method: 'GET', path: '/generals/offered-services', auth: true },
+  { name: 'Performance Categories', method: 'GET', path: '/generals/performance-categories', auth: true },
   { name: 'Notification Categories', method: 'GET', path: '/notifications/categories', auth: true },
   { name: 'Notifications', method: 'GET', path: '/notifications', auth: true },
   { name: 'Experience Categories', method: 'GET', path: '/experiences/categories' },
@@ -263,7 +290,7 @@ async function main() {
     `Base URL: \`${baseUrl}\``,
     `Probed at: ${new Date().toISOString()}`,
     '',
-    'Hold seat UI remains **mock** until that endpoint is explicitly approved.',
+    'Soft seat hold is wired when seat ids are pure numeric and `ticketId` is known; fixture seat maps still use a local mock hold.',
     '',
     '| Endpoint | Status | Shape |',
     '|----------|--------|-------|',

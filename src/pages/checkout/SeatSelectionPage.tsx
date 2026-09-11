@@ -10,9 +10,14 @@ import {
 } from '@/components/icons'
 import { Divider, FilterChip, PriceDisplay } from '@/components/data-display'
 import { Button } from '@/components/ui'
+import { cn } from '@/lib/cn'
 import { useGetEventsQuery } from '@/app/api/eventsApi'
-import { useGetEventSeatsQuery } from '@/app/api/seatsApi'
+import { useGetEventSeatsQuery, useHoldSeatsMutation } from '@/app/api/seatsApi'
+import { useAppDispatch } from '@/app/hooks'
+import { toastPushed } from '@/features/ui/uiSlice'
+import { parsePureNumericIds } from '@/lib/api/formPayload'
 import { resolveEventId } from '@/lib/api/mappers/events'
+import { apiErrorMessage } from '@/lib/api/unwrap'
 
 type SeatStatus =
   | 'available'
@@ -292,13 +297,16 @@ function SeatBlock({
  */
 export function SeatSelectionPage() {
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const { slug } = useParams()
   const [zone, setZone] = useState<Zone>('all')
   const [zoom, setZoom] = useState(100)
   const [selected, setSelected] = useState<SelectedSeat[]>(INITIAL_SELECTED)
+  const [holding, setHolding] = useState(false)
   const selectedIds = useMemo(() => new Set(selected.map((seat) => seat.id)), [selected])
 
   const { data: apiEvents } = useGetEventsQuery()
+  const [holdSeats] = useHoldSeatsMutation()
   const resolvedEventId = useMemo(
     () => resolveEventId(apiEvents, slug ?? '') ?? (/^\d+$/.test(slug ?? '') ? slug : undefined),
     [apiEvents, slug],
@@ -311,18 +319,55 @@ export function SeatSelectionPage() {
   const vat = Math.round((subtotal + serviceFee) * 0.15)
   const total = subtotal + serviceFee + vat
 
-  /** Hold stays mock until seats hold endpoint is confirmed in a future collection. */
-  function continueToCheckout() {
+  /**
+   * Soft hold: call API only when seat ids are pure numeric + ticketId is known.
+   * Fixture labels like `C11` stay local mock so checkout still works offline.
+   */
+  async function continueToCheckout() {
     if (resolvedEventId) sessionStorage.setItem('myticket.eventId', resolvedEventId)
     else if (slug) sessionStorage.setItem('myticket.eventId', slug)
+
+    const storedTicketId = sessionStorage.getItem('myticket.ticketId')
+    const ticketId =
+      storedTicketId && /^\d+$/.test(storedTicketId) ? Number(storedTicketId) : undefined
+    const numericSeatIds = parsePureNumericIds(selected.map((seat) => seat.id))
+
+    let holdId: string | number | undefined
+    let heldSeatIds: Array<string | number> = selected.map((seat) => seat.id)
+
+    if (resolvedEventId && ticketId && numericSeatIds.length === selected.length) {
+      setHolding(true)
+      try {
+        const held = await holdSeats({
+          eventId: resolvedEventId,
+          seatIds: numericSeatIds,
+          ticketId,
+        }).unwrap()
+        holdId = (held.holdId ?? held.hold_id ?? held.id) as string | number | undefined
+        heldSeatIds = numericSeatIds
+      } catch (error) {
+        dispatch(
+          toastPushed(
+            'neutral',
+            apiErrorMessage(error, 'Seat hold unavailable — continuing with local hold'),
+          ),
+        )
+      } finally {
+        setHolding(false)
+      }
+    }
+
     sessionStorage.setItem(
       'myticket.mockHold',
       JSON.stringify({
-        seatIds: selected.map((seat) => seat.id),
+        seatIds: heldSeatIds,
+        ticketId,
+        holdId,
         total,
         heldAt: Date.now(),
       }),
     )
+    if (ticketId) sessionStorage.setItem('myticket.ticketId', String(ticketId))
     navigate('/checkout')
   }
 
@@ -577,10 +622,12 @@ export function SeatSelectionPage() {
             type="button"
             size="lg"
             className="mt-lg h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
-            disabled={selected.length === 0}
-            onClick={continueToCheckout}
+            disabled={holding || selected.length === 0}
+            onClick={() => void continueToCheckout()}
           >
-            Continue to payment · SAR {total.toLocaleString('en-US')}
+            {holding
+              ? 'Holding seats…'
+              : `Continue to payment · SAR ${total.toLocaleString('en-US')}`}
           </Button>
           <p className="mt-md text-center text-[12px] leading-[1.5] text-ink-muted">
             Seats are held for 10 minutes. Maximum 6 per order.

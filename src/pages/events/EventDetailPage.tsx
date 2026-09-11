@@ -30,6 +30,7 @@ import {
   resolveEventFromList,
   resolveEventId,
 } from '@/lib/api/mappers/events'
+import { firstTicketTypeId, localizedString } from '@/lib/api/locale'
 import {
   CATALOG_EVENTS,
   DetailGallery,
@@ -108,8 +109,8 @@ const MAPS_URL =
 function pickDetailString(record: Record<string, unknown> | undefined, keys: string[]): string | undefined {
   if (!record) return undefined
   for (const key of keys) {
-    const value = record[key]
-    if (value != null && value !== '') return String(value)
+    const text = localizedString(record[key])
+    if (text) return text
   }
   return undefined
 }
@@ -198,7 +199,10 @@ export function EventDetailPage() {
     () => ({
       title: detailCard?.title ?? listCard?.title ?? EVENT_DETAIL.title,
       category: detailCard?.category ?? listCard?.category ?? EVENT_DETAIL.category,
-      flag: detailCard?.flag ?? listCard?.flag ?? EVENT_DETAIL.flag,
+      flag:
+        detailCard?.flag ??
+        (listCard && 'flag' in listCard ? listCard.flag : undefined) ??
+        EVENT_DETAIL.flag,
       rating:
         pickDetailString(apiDetail, ['rating_label', 'reviews_summary']) ??
         (detailCard?.rating && detailCard.rating !== '—'
@@ -224,6 +228,14 @@ export function EventDetailPage() {
   )
 
   const title = display.title
+
+  useEffect(() => {
+    const ticketTypeId =
+      firstTicketTypeId(apiDetail) ??
+      (listCard && 'ticketTypeId' in listCard ? listCard.ticketTypeId : undefined)
+    if (ticketTypeId) sessionStorage.setItem('myticket.ticketId', String(ticketTypeId))
+    if (resolvedId) sessionStorage.setItem('myticket.eventId', String(resolvedId))
+  }, [apiDetail, listCard, resolvedId])
 
   useEffect(() => {
     const nodes = TABS.map((item) => document.getElementById(TAB_IDS[item])).filter(

@@ -1,0 +1,2113 @@
+{
+  "baseUrl": "https://api.myticket.sa/api/v1",
+  "ids": {
+    "eventId": 23,
+    "talentId": 11,
+    "experienceId": 1,
+    "orderId": null
+  },
+  "results": [
+    {
+      "name": "Login",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "shape": "{ success: boolean; message: string; data: { user: { id: number; name: string; email: string; phone: string; role: string; emailVerified: boolean; walletBalance: number; created_at: string }; access_token: string; token_type: string } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": {
+          "user": {
+            "id": 57,
+            "name": "Mohamed Hafiz",
+            "email": "mohamedelhaj.career@gmail.com",
+            "phone": "966368951323",
+            "role": "default",
+            "emailVerified": true,
+            "walletBalance": 1000000,
+            "created_at": "2026-09-10T08:03:34.000000Z"
+          },
+          "access_token": "113|nYMU7GSawDFtozU9PEWYUyL3ocg9udxr3HvklpEr3e4fc04a",
+          "token_type": "Bearer"
+        }
+      }
+    },
+    {
+      "name": "List Categories",
+      "method": "GET",
+      "path": "/tickets/categories",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; name: { en: string; ar: string }; slug: string; icon: null; created_at: string }> }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [
+          {
+            "id": 1,
+            "name": {
+              "en": "Concerts",
+              "ar": "حفلات"
+            },
+            "slug": "concerts",
+            "icon": null,
+            "created_at": "2026-08-20T11:29:39.000000Z"
+          },
+          {
+            "id": 3,
+            "name": {
+              "en": "Festivals",
+              "ar": "مهرجانات"
+            },
+            "slug": "festivals",
+            "icon": null,
+            "created_at": "2026-08-20T11:29:39.000000Z"
+          },
+          {
+            "id": 4,
+            "name": {
+              "en": "Sports",
+              "ar": "رياضة"
+            },
+            "slug": "sports",
+            "icon": null,
+            "created_at": "2026-08-20T11:29:39.000000Z"
+          },
+          {
+            "id": 6,
+            "name": {
+              "en": "Comedy",
+              "ar": "كوميديا"
+            },
+            "slug": "comedy",
+            "icon": null,
+            "created_at": "2026-08-20T11:29:39.000000Z"
+          },
+          {
+            "id": 8,
+            "name": {
+              "en": "Cultural",
+              "ar": "ثقافة"
+            },
+            "slug": "cultural",
+            "icon": null,
+            "created_at": "2026-08-31T09:44:40.000000Z"
+          },
+          {
+            "id": 9,
+            "name": {
+              "en": "Food & Drink",
+              "ar": "طعام"
+            },
+            "slug": "food-drink",
+            "icon": null,
+            "created_at": "2026-08-31T09:44:40.000000Z"
+          },
+          {
+            "id": 10,
+            "name": {
+              "en": "Motorsport",
+              "ar": "سباقات"
+            },
+            "slug": "motorsport",
+            "icon": null,
+            "created_at": "2026-08-31T09:44:40.000000Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "List Events",
+      "method": "GET",
+      "path": "/tickets/events",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; title: { en: string; ar: string }; short_description: { en: string; ar: string }; slug: string; startTime: string; raters: number; rating: number; attendees: null; place: string; latitude: string; longitude: string; priceFrom: number; discountedPrice: number; seatingType: string; ticketTypes: array<{ id: number; name: string; price: string }>; cover: string; banner: string; isFeatured: boolean; isFree: boolean; created_at: string }>; pagination: { total: number; count: number; perPage: number; currentPage: number; totalPages: number } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [
+          {
+            "id": 23,
+            "title": {
+              "en": "Riyadh Season Family Fun Day",
+              "ar": "يوم العائلة المجاني في موسم الرياض"
+            },
+            "short_description": {
+              "en": "A free day of rides, live shows and food trucks for the whole family.",
+              "ar": "يوم مجاني من الألعاب والعروض الحية وعربات الطعام لكل العائلة."
+            },
+            "slug": "riyadh-season-family-fun-day",
+            "startTime": "2026-09-12T06:33:22.000000Z",
+            "raters": 0,
+            "rating": 0,
+            "attendees": null,
+            "place": "Boulevard Riyadh City",
+            "latitude": "26.4207",
+            "longitude": "50.0888",
+            "priceFrom": 0,
+            "discountedPrice": 0,
+            "seatingType": "free",
+            "ticketTypes": [
+              {
+                "id": 22,
+                "name": "Free",
+                "price": "0"
+              }
+            ],
+            "cover": "https://images.unsplash.com/photo-1478147427282-58a87a120781?w=800&q=80",
+            "banner": "https://images.unsplash.com/photo-1478147427282-58a87a120781?w=800&q=80",
+            "isFeatured": false,
+            "isFree": true,
+            "created_at": "2026-09-07T06:33:22.000000Z"
+          },
+          {
+            "id": 22,
+            "title": {
+              "en": "MDLBEAST XP Live Free",
+              "ar": null
+            },
+            "short_description": {
+              "en": "Join us for MDLBEAST XP Free Live — an experience you won't want to miss.",
+              "ar": null
+            },
+            "slug": "mdlbeast-xp-live-free",
+            "startTime": "2026-09-13T06:33:22.000000Z",
+            "raters": 0,
+            "rating": 0,
+            "attendees": null,
+            "place": "King Abdullah Park, Riyadh",
+            "latitude": "26.4207",
+            "longitude": "50.0888",
+            "priceFrom": 0,
+            "discountedPrice": 0,
+            "seatingType": "free",
+            "ticketTypes": [
+              {
+                "id": 21,
+                "name": "Free",
+                "price": "0"
+              }
+            ],
+            "cover": "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80",
+            "banner": "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80",
+            "isFeatured": false,
+            "isFree": true,
+            "created_at": "2026-09-02T11:37:41.000000Z"
+          },
+          {
+            "id": 24,
+            "title": {
+              "en": "Jeddah Corniche Sunset Concert",
+              "ar": "حفل غروب الشمس على كورنيش جدة"
+            },
+            "short_description": {
+              "en": "Free open-air concert on the Corniche as the sun goes down.",
+              "ar": "حفل مجاني في الهواء الطلق على الكورنيش وقت الغروب."
+            },
+            "slug": "jeddah-corniche-sunset-concert",
+            "startTime": "2026-09-16T06:33:22.000000Z",
+            "raters": 0,
+            "rating": 0,
+            "attendees": null,
+            "place": "Jeddah Waterfront",
+            "latitude": "26.4207",
+            "longitude": "50.0888",
+            "priceFrom": 0,
+            "discountedPrice": 0,
+            "seatingType": "free",
+            "ticketTypes": [
+              {
+                "id": 23,
+                "name": "Free",
+                "price": "0"
+              }
+            ],
+            "cover": "https://images.unsplash.com/photo-1524230507669-5ff97982bb5e?w=800&q=80",
+            "banner": "https://images.unsplash.com/photo-1524230507669-5ff97982bb5e?w=800&q=80",
+            "isFeatured": false,
+            "isFree": true,
+            "created_at": "2026-09-07T06:33:22.000000Z"
+          },
+          {
+            "id": 25,
+            "title": {
+              "en": "AlUla Old Town Cultural Night",
+              "ar": "ليلة ثقافية في بلدة العلا القديمة"
+            },
+            "short_description": {
+              "en": "Free evening of heritage storytelling, music and local crafts.",
+              "ar": "أمسية مجانية من الحكايات التراثية والموسيقى والحرف المحلية."
+            },
+            "slug": "alula-old-town-cultural-night",
+            "startTime": "2026-09-19T06:33:22.000000Z",
+            "raters": 0,
+            "rating": 0,
+            "attendees": null,
+            "place": "AlUla Old Town",
+            "latitude": "26.4207",
+            "longitude": "50.0888",
+            "priceFrom": 0,
+            "discountedPrice": 0,
+            "seatingType": "free",
+            "ticketTypes": [
+              {
+                "id": 24,
+                "name": "Free",
+                "price": "0"
+              }
+            ],
+            "cover": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80",
+            "banner": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80",
+            "isFeatured": false,
+            "isFree": true,
+            "created_at": "2026-09-07T06:33:22.000000Z"
+          },
+          {
+            "id": 26,
+            "title": {
+              "en": "Diriyah Comedy Night (Free Entry)",
+              "ar": "ليلة الكوميديا في الدرعية (دخول مجاني)"
+            },
+            "short_description": {
+              "en": "A free stand-up comedy night with local and regional comedians.",
+              "ar": "أمسية كوميدية مجانية مع فنانين محليين وإقليميين."
+            },
+            "slug": "diriyah-comedy-night-free-entry",
+            "startTime": "2026-09-23T06:33:22.000000Z",
+            "raters": 0,
+            "rating": 0,
+            "attendees": null,
+            "place": "Boulevard City, Riyadh",
+            "latitude": "26.4207",
+            "longitude": "50.0888",
+            "priceFrom": 0,
+            "discountedPrice": 0,
+            "seatingType": "free",
+            "ticketTypes": [
+              {
+                "id": 25,
+                "name": "Free",
+                "price": "0"
+              }
+            ],
+            "cover": "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80",
+            "banner": "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80",
+            "isFeatured": false,
+            "isFree": true,
+            "created_at": "2026-09-07T06:33:22.000000Z"
+          },
+          {
+            "id": 27,
+            "title": {
+              "en": "Kingdom Arena Community Sports Day",
+              "ar": "يوم رياضي مجتمعي مجاني في كينجدوم أرينا"
+            },
+            "short_description": {
+              "en": "Free community sports day with open courts and youth tournaments.",
+              "ar": "يوم رياضي مجاني يضم ملاعب مفتوحة وبطولات للناشئين."
+            },
+            "slug": "kingdom-arena-community-sports-day",
+            "startTime": "2026-09-27T06:33:22.000000Z",
+            "raters": 0,
+            "rating": 0,
+            "attendees": null,
+            "place": "Kingdom Arena, Riyadh",
+            "latitude": "26.4207",
+            "longitude": "50.0888",
+            "priceFrom": 0,
+            "discountedPrice": 0,
+            "seatingType": "free",
+            "ticketTypes": [
+              {
+                "id": 26,
+                "name": "Free",
+                "price": "0"
+              }
+            ],
+            "cover": "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
+            "banner": "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
+            "isFeatured": false,
+            "isFree": true,
+            "created_at": "2026-09-07T06:33:22.000000Z"
+          },
+          {
+            "id": 28,
+            "title": {
+              "en": "Kingdom Theatre: Orchestra Night",
+              "ar": "ليلة الأوركسترا في مسرح المملكة"
+            },
+            "short_description": {
+              "en": "An evening with the national symphony orchestra, reserved seating throughout.",
+              "ar": "أمسية مع الأوركسترا الوطنية، مقاعد محجوزة بالكامل."
+            },
+            "slug": "kingdom-theatre-orchestra-night",
+            "startTime": "2026-10-02T08:09:27.000000Z",
+            "raters": 0,
+            "rating": 0,
+            "attendees": null,
+            "place": "Princess Nourah Hall, Riyadh",
+            "latitude": "26.4207",
+            "longitude": "50.0888",
+            "priceFrom": 180,
+            "discountedPrice": 180,
+            "seatingType": "assigned",
+            "ticketTypes": [
+              {
+                "id": 35,
+                "name": "Standard",
+                "price": "180"
+              },
+              {
+                "id": 36,
+                "name": "Premium",
+                "price": "350"
+              }
+            ],
+            "cover": "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=800&q=80",
+            "banner": "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=800&q=80",
+            "isFeatured": false,
+            "isFree": false,
+            "created_at": "2026-09-07T08:09:27.000000Z"
+          },
+          {
+            "id": 29,
+            "title": {
+              "en": "National Theatre Comedy Gala",
+              "ar": "حفل الكوميديا الكبير في المسرح الوطني"
+            },
+            "short_description": {
+              "en": "A headline comedy gala night, reserved seating throughout.",
+              "ar": "أمسية كوميدية كبرى بمقاعد محجوزة بالكامل."
+            },
+            "slug": "national-theatre-comedy-gala",
+            "startTime": "2026-10-07T08:09:27.000000Z",
+            "raters": 0,
+            "rating": 0,
+            "attendees": null,
+            "place": "Princess Nourah Hall, Riyadh",
+            "latitude": "26.4207",
+            "longitude": "50.0888",
+            "priceFrom": 120,
+            "discountedPrice": 120,
+            "seatingType": "assigned",
+            "ticketTypes": [
+              {
+                "id": 37,
+                "name": "Standard",
+                "price": "120"
+              }
+            ],
+            "cover": "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=800&q=80",
+            "banner": "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=800&q=80",
+            "isFeatured": false,
+            "isFree": false,
+            "created_at": "2026-09-07T08:09:27.000000Z"
+          },
+          {
+            "id": 9,
+            "title": {
+              "en": "AlUla Sky Lantern Evening",
+              "ar": "أمسية الفوانيس السماوية في العلا"
+            },
+            "short_description": {
+              "en": "A lantern-release evening among the sandstone of AlUla Old Town.",
+              "ar": "أمسية إطلاق فوانيس بين صخور العلا القديمة."
+            },
+            "slug": "alula-sky-lantern",
+            "startTime": "2026-10-08T19:30:00.000000Z",
+            "raters": 3,
+            "rating": 4.9,
+            "attendees": null,
+            "place": "AlUla Old Town",
+            "latitude": "26.4207",
+            "longitude": "50.0888",
+            "priceFrom": 150,
+            "discountedPrice": 150,
+            "seatingType": "free",
+            "ticketTypes": [
+              {
+                "id": 8,
+                "name": "General Admission",
+                "price": "150"
+              },
+              {
+                "id": 32,
+                "name": "Premium Lantern",
+                "price": "250"
+              }
+            ],
+            "cover": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80",
+            "banner": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80",
+            "isFeatured": false,
+            "isFree": false,
+            "created_at": "2026-08-31T09:44:40.000000Z"
+          },
+          {
+            "id": 6,
+            "title": {
+              "en": "Winter Nights: Live at King Abdullah Park",
+              "ar": "ليالي الشتاء: حفل حي في حديقة الملك عبدالله"
+            },
+            "short_description": {
+              "en": "An open-air winter concert series under the Riyadh sky.",
+              "ar": "سلسلة حفلات شتوية في الهواء الطلق تحت سماء الرياض."
+            },
+            "slug": "winter-nights-king-abdullah-park",
+            "startTime": "2026-10-08T20:00:00.000000Z",
+            "raters": 5,
+            "rating": 4.8,
+            "attendees": null,
+            "place": "King Abdullah Park, Riyadh",
+            "latitude": "26.4207",
+            "longitude": "50.0888",
+            "priceFrom": 180,
+            "discountedPrice": 180,
+            "seatingType": "free",
+            "ticketTypes": [
+              {
+                "id": 3,
+                "name": "General Admission",
+                "price": "180"
+              },
+              {
+                "id": 4,
+                "name": "Silver Seated",
+                "price": "320"
+              }
+            ],
+            "cover": "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80",
+            "banner": "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80",
+            "isFeatured": true,
+            "isFree": false,
+            "created_at": "2026-08-31T09:44:40.000000Z"
+          }
+        ],
+        "pagination": {
+          "total": 17,
+          "count": 10,
+          "perPage": 10,
+          "currentPage": 1,
+          "totalPages": 2
+        }
+      }
+    },
+    {
+      "name": "Get Event Details",
+      "method": "GET",
+      "path": "/tickets/events/23",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: { id: number; title: { en: string; ar: string }; short_description: { en: string; ar: string }; slug: string; startTime: string; raters: number; rating: number; attendees: null; place: string; latitude: string; longitude: string; priceFrom: number; discountedPrice: number; seatingType: string; ticketTypes: array<{ id: number; name: string; price: string }>; cover: string; banner: string; isFeatured: boolean; isFree: boolean; created_at: string; description: { en: string; ar: string } } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": {
+          "id": 23,
+          "title": {
+            "en": "Riyadh Season Family Fun Day",
+            "ar": "يوم العائلة المجاني في موسم الرياض"
+          },
+          "short_description": {
+            "en": "A free day of rides, live shows and food trucks for the whole family.",
+            "ar": "يوم مجاني من الألعاب والعروض الحية وعربات الطعام لكل العائلة."
+          },
+          "slug": "riyadh-season-family-fun-day",
+          "startTime": "2026-09-12T06:33:22.000000Z",
+          "raters": 0,
+          "rating": 0,
+          "attendees": null,
+          "place": "Boulevard Riyadh City",
+          "latitude": "26.4207",
+          "longitude": "50.0888",
+          "priceFrom": 0,
+          "discountedPrice": 0,
+          "seatingType": "free",
+          "ticketTypes": [
+            {
+              "id": 22,
+              "name": "Free",
+              "price": "0"
+            }
+          ],
+          "cover": "https://images.unsplash.com/photo-1478147427282-58a87a120781?w=800&q=80",
+          "banner": "https://images.unsplash.com/photo-1478147427282-58a87a120781?w=800&q=80",
+          "isFeatured": false,
+          "isFree": true,
+          "created_at": "2026-09-07T06:33:22.000000Z",
+          "description": {
+            "en": "Free entry family festival with rides, live entertainment and food trucks. Doors open one hour before start time. Standard venue policies apply.",
+            "ar": "مهرجان عائلي مجاني الدخول يضم ألعابًا وعروضًا حية وعربات طعام. تُفتح الأبواب قبل ساعة من بدء الفعالية."
+          }
+        }
+      }
+    },
+    {
+      "name": "List Orders",
+      "method": "GET",
+      "path": "/tickets/orders",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array(empty); pagination: { total: number; count: number; perPage: number; currentPage: number; totalPages: number } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [],
+        "pagination": {
+          "total": 0,
+          "count": 0,
+          "perPage": 10,
+          "currentPage": 1,
+          "totalPages": 1
+        }
+      }
+    },
+    {
+      "name": "Get Order Details",
+      "method": "GET",
+      "path": "/tickets/orders/{orderId}",
+      "skipped": true,
+      "note": "No orderId discovered yet"
+    },
+    {
+      "name": "Get Favorites",
+      "method": "GET",
+      "path": "/favorites",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array(empty) }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": []
+      }
+    },
+    {
+      "name": "Talent Categories",
+      "method": "GET",
+      "path": "/talents/categories",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; name_en: string; name_ar: string }> }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [
+          {
+            "id": 9,
+            "name_en": "Arabic Pop",
+            "name_ar": "بوب عربي"
+          },
+          {
+            "id": 2,
+            "name_en": "Band",
+            "name_ar": "فرقة"
+          },
+          {
+            "id": 4,
+            "name_en": "Comedian",
+            "name_ar": "كوميديان"
+          },
+          {
+            "id": 6,
+            "name_en": "Dancer",
+            "name_ar": "راقص"
+          },
+          {
+            "id": 3,
+            "name_en": "DJ",
+            "name_ar": "دي جي"
+          },
+          {
+            "id": 12,
+            "name_en": "Electronic",
+            "name_ar": "إلكترونية"
+          },
+          {
+            "id": 7,
+            "name_en": "Host / MC",
+            "name_ar": "مقدم حفل"
+          },
+          {
+            "id": 14,
+            "name_en": "Jazz",
+            "name_ar": "جاز"
+          },
+          {
+            "id": 8,
+            "name_en": "Other",
+            "name_ar": "أخرى"
+          },
+          {
+            "id": 10,
+            "name_en": "Oud",
+            "name_ar": "عود"
+          },
+          {
+            "id": 13,
+            "name_en": "Saxophonist",
+            "name_ar": "ساكسفون"
+          },
+          {
+            "id": 1,
+            "name_en": "Singer",
+            "name_ar": "مطرب"
+          },
+          {
+            "id": 5,
+            "name_en": "Speaker",
+            "name_ar": "متحدث"
+          },
+          {
+            "id": 11,
+            "name_en": "Traditional",
+            "name_ar": "تراثي"
+          }
+        ]
+      }
+    },
+    {
+      "name": "List Talents",
+      "method": "GET",
+      "path": "/talents",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; performer: { stageName: string; profilePhoto: string; biography: null; homeCity: { id: number; slug: string; name: object }; travelPreference: null }; portfolio: { bestVideo: null; media: null; notableGigs: null }; categories: { performanceCategories: array<object>; governmentId: null }; raters: number; rating: number; status: null; isFollowing: boolean; ownDiscovery: boolean; created_at: null }>; pagination: { total: number; count: number; perPage: number; currentPage: number; totalPages: number } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [
+          {
+            "id": 11,
+            "performer": {
+              "stageName": "Layal Qasim",
+              "profilePhoto": "https://api.myticket.sa/storage/seed/talent-layal-qasim.jpg",
+              "biography": null,
+              "homeCity": {
+                "id": 1,
+                "slug": "riyadh",
+                "name": {
+                  "en": "Riyadh",
+                  "ar": "الرياض"
+                }
+              },
+              "travelPreference": null
+            },
+            "portfolio": {
+              "bestVideo": null,
+              "media": null,
+              "notableGigs": null
+            },
+            "categories": {
+              "performanceCategories": [
+                {
+                  "id": 1,
+                  "name_en": "Singer",
+                  "name_ar": "مطرب"
+                },
+                {
+                  "id": 9,
+                  "name_en": "Arabic Pop",
+                  "name_ar": "بوب عربي"
+                }
+              ],
+              "governmentId": null
+            },
+            "raters": 6,
+            "rating": 4.62,
+            "status": null,
+            "isFollowing": false,
+            "ownDiscovery": true,
+            "created_at": null
+          },
+          {
+            "id": 12,
+            "performer": {
+              "stageName": "Tarek Al-Nasser",
+              "profilePhoto": "https://api.myticket.sa/storage/seed/talent-tarek-alnasser.jpg",
+              "biography": null,
+              "homeCity": {
+                "id": 2,
+                "slug": "jeddah",
+                "name": {
+                  "en": "Jeddah",
+                  "ar": "جدة"
+                }
+              },
+              "travelPreference": null
+            },
+            "portfolio": {
+              "bestVideo": null,
+              "media": null,
+              "notableGigs": null
+            },
+            "categories": {
+              "performanceCategories": [
+                {
+                  "id": 10,
+                  "name_en": "Oud",
+                  "name_ar": "عود"
+                },
+                {
+                  "id": 11,
+                  "name_en": "Traditional",
+                  "name_ar": "تراثي"
+                }
+              ],
+              "governmentId": null
+            },
+            "raters": 3,
+            "rating": 4.2,
+            "status": null,
+            "isFollowing": false,
+            "ownDiscovery": false,
+            "created_at": null
+          },
+          {
+            "id": 13,
+            "performer": {
+              "stageName": "Nada Sharif",
+              "profilePhoto": "https://api.myticket.sa/storage/seed/talent-nada-sharif.jpg",
+              "biography": null,
+              "homeCity": {
+                "id": 2,
+                "slug": "jeddah",
+                "name": {
+                  "en": "Jeddah",
+                  "ar": "جدة"
+                }
+              },
+              "travelPreference": null
+            },
+            "portfolio": {
+              "bestVideo": null,
+              "media": null,
+              "notableGigs": null
+            },
+            "categories": {
+              "performanceCategories": [
+                {
+                  "id": 3,
+                  "name_en": "DJ",
+                  "name_ar": "دي جي"
+                },
+                {
+                  "id": 12,
+                  "name_en": "Electronic",
+                  "name_ar": "إلكترونية"
+                }
+              ],
+              "governmentId": null
+            },
+            "raters": 2,
+            "rating": 4.7,
+            "status": null,
+            "isFollowing": false,
+            "ownDiscovery": true,
+            "created_at": null
+          },
+          {
+            "id": 14,
+            "performer": {
+              "stageName": "Omar Baits",
+              "profilePhoto": "https://api.myticket.sa/storage/seed/talent-omar-baits.jpg",
+              "biography": null,
+              "homeCity": {
+                "id": 1,
+                "slug": "riyadh",
+                "name": {
+                  "en": "Riyadh",
+                  "ar": "الرياض"
+                }
+              },
+              "travelPreference": null
+            },
+            "portfolio": {
+              "bestVideo": null,
+              "media": null,
+              "notableGigs": null
+            },
+            "categories": {
+              "performanceCategories": [
+                {
+                  "id": 13,
+                  "name_en": "Saxophonist",
+                  "name_ar": "ساكسفون"
+                },
+                {
+                  "id": 14,
+                  "name_en": "Jazz",
+                  "name_ar": "جاز"
+                }
+              ],
+              "governmentId": null
+            },
+            "raters": 3,
+            "rating": 4.8,
+            "status": null,
+            "isFollowing": false,
+            "ownDiscovery": false,
+            "created_at": null
+          },
+          {
+            "id": 15,
+            "performer": {
+              "stageName": "Trio Rama",
+              "profilePhoto": "https://api.myticket.sa/storage/seed/talent-trio-rama.jpg",
+              "biography": null,
+              "homeCity": {
+                "id": 4,
+                "slug": "dammam",
+                "name": {
+                  "en": "Dammam",
+                  "ar": "الدمام"
+                }
+              },
+              "travelPreference": null
+            },
+            "portfolio": {
+              "bestVideo": null,
+              "media": null,
+              "notableGigs": null
+            },
+            "categories": {
+              "performanceCategories": [
+                {
+                  "id": 2,
+                  "name_en": "Band",
+                  "name_ar": "فرقة"
+                },
+                {
+                  "id": 14,
+                  "name_en": "Jazz",
+                  "name_ar": "جاز"
+                }
+              ],
+              "governmentId": null
+            },
+            "raters": 3,
+            "rating": 4.2,
+            "status": null,
+            "isFollowing": false,
+            "ownDiscovery": false,
+            "created_at": null
+          }
+        ],
+        "pagination": {
+          "total": 5,
+          "count": 5,
+          "perPage": 10,
+          "currentPage": 1,
+          "totalPages": 1
+        }
+      }
+    },
+    {
+      "name": "Talent Details",
+      "method": "GET",
+      "path": "/talents/11",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: { id: number; performer: { stageName: string; profilePhoto: string; biography: string; homeCity: { id: number; slug: string; name: { en: string; ar: string } }; travelPreference: string }; portfolio: { bestVideo: string; media: array<string>; notableGigs: string }; categories: { performanceCategories: array<{ id: number; name_en: string; name_ar: string }>; governmentId: string }; raters: number; rating: number; status: string; isFollowing: boolean; ownDiscovery: boolean; created_at: string } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": {
+          "id": 11,
+          "performer": {
+            "stageName": "Layal Qasim",
+            "profilePhoto": "https://api.myticket.sa/storage/seed/talent-layal-qasim.jpg",
+            "biography": "Layal Qasim brings contemporary Arabic pop to stages across the Kingdom, blending classic melodies with modern production.",
+            "homeCity": {
+              "id": 1,
+              "slug": "riyadh",
+              "name": {
+                "en": "Riyadh",
+                "ar": "الرياض"
+              }
+            },
+            "travelPreference": "Nationwide"
+          },
+          "portfolio": {
+            "bestVideo": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+            "media": [
+              "https://api.myticket.sa/storage/seed/work-layal-1.jpg",
+              "https://api.myticket.sa/storage/seed/work-layal-2.jpg",
+              "https://api.myticket.sa/storage/seed/work-layal-3.jpg"
+            ],
+            "notableGigs": "موسم الرياض ٢٠٢٥ · موسم جدة · إم دي إل بيست\nRiyadh Season 2025 · Jeddah Season · MDL Beast"
+          },
+          "categories": {
+            "performanceCategories": [
+              {
+                "id": 1,
+                "name_en": "Singer",
+                "name_ar": "مطرب"
+              },
+              {
+                "id": 9,
+                "name_en": "Arabic Pop",
+                "name_ar": "بوب عربي"
+              }
+            ],
+            "governmentId": "https://api.myticket.sa/storage/seed/id-layal-qasim.pdf"
+          },
+          "raters": 6,
+          "rating": 4.62,
+          "status": "approved",
+          "isFollowing": false,
+          "ownDiscovery": true,
+          "created_at": "2026-08-31T09:44:40.000000Z"
+        }
+      }
+    },
+    {
+      "name": "Talent Previous Works",
+      "method": "GET",
+      "path": "/talents/11/previous-works",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<string> }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [
+          "https://api.myticket.sa/storage/seed/work-layal-1.jpg",
+          "https://api.myticket.sa/storage/seed/work-layal-2.jpg",
+          "https://api.myticket.sa/storage/seed/work-layal-3.jpg"
+        ]
+      }
+    },
+    {
+      "name": "Wallet",
+      "method": "GET",
+      "path": "/wallet",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ transaction_type: string; amount: string; created_at: string }>; pagination: { total: number; count: number; perPage: number; currentPage: number; totalPages: number } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [
+          {
+            "transaction_type": "topup",
+            "amount": "10",
+            "created_at": "2026-08-26T13:46:18.000000Z"
+          },
+          {
+            "transaction_type": "topup",
+            "amount": "10",
+            "created_at": "2026-08-26T13:48:25.000000Z"
+          },
+          {
+            "transaction_type": "ticket_purchase",
+            "amount": "199",
+            "created_at": "2026-08-26T14:08:33.000000Z"
+          },
+          {
+            "transaction_type": "ticket_purchase",
+            "amount": "640",
+            "created_at": "2026-08-29T06:05:58.000000Z"
+          },
+          {
+            "transaction_type": "ticket_purchase",
+            "amount": "150",
+            "created_at": "2026-09-03T12:16:02.000000Z"
+          },
+          {
+            "transaction_type": "ticket_purchase",
+            "amount": "150",
+            "created_at": "2026-09-03T12:42:56.000000Z"
+          },
+          {
+            "transaction_type": "ticket_purchase",
+            "amount": "300",
+            "created_at": "2026-09-03T12:49:09.000000Z"
+          },
+          {
+            "transaction_type": "ticket_purchase",
+            "amount": "135",
+            "created_at": "2026-09-07T09:01:14.000000Z"
+          },
+          {
+            "transaction_type": "ticket_purchase",
+            "amount": "180",
+            "created_at": "2026-09-07T11:48:06.000000Z"
+          },
+          {
+            "transaction_type": "ticket_purchase",
+            "amount": "120",
+            "created_at": "2026-09-07T13:12:03.000000Z"
+          }
+        ],
+        "pagination": {
+          "total": 15,
+          "count": 10,
+          "perPage": 10,
+          "currentPage": 1,
+          "totalPages": 2
+        }
+      }
+    },
+    {
+      "name": "Get Event Seats",
+      "method": "GET",
+      "path": "/seats/event/23",
+      "status": 200,
+      "ok": true,
+      "note": "Prefetch in UI; map still fixture until overlay is mapped",
+      "shape": "{ success: boolean; message: string; data: array(empty) }",
+      "sample": {
+        "success": true,
+        "message": "Seats fetched successfully",
+        "data": []
+      }
+    },
+    {
+      "name": "Hold Seat",
+      "method": "POST",
+      "path": "/seats/event/{eventId}/hold",
+      "skipped": true,
+      "note": "SKIPPED in probe — UI soft-holds when seat ids are pure numeric"
+    },
+    {
+      "name": "Cities",
+      "method": "GET",
+      "path": "/generals/cities",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; slug: string; name: { en: string; ar: string } }> }",
+      "sample": {
+        "success": true,
+        "message": "Cities retrieved successfully",
+        "data": [
+          {
+            "id": 13,
+            "slug": "abha",
+            "name": {
+              "en": "Abha",
+              "ar": "أبها"
+            }
+          },
+          {
+            "id": 21,
+            "slug": "al-ahsa",
+            "name": {
+              "en": "Al Ahsa",
+              "ar": "الأحساء"
+            }
+          },
+          {
+            "id": 23,
+            "slug": "al-khafji",
+            "name": {
+              "en": "Al Khafji",
+              "ar": "الخفجي"
+            }
+          },
+          {
+            "id": 3,
+            "slug": "alula",
+            "name": {
+              "en": "AlUla",
+              "ar": "العلا"
+            }
+          },
+          {
+            "id": 19,
+            "slug": "buraidah",
+            "name": {
+              "en": "Buraidah",
+              "ar": "بريدة"
+            }
+          },
+          {
+            "id": 4,
+            "slug": "dammam",
+            "name": {
+              "en": "Dammam",
+              "ar": "الدمام"
+            }
+          },
+          {
+            "id": 10,
+            "slug": "dhahran",
+            "name": {
+              "en": "Dhahran",
+              "ar": "الظهران"
+            }
+          },
+          {
+            "id": 5,
+            "slug": "diriyah",
+            "name": {
+              "en": "Diriyah",
+              "ar": "الدرعية"
+            }
+          },
+          {
+            "id": 17,
+            "slug": "hail",
+            "name": {
+              "en": "Hail",
+              "ar": "حائل"
+            }
+          },
+          {
+            "id": 18,
+            "slug": "jazan",
+            "name": {
+              "en": "Jazan",
+              "ar": "جازان"
+            }
+          },
+          {
+            "id": 2,
+            "slug": "jeddah",
+            "name": {
+              "en": "Jeddah",
+              "ar": "جدة"
+            }
+          },
+          {
+            "id": 14,
+            "slug": "jubail",
+            "name": {
+              "en": "Jubail",
+              "ar": "الجبيل"
+            }
+          },
+          {
+            "id": 20,
+            "slug": "khamis-mushait",
+            "name": {
+              "en": "Khamis Mushait",
+              "ar": "خميس مشيط"
+            }
+          },
+          {
+            "id": 9,
+            "slug": "khobar",
+            "name": {
+              "en": "Khobar",
+              "ar": "الخبر"
+            }
+          },
+          {
+            "id": 7,
+            "slug": "mecca",
+            "name": {
+              "en": "Mecca",
+              "ar": "مكة المكرمة"
+            }
+          },
+          {
+            "id": 8,
+            "slug": "medina",
+            "name": {
+              "en": "Medina",
+              "ar": "المدينة المنورة"
+            }
+          },
+          {
+            "id": 16,
+            "slug": "najran",
+            "name": {
+              "en": "Najran",
+              "ar": "نجران"
+            }
+          },
+          {
+            "id": 22,
+            "slug": "qatif",
+            "name": {
+              "en": "Qatif",
+              "ar": "القطيف"
+            }
+          },
+          {
+            "id": 1,
+            "slug": "riyadh",
+            "name": {
+              "en": "Riyadh",
+              "ar": "الرياض"
+            }
+          },
+          {
+            "id": 12,
+            "slug": "tabuk",
+            "name": {
+              "en": "Tabuk",
+              "ar": "تبوك"
+            }
+          },
+          {
+            "id": 11,
+            "slug": "taif",
+            "name": {
+              "en": "Taif",
+              "ar": "الطائف"
+            }
+          },
+          {
+            "id": 15,
+            "slug": "yanbu",
+            "name": {
+              "en": "Yanbu",
+              "ar": "ينبع"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Offered Services",
+      "method": "GET",
+      "path": "/generals/offered-services",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; name_en: string; name_ar: null }> }",
+      "sample": {
+        "success": true,
+        "message": "Offered services retrieved successfully",
+        "data": [
+          {
+            "id": 1,
+            "name_en": "Catering",
+            "name_ar": null
+          },
+          {
+            "id": 3,
+            "name_en": "Decor & flowers",
+            "name_ar": null
+          },
+          {
+            "id": 8,
+            "name_en": "Logistics",
+            "name_ar": null
+          },
+          {
+            "id": 2,
+            "name_en": "Photography",
+            "name_ar": null
+          },
+          {
+            "id": 5,
+            "name_en": "Planning",
+            "name_ar": null
+          },
+          {
+            "id": 7,
+            "name_en": "Security",
+            "name_ar": null
+          },
+          {
+            "id": 4,
+            "name_en": "Sound & light",
+            "name_ar": null
+          },
+          {
+            "id": 6,
+            "name_en": "Staff & ushers",
+            "name_ar": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "Performance Categories",
+      "method": "GET",
+      "path": "/generals/performance-categories",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; name_en: string; name_ar: string }> }",
+      "sample": {
+        "success": true,
+        "message": "Performance categories retrieved successfully",
+        "data": [
+          {
+            "id": 9,
+            "name_en": "Arabic Pop",
+            "name_ar": "بوب عربي"
+          },
+          {
+            "id": 2,
+            "name_en": "Band",
+            "name_ar": "فرقة"
+          },
+          {
+            "id": 4,
+            "name_en": "Comedian",
+            "name_ar": "كوميديان"
+          },
+          {
+            "id": 6,
+            "name_en": "Dancer",
+            "name_ar": "راقص"
+          },
+          {
+            "id": 3,
+            "name_en": "DJ",
+            "name_ar": "دي جي"
+          },
+          {
+            "id": 12,
+            "name_en": "Electronic",
+            "name_ar": "إلكترونية"
+          },
+          {
+            "id": 7,
+            "name_en": "Host / MC",
+            "name_ar": "مقدم حفل"
+          },
+          {
+            "id": 14,
+            "name_en": "Jazz",
+            "name_ar": "جاز"
+          },
+          {
+            "id": 8,
+            "name_en": "Other",
+            "name_ar": "أخرى"
+          },
+          {
+            "id": 10,
+            "name_en": "Oud",
+            "name_ar": "عود"
+          },
+          {
+            "id": 13,
+            "name_en": "Saxophonist",
+            "name_ar": "ساكسفون"
+          },
+          {
+            "id": 1,
+            "name_en": "Singer",
+            "name_ar": "مطرب"
+          },
+          {
+            "id": 5,
+            "name_en": "Speaker",
+            "name_ar": "متحدث"
+          },
+          {
+            "id": 11,
+            "name_en": "Traditional",
+            "name_ar": "تراثي"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Notification Categories",
+      "method": "GET",
+      "path": "/notifications/categories",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; name_en: string; name_ar: null; notifications_count: number }> }",
+      "sample": {
+        "success": true,
+        "message": "Categories retreived successfully",
+        "data": [
+          {
+            "id": 5,
+            "name_en": "Enquiries",
+            "name_ar": null,
+            "notifications_count": 0
+          },
+          {
+            "id": 4,
+            "name_en": "Following",
+            "name_ar": null,
+            "notifications_count": 0
+          },
+          {
+            "id": 3,
+            "name_en": "Prices & Auction",
+            "name_ar": null,
+            "notifications_count": 0
+          },
+          {
+            "id": 1,
+            "name_en": "Tickets & Orders",
+            "name_ar": null,
+            "notifications_count": 1
+          },
+          {
+            "id": 2,
+            "name_en": "Waitlists",
+            "name_ar": null,
+            "notifications_count": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "Notifications",
+      "method": "GET",
+      "path": "/notifications",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; type: string; title: string; message: string; is_read: boolean; created_at: string }>; pagination: { total: number; count: number; perPage: number; currentPage: number; totalPages: number } }",
+      "sample": {
+        "success": true,
+        "message": "Notifications retrieved successfully",
+        "data": [
+          {
+            "id": 28,
+            "type": "ORGANIZATION_REQUEST",
+            "title": "Application Status Update",
+            "message": "Hey, your application to be organizer has been rejected for the reason optional reason field",
+            "is_read": false,
+            "created_at": "2026-09-10T08:06:23.000000Z"
+          }
+        ],
+        "pagination": {
+          "total": 1,
+          "count": 1,
+          "perPage": 20,
+          "currentPage": 1,
+          "totalPages": 1
+        }
+      }
+    },
+    {
+      "name": "Experience Categories",
+      "method": "GET",
+      "path": "/experiences/categories",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; name: { en: string; ar: string }; slug: string; icon: string; created_at: string }> }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [
+          {
+            "id": 1,
+            "name": {
+              "en": "Food & Desert",
+              "ar": "الطعام"
+            },
+            "slug": "food-desert",
+            "icon": "utensils",
+            "created_at": "2026-08-31T07:52:56.000000Z"
+          },
+          {
+            "id": 2,
+            "name": {
+              "en": "Culture",
+              "ar": "الثقافة"
+            },
+            "slug": "culture",
+            "icon": "theater-masks",
+            "created_at": "2026-08-31T07:52:56.000000Z"
+          },
+          {
+            "id": 3,
+            "name": {
+              "en": "Heritage",
+              "ar": "التراث"
+            },
+            "slug": "heritage",
+            "icon": "landmark",
+            "created_at": "2026-08-31T07:52:56.000000Z"
+          },
+          {
+            "id": 4,
+            "name": {
+              "en": "Outdoors",
+              "ar": "الأنشطة الخارجية"
+            },
+            "slug": "outdoors",
+            "icon": "mountain",
+            "created_at": "2026-08-31T07:52:56.000000Z"
+          },
+          {
+            "id": 5,
+            "name": {
+              "en": "Workshops",
+              "ar": "ورش العمل"
+            },
+            "slug": "workshops",
+            "icon": "tools",
+            "created_at": "2026-08-31T07:52:56.000000Z"
+          },
+          {
+            "id": 6,
+            "name": {
+              "en": "Music",
+              "ar": "الموسيقى"
+            },
+            "slug": "music",
+            "icon": "music",
+            "created_at": "2026-08-31T07:52:56.000000Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "List Experiences",
+      "method": "GET",
+      "path": "/experiences",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; title: { en: string; ar: string }; about: { en: null; ar: null }; includes: { en: null; ar: null }; slug: null; type: string; opening_hours: null; raters: number; rating: number; location: null; max_guests: null; price: string; cover: string; banner: string; photos: null; status: null; created_at: null }>; pagination: { total: number; count: number; perPage: number; currentPage: number; totalPages: number } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [
+          {
+            "id": 1,
+            "title": {
+              "en": "Traditional Saudi Coffee & Dates Tasting",
+              "ar": "تذوق القهوة والتمور السعودية التقليدية"
+            },
+            "about": {
+              "en": null,
+              "ar": null
+            },
+            "includes": {
+              "en": null,
+              "ar": null
+            },
+            "slug": null,
+            "type": "activity",
+            "opening_hours": null,
+            "raters": 3,
+            "rating": 4.3,
+            "location": null,
+            "max_guests": null,
+            "price": "150",
+            "cover": "https://api.myticket.sa/storage/experiences/seed-coffee-cover.jpg",
+            "banner": "https://api.myticket.sa/storage/experiences/seed-coffee-banner.jpg",
+            "photos": null,
+            "status": null,
+            "created_at": null
+          },
+          {
+            "id": 2,
+            "title": {
+              "en": "AlUla Heritage Walking Tour",
+              "ar": "جولة سير في تراث العلا"
+            },
+            "about": {
+              "en": null,
+              "ar": null
+            },
+            "includes": {
+              "en": null,
+              "ar": null
+            },
+            "slug": null,
+            "type": "attraction",
+            "opening_hours": null,
+            "raters": 7,
+            "rating": 3.51,
+            "location": null,
+            "max_guests": null,
+            "price": "220",
+            "cover": "https://api.myticket.sa/storage/experiences/seed-alula-cover.jpg",
+            "banner": "https://api.myticket.sa/storage/experiences/seed-alula-banner.jpg",
+            "photos": null,
+            "status": null,
+            "created_at": null
+          },
+          {
+            "id": 3,
+            "title": {
+              "en": "Red Sea Snorkeling Adventure",
+              "ar": "مغامرة الغطس في البحر الأحمر"
+            },
+            "about": {
+              "en": null,
+              "ar": null
+            },
+            "includes": {
+              "en": null,
+              "ar": null
+            },
+            "slug": null,
+            "type": "activity",
+            "opening_hours": null,
+            "raters": 7,
+            "rating": 3.56,
+            "location": null,
+            "max_guests": null,
+            "price": "350",
+            "cover": "https://api.myticket.sa/storage/experiences/seed-reef-cover.jpg",
+            "banner": "https://api.myticket.sa/storage/experiences/seed-reef-banner.jpg",
+            "photos": null,
+            "status": null,
+            "created_at": null
+          },
+          {
+            "id": 4,
+            "title": {
+              "en": "Sadu Weaving Workshop",
+              "ar": "ورشة نسيج السدو"
+            },
+            "about": {
+              "en": null,
+              "ar": null
+            },
+            "includes": {
+              "en": null,
+              "ar": null
+            },
+            "slug": null,
+            "type": "activity",
+            "opening_hours": null,
+            "raters": 2,
+            "rating": 4.45,
+            "location": null,
+            "max_guests": null,
+            "price": "180",
+            "cover": "https://api.myticket.sa/storage/experiences/seed-sadu-cover.jpg",
+            "banner": "https://api.myticket.sa/storage/experiences/seed-sadu-banner.jpg",
+            "photos": null,
+            "status": null,
+            "created_at": null
+          },
+          {
+            "id": 5,
+            "title": {
+              "en": "Edge of the World (Jebel Fihrayn)",
+              "ar": "حافة العالم (جبل فحيان)"
+            },
+            "about": {
+              "en": null,
+              "ar": null
+            },
+            "includes": {
+              "en": null,
+              "ar": null
+            },
+            "slug": null,
+            "type": "attraction",
+            "opening_hours": null,
+            "raters": 0,
+            "rating": 0,
+            "location": null,
+            "max_guests": null,
+            "price": "200",
+            "cover": "https://api.myticket.sa/storage/experiences/seed-edge-of-the-world.jpg",
+            "banner": "https://api.myticket.sa/storage/experiences/seed-edge-of-the-world.jpg",
+            "photos": null,
+            "status": null,
+            "created_at": null
+          },
+          {
+            "id": 6,
+            "title": {
+              "en": "At-Turaif District, Diriyah",
+              "ar": "حي الطريف بالدرعية"
+            },
+            "about": {
+              "en": null,
+              "ar": null
+            },
+            "includes": {
+              "en": null,
+              "ar": null
+            },
+            "slug": null,
+            "type": "attraction",
+            "opening_hours": null,
+            "raters": 0,
+            "rating": 0,
+            "location": null,
+            "max_guests": null,
+            "price": "180",
+            "cover": "https://api.myticket.sa/storage/experiences/seed-at-turaif.jpg",
+            "banner": "https://api.myticket.sa/storage/experiences/seed-at-turaif.jpg",
+            "photos": null,
+            "status": null,
+            "created_at": null
+          },
+          {
+            "id": 7,
+            "title": {
+              "en": "Elephant Rock, AlUla",
+              "ar": "صخرة الفيل، العلا"
+            },
+            "about": {
+              "en": null,
+              "ar": null
+            },
+            "includes": {
+              "en": null,
+              "ar": null
+            },
+            "slug": null,
+            "type": "attraction",
+            "opening_hours": null,
+            "raters": 0,
+            "rating": 0,
+            "location": null,
+            "max_guests": null,
+            "price": "120",
+            "cover": "https://api.myticket.sa/storage/experiences/seed-elephant-rock.jpg",
+            "banner": "https://api.myticket.sa/storage/experiences/seed-elephant-rock.jpg",
+            "photos": null,
+            "status": null,
+            "created_at": null
+          },
+          {
+            "id": 8,
+            "title": {
+              "en": "Masmak Fortress, Riyadh",
+              "ar": "قصر المصمك، الرياض"
+            },
+            "about": {
+              "en": null,
+              "ar": null
+            },
+            "includes": {
+              "en": null,
+              "ar": null
+            },
+            "slug": null,
+            "type": "attraction",
+            "opening_hours": null,
+            "raters": 0,
+            "rating": 0,
+            "location": null,
+            "max_guests": null,
+            "price": "80",
+            "cover": "https://api.myticket.sa/storage/experiences/seed-masmak.jpg",
+            "banner": "https://api.myticket.sa/storage/experiences/seed-masmak.jpg",
+            "photos": null,
+            "status": null,
+            "created_at": null
+          },
+          {
+            "id": 9,
+            "title": {
+              "en": "Al-Balad, Historic Jeddah",
+              "ar": "البلد، جدة التاريخية"
+            },
+            "about": {
+              "en": null,
+              "ar": null
+            },
+            "includes": {
+              "en": null,
+              "ar": null
+            },
+            "slug": null,
+            "type": "attraction",
+            "opening_hours": null,
+            "raters": 0,
+            "rating": 0,
+            "location": null,
+            "max_guests": null,
+            "price": "140",
+            "cover": "https://api.myticket.sa/storage/experiences/seed-al-balad.jpg",
+            "banner": "https://api.myticket.sa/storage/experiences/seed-al-balad.jpg",
+            "photos": null,
+            "status": null,
+            "created_at": null
+          }
+        ],
+        "pagination": {
+          "total": 9,
+          "count": 9,
+          "perPage": 10,
+          "currentPage": 1,
+          "totalPages": 1
+        }
+      }
+    },
+    {
+      "name": "Experience Details",
+      "method": "GET",
+      "path": "/experiences/1",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: { id: number; title: { en: string; ar: string }; about: { en: string; ar: string }; includes: { en: string; ar: string }; slug: string; type: string; opening_hours: array<{ open: string; close: string; isClosed: boolean; dayOfWeek: number }>; raters: number; rating: number; location: string; max_guests: number; price: string; cover: string; banner: string; photos: array<string>; status: string; created_at: string } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": {
+          "id": 1,
+          "title": {
+            "en": "Traditional Saudi Coffee & Dates Tasting",
+            "ar": "تذوق القهوة والتمور السعودية التقليدية"
+          },
+          "about": {
+            "en": "Learn the art of Saudi hospitality with a guided tasting of Arabic coffee (qahwa) and premium dates.",
+            "ar": "تعرف على فن الضيافة السعودية من خلال تذوق موجه للقهوة العربية وأجود أنواع التمور."
+          },
+          "includes": {
+            "en": "[\"Arabic coffee tasting\", \"Date varieties sampling\", \"Hospitality etiquette guide\"]",
+            "ar": "[\"تذوق القهوة العربية\", \"تذوق أصناف التمور\", \"دليل آداب الضيافة\"]"
+          },
+          "slug": "traditional-saudi-coffee-dates-tasting-5hHBQ",
+          "type": "activity",
+          "opening_hours": [
+            {
+              "open": "09:00",
+              "close": "18:00",
+              "isClosed": false,
+              "dayOfWeek": 0
+            },
+            {
+              "open": "09:00",
+              "close": "18:00",
+              "isClosed": false,
+              "dayOfWeek": 1
+            },
+            {
+              "open": "09:00",
+              "close": "18:00",
+              "isClosed": false,
+              "dayOfWeek": 2
+            },
+            {
+              "open": "09:00",
+              "close": "18:00",
+              "isClosed": false,
+              "dayOfWeek": 3
+            },
+            {
+              "open": "09:00",
+              "close": "18:00",
+              "isClosed": false,
+              "dayOfWeek": 4
+            },
+            {
+              "open": "00:00",
+              "close": "00:00",
+              "isClosed": true,
+              "dayOfWeek": 5
+            },
+            {
+              "open": "09:00",
+              "close": "18:00",
+              "isClosed": false,
+              "dayOfWeek": 6
+            }
+          ],
+          "raters": 3,
+          "rating": 4.3,
+          "location": "46.6753:24.7136",
+          "max_guests": 8,
+          "price": "150",
+          "cover": "https://api.myticket.sa/storage/experiences/seed-coffee-cover.jpg",
+          "banner": "https://api.myticket.sa/storage/experiences/seed-coffee-banner.jpg",
+          "photos": [
+            "https://api.myticket.sa/storage/experiences/seed-coffee-cover.jpg"
+          ],
+          "status": "active",
+          "created_at": "2026-08-31T07:53:03.000000Z"
+        }
+      }
+    },
+    {
+      "name": "My Submissions",
+      "method": "GET",
+      "path": "/experiences/my-submissions",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array(empty); pagination: { total: number; count: number; perPage: number; currentPage: number; totalPages: number } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [],
+        "pagination": {
+          "total": 0,
+          "count": 0,
+          "perPage": 10,
+          "currentPage": 1,
+          "totalPages": 1
+        }
+      }
+    },
+    {
+      "name": "My Application",
+      "method": "GET",
+      "path": "/applications",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: { type: string; application: { id: number; publicPresence: { publicName: string; logo: string; biography: string; website: string; instagram: string }; entity: { type: string; companyName: string; registrationNumber: string; fullName: null; idNumber: null; regions: array<object>; contactEmail: string; contactPhone: string }; verification: { IdDocument: string; eventLicense: string; payoutBankCountry: string }; status: string; created_at: string } } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": {
+          "type": "organizer",
+          "application": {
+            "id": 16,
+            "publicPresence": {
+              "publicName": "Night Owl Productions",
+              "logo": "https://api.myticket.sa/storage/organizer-profiles/H7FCfnFabSmMKPt3tKMLSzxNC1dzpGMUTIzAK5Dp.png",
+              "biography": "Lorem ipsum dolor sit amet, consectetur adipiis, tesque fermentum fermentum scelerisque. In tincidunt sit amet nisi in sollicitudin. Mauris nisl nibh, ullamcorper non interdum ut, tincidunt a lectus. Nam tempus facilisis arcu vel euismod. Donec vestibulum libero quam. Sed vestibulum quam diam, id tincidunt enim malesuada vitae.",
+              "website": "https://myticket.sa",
+              "instagram": "@myticketsa"
+            },
+            "entity": {
+              "type": "company",
+              "companyName": "My Ticket",
+              "registrationNumber": "1234567",
+              "fullName": null,
+              "idNumber": null,
+              "regions": [
+                {
+                  "id": 1,
+                  "slug": "riyadh",
+                  "name": {
+                    "en": "Riyadh",
+                    "ar": "الرياض"
+                  }
+                }
+              ],
+              "contactEmail": "business@myticket.sa",
+              "contactPhone": "+96651269782"
+            },
+            "verification": {
+              "IdDocument": "https://api.myticket.sa/storage/organizer-profiles/bZVvNm9UzHaKNC01p8ezM3TYyKaV2h3TXCqye1sd.png",
+              "eventLicense": "https://api.myticket.sa/storage/organizer-profiles/sm8gHkelFes7p9JGaxEFHolzlBO0wh9KYAPCCtOw.png",
+              "payoutBankCountry": "Saudi Arabia"
+            },
+            "status": "rejected",
+            "created_at": "2026-09-10T08:04:23.000000Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "My Reviews",
+      "method": "GET",
+      "path": "/reviews",
+      "status": 200,
+      "ok": true,
+      "shape": "{ data: array(empty); links: { first: string; last: string; prev: null; next: null }; meta: { current_page: number; from: null; last_page: number; links: array<{ url: null; label: string; page: null; active: boolean }>; path: string; per_page: number; to: null; total: number } }",
+      "sample": {
+        "data": [],
+        "links": {
+          "first": "https://api.myticket.sa/api/v1/reviews?page=1",
+          "last": "https://api.myticket.sa/api/v1/reviews?page=1",
+          "prev": null,
+          "next": null
+        },
+        "meta": {
+          "current_page": 1,
+          "from": null,
+          "last_page": 1,
+          "links": [
+            {
+              "url": null,
+              "label": "&laquo; Previous",
+              "page": null,
+              "active": false
+            },
+            {
+              "url": "https://api.myticket.sa/api/v1/reviews?page=1",
+              "label": "1",
+              "page": 1,
+              "active": true
+            },
+            {
+              "url": null,
+              "label": "Next &raquo;",
+              "page": null,
+              "active": false
+            }
+          ],
+          "path": "https://api.myticket.sa/api/v1/reviews",
+          "per_page": 10,
+          "to": null,
+          "total": 0
+        }
+      }
+    },
+    {
+      "name": "Gift Tickets",
+      "method": "GET",
+      "path": "/gift-tickets",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array(empty) }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": []
+      }
+    },
+    {
+      "name": "Chats",
+      "method": "GET",
+      "path": "/chats",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array(empty); pagination: { total: number; count: number; perPage: number; currentPage: number; totalPages: number } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [],
+        "pagination": {
+          "total": 0,
+          "count": 0,
+          "perPage": 10,
+          "currentPage": 1,
+          "totalPages": 1
+        }
+      }
+    },
+    {
+      "name": "Advertisements",
+      "method": "GET",
+      "path": "/advertisements",
+      "status": 200,
+      "ok": true,
+      "shape": "{ success: boolean; message: string; data: array<{ id: number; title: string; description: string; image: string; video: null }>; pagination: { total: number; count: number; perPage: number; currentPage: number; totalPages: number } }",
+      "sample": {
+        "success": true,
+        "message": "success",
+        "data": [
+          {
+            "id": 6,
+            "title": "Weekend Lineup",
+            "description": "A packed weekend of concerts and festivals across the city.",
+            "image": "https://api.myticket.sa/storage/advertisements/weekend-lineup.jpg",
+            "video": null
+          },
+          {
+            "id": 7,
+            "title": "Season Opening Night",
+            "description": "Doors open soon — grab your ticket before it sells out.",
+            "image": "https://api.myticket.sa/storage/advertisements/season-opening.jpg",
+            "video": null
+          },
+          {
+            "id": 4,
+            "title": "New Season Lineup",
+            "description": "A first look at what is coming to MyTicket this season.",
+            "image": null,
+            "video": "https://api.myticket.sa/storage/advertisements/summer-lineup-teaser.mp4"
+          },
+          {
+            "id": 5,
+            "title": "Behind the Scenes",
+            "description": "A quick behind-the-scenes look from our latest event.",
+            "image": null,
+            "video": "https://api.myticket.sa/storage/advertisements/behind-the-scenes.mp4"
+          },
+          {
+            "id": 1,
+            "title": "Summer Sale",
+            "description": "Up to 50% off on selected events this summer.",
+            "image": "https://api.myticket.sa/storage/myticket-logo-iRUEB1it.png",
+            "video": null
+          }
+        ],
+        "pagination": {
+          "total": 5,
+          "count": 5,
+          "perPage": 15,
+          "currentPage": 1,
+          "totalPages": 1
+        }
+      }
+    }
+  ]
+}

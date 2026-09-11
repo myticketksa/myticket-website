@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowDownIcon, ArrowUpIcon, ClockIcon } from '@/components/icons'
 import { FilterChip } from '@/components/data-display'
-import { Button } from '@/components/ui'
+import { Button, Field, TextInput } from '@/components/ui'
 import { AccountPageHead, AccountSplit } from '@/layouts'
 import { ACCOUNT_USER, WALLET_TXNS, type WalletTxnFixture } from '@/pages/_account/fixtures'
 import { useGetWalletQuery, useTopUpWalletMutation } from '@/app/api/accountApis'
@@ -110,9 +110,11 @@ function WalletAside() {
   )
 }
 
-/** Wallet — Figma `207:11086`. */
+/** Wallet — Figma `207:11086`. Top-up body matches Postman `{ amount, paymentMethod }`. */
 export function WalletPage() {
   const [filter, setFilter] = useState(0)
+  const [topUpAmount, setTopUpAmount] = useState('100')
+  const [showTopUp, setShowTopUp] = useState(false)
   const dispatch = useAppDispatch()
   const { data: wallet } = useGetWalletQuery()
   const [topUp, topUpState] = useTopUpWalletMutation()
@@ -151,9 +153,15 @@ export function WalletPage() {
   }, [filter, transactions])
 
   async function handleTopUp() {
+    const amount = Number(topUpAmount)
+    if (!Number.isFinite(amount) || amount <= 0) {
+      dispatch(toastPushed('error', 'Enter a valid top-up amount'))
+      return
+    }
     try {
-      await topUp({ amount: 100, paymentMethod: 'CREDIT' }).unwrap()
+      await topUp({ amount, paymentMethod: 'CREDIT' }).unwrap()
       dispatch(toastPushed('success', 'Top-up submitted'))
+      setShowTopUp(false)
     } catch (error) {
       dispatch(toastPushed('error', apiErrorMessage(error, 'Top-up failed')))
     }
@@ -180,7 +188,7 @@ export function WalletPage() {
                 <Button
                   size="md"
                   className="h-[42px] rounded-[21px] bg-bg-page px-[18px] text-ink-primary hover:bg-bg-page hover:text-ink-brand"
-                  onClick={() => void handleTopUp()}
+                  onClick={() => setShowTopUp((open) => !open)}
                   disabled={topUpState.isLoading}
                 >
                   Add funds
@@ -193,6 +201,47 @@ export function WalletPage() {
                   Withdraw
                 </Button>
               </div>
+              {showTopUp && (
+                <div className="mt-[16px] rounded-[14px] border border-bg-page/20 bg-bg-page/10 p-[14px]">
+                  <p className="text-[12px] font-bold tracking-[0.06em] text-bg-page/70 uppercase">
+                    Top-up amount (SAR)
+                  </p>
+                  <div className="mt-[10px] flex flex-wrap gap-[8px]">
+                    {['50', '100', '200', '500'].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setTopUpAmount(preset)}
+                        className={`h-[34px] rounded-[17px] px-[14px] text-[13px] font-semibold ${
+                          topUpAmount === preset
+                            ? 'bg-bg-page text-ink-primary'
+                            : 'border border-bg-page/30 text-bg-page'
+                        }`}
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
+                  <Field className="mt-[12px]" label="Custom amount" htmlFor="topup-amount">
+                    <TextInput
+                      id="topup-amount"
+                      type="number"
+                      min={1}
+                      value={topUpAmount}
+                      onChange={(event) => setTopUpAmount(event.target.value)}
+                      className="h-[42px] border-bg-page/30 bg-bg-page text-ink-primary"
+                    />
+                  </Field>
+                  <Button
+                    size="md"
+                    className="mt-[12px] h-[40px] rounded-[20px] bg-bg-page px-[18px] text-ink-primary"
+                    loading={topUpState.isLoading}
+                    onClick={() => void handleTopUp()}
+                  >
+                    Confirm top-up · SAR {topUpAmount || '0'}
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
               <p className="text-[12px] font-bold tracking-[0.07em] text-ink-muted uppercase">

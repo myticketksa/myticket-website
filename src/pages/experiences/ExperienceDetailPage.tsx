@@ -164,8 +164,9 @@ export function ExperienceDetailPage() {
 
             <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">About</h2>
             <p className="mt-[18px] max-w-[720px] text-[16px] leading-[1.6] text-ink-secondary">
-              {experience.summary ??
-                'A hosted experience on MyTicket — small groups, verified hosts, and clear cancellation. Meet at the published pickup point; transfers and equipment are included unless noted otherwise.'}
+              {'summary' in experience && experience.summary
+                ? experience.summary
+                : 'A hosted experience on MyTicket — small groups, verified hosts, and clear cancellation. Meet at the published pickup point; transfers and equipment are included unless noted otherwise.'}
             </p>
 
             <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">What’s included</h2>
@@ -201,7 +202,7 @@ export function ExperienceDetailPage() {
 
           <StickyCtaCard
             fromLabel="From"
-            fromPrice={experience.price}
+            fromPrice={experience.price ?? 'SAR —'}
             note="Per guest · select a date to confirm"
             primaryLabel="Check availability"
             secondaryLabel="Ask the host"

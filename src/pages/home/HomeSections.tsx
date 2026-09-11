@@ -61,8 +61,8 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
       <div className="mt-[26px] grid grid-cols-2 gap-[18px] md:grid-cols-3 lg:grid-cols-5">
         {talents.map((talent, i) => (
           <Link
-            key={'slug' in talent ? talent.slug : talent.name}
-            to={`/talents/${'slug' in talent ? talent.slug : slugify(talent.name)}`}
+            key={talent.slug}
+            to={`/talents/${talent.slug}`}
             className="min-w-0"
           >
             <TalentCard
@@ -166,8 +166,8 @@ export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
       <div className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {filtered.map((event, i) => (
           <Link
-            key={'slug' in event ? event.slug : event.title}
-            to={`/events/${'slug' in event ? event.slug : slugify(event.title)}`}
+            key={event.slug}
+            to={`/events/${event.slug}`}
             className="min-w-0"
           >
             <EventCard
@@ -332,8 +332,8 @@ export function HomeExperiences({ apiExperiences }: { apiExperiences?: Experienc
       <div className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {experiences.map((experience, i) => (
           <Link
-            key={'slug' in experience ? experience.slug : experience.title}
-            to={`/experiences/${'slug' in experience ? experience.slug : slugify(experience.title)}`}
+            key={experience.slug}
+            to={`/experiences/${experience.slug}`}
             className="min-w-0"
           >
             <ExperienceCard

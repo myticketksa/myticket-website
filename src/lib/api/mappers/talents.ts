@@ -1,34 +1,13 @@
 import type { TalentCardProps, TalentDirectoryCardProps } from '@/components/cards'
 import { slugify } from '@/pages/_guest/slugify'
+import { localizedString, nestedValue, pickLocalized } from '@/lib/api/locale'
 
 type ApiRecord = Record<string, unknown>
-
-function str(value: unknown, fallback = ''): string {
-  if (value == null) return fallback
-  return String(value)
-}
-
-function pick(record: ApiRecord, keys: string[], fallback = ''): string {
-  for (const key of keys) {
-    const value = record[key]
-    if (value != null && value !== '') return str(value)
-  }
-  return fallback
-}
-
-function nested(record: ApiRecord, path: string[]): unknown {
-  let current: unknown = record
-  for (const key of path) {
-    if (!current || typeof current !== 'object') return undefined
-    current = (current as ApiRecord)[key]
-  }
-  return current
-}
 
 function formatRating(value: unknown): string {
   if (value == null || value === '') return '—'
   const n = Number(value)
-  return Number.isFinite(n) ? n.toFixed(1) : str(value)
+  return Number.isFinite(n) ? n.toFixed(1) : localizedString(value, '—')
 }
 
 export type MappedTalent = TalentDirectoryCardProps &
@@ -39,65 +18,60 @@ export type MappedTalent = TalentDirectoryCardProps &
 
 /** Map flexible talent API rows into card props; keep fixtures usable as fallback. */
 export function mapApiTalentToCard(talent: ApiRecord): MappedTalent {
-  const name = pick(talent, ['name', 'stage_name', 'stageName', 'display_name'], 'Unknown talent')
-  const slug = pick(talent, ['slug']) || slugify(name) || str(talent.id)
+  const performer = (talent.performer as ApiRecord | undefined) ?? {}
+  const name =
+    pickLocalized(performer, ['stageName', 'stage_name', 'name']) ||
+    pickLocalized(talent, ['name', 'stage_name', 'stageName', 'display_name'], 'Unknown talent')
+
+  const slug = pickLocalized(talent, ['slug']) || slugify(name) || String(talent.id ?? '')
+
+  const categories = nestedValue(talent, ['categories', 'performanceCategories'])
+  const firstCategory =
+    Array.isArray(categories) && categories[0] && typeof categories[0] === 'object'
+      ? localizedString((categories[0] as ApiRecord).name_en) ||
+        localizedString((categories[0] as ApiRecord).name) ||
+        localizedString((categories[0] as ApiRecord).name_ar)
+      : ''
 
   const discipline =
-    pick(talent, ['discipline', 'craft', 'type', 'category_name', 'performance_category']) ||
-    str(nested(talent, ['category', 'name'])) ||
+    firstCategory ||
+    pickLocalized(talent, ['discipline', 'craft', 'type', 'category_name', 'performance_category']) ||
+    localizedString(nestedValue(talent, ['category', 'name'])) ||
     'Performer'
 
-  const rating = formatRating(talent.rating ?? talent.average_rating ?? nested(talent, ['stats', 'rating']))
+  const rating = formatRating(talent.rating ?? talent.average_rating ?? nestedValue(talent, ['stats', 'rating']))
 
-  const reviews = pick(talent, ['reviews_count', 'review_count', 'reviews'], '0')
+  const reviews = pickLocalized(talent, ['raters', 'reviews_count', 'review_count', 'reviews'], '0')
   const city =
-    pick(talent, ['city', 'home_city', 'location']) ||
-    str(nested(talent, ['city', 'name'])) ||
-    str(nested(talent, ['homeCity', 'name']))
+    localizedString(nestedValue(performer, ['homeCity', 'name'])) ||
+    pickLocalized(talent, ['city', 'home_city', 'location']) ||
+    localizedString(nestedValue(talent, ['city', 'name'])) ||
+    localizedString(nestedValue(talent, ['homeCity', 'name']))
 
-  const followers = pick(talent, ['followers_count', 'followers', 'followers_label'])
-  const shows = pick(talent, ['shows_count', 'upcoming_shows', 'shows_label'])
+  const followers = pickLocalized(talent, ['followers_count', 'followers', 'followers_label'])
+  const shows = pickLocalized(talent, ['shows_count', 'upcoming_shows', 'shows_label'])
   const meta =
-    pick(talent, ['meta']) ||
+    pickLocalized(talent, ['meta']) ||
     (followers && shows
       ? `${followers} followers · ${shows} shows`
       : reviews && city
         ? `${reviews} reviews · ${city}`
         : city)
 
-  const nextEventName =
-    pick(talent, ['next_event', 'nextEvent', 'next_show_name']) ||
-    str(nested(talent, ['next_show', 'name'])) ||
-    str(nested(talent, ['nextShow', 'headline']))
-  const nextDate =
-    pick(talent, ['next_date', 'next_show_date', 'next_label']) ||
-    str(nested(talent, ['next_show', 'date']))
-  const nextVenue =
-    pick(talent, ['next_venue', 'next_show_venue']) || str(nested(talent, ['next_show', 'venue']))
-  const nextPrice = pick(talent, ['next_price', 'from_price'])
-
-  const nextLabel = nextDate ? (nextDate.startsWith('Next') ? nextDate : `Next · ${nextDate}`) : undefined
-  const nextEvent = nextEventName || undefined
-  const nextShow =
-    nextDate && nextEventName
-      ? {
-          headline: `${nextDate.replace(/^Next · /, '')} · ${nextEventName}`,
-          detail: `${nextVenue || city}${nextPrice ? ` · from ${nextPrice.startsWith('SAR') ? nextPrice : `SAR ${nextPrice}`}` : ''}`,
-        }
-      : undefined
-
   const image =
-    pick(talent, ['image', 'profile_photo', 'profilePhoto', 'photo', 'avatar', 'thumbnail']) ||
+    pickLocalized(performer, ['profilePhoto', 'profile_photo', 'photo', 'avatar']) ||
+    pickLocalized(talent, ['image', 'profile_photo', 'profilePhoto', 'photo', 'avatar', 'thumbnail']) ||
     undefined
 
   const verified =
     talent.verified === true ||
     talent.is_verified === true ||
-    pick(talent, ['verified']) === 'true' ||
-    pick(talent, ['verified']) === '1'
+    talent.isFollowing === true ||
+    pickLocalized(talent, ['verified']) === 'true' ||
+    pickLocalized(talent, ['verified']) === '1'
 
   return {
-    id: talent.id != null ? str(talent.id) : undefined,
+    id: talent.id != null ? String(talent.id) : undefined,
     slug,
     name,
     discipline,
@@ -105,9 +79,6 @@ export function mapApiTalentToCard(talent: ApiRecord): MappedTalent {
     rating,
     reviews,
     city,
-    nextLabel,
-    nextEvent,
-    nextShow,
     verified: verified || undefined,
     image,
   }
@@ -119,7 +90,7 @@ export function resolveTalentFromList(
 ): ApiRecord | undefined {
   if (!talents?.length) return undefined
   if (/^\d+$/.test(slugOrId)) {
-    return talents.find((t) => str(t.id) === slugOrId)
+    return talents.find((t) => String(t.id) === slugOrId)
   }
   return talents.find((t) => {
     const mapped = mapApiTalentToCard(t)
@@ -130,5 +101,5 @@ export function resolveTalentFromList(
 export function resolveTalentId(talents: ApiRecord[] | undefined, slugOrId: string): string | undefined {
   if (/^\d+$/.test(slugOrId)) return slugOrId
   const match = resolveTalentFromList(talents, slugOrId)
-  return match?.id != null ? str(match.id) : undefined
+  return match?.id != null ? String(match.id) : undefined
 }

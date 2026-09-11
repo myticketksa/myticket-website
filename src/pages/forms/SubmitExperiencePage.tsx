@@ -3,31 +3,59 @@ import { useNavigate } from 'react-router-dom'
 import { ImagePlaceholder } from '@/components/data-display'
 import { Field, TextInput, Textarea, Select } from '@/components/ui'
 import { FormWizardShell } from '@/pages/_account/FormWizard'
-import { useCreateExperienceMutation } from '@/app/api/experiencesApi'
+import { useGetCitiesQuery } from '@/app/api/accountApis'
+import {
+  useCreateExperienceMutation,
+  useGetExperienceCategoriesQuery,
+} from '@/app/api/experiencesApi'
 import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
+import { mapApiIdLabelOptions } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
 const STEPS = ['The place', 'Hours & services', 'Contact', 'Photos & review']
 
-/** Submit experience — Figma `207:6961`. Step 1 form posts via Create Experience API. */
+/** Submit experience — FormData keys match Postman `POST /experiences`. */
 export function SubmitExperiencePage() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const [createExperience, createState] = useCreateExperienceMutation()
+  const { data: apiCities } = useGetCitiesQuery()
+  const { data: apiCategories } = useGetExperienceCategoriesQuery()
   const [name, setName] = useState('Wadi Namar Waterfall Park')
   const [region, setRegion] = useState('Riyadh')
   const [city, setCity] = useState('1')
+  const [category, setCategory] = useState('3')
   const [about, setAbout] = useState(
     'A man-made waterfall and lake on the southern edge of Riyadh, with walking tracks, picnic lawns and food trucks in the cooler months. Best at sunset when the falls are lit.',
   )
 
+  const cityOptions = useMemo(
+    () =>
+      mapApiIdLabelOptions(apiCities, [
+        { value: '1', label: 'Riyadh' },
+        { value: '2', label: 'Diriyah' },
+      ]),
+    [apiCities],
+  )
+
+  const categoryOptions = useMemo(
+    () =>
+      mapApiIdLabelOptions(apiCategories, [
+        { value: '3', label: 'Outdoors' },
+        { value: '1', label: 'Food & desert' },
+        { value: '2', label: 'Culture' },
+      ]),
+    [apiCategories],
+  )
+
   async function handleContinue() {
+    const title = name.trim() || 'Untitled place'
     const body = new FormData()
-    body.append('category', '3')
+    body.append('category', category)
     body.append('type', 'activity')
-    body.append('place[name_en]', name.trim() || 'Untitled place')
-    body.append('place[name_ar]', name.trim() || 'Untitled place')
+    body.append('place[name_en]', title)
+    body.append('place[name_ar]', title)
     body.append('place[latitude]', '24.7136')
     body.append('place[longitude]', '46.6753')
     body.append('place[region]', region)
@@ -71,6 +99,19 @@ export function SubmitExperiencePage() {
             onChange={(event) => setName(event.target.value)}
           />
         </Field>
+        <Field label="Category" htmlFor="category">
+          <Select
+            id="category"
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+          >
+            {categoryOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
         <div>
           <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
             Where exactly is it?{' '}
@@ -82,15 +123,21 @@ export function SubmitExperiencePage() {
             className="h-[190px] rounded-[14px] border border-border-default"
           />
           <div className="mt-md grid gap-md sm:grid-cols-2">
-            <Select value={region === 'Riyadh' ? 'riyadh-region' : 'makkah'} onChange={(e) => {
-              setRegion(e.target.value === 'makkah' ? 'Makkah' : 'Riyadh')
-            }}>
+            <Select
+              value={region === 'Riyadh' ? 'riyadh-region' : 'makkah'}
+              onChange={(e) => {
+                setRegion(e.target.value === 'makkah' ? 'Makkah' : 'Riyadh')
+              }}
+            >
               <option value="riyadh-region">Riyadh Region</option>
               <option value="makkah">Makkah Region</option>
             </Select>
             <Select value={city} onChange={(e) => setCity(e.target.value)}>
-              <option value="1">Riyadh</option>
-              <option value="2">Diriyah</option>
+              {cityOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </Select>
           </div>
         </div>

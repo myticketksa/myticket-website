@@ -18,6 +18,7 @@ import { apiErrorMessage } from '@/lib/api/unwrap'
 import {
   otpVerifySchema,
   signInSchema,
+  toLoginIdentifier,
   type OtpVerifyValues,
   type SignInValues,
 } from '@/lib/validation/authSchemas'
@@ -47,7 +48,7 @@ export function SignInPage() {
   async function onPasswordSubmit(values: SignInValues) {
     try {
       const session = await login({
-        identifier: values.identifier.trim(),
+        identifier: toLoginIdentifier(values.identifier),
         password: values.password,
       }).unwrap()
       dispatch(
@@ -65,7 +66,7 @@ export function SignInPage() {
   }
 
   async function onRequestOtp() {
-    const identifier = passwordForm.getValues('identifier').trim()
+    const identifier = toLoginIdentifier(passwordForm.getValues('identifier'))
     if (!identifier) {
       passwordForm.setError('identifier', { message: 'Enter your mobile number or email' })
       return
@@ -82,7 +83,10 @@ export function SignInPage() {
 
   async function onOtpSubmit(values: OtpVerifyValues) {
     try {
-      const session = await verifyCode(values).unwrap()
+      const session = await verifyCode({
+        identifier: toLoginIdentifier(values.identifier),
+        code: values.code,
+      }).unwrap()
       dispatch(
         credentialsSet({
           token: session.access_token,

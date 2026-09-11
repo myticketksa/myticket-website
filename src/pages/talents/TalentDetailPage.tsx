@@ -1,6 +1,10 @@
 import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useGetTalentDetailsQuery, useGetTalentsQuery } from '@/app/api/talentsApi'
+import {
+  useGetTalentDetailsQuery,
+  useGetTalentPreviousWorksQuery,
+  useGetTalentsQuery,
+} from '@/app/api/talentsApi'
 import { TalentDirectoryCard } from '@/components/cards'
 import { StarFillIcon, VerifiedIcon } from '@/components/icons'
 import { Breadcrumbs } from '@/components/navigation'
@@ -23,6 +27,7 @@ import {
 /**
  * Limited public talent profile — BIG_CHANGES:
  * avatar/media, name, talent type, rating only. No hire / marketplace / enquire.
+ * Previous works are read-only extras when the API returns them.
  */
 export function TalentDetailPage() {
   const { slug } = useParams()
@@ -47,6 +52,10 @@ export function TalentDetailPage() {
     skip: !resolvedId,
   })
 
+  const { data: previousWorks } = useGetTalentPreviousWorksQuery(resolvedId!, {
+    skip: !resolvedId,
+  })
+
   const talent = useMemo(() => {
     const fromList =
       catalog.find((t) => t.slug === slugOrId || slugify(t.name) === slugOrId) ??
@@ -62,6 +71,16 @@ export function TalentDetailPage() {
 
     return fromList
   }, [apiDetail, apiTalents, catalog, slugOrId])
+
+  const works = useMemo(() => {
+    if (!previousWorks?.length) return []
+    return previousWorks.slice(0, 6).map((work, index) => ({
+      key: String(work.id ?? index),
+      title: String(work.title ?? work.name ?? work.event ?? `Work ${index + 1}`),
+      meta: String(work.venue ?? work.date ?? work.location ?? ''),
+      image: String(work.image ?? work.cover ?? work.thumbnail ?? '') || undefined,
+    }))
+  }, [previousWorks])
 
   return (
     <>
@@ -104,6 +123,35 @@ export function TalentDetailPage() {
             </Button>
           </div>
         </div>
+
+        {works.length > 0 && (
+          <div className="mx-auto mt-[56px] max-w-[960px]">
+            <h2 className="text-heading-h2-section text-center text-ink-primary">Previous work</h2>
+            <p className="mt-[6px] text-center text-[15px] text-ink-secondary">
+              Public highlights only — no booking from this profile.
+            </p>
+            <div className="mt-[22px] grid grid-cols-1 gap-lg sm:grid-cols-2 lg:grid-cols-3">
+              {works.map((work) => (
+                <div
+                  key={work.key}
+                  className="overflow-hidden rounded-[16px] border border-border-default bg-surface-default"
+                >
+                  <div className="h-[140px] bg-bg-skeleton">
+                    {work.image ? (
+                      <img src={work.image} alt="" className="size-full object-cover" />
+                    ) : null}
+                  </div>
+                  <div className="px-[14px] py-[14px]">
+                    <p className="text-[15px] font-semibold text-ink-primary">{work.title}</p>
+                    {work.meta && (
+                      <p className="mt-[4px] text-[13px] text-ink-secondary">{work.meta}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <SimilarSection
           className="mt-[64px]"

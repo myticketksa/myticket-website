@@ -190,8 +190,8 @@ export function TalentsPage() {
                 rating={talent.rating}
                 reviews={talent.reviews ?? ''}
                 city={talent.city ?? ''}
-                nextLabel={talent.nextLabel}
-                nextEvent={talent.nextEvent}
+                nextLabel={'nextLabel' in talent ? talent.nextLabel : undefined}
+                nextEvent={'nextEvent' in talent ? talent.nextEvent : undefined}
                 verified={talent.verified}
                 image={talent.image ?? TALENT_WEEK_IMAGES[i]}
                 limited
