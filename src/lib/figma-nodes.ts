@@ -88,7 +88,7 @@ export const FIGMA_COMPONENTS = {
   Pagination: '207:2852',
   SectionHeader: '207:2818',
   SearchPill: '207:2933',
-  Logo: '207:3096',
+  Logo: '207:3096', // favicon mark cropped from this lockup
 
   // feedback and overlays
   Toast: '207:2875',

@@ -3,6 +3,7 @@ export { NavItem, type NavItemProps } from './NavItem'
 export { SearchPill, type SearchPillProps } from './SearchPill'
 export { SiteHeader, type SiteHeaderProps } from './SiteHeader'
 export { SiteFooter, type SiteFooterProps } from './SiteFooter'
+export { SiteDocumentMeta } from './SiteDocumentMeta'
 export { Breadcrumbs, type BreadcrumbsProps, type BreadcrumbItem } from './Breadcrumbs'
 export { Pagination, type PaginationProps } from './Pagination'
 export {

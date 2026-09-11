@@ -9,9 +9,9 @@ import { cn } from '@/lib/cn'
  * only dimension exposed and width follows from `aspect-[73/40]`, which makes
  * disproportionate scaling impossible by construction rather than by convention.
  *
- * Figma exports this as a PNG rather than a vector, so that is what ships. It is the
- * one raster asset in the system and the obvious candidate for an SVG replacement if the
- * source artwork becomes available.
+ * Source: Figma file `yffYsbbooJbCZMYbAWSMfH` → exported PNG committed as
+ * `src/assets/myticket-logo.png` (also mirrored under `public/brand/logo.png`).
+ * Favicon / app icons use the orange “my” ticket mark from the same lockup.
  */
 export interface LogoProps {
   /** Rendered height in px. The nav draws 40. */

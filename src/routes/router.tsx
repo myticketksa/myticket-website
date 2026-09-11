@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Outlet } from 'react-router-dom'
 import {
   MainLayout,
   AuthLayout,
@@ -6,6 +6,7 @@ import {
   PurchaseLayout,
   FunnelLayout,
 } from '@/layouts'
+import { SiteDocumentMeta } from '@/components/navigation'
 import { ProbeRoute } from './ProbeRoute'
 import {
   HomePage,
@@ -65,7 +66,19 @@ import {
  *
  * `/probe` is the temporary component harness — keep it until Visual QA lands.
  */
+function RootDocument() {
+  return (
+    <>
+      <SiteDocumentMeta />
+      <Outlet />
+    </>
+  )
+}
+
 export const router = createBrowserRouter([
+  {
+    element: <RootDocument />,
+    children: [
   {
     path: '/probe',
     element: <ProbeRoute />,
@@ -145,6 +158,8 @@ export const router = createBrowserRouter([
     children: [
       { path: '/events/:slug/seats', element: <SeatSelectionPage /> },
       { path: '/checkout', element: <CheckoutPage /> },
+    ],
+  },
     ],
   },
 ])
