@@ -40,12 +40,13 @@ export function FilterChip({
       aria-pressed={removable ? undefined : selected}
       className={cn(
         'inline-flex h-chip items-center justify-center gap-sm rounded-chip px-[14px]',
-        'border text-[14px] leading-[1.5] transition-colors duration-normal ease-standard',
+        'border text-[14px] leading-[1.5] transition-[color,border-color,background,transform] duration-fast ease-standard',
         removable
           ? 'border-border-default bg-bg-tint-brand font-semibold text-ink-brand-strong'
           : selected
             ? 'border-transparent bg-identity-gradient font-medium text-ink-inverse'
             : 'border-border-default bg-surface-default font-medium text-ink-primary hover:border-border-focus',
+        selected && !removable && 'active:scale-[0.95] motion-reduce:active:scale-100',
         className,
       )}
       {...props}

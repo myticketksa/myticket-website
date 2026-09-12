@@ -95,12 +95,21 @@ export function FeaturedHeroCard({
   return (
     <article
       className={cn(
-        'relative flex h-[494px] flex-col items-start justify-end overflow-hidden rounded-[22px] p-[18px]',
+        'group relative flex h-[494px] flex-col items-start justify-end overflow-hidden rounded-[22px] p-[18px]',
         'bg-[linear-gradient(135deg,var(--color-brand-gradient-start)_13.397%,var(--color-ink-brand)_50%,var(--color-ink-link-hover)_86.603%)]',
+        'transition-[transform,box-shadow] duration-normal ease-standard',
+        'hover:-translate-y-0.5 hover:shadow-lift',
+        'motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none',
         className,
       )}
     >
-      {image && <img src={image} alt="" className="absolute inset-0 size-full object-cover" />}
+      {image && (
+        <img
+          src={image}
+          alt=""
+          className="absolute inset-0 size-full object-cover transition-transform duration-slow ease-standard group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
+        />
+      )}
 
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(25,16,8,0.1)_0%,rgba(25,16,8,0)_30%,rgba(25,16,8,0.62)_70%,rgba(25,16,8,0.95)_100%)]" />
 

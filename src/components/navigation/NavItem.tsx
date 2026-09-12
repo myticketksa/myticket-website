@@ -29,11 +29,9 @@ import { cn } from '@/lib/cn'
  * - The 4px padding is a bare literal in the export even though `--space-xs` is also 4px,
  *   so it stays a literal rather than being upgraded to a token it was never bound to.
  *
- * **Not built:** hover and disabled. Figma calls the three states verbatim and complete,
- * and there is a specific reason not to guess here: the states are distinguished by
- * colour alone along one brand ramp (`#191008` → `#D8431A` → `#F25F2C`), so any hover
- * colour would read as one of the other two states. The affordance is left to the cursor
- * and to the global `:focus-visible` outline in `src/styles/globals.css`.
+ * **Hover.** Motion language adds a 150ms color/opacity settle. Default items shift
+ * toward secondary ink; active/section only ease opacity so the brand ramp states stay
+ * distinct.
  *
  * **Deliberate additions.** Figma draws a text node; this renders an anchor, because a
  * header nav item that does not navigate is not one, and Figma's own description
@@ -56,9 +54,11 @@ export function NavItem({ label, state = 'default', className, ...props }: NavIt
       aria-current={state === 'active' ? 'page' : state === 'section' ? 'location' : undefined}
       className={cn(
         'inline-flex items-center text-[15px] leading-[normal] font-semibold whitespace-nowrap',
-        state === 'default' && 'text-ink-primary',
-        state === 'active' && 'border-b-2 border-border-focus pb-[4px] text-ink-brand-mid',
-        state === 'section' && 'text-brand-primary',
+        'transition-[color,opacity] duration-micro ease-micro',
+        state === 'default' && 'text-ink-primary hover:text-ink-secondary',
+        state === 'active' &&
+          'border-b-2 border-border-focus pb-[4px] text-ink-brand-mid hover:opacity-80',
+        state === 'section' && 'text-brand-primary hover:opacity-80',
         className,
       )}
       {...props}

@@ -78,6 +78,9 @@ export function AuctionCard({
     <article
       className={cn(
         'flex flex-col gap-[14px] rounded-[20px] border border-border-default bg-surface-default p-[18px]',
+        'transition-[transform,box-shadow] duration-normal ease-standard',
+        'hover:-translate-y-0.5 hover:shadow-lift',
+        'motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none',
         className,
       )}
     >

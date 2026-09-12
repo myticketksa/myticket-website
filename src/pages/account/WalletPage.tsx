@@ -6,7 +6,8 @@ import { Button, Field, TextInput } from '@/components/ui'
 import { AccountPageHead, AccountSplit } from '@/layouts'
 import { ACCOUNT_USER, WALLET_TXNS, type WalletTxnFixture } from '@/pages/_account/fixtures'
 import { useGetWalletQuery, useTopUpWalletMutation } from '@/app/api/accountApis'
-import { useAppDispatch } from '@/app/hooks'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
@@ -22,28 +23,39 @@ function formatMoney(value: unknown, fallback: string) {
 function mapWalletTxn(record: Record<string, unknown>, index: number): WalletTxnFixture {
   const fallback = WALLET_TXNS[index % WALLET_TXNS.length]
   const amountRaw = record.amount ?? record.value
-  const toneRaw = String(record.tone ?? record.type ?? record.direction ?? '').toLowerCase()
+  const typeRaw = String(
+    record.transaction_type ?? record.tone ?? record.type ?? record.direction ?? '',
+  ).toLowerCase()
   const tone: WalletTxnFixture['tone'] =
-    toneRaw.includes('pending') || record.pending
+    typeRaw.includes('pending') || record.pending
       ? 'pending'
-      : toneRaw.includes('debit') || toneRaw.includes('out') || Number(amountRaw) < 0
+      : typeRaw.includes('purchase') ||
+          typeRaw.includes('debit') ||
+          typeRaw.includes('withdraw') ||
+          typeRaw.includes('out') ||
+          Number(amountRaw) < 0
         ? 'debit'
         : 'credit'
 
   let amount = fallback.amount
   if (amountRaw != null) {
     const num = Number(amountRaw)
+    const signed = tone === 'debit' ? -Math.abs(num) : Math.abs(num)
     amount = Number.isNaN(num)
       ? String(amountRaw)
-      : `${num >= 0 ? '+' : '−'} SAR ${Math.abs(num).toFixed(2)}`
+      : `${signed >= 0 ? '+' : '−'} SAR ${Math.abs(num).toFixed(2)}`
   }
 
+  const typeLabel = typeRaw
+    ? typeRaw.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : fallback.label
+
   return {
-    label: String(record.label ?? record.title ?? record.description ?? fallback.label),
+    label: String(record.label ?? record.title ?? record.description ?? typeLabel),
     detail: String(record.detail ?? record.reference ?? record.order_id ?? fallback.detail),
     date: String(record.date ?? record.created_at ?? fallback.date),
     amount,
-    status: String(record.status ?? fallback.status),
+    status: String(record.status ?? (tone === 'pending' ? 'Pending' : 'Cleared')),
     tone,
   }
 }
@@ -116,31 +128,23 @@ export function WalletPage() {
   const [topUpAmount, setTopUpAmount] = useState('100')
   const [showTopUp, setShowTopUp] = useState(false)
   const dispatch = useAppDispatch()
+  const user = useAppSelector(selectAuthUser)
   const { data: wallet } = useGetWalletQuery()
   const [topUp, topUpState] = useTopUpWalletMutation()
 
   const balances = useMemo(
     () => ({
-      available: formatMoney(
-        wallet?.balance ?? wallet?.available ?? wallet?.available_balance,
-        ACCOUNT_USER.walletBalance,
-      ),
-      pending: formatMoney(
-        wallet?.pending ?? wallet?.pending_balance,
-        ACCOUNT_USER.walletPending,
-      ),
-      earnedYear: formatMoney(
-        wallet?.earned_year ?? wallet?.earnedYear ?? wallet?.year_earned,
-        ACCOUNT_USER.walletEarnedYear,
-      ),
+      available: formatMoney(user?.walletBalance, ACCOUNT_USER.walletBalance),
+      pending: ACCOUNT_USER.walletPending,
+      earnedYear: ACCOUNT_USER.walletEarnedYear,
     }),
-    [wallet],
+    [user?.walletBalance],
   )
 
   const transactions = useMemo(() => {
-    const list = wallet?.transactions ?? wallet?.activity ?? wallet?.items
+    const list = wallet?.transactions
     if (Array.isArray(list) && list.length > 0) {
-      return (list as Record<string, unknown>[]).map(mapWalletTxn)
+      return list.map(mapWalletTxn)
     }
     return WALLET_TXNS
   }, [wallet])

@@ -217,18 +217,27 @@
   --blur-header: 14px;
 
   /* -------------------------------------------------------------- motion */
-  /* Not present in Figma. Deliberate addition — see DESIGN-SYSTEM.md §10. */
-  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
-  --ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1);
-  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
+  /* Guest motion language — warm organic ease, never mechanical. */
+  --ease-micro: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  --duration-micro: 150ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-entrance: 450ms;
 }
 
 /* Tailwind v4 exposes @theme values as utilities but durations need to be
    plain custom properties to be usable in transition shorthands. */
 :root {
-  --duration-fast: 120ms;
+  --duration-micro: 150ms;
+  --duration-fast: 150ms;
   --duration-normal: 200ms;
-  --duration-slow: 320ms;
+  --duration-slow: 300ms;
+  --duration-entrance: 450ms;
 
   /* Three stops with the mid at 52%, on a 135deg diagonal. Figma reports a
      slightly different angle on every instance (133.49, 134.37, 135.30, 141.67,
@@ -279,10 +288,23 @@
   );
 }
 
+@keyframes spinner-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --duration-fast: 1ms;
-    --duration-normal: 1ms;
+    /* Keep color/border micro settles; only spatial/entrance timing collapses. */
+    --duration-entrance: 1ms;
     --duration-slow: 1ms;
+  }
+
+  .motion-safe-transform {
+    transform: none !important;
   }
 }

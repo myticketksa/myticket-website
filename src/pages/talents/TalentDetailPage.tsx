@@ -7,6 +7,7 @@ import {
 } from '@/app/api/talentsApi'
 import { TalentDirectoryCard } from '@/components/cards'
 import { StarFillIcon, VerifiedIcon } from '@/components/icons'
+import { FadeUp } from '@/components/motion'
 import { Breadcrumbs } from '@/components/navigation'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
@@ -95,7 +96,7 @@ export function TalentDetailPage() {
       </PageSection>
 
       <PageSection padTop={28} padBottom={96}>
-        <div className="mx-auto flex max-w-[720px] flex-col items-center text-center">
+        <FadeUp className="mx-auto flex max-w-[720px] flex-col items-center text-center">
           <div className="size-[168px] overflow-hidden rounded-full border border-border-default bg-bg-skeleton">
             <img
               src={talent.image ?? TALENT_DETAIL_GALLERY.main}
@@ -122,7 +123,7 @@ export function TalentDetailPage() {
               Browse talents
             </Button>
           </div>
-        </div>
+        </FadeUp>
 
         {works.length > 0 && (
           <div className="mx-auto mt-[56px] max-w-[960px]">

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { EventCard } from '@/components/cards'
+import { FadeUp, StaggerGroup } from '@/components/motion'
 import { Breadcrumbs } from '@/components/navigation'
 import { PageSection } from '@/layouts'
 import { NumberedPagination } from '@/components/navigation'
@@ -133,20 +134,22 @@ export function EventsPage() {
       </PageSection>
 
       <PageSection padTop={14} padBottom={0}>
-        <CatalogPageHead
-          title={`${category} in Saudi Arabia`}
-          subtitle={`${shown.length} ${category.toLowerCase()} on sale — arena shows, festival stages and intimate nights, from Riyadh to Jazan.${
-            isError ? ' Showing local preview while the API is unreachable.' : ''
-          }${isFetching ? ' Updating…' : ''}`}
-          chips={categoryChips.map((label) => ({
-            label,
-            selected: label === category || (label === 'All events' && category === 'All events'),
-          }))}
-          onChipSelect={setCategory}
-          actions={
-            <CatalogSaveAlertActions alertLabel={`Alert me on new ${category.toLowerCase()}`} />
-          }
-        />
+        <FadeUp>
+          <CatalogPageHead
+            title={`${category} in Saudi Arabia`}
+            subtitle={`${shown.length} ${category.toLowerCase()} on sale — arena shows, festival stages and intimate nights, from Riyadh to Jazan.${
+              isError ? ' Showing local preview while the API is unreachable.' : ''
+            }${isFetching ? ' Updating…' : ''}`}
+            chips={categoryChips.map((label) => ({
+              label,
+              selected: label === category || (label === 'All events' && category === 'All events'),
+            }))}
+            onChipSelect={setCategory}
+            actions={
+              <CatalogSaveAlertActions alertLabel={`Alert me on new ${category.toLowerCase()}`} />
+            }
+          />
+        </FadeUp>
       </PageSection>
 
       <PageSection padTop={28} padBottom={0}>
@@ -176,7 +179,7 @@ export function EventsPage() {
             view={view}
             onViewChange={setView}
           />
-          <div
+          <StaggerGroup
             className={
               view === 'list'
                 ? 'mt-lg flex flex-col gap-lg'
@@ -191,7 +194,7 @@ export function EventsPage() {
                 <EventCard {...event} context="catalog" />
               </LinkedCard>
             ))}
-          </div>
+          </StaggerGroup>
           <div className="mt-[36px]">
             <NumberedPagination pages={[1, 2, 3, 4, 19]} />
           </div>

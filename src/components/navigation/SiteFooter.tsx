@@ -113,7 +113,7 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
                 <a
                   key={label}
                   href="#"
-                  className="rounded-input border-[1.5px] border-border-default bg-surface-default px-[14px] py-[9px] text-[13px] font-semibold whitespace-nowrap text-ink-primary"
+                  className="rounded-input border-[1.5px] border-border-default bg-surface-default px-[14px] py-[9px] text-[13px] font-semibold whitespace-nowrap text-ink-primary transition-[color,border-color] duration-micro ease-micro hover:border-border-brand hover:text-ink-brand-mid"
                 >
                   {label}
                 </a>
@@ -125,7 +125,7 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
                 <a
                   key={label}
                   href="#"
-                  className="text-[13px] font-semibold whitespace-nowrap text-ink-secondary"
+                  className="text-[13px] font-semibold whitespace-nowrap text-ink-secondary transition-colors duration-micro ease-micro hover:text-ink-brand-mid"
                 >
                   {label}
                 </a>
@@ -141,7 +141,7 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
                   <li key={link.label}>
                     <Link
                       to={link.href}
-                      className="text-body-small whitespace-nowrap text-ink-primary"
+                      className="text-body-small whitespace-nowrap text-ink-primary transition-colors duration-micro ease-micro hover:text-ink-brand-mid"
                     >
                       {link.label}
                     </Link>

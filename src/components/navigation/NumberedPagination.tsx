@@ -33,7 +33,7 @@ export function NumberedPagination({
         type="button"
         disabled={page <= first}
         onClick={() => onPageChange?.(Math.max(first, page - 1))}
-        className="inline-flex h-[38px] items-center gap-[6px] rounded-[19px] border-[1.5px] border-border-default bg-surface-default px-[14px] text-[13.5px] font-semibold text-ink-primary disabled:opacity-40"
+        className="inline-flex h-[38px] items-center gap-[6px] rounded-[19px] border-[1.5px] border-border-default bg-surface-default px-[14px] text-[13.5px] font-semibold text-ink-primary transition-colors duration-micro ease-micro hover:border-border-brand hover:text-ink-brand disabled:opacity-40 disabled:hover:border-border-default disabled:hover:text-ink-primary"
       >
         <ArrowLeftIcon size={14} />
         Previous
@@ -46,10 +46,10 @@ export function NumberedPagination({
           aria-current={n === page ? 'page' : undefined}
           onClick={() => onPageChange?.(n)}
           className={cn(
-            'inline-flex size-[38px] items-center justify-center rounded-[19px] text-[13.5px] font-semibold',
+            'inline-flex size-[38px] items-center justify-center rounded-[19px] text-[13.5px] font-semibold transition-colors duration-micro ease-micro',
             n === page
               ? 'bg-identity-gradient font-bold text-ink-inverse'
-              : 'border-[1.5px] border-border-default bg-surface-default text-ink-secondary',
+              : 'border-[1.5px] border-border-default bg-surface-default text-ink-secondary hover:border-border-brand hover:text-ink-brand',
           )}
         >
           {n}
@@ -60,7 +60,7 @@ export function NumberedPagination({
         type="button"
         disabled={page >= last}
         onClick={() => onPageChange?.(Math.min(last, page + 1))}
-        className="inline-flex h-[38px] items-center gap-[6px] rounded-[19px] border-[1.5px] border-border-default bg-surface-default px-[14px] text-[13.5px] font-semibold text-ink-primary disabled:opacity-40"
+        className="inline-flex h-[38px] items-center gap-[6px] rounded-[19px] border-[1.5px] border-border-default bg-surface-default px-[14px] text-[13.5px] font-semibold text-ink-primary transition-colors duration-micro ease-micro hover:border-border-brand hover:text-ink-brand disabled:opacity-40 disabled:hover:border-border-default disabled:hover:text-ink-primary"
       >
         Next
         <ArrowRightIcon size={14} />

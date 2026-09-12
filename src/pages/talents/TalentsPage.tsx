@@ -2,6 +2,7 @@ import { useId, useMemo, useState } from 'react'
 import { useGetTalentCategoriesQuery, useGetTalentsQuery } from '@/app/api/talentsApi'
 import { TalentCard, TalentDirectoryCard } from '@/components/cards'
 import { FilterChip } from '@/components/data-display'
+import { FadeUp, StaggerGroup } from '@/components/motion'
 import { Checkbox } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { mapCategoryLabels } from '@/lib/api/mappers/categories'
@@ -149,22 +150,24 @@ export function TalentsPage() {
   return (
     <>
       <PageSection padTop={14} padBottom={0}>
-        <CatalogPageHead
-          eyebrow="Who's performing"
-          title="Follow the artists, catch every show"
-          subtitle={`Public profiles show name, craft and rating — then find their tickets on events.${
-            isError ? ' Showing local preview while the API is unreachable.' : ''
-          }${isFetching ? ' Updating…' : ''}`}
-          chips={talentChips.map((label) => ({
-            label,
-            selected: label === chip,
-          }))}
-          onChipSelect={setChip}
-        />
+        <FadeUp>
+          <CatalogPageHead
+            eyebrow="Who's performing"
+            title="Follow the artists, catch every show"
+            subtitle={`Public profiles show name, craft and rating — then find their tickets on events.${
+              isError ? ' Showing local preview while the API is unreachable.' : ''
+            }${isFetching ? ' Updating…' : ''}`}
+            chips={talentChips.map((label) => ({
+              label,
+              selected: label === chip,
+            }))}
+            onChipSelect={setChip}
+          />
+        </FadeUp>
       </PageSection>
 
       <PageSection padTop={30} padBottom={0}>
-        <div className="mb-[18px] flex items-end justify-between gap-4xl">
+        <FadeUp className="mb-[18px] flex items-end justify-between gap-4xl">
           <div>
             <h2 className="text-heading-h2 text-ink-primary">On stage this season</h2>
             <p className="mt-sm text-body-default text-ink-secondary">
@@ -177,8 +180,8 @@ export function TalentsPage() {
           >
             All talents →
           </a>
-        </div>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        </FadeUp>
+        <StaggerGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {catalog.slice(0, 4).map((talent, i) => (
             <LinkedCard
               key={talent.slug ?? talent.name}
@@ -198,7 +201,7 @@ export function TalentsPage() {
               />
             </LinkedCard>
           ))}
-        </div>
+        </StaggerGroup>
       </PageSection>
 
       <PageSection padTop={44} padBottom={0} id="directory">
@@ -277,7 +280,7 @@ export function TalentsPage() {
             onSortClick={cycleSort}
             showViewToggle={false}
           />
-          <div className="mt-[18px] grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
+          <StaggerGroup className="mt-[18px] grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
             {shown.slice(0, 9).map((talent) => (
               <LinkedCard
                 key={talent.slug ?? talent.name}
@@ -286,7 +289,7 @@ export function TalentsPage() {
                 <TalentDirectoryCard {...talent} limited />
               </LinkedCard>
             ))}
-          </div>
+          </StaggerGroup>
           <div className="mt-[36px]">
             <CatalogPager pages={[1, 2, 3, 4, 46]} />
           </div>

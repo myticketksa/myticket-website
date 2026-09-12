@@ -10,6 +10,7 @@ export interface AuthUser {
   phone: string
   role: string
   emailVerified?: boolean
+  walletBalance?: number
   created_at?: string
 }
 

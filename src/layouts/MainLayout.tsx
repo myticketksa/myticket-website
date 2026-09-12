@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { SiteFooter, SiteHeader } from '@/components/navigation'
+import { PageFade } from '@/components/motion'
 import { useAppSelector } from '@/app/hooks'
 import { selectAuthUser, selectIsAuthenticated } from '@/features/auth/authSlice'
 
@@ -75,7 +76,9 @@ export function MainLayout() {
         }
       />
       <main className="flex-1">
-        <Outlet />
+        <PageFade>
+          <Outlet />
+        </PageFade>
       </main>
       <SiteFooter />
     </div>

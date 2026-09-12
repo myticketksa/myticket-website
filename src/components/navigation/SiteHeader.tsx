@@ -108,7 +108,7 @@ function HeaderLanguagePill() {
       dir="auto"
       onClick={toggleLocale}
       aria-label={locale === 'en' ? 'Switch to Arabic' : 'Switch to English'}
-      className="font-arabic inline-flex h-[36px] shrink-0 items-center justify-center rounded-pill border-[1.5px] border-border-default bg-surface-default px-[13px] text-[13px] font-bold whitespace-nowrap text-ink-secondary"
+      className="font-arabic inline-flex h-[36px] shrink-0 items-center justify-center rounded-pill border-[1.5px] border-border-default bg-surface-default px-[13px] text-[13px] font-bold whitespace-nowrap text-ink-secondary transition-[color,border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:text-ink-primary"
     >
       {nextLabel}
     </button>
@@ -162,7 +162,7 @@ export function SiteHeader({
         {showSearch && (
           <form
             onSubmit={onSearch}
-            className="min-w-[200px] max-w-[300px] flex-1 shrink-0"
+            className="min-w-[200px] max-w-[300px] flex-1 shrink-0 transition-[max-width] duration-normal ease-standard focus-within:max-w-[320px]"
           >
             <SearchPill name="q" className="w-full" />
           </form>
@@ -208,14 +208,14 @@ export function SiteHeader({
 
             <Link
               to="/my-tickets"
-              className="text-[15px] font-bold whitespace-nowrap text-ink-primary"
+              className="text-[15px] font-bold whitespace-nowrap text-ink-primary transition-[color,opacity] duration-micro ease-micro hover:text-ink-secondary"
             >
               My tickets
             </Link>
 
             <Link
               to="/profile"
-              className="flex shrink-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pr-[14px] pl-[5px]"
+              className="flex shrink-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pr-[14px] pl-[5px] transition-[border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:opacity-95"
             >
               <Avatar initials={account?.initials ?? ''} size="md" />
               <span className="text-[14px] font-bold whitespace-nowrap text-ink-primary">

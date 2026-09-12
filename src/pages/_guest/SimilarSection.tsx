@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { FadeUp, StaggerGroup } from '@/components/motion'
 import { SectionHeader } from '@/components/sections'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
@@ -24,16 +25,18 @@ export function SimilarSection({
 }: SimilarSectionProps) {
   return (
     <PageSection padTop={76} padBottom={96} className={className}>
-      <SectionHeader
-        heading={heading}
-        lede={lede}
-        headingClassName={headingClassName}
-        link={link ? { label: link.label, href: link.to } : undefined}
-        className="mb-xl"
-      />
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+      <FadeUp>
+        <SectionHeader
+          heading={heading}
+          lede={lede}
+          headingClassName={headingClassName}
+          link={link ? { label: link.label, href: link.to } : undefined}
+          className="mb-xl"
+        />
+      </FadeUp>
+      <StaggerGroup className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
         {children}
-      </div>
+      </StaggerGroup>
     </PageSection>
   )
 }

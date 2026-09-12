@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import eventThumb from '@/assets/checkout/event-thumb.png'
 import { CheckIcon } from '@/components/icons'
@@ -6,6 +6,7 @@ import { PriceDisplay } from '@/components/data-display'
 import { Button, Checkbox, Field, Radio, RadioGroup, TextInput } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { usePayOrderMutation, useCreateOrderMutation, useApplyPromoCodeMutation } from '@/app/api/ordersApi'
+import { useReleaseHoldMutation } from '@/app/api/seatsApi'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
@@ -14,10 +15,37 @@ import { apiErrorMessage } from '@/lib/api/unwrap'
 
 type PaymentMethod = 'card' | 'apple' | 'tabby' | 'tamara' | 'wallet' | 'sadad'
 
-const SEATS = [
+type HeldSeat = {
+  id?: string
+  label: string
+  category?: string
+  meta?: string
+  price: number
+  row?: string
+}
+
+const FALLBACK_SEATS: HeldSeat[] = [
   { row: 'C', label: 'Row C, seat 11', meta: 'Gold · Floor Block A', price: 520 },
   { row: 'C', label: 'Row C, seat 12', meta: 'Gold · Floor Block A', price: 520 },
-] as const
+]
+
+function readHold() {
+  try {
+    return JSON.parse(sessionStorage.getItem('myticket.mockHold') || 'null') as {
+      seatIds?: unknown[]
+      seats?: HeldSeat[]
+      holdId?: string
+      ticketId?: number | string
+      eventId?: string
+      total?: number
+      subtotal?: number
+      serviceFee?: number
+      vat?: number
+    } | null
+  } catch {
+    return null
+  }
+}
 
 const ASSURANCES = [
   'Tickets are issued by the organizer and verified by MyTicket.',
@@ -55,9 +83,33 @@ export function CheckoutPage() {
   const [payOrder, payState] = usePayOrderMutation()
   const [createOrder, createState] = useCreateOrderMutation()
   const [applyPromo, promoState] = useApplyPromoCodeMutation()
+  const [releaseHold] = useReleaseHoldMutation()
+  const paidRef = useRef(false)
   const [method, setMethod] = useState<PaymentMethod>('tabby')
   const [assignGuests, setAssignGuests] = useState(false)
   const [acceptRefund, setAcceptRefund] = useState(true)
+
+  const hold = useMemo(() => readHold(), [])
+  const seats = useMemo(() => {
+    if (hold?.seats && hold.seats.length > 0) return hold.seats
+    return FALLBACK_SEATS
+  }, [hold])
+  const subtotal =
+    hold?.subtotal ?? seats.reduce((sum, seat) => sum + Number(seat.price || 0), 0)
+  const serviceFee = hold?.serviceFee ?? Math.round(subtotal * 0.05)
+  const vat = hold?.vat ?? Math.round((subtotal + serviceFee) * 0.15)
+  const total = hold?.total ?? subtotal + serviceFee + vat
+
+  useEffect(() => {
+    return () => {
+      if (paidRef.current) return
+      const current = readHold()
+      if (current?.holdId && current.eventId) {
+        void releaseHold({ eventId: current.eventId, holdId: String(current.holdId) })
+        sessionStorage.removeItem('myticket.mockHold')
+      }
+    }
+  }, [releaseHold])
   const [sendReminders, setSendReminders] = useState(true)
   const [marketing, setMarketing] = useState(false)
   const [promoCode, setPromoCode] = useState('')
@@ -185,6 +237,8 @@ export function CheckoutPage() {
         }).unwrap()
         sessionStorage.setItem('myticket.lastOrderId', String(pendingOrderId))
         sessionStorage.removeItem('myticket.pendingOrderId')
+        sessionStorage.removeItem('myticket.mockHold')
+        paidRef.current = true
         dispatch(toastPushed('success', 'Payment submitted'))
         navigate(`/order-confirmation?orderId=${pendingOrderId}`)
         return
@@ -437,20 +491,28 @@ export function CheckoutPage() {
               YOUR SEATS
             </h3>
             <ul className="mt-md flex flex-col gap-[9px]">
-              {SEATS.map((seat) => (
-                <li key={seat.label} className="flex items-center gap-[11px]">
-                  <span className="flex size-[30px] items-center justify-center rounded-[8px] bg-brand-identity-end text-[11px] font-bold text-ink-inverse">
-                    {seat.row}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[14px] font-semibold text-ink-primary">{seat.label}</p>
-                    <p className="text-[12px] text-ink-secondary">{seat.meta}</p>
-                  </div>
-                  <PriceDisplay context="row" className="font-semibold">
-                    SAR {seat.price}
-                  </PriceDisplay>
-                </li>
-              ))}
+              {seats.map((seat) => {
+                const row =
+                  seat.row ??
+                  seat.label.match(/Row\s+([A-Z0-9]+)/i)?.[1] ??
+                  seat.label.slice(0, 1)
+                return (
+                  <li key={seat.label} className="flex items-center gap-[11px]">
+                    <span className="flex size-[30px] items-center justify-center rounded-[8px] bg-brand-identity-end text-[11px] font-bold text-ink-inverse">
+                      {row}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14px] font-semibold text-ink-primary">{seat.label}</p>
+                      <p className="text-[12px] text-ink-secondary">
+                        {seat.meta ?? seat.category ?? 'Selected seat'}
+                      </p>
+                    </div>
+                    <PriceDisplay context="row" className="font-semibold">
+                      SAR {seat.price}
+                    </PriceDisplay>
+                  </li>
+                )
+              })}
             </ul>
 
             <div className="mt-lg flex gap-sm">
@@ -477,8 +539,10 @@ export function CheckoutPage() {
             <div className="mt-lg border-t border-border-divider pt-[14px]">
               <div className="flex flex-col gap-[8px] text-[14px]">
                 <div className="flex justify-between">
-                  <span className="text-ink-secondary">2 seats</span>
-                  <PriceDisplay context="row">SAR 1,040</PriceDisplay>
+                  <span className="text-ink-secondary">
+                    {seats.length} seat{seats.length === 1 ? '' : 's'}
+                  </span>
+                  <PriceDisplay context="row">SAR {subtotal.toLocaleString()}</PriceDisplay>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">Promo code</span>
@@ -488,22 +552,22 @@ export function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">Service fee</span>
-                  <PriceDisplay context="row">SAR 52</PriceDisplay>
+                  <PriceDisplay context="row">SAR {serviceFee.toLocaleString()}</PriceDisplay>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">VAT 15%</span>
-                  <PriceDisplay context="row">SAR 164</PriceDisplay>
+                  <PriceDisplay context="row">SAR {vat.toLocaleString()}</PriceDisplay>
                 </div>
               </div>
 
               <div className="mt-[12px] flex items-baseline justify-between border-t border-border-divider pt-[12px]">
                 <span className="text-[16px] font-semibold text-ink-primary">Total due</span>
                 <PriceDisplay context="stat" className="text-[26px] font-extrabold">
-                  SAR 1,256
+                  SAR {total.toLocaleString()}
                 </PriceDisplay>
               </div>
               <p className="mt-[8px] text-[13px] font-semibold text-ink-brand">
-                Pay SAR 314 today, then 3 monthly payments
+                Pay SAR {Math.round(total / 4).toLocaleString()} today, then 3 monthly payments
               </p>
             </div>
 

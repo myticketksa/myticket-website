@@ -17,6 +17,7 @@ import {
   HeartGlyphIcon,
   StarFillIcon,
 } from '@/components/icons'
+import { FadeUp } from '@/components/motion'
 import {
   Breadcrumbs,
   DetailSectionTab,
@@ -289,28 +290,32 @@ export function EventDetailPage() {
       </PageSection>
 
       <PageSection padTop={16} padBottom={0}>
-        <DetailGallery
-          category={display.category}
-          flag={display.flag}
-          mainImage={detailCard?.image ?? listCard?.image ?? EVENT_DETAIL_GALLERY.main}
-          thumbs={EVENT_DETAIL_GALLERY.thumbs}
-        />
+        <FadeUp>
+          <DetailGallery
+            category={display.category}
+            flag={display.flag}
+            mainImage={detailCard?.image ?? listCard?.image ?? EVENT_DETAIL_GALLERY.main}
+            thumbs={EVENT_DETAIL_GALLERY.thumbs}
+          />
+        </FadeUp>
       </PageSection>
 
       <PageSection padTop={34} padBottom={0}>
         <div className="flex w-full items-start gap-[48px]">
           <article className="min-w-0 flex-1">
-            <h1 className="text-display-hero text-ink-primary">{title}</h1>
+            <FadeUp>
+              <h1 className="text-display-hero text-ink-primary">{title}</h1>
 
-            <div className="mt-[14px] flex flex-wrap items-center gap-[18px] text-[15px]">
-              <span className="flex items-center gap-[5px] font-semibold text-ink-primary">
-                <StarFillIcon size={15} />
-                {display.rating}
-              </span>
-              <span className="text-ink-secondary">{display.when}</span>
-              <span className="text-ink-secondary">{display.venue}</span>
-              <span className="text-ink-secondary">{display.attendance}</span>
-            </div>
+              <div className="mt-[14px] flex flex-wrap items-center gap-[18px] text-[15px]">
+                <span className="flex items-center gap-[5px] font-semibold text-ink-primary">
+                  <StarFillIcon size={15} />
+                  {display.rating}
+                </span>
+                <span className="text-ink-secondary">{display.when}</span>
+                <span className="text-ink-secondary">{display.venue}</span>
+                <span className="text-ink-secondary">{display.attendance}</span>
+              </div>
+            </FadeUp>
 
             <div className="mt-[22px] flex flex-wrap gap-row-gap">
               <Button

@@ -7,6 +7,8 @@ import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
 import { useGetOrderDetailsQuery } from '@/app/api/ordersApi'
+import { useAppSelector } from '@/app/hooks'
+import { selectAuthUser } from '@/features/auth/authSlice'
 
 const TICKETS = [
   {
@@ -26,6 +28,29 @@ const NEXT_STEPS = [
   'Share a ticket with a friend and they get their own QR the moment they accept.',
   "We'll remind you an hour before doors with the gate and bag-policy notes.",
 ] as const
+
+function formatMoney(value: unknown, fallback: string) {
+  if (value == null || value === '' || value === '—') return fallback
+  const raw = String(value)
+  if (/sar/i.test(raw)) return raw
+  const num = Number(value)
+  if (!Number.isFinite(num)) return raw
+  return `SAR ${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function readSessionHold() {
+  try {
+    return JSON.parse(sessionStorage.getItem('myticket.mockHold') || 'null') as {
+      seats?: { id?: string; label: string; category?: string; price: number }[]
+      subtotal?: number
+      serviceFee?: number
+      vat?: number
+      total?: number
+    } | null
+  } catch {
+    return null
+  }
+}
 
 /** Dense QR-like matrix — Figma `207:8498` draws a seeded ~105px module grid (no lib in deps). */
 function TicketQr({ seed }: { seed: number }) {
@@ -107,13 +132,25 @@ function resolveOrderId(searchParams: URLSearchParams) {
   )
 }
 
-function mapOrderTickets(order: Record<string, unknown>) {
+function mapOrderTickets(
+  order: Record<string, unknown>,
+  holdSeats?: { id?: string; label: string; category?: string }[],
+) {
   const items = order.tickets ?? order.items ?? order.lines
   if (Array.isArray(items) && items.length > 0) {
     return (items as Record<string, unknown>[]).map((ticket, index) => ({
       id: String(ticket.id ?? ticket.ticket_number ?? `MT-${index + 1}`),
-      seat: String(ticket.seat ?? ticket.seats ?? ticket.tier ?? '—'),
+      seat: String(
+        ticket.seat ?? ticket.seats ?? ticket.tier ?? holdSeats?.[index]?.label ?? '—',
+      ),
       gate: String(ticket.gate ?? ticket.entry ?? 'Scan at gate'),
+    }))
+  }
+  if (holdSeats && holdSeats.length > 0) {
+    return holdSeats.map((seat, index) => ({
+      id: String(seat.id ?? `MT-HOLD-${index + 1}`),
+      seat: seat.label,
+      gate: 'Scan at gate',
     }))
   }
   return [...TICKETS]
@@ -125,51 +162,80 @@ function mapOrderTickets(order: Record<string, unknown>) {
 export function OrderConfirmationPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const user = useAppSelector(selectAuthUser)
   const orderId = resolveOrderId(searchParams)
-  const { data: order } = useGetOrderDetailsQuery(orderId, { skip: !orderId })
+  const { data: order, isFetching, isError } = useGetOrderDetailsQuery(orderId, {
+    skip: !orderId,
+  })
+  const hold = useMemo(() => readSessionHold(), [])
 
   const view = useMemo(() => {
-    if (!order || Object.keys(order).length === 0) {
+    const hasOrder = Boolean(order && Object.keys(order).length > 0)
+    const tickets = hasOrder
+      ? mapOrderTickets(order!, hold?.seats)
+      : mapOrderTickets({}, hold?.seats)
+
+    const fallbackSubtotal = hold?.subtotal ?? 485
+    const fallbackFee = hold?.serviceFee ?? 28
+    const fallbackVat = hold?.vat ?? 75
+    const fallbackTotal = hold?.total ?? fallbackSubtotal + fallbackFee + fallbackVat
+
+    if (!hasOrder) {
       return {
-        email: 'sara@email.com',
-        ticketCount: 2,
-        reference: 'MT-2026-84193',
-        placedAt: '4 Aug 2026, 21:14',
+        email: user?.email ?? 'sara@email.com',
+        ticketCount: tickets.length,
+        reference: orderId || 'MT-2026-84193',
+        placedAt: new Date().toLocaleString(),
         eventTitle: 'Winter Nights: Live at King Abdullah Park',
         eventMeta: 'Thu 8 Oct 2026 · 20:00 · King Abdullah Park, Riyadh',
-        tierLabel: 'GOLD · SEATED',
-        holder: 'Sara Alghamdi',
-        tickets: [...TICKETS],
-        subtotal: 'SAR 485.00',
-        serviceFee: 'SAR 28.00',
-        vat: 'SAR 75.00',
-        total: 'SAR 588.00',
-        walletPaid: 'SAR 120.00',
-        cardPaid: 'SAR 468.00',
-        cashback: 'SAR 21.00',
+        tierLabel: hold?.seats?.[0]?.category?.toUpperCase() ?? 'GOLD · SEATED',
+        holder: user?.name ?? 'Sara Alghamdi',
+        tickets,
+        subtotal: formatMoney(fallbackSubtotal, 'SAR 485.00'),
+        serviceFee: formatMoney(fallbackFee, 'SAR 28.00'),
+        vat: formatMoney(fallbackVat, 'SAR 75.00'),
+        total: formatMoney(fallbackTotal, 'SAR 588.00'),
+        walletPaid: 'SAR 0.00',
+        cardPaid: formatMoney(fallbackTotal, 'SAR 588.00'),
+        cashback: 'SAR 0.00',
+        apiNote: isError
+          ? 'Showing your local checkout summary while order details are unreachable.'
+          : isFetching
+            ? 'Loading order details…'
+            : orderId
+              ? null
+              : 'Showing a preview — complete checkout to get a live order reference.',
       }
     }
 
-    const tickets = mapOrderTickets(order)
     return {
-      email: String(order.email ?? order.customer_email ?? 'sara@email.com'),
-      ticketCount: Number(order.quantity ?? tickets.length) || tickets.length,
-      reference: String(order.reference ?? order.order_number ?? order.id ?? orderId),
-      placedAt: String(order.created_at ?? order.placed_at ?? '—'),
-      eventTitle: String(order.event_title ?? order.title ?? order.name ?? 'Your event'),
-      eventMeta: String(order.event_meta ?? order.meta ?? order.venue ?? '—'),
-      tierLabel: String(order.tier_label ?? order.tier ?? 'TICKET'),
-      holder: String(order.holder ?? order.customer_name ?? 'Ticket holder'),
+      email: String(order!.email ?? order!.customer_email ?? user?.email ?? 'sara@email.com'),
+      ticketCount: Number(order!.quantity ?? tickets.length) || tickets.length,
+      reference: String(order!.reference ?? order!.order_number ?? order!.id ?? orderId),
+      placedAt: String(order!.created_at ?? order!.placed_at ?? new Date().toLocaleString()),
+      eventTitle: String(order!.event_title ?? order!.title ?? order!.name ?? 'Your event'),
+      eventMeta: String(order!.event_meta ?? order!.meta ?? order!.venue ?? '—'),
+      tierLabel: String(
+        order!.tier_label ?? order!.tier ?? hold?.seats?.[0]?.category ?? 'TICKET',
+      ),
+      holder: String(order!.holder ?? order!.customer_name ?? user?.name ?? 'Ticket holder'),
       tickets,
-      subtotal: String(order.subtotal ?? order.items_total ?? '—'),
-      serviceFee: String(order.service_fee ?? order.fees ?? '—'),
-      vat: String(order.vat ?? order.tax ?? '—'),
-      total: String(order.total ?? order.amount ?? '—'),
-      walletPaid: String(order.wallet_paid ?? order.wallet_amount ?? '—'),
-      cardPaid: String(order.card_paid ?? order.card_amount ?? '—'),
-      cashback: String(order.cashback ?? order.cashback_earned ?? '—'),
+      subtotal: formatMoney(
+        order!.subtotal ?? order!.items_total ?? hold?.subtotal,
+        'SAR 485.00',
+      ),
+      serviceFee: formatMoney(
+        order!.service_fee ?? order!.fees ?? hold?.serviceFee,
+        'SAR 28.00',
+      ),
+      vat: formatMoney(order!.vat ?? order!.tax ?? hold?.vat, 'SAR 75.00'),
+      total: formatMoney(order!.total ?? order!.amount ?? hold?.total, 'SAR 588.00'),
+      walletPaid: formatMoney(order!.wallet_paid ?? order!.wallet_amount, 'SAR 0.00'),
+      cardPaid: formatMoney(order!.card_paid ?? order!.card_amount ?? order!.total, '—'),
+      cashback: formatMoney(order!.cashback ?? order!.cashback_earned, 'SAR 0.00'),
+      apiNote: null as string | null,
     }
-  }, [order, orderId])
+  }, [hold, isError, isFetching, order, orderId, user?.email, user?.name])
 
   return (
     <PageSection padTop={52} padBottom={96}>
@@ -184,6 +250,9 @@ export function OrderConfirmationPage() {
           Payment went through and your {view.ticketCount} tickets are ready. We&apos;ve emailed them
           to {view.email} too.
         </p>
+        {view.apiNote ? (
+          <p className="mt-[8px] max-w-[560px] text-[13px] text-ink-muted">{view.apiNote}</p>
+        ) : null}
         <p className="mt-[10px] text-[13.5px] font-bold">
           <span className="text-ink-muted">Order reference</span>{' '}
           <span className="text-ink-primary">{view.reference}</span>{' '}

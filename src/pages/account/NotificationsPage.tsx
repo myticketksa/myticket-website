@@ -14,6 +14,7 @@ import { AccountPageHead, PageSection } from '@/layouts'
 import { NOTIFICATIONS, type NotificationFixture } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
 import {
+  useGetNotificationCategoriesQuery,
   useGetNotificationsQuery,
   useMarkAllNotificationsReadMutation,
   useMarkNotificationReadMutation,
@@ -93,8 +94,10 @@ function notificationId(record: Record<string, unknown>): string | number | unde
 
 function mapNotification(record: Record<string, unknown>, index: number): NotificationFixture & {
   id?: string | number
+  categoryKey?: string
 } {
   const fallback = NOTIFICATIONS[index % NOTIFICATIONS.length]
+  const categoryId = record.category_id ?? record.categoryId
   return {
     id: notificationId(record),
     title: String(record.title ?? record.subject ?? fallback.title),
@@ -103,6 +106,10 @@ function mapNotification(record: Record<string, unknown>, index: number): Notifi
     unread: Boolean(record.unread ?? record.is_unread ?? !record.read_at),
     group: mapNotificationGroup(record.group ?? record.period),
     category: mapNotificationCategory(record.category ?? record.type),
+    categoryKey:
+      categoryId != null
+        ? String(categoryId)
+        : mapNotificationCategory(record.category ?? record.type),
     tag: record.tag ? String(record.tag) : fallback.tag,
     cta: record.cta ? String(record.cta) : record.action ? String(record.action) : fallback.cta,
     icon: mapNotificationIcon(record.icon ?? record.category ?? record.type),
@@ -113,6 +120,7 @@ function mapNotification(record: Record<string, unknown>, index: number): Notifi
 export function NotificationsPage() {
   const [filter, setFilter] = useState('all')
   const { data: notifications } = useGetNotificationsQuery()
+  const { data: categories } = useGetNotificationCategoriesQuery()
   const [markAllRead, markAllState] = useMarkAllNotificationsReadMutation()
   const [markRead] = useMarkNotificationReadMutation()
 
@@ -120,27 +128,40 @@ export function NotificationsPage() {
     if (notifications && notifications.length > 0) {
       return notifications.map(mapNotification)
     }
-    return NOTIFICATIONS.map((item) => ({ ...item }))
+    return NOTIFICATIONS.map((item) => ({ ...item, categoryKey: item.category }))
   }, [notifications])
 
   const items = useMemo(
     () =>
-      filter === 'all' ? allItems : allItems.filter((item) => item.category === filter),
+      filter === 'all'
+        ? allItems
+        : allItems.filter((item) => ('categoryKey' in item ? item.categoryKey : item.category) === filter),
     [allItems, filter],
   )
 
   const unreadCount = allItems.filter((item) => item.unread).length
-  const filters = useMemo(
-    () =>
-      FILTER_DEFS.map((item) => ({
-        ...item,
-        count:
-          item.id === 'all'
-            ? unreadCount || undefined
-            : allItems.filter((n) => n.category === item.id && n.unread).length || undefined,
-      })),
-    [allItems, unreadCount],
-  )
+  const filters = useMemo(() => {
+    if (categories && categories.length > 0) {
+      return [
+        { id: 'all', label: 'All', count: unreadCount || undefined },
+        ...categories.map((category) => {
+          const id = String(category.id ?? category.slug ?? category.name_en)
+          const label = String(
+            category.name_en ?? category.name ?? category.label ?? 'Category',
+          )
+          const count = Number(category.notifications_count ?? 0) || undefined
+          return { id, label, count }
+        }),
+      ]
+    }
+    return FILTER_DEFS.map((item) => ({
+      ...item,
+      count:
+        item.id === 'all'
+          ? unreadCount || undefined
+          : allItems.filter((n) => n.category === item.id && n.unread).length || undefined,
+    }))
+  }, [allItems, categories, unreadCount])
 
   const groups = ['TODAY', 'YESTERDAY', 'EARLIER'] as const
 

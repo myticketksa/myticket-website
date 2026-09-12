@@ -9,6 +9,7 @@ import {
 } from '@/components/icons'
 import { FeaturedHeroCard } from '@/components/cards'
 import { PopularChip } from '@/components/data-display'
+import { FadeUp } from '@/components/motion'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
 import { mapApiEventToCard } from '@/lib/api/mappers/events'
@@ -92,36 +93,41 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
     >
       <div className="flex flex-col gap-[52px] lg:flex-row lg:items-start">
         <div className="flex w-full max-w-[675px] flex-col pt-xl">
-          <div
-            className="inline-flex w-fit items-center gap-[9px] rounded-[22px] bg-identity-gradient py-[7px] pr-[15px] pl-[11px] text-[13px] font-bold text-ink-inverse shadow-[0px_8px_22px_-10px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)]"
-          >
-            <span className="size-[7px] rounded-pill bg-ink-inverse" aria-hidden />
-            1,284 events live across the Kingdom right now
-          </div>
-
-          <h1 className="text-display-hero-xl mt-[26px] text-ink-primary">
-            <span className="block">Everything happening</span>
-            <span className="block">in Saudi Arabia,</span>
-            <span
-              className="block bg-clip-text text-transparent"
-              style={{
-                backgroundImage:
-                  'linear-gradient(135deg, var(--color-brand-gradient-start) 0%, var(--color-ink-brand) 46%, var(--color-ink-brand-strong) 100%)',
-              }}
+          <FadeUp inView={false} delay={0.05} distance={8}>
+            <div
+              className="inline-flex w-fit items-center gap-[9px] rounded-[22px] bg-identity-gradient py-[7px] pr-[15px] pl-[11px] text-[13px] font-bold text-ink-inverse shadow-[0px_8px_22px_-10px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)]"
             >
-              in one place.
-            </span>
-          </h1>
+              <span className="size-[7px] rounded-pill bg-ink-inverse" aria-hidden />
+              1,284 events live across the Kingdom right now
+            </div>
+          </FadeUp>
 
-          <p className="mt-2xl max-w-[480px] text-[18px] leading-[1.55] font-medium text-ink-secondary">
-            Concerts, matches, festivals, conferences and the people who make them happen.
-            Find it, book it, and hold your ticket here.
-          </p>
+          <FadeUp inView={false} delay={0.1} distance={12}>
+            <h1 className="text-display-hero-xl mt-[26px] text-ink-primary">
+              <span className="block">Everything happening</span>
+              <span className="block">in Saudi Arabia,</span>
+              <span
+                className="block bg-clip-text text-transparent"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(135deg, var(--color-brand-gradient-start) 0%, var(--color-ink-brand) 46%, var(--color-ink-brand-strong) 100%)',
+                }}
+              >
+                in one place.
+              </span>
+            </h1>
 
-          <form
-            action="/search"
-            className="mt-3xl flex w-full flex-col gap-[10px] rounded-[20px] border border-border-default bg-surface-default p-sm shadow-[0px_22px_48px_-24px_color-mix(in_srgb,var(--color-brand-primary)_55%,transparent),0px_2px_4px_0px_color-mix(in_srgb,var(--color-ink-primary)_4%,transparent)] sm:flex-row sm:items-center"
-          >
+            <p className="mt-2xl max-w-[480px] text-[18px] leading-[1.55] font-medium text-ink-secondary">
+              Concerts, matches, festivals, conferences and the people who make them happen.
+              Find it, book it, and hold your ticket here.
+            </p>
+          </FadeUp>
+
+          <FadeUp inView={false} delay={0.2} distance={8}>
+            <form
+              action="/search"
+              className="mt-3xl flex w-full flex-col gap-[10px] rounded-[20px] border border-border-default bg-surface-default p-sm shadow-[0px_22px_48px_-24px_color-mix(in_srgb,var(--color-brand-primary)_55%,transparent),0px_2px_4px_0px_color-mix(in_srgb,var(--color-ink-primary)_4%,transparent)] sm:flex-row sm:items-center"
+            >
             <label className="flex min-w-0 flex-1 items-center gap-md px-lg py-[10px]">
               <SearchIcon size={19} className="shrink-0 text-brand-primary" />
               <input
@@ -159,7 +165,9 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
               Search
             </button>
           </form>
+          </FadeUp>
 
+          <FadeUp inView={false} delay={0.25} distance={0}>
           <div className="mt-[18px] flex flex-wrap items-center gap-sm">
             <span className="text-[13px] font-semibold text-ink-muted">Popular</span>
             {HOME_POPULAR.map((term) => (
@@ -168,19 +176,23 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
               </PopularChip>
             ))}
           </div>
+          </FadeUp>
         </div>
 
-        <div className="flex w-full max-w-[593px] flex-col gap-[14px]">
+        <FadeUp inView={false} delay={0.3} distance={16} className="flex w-full max-w-[593px] flex-col gap-[14px]">
           <div className="flex h-[36px] items-center justify-between">
             <p className="text-label-overline text-brand-gradient-end">Featured this week</p>
             {/* Figma `207:4402` — flat 8px gap: link text, 13px arrow, then 36×36 prev/next. */}
             <div className="flex items-center gap-sm">
               <Link
                 to="/events"
-                className="flex items-center gap-sm text-[13px] font-bold text-brand-gradient-end"
+                className="group/link flex items-center gap-sm text-[13px] font-bold text-brand-gradient-end transition-colors duration-fast ease-standard hover:text-ink-brand"
               >
                 See all featured
-                <ArrowRightIcon size={13} className="shrink-0" />
+                <ArrowRightIcon
+                  size={13}
+                  className="shrink-0 transition-transform duration-fast ease-standard group-hover/link:translate-x-0.5 motion-reduce:group-hover/link:translate-x-0"
+                />
               </Link>
               <button
                 type="button"
@@ -248,7 +260,7 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
               />
             ))}
           </div>
-        </div>
+        </FadeUp>
       </div>
     </PageSection>
   )

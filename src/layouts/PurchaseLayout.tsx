@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom'
 import { ArrowLeftIcon } from '@/components/icons'
 import { Logo } from '@/components/navigation'
+import { PageFade } from '@/components/motion'
 import { Countdown } from '@/components/data-display'
 import { cn } from '@/lib/cn'
 
@@ -165,7 +166,9 @@ export function PurchaseLayout({ header }: PurchaseLayoutProps) {
           isSeats ? 'pb-[60px] pt-[24px]' : 'pb-[70px] pt-[30px]',
         )}
       >
-        <Outlet />
+        <PageFade>
+          <Outlet />
+        </PageFade>
       </div>
     </div>
   )

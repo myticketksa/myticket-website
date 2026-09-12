@@ -1,18 +1,14 @@
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
+import { motion, useReducedMotion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { CheckIcon } from '@/components/icons'
+import { easeMicro, motionTokens } from '@/lib/motion'
 
 /**
  * Figma `Checkbox` — node 207:1717.
  *
- * The box is 16x16 with **square corners**. Figma's description is explicit that
- * the source uses a native input whose radius was never specified, so it is left
- * unset rather than rounded to `--radius-badge` on a guess.
- *
- * `count` is the trailing facet count used in filter panels. Figma notes the
- * source pushes it right with `margin-left: auto`, which only works on a
- * full-width row — hence `fullWidth`.
+ * The box is 16x16 with **square corners**. Checked indicator scales in per guest motion.
  */
 export interface CheckboxProps
   extends Omit<CheckboxPrimitive.CheckboxProps, 'children'> {
@@ -30,20 +26,33 @@ export function Checkbox({
   id,
   ...props
 }: CheckboxProps) {
+  const reduce = useReducedMotion()
+
   const control = (
     <CheckboxPrimitive.Root
       id={id}
       className={cn(
         'flex size-4 shrink-0 items-center justify-center border border-border-default bg-surface-default',
-        'transition-colors duration-fast ease-standard',
+        'transition-colors duration-micro ease-micro',
         'data-[state=checked]:border-brand-primary data-[state=checked]:bg-brand-primary',
         'disabled:cursor-not-allowed disabled:bg-bg-skeleton',
         !label && className,
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator className="text-ink-inverse">
-        <CheckIcon size={12} />
+      <CheckboxPrimitive.Indicator asChild forceMount={false}>
+        <motion.span
+          className="flex items-center justify-center text-ink-inverse"
+          initial={reduce ? false : { opacity: 0, scale: 0.6 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={
+            reduce
+              ? { duration: 0 }
+              : { duration: motionTokens.micro.duration, ease: easeMicro }
+          }
+        >
+          <CheckIcon size={12} />
+        </motion.span>
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

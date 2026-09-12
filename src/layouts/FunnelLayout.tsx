@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, Outlet } from 'react-router-dom'
 import { ArrowLeftIcon } from '@/components/icons'
+import { PageFade } from '@/components/motion'
 import { Logo, SiteFooter } from '@/components/navigation'
 import { cn } from '@/lib/cn'
 
@@ -48,7 +49,7 @@ export function FunnelHeader({
           {rightSlot ?? (
             <Link
               to={backHref}
-              className="flex shrink-0 items-center gap-[5px] text-[14px] font-semibold text-ink-secondary hover:text-ink-brand"
+              className="flex shrink-0 items-center gap-[5px] text-[14px] font-semibold text-ink-secondary transition-colors duration-micro ease-micro hover:text-ink-brand"
             >
               <ArrowLeftIcon size={14} />
               {backLabel}
@@ -67,7 +68,9 @@ export function FunnelLayout() {
   return (
     <div className="flex min-h-dvh flex-col bg-bg-page">
       <div className="flex flex-1 flex-col">
-        <Outlet />
+        <PageFade>
+          <Outlet />
+        </PageFade>
       </div>
       <SiteFooter />
     </div>

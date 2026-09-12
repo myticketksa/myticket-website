@@ -58,13 +58,20 @@ export function TalentCard({
   return (
     <article
       className={cn(
-        'flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default',
+        'group flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default',
+        'transition-[transform,box-shadow] duration-normal ease-standard',
+        'hover:-translate-y-0.5 hover:shadow-lift',
+        'motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none',
         className,
       )}
     >
       <div className="relative h-[208px] w-full overflow-hidden">
         {image ? (
-          <img src={image} alt="" className="size-full object-cover" />
+          <img
+            src={image}
+            alt=""
+            className="size-full object-cover transition-transform duration-slow ease-standard group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
+          />
         ) : (
           <ImagePlaceholder ratio="fill" caption="Event imagery 16:10" />
         )}

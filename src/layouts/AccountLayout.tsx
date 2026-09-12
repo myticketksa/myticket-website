@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Outlet } from 'react-router-dom'
 import { AccountTabBar, AccountTabBarItem, SiteFooter, SiteHeader } from '@/components/navigation'
+import { PageFade } from '@/components/motion'
 import { cn } from '@/lib/cn'
 
 /**
@@ -115,7 +116,9 @@ export function AccountLayout() {
     <div className="flex min-h-dvh flex-col bg-bg-page">
       <SiteHeader state="signedIn" />
       <div className="flex flex-1 flex-col">
-        <Outlet />
+        <PageFade>
+          <Outlet />
+        </PageFade>
       </div>
       <SiteFooter />
     </div>

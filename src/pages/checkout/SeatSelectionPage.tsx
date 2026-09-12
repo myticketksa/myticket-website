@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   CheckIcon,
@@ -12,23 +12,19 @@ import { Divider, FilterChip, PriceDisplay } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { useGetEventsQuery } from '@/app/api/eventsApi'
-import { useGetEventSeatsQuery, useHoldSeatsMutation } from '@/app/api/seatsApi'
+import {
+  useGetEventSeatsQuery,
+  useHoldSeatsMutation,
+  useReleaseHoldMutation,
+} from '@/app/api/seatsApi'
 import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { parsePureNumericIds } from '@/lib/api/formPayload'
 import { resolveEventId } from '@/lib/api/mappers/events'
+import { mapApiSeatsToRows, type SeatMapStatus } from '@/lib/api/mappers/seats'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
-type SeatStatus =
-  | 'available'
-  | 'vip'
-  | 'gold'
-  | 'silver'
-  | 'bronze'
-  | 'sold'
-  | 'held'
-  | 'selected'
-  | 'accessible'
+type SeatStatus = SeatMapStatus | 'selected'
 type Zone = 'all' | 'vip' | 'gold' | 'silver' | 'bronze'
 
 interface SelectedSeat {
@@ -301,18 +297,64 @@ export function SeatSelectionPage() {
   const { slug } = useParams()
   const [zone, setZone] = useState<Zone>('all')
   const [zoom, setZoom] = useState(100)
-  const [selected, setSelected] = useState<SelectedSeat[]>(INITIAL_SELECTED)
+  const [selected, setSelected] = useState<SelectedSeat[]>([])
   const [holding, setHolding] = useState(false)
   const selectedIds = useMemo(() => new Set(selected.map((seat) => seat.id)), [selected])
+  const continuingRef = useRef(false)
 
   const { data: apiEvents } = useGetEventsQuery()
   const [holdSeats] = useHoldSeatsMutation()
+  const [releaseHold] = useReleaseHoldMutation()
   const resolvedEventId = useMemo(
     () => resolveEventId(apiEvents, slug ?? '') ?? (/^\d+$/.test(slug ?? '') ? slug : undefined),
     [apiEvents, slug],
   )
-  /** Prefetch seat inventory when API is up; map UI stays fixture until response shape is probed. */
-  useGetEventSeatsQuery(resolvedEventId!, { skip: !resolvedEventId })
+  const { data: apiSeats } = useGetEventSeatsQuery(resolvedEventId!, {
+    skip: !resolvedEventId,
+  })
+
+  const liveRows = useMemo(() => mapApiSeatsToRows(apiSeats ?? []), [apiSeats])
+  const usingLiveMap = Boolean(liveRows && liveRows.length > 0)
+
+  const floorRows = usingLiveMap
+    ? liveRows!.slice(0, Math.ceil(liveRows!.length / 3))
+    : FLOOR_ROWS
+  const mezzRows = usingLiveMap
+    ? liveRows!.slice(
+        Math.ceil(liveRows!.length / 3),
+        Math.ceil((liveRows!.length * 2) / 3),
+      )
+    : MEZZ_ROWS
+  const upperRows = usingLiveMap
+    ? liveRows!.slice(Math.ceil((liveRows!.length * 2) / 3))
+    : UPPER_ROWS
+
+  useEffect(() => {
+    if (usingLiveMap) {
+      setSelected([])
+      return
+    }
+    setSelected(INITIAL_SELECTED)
+  }, [usingLiveMap])
+
+  useEffect(() => {
+    return () => {
+      if (continuingRef.current) return
+      try {
+        const mock = JSON.parse(sessionStorage.getItem('myticket.mockHold') || 'null') as {
+          holdId?: string
+          eventId?: string
+        } | null
+        const eventId = mock?.eventId ?? resolvedEventId
+        if (mock?.holdId && eventId) {
+          void releaseHold({ eventId, holdId: String(mock.holdId) })
+          sessionStorage.removeItem('myticket.mockHold')
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [releaseHold, resolvedEventId])
 
   const subtotal = selected.reduce((sum, seat) => sum + seat.price, 0)
   const serviceFee = Math.round(subtotal * 0.05)
@@ -343,7 +385,7 @@ export function SeatSelectionPage() {
           seatIds: numericSeatIds,
           ticketId,
         }).unwrap()
-        holdId = (held.holdId ?? held.hold_id ?? held.id) as string | number | undefined
+        holdId = held.holdId ?? held.hold_id ?? held.id
         heldSeatIds = numericSeatIds
       } catch (error) {
         dispatch(
@@ -357,13 +399,19 @@ export function SeatSelectionPage() {
       }
     }
 
+    continuingRef.current = true
     sessionStorage.setItem(
       'myticket.mockHold',
       JSON.stringify({
         seatIds: heldSeatIds,
+        seats: selected,
         ticketId,
         holdId,
+        eventId: resolvedEventId ?? slug,
         total,
+        subtotal,
+        serviceFee,
+        vat,
         heldAt: Date.now(),
       }),
     )
@@ -380,15 +428,18 @@ export function SeatSelectionPage() {
       }
       if (current.length >= 6) return current
 
-      const { price, category } = seatMeta(status === 'selected' ? 'gold' : status)
+      const liveSeat = liveRows
+        ?.flatMap((r) => r.seats)
+        .find((seat) => seat.id === id)
+      const meta = seatMeta(status === 'selected' ? 'gold' : status)
 
       return [
         ...current,
         {
           id,
           label: `Row ${row}, seat ${number}`,
-          category,
-          price,
+          category: liveSeat?.category ?? meta.category,
+          price: liveSeat?.price ?? meta.price,
         },
       ]
     })
@@ -399,9 +450,12 @@ export function SeatSelectionPage() {
       zone === 'all' ? ['gold', 'vip', 'silver', 'bronze'] : [zone]
     const need = 2
     const picks: SelectedSeat[] = []
+    const sourceRows = usingLiveMap
+      ? [...floorRows, ...mezzRows, ...upperRows]
+      : ALL_SEAT_ROWS
 
     for (const status of preferred) {
-      for (const { row, seats } of ALL_SEAT_ROWS) {
+      for (const { row, seats } of sourceRows) {
         for (let i = 0; i < seats.length; i++) {
           const run: { id: string; index: number; status: SeatStatus }[] = []
           for (let j = i; j < seats.length && run.length < need; j++) {
@@ -411,12 +465,15 @@ export function SeatSelectionPage() {
           }
           if (run.length === need) {
             for (const seat of run) {
-              const { price, category } = seatMeta(seat.status)
+              const liveSeat = liveRows
+                ?.flatMap((r) => r.seats)
+                .find((item) => item.id === seat.id)
+              const meta = seatMeta(seat.status)
               picks.push({
                 id: seat.id,
                 label: `Row ${row}, seat ${seat.index}`,
-                category,
-                price,
+                category: liveSeat?.category ?? meta.category,
+                price: liveSeat?.price ?? meta.price,
               })
             }
             setSelected(picks)
@@ -495,7 +552,7 @@ export function SeatSelectionPage() {
               <SeatBlock
                 title="FLOOR — BLOCK A"
                 range="SAR 340 – SAR 720"
-                rows={FLOOR_ROWS}
+                rows={floorRows}
                 zone={zone}
                 selectedIds={selectedIds}
                 onToggle={toggleSeat}
@@ -506,7 +563,7 @@ export function SeatSelectionPage() {
               <SeatBlock
                 title="MEZZANINE — BLOCK B"
                 range="SAR 220 – SAR 380"
-                rows={MEZZ_ROWS}
+                rows={mezzRows}
                 zone={zone}
                 selectedIds={selectedIds}
                 onToggle={toggleSeat}
@@ -517,7 +574,7 @@ export function SeatSelectionPage() {
               <SeatBlock
                 title="UPPER TIER — BLOCK C"
                 range="SAR 140 – SAR 220"
-                rows={UPPER_ROWS}
+                rows={upperRows}
                 zone={zone}
                 selectedIds={selectedIds}
                 onToggle={toggleSeat}

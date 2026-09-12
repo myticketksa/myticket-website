@@ -13,6 +13,7 @@ import { toastPushed } from '@/features/ui/uiSlice'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 import { ExperienceCard } from '@/components/cards'
 import { StarFillIcon } from '@/components/icons'
+import { FadeUp } from '@/components/motion'
 import { Breadcrumbs } from '@/components/navigation'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
@@ -128,27 +129,31 @@ export function ExperienceDetailPage() {
       </PageSection>
 
       <PageSection padTop={16} padBottom={0}>
-        <DetailGallery
-          category={experience.meta.split(' · ')[0]}
-          moreLabel="+24 photos"
-          mainImage={experience.image ?? EXPERIENCE_DETAIL_GALLERY.main}
-          thumbs={EXPERIENCE_DETAIL_GALLERY.thumbs}
-        />
+        <FadeUp>
+          <DetailGallery
+            category={experience.meta.split(' · ')[0]}
+            moreLabel="+24 photos"
+            mainImage={experience.image ?? EXPERIENCE_DETAIL_GALLERY.main}
+            thumbs={EXPERIENCE_DETAIL_GALLERY.thumbs}
+          />
+        </FadeUp>
       </PageSection>
 
       <PageSection padTop={34} padBottom={0}>
         <div className="flex items-start gap-[48px]">
           <article className="min-w-0 flex-1">
-            <p className="text-label-overline text-ink-brand-mid">{experience.meta}</p>
-            <h1 className="text-display-hero mt-sm text-ink-primary">{experience.title}</h1>
-            <div className="mt-[14px] flex flex-wrap items-center gap-[18px] text-[15px]">
-              <span className="flex items-center gap-[5px] font-semibold text-ink-primary">
-                <StarFillIcon size={15} />
-                {ratingDisplay}
-              </span>
-              <span className="text-ink-secondary">{experience.place}</span>
-              <span className="text-ink-secondary">{guestLabel}</span>
-            </div>
+            <FadeUp>
+              <p className="text-label-overline text-ink-brand-mid">{experience.meta}</p>
+              <h1 className="text-display-hero mt-sm text-ink-primary">{experience.title}</h1>
+              <div className="mt-[14px] flex flex-wrap items-center gap-[18px] text-[15px]">
+                <span className="flex items-center gap-[5px] font-semibold text-ink-primary">
+                  <StarFillIcon size={15} />
+                  {ratingDisplay}
+                </span>
+                <span className="text-ink-secondary">{experience.place}</span>
+                <span className="text-ink-secondary">{guestLabel}</span>
+              </div>
+            </FadeUp>
             <div className="mt-[22px] flex gap-row-gap">
               <Button
                 variant="secondary"

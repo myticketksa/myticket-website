@@ -65,10 +65,13 @@ export function HomeSectionHeader({
       {!trailing && link && (
         <Link
           to={link.to}
-          className="flex shrink-0 items-center gap-[5px] text-[14px] font-bold text-brand-gradient-end"
+          className="flex shrink-0 items-center gap-[5px] text-[14px] font-bold text-brand-gradient-end transition-colors duration-fast ease-standard hover:text-ink-brand group/link"
         >
           {link.label}
-          <ArrowRightIcon size={14} className="shrink-0" />
+          <ArrowRightIcon
+            size={14}
+            className="shrink-0 transition-transform duration-fast ease-standard group-hover/link:translate-x-0.5 motion-reduce:group-hover/link:translate-x-0"
+          />
         </Link>
       )}
     </div>

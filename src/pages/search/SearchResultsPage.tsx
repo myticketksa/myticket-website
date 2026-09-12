@@ -5,6 +5,7 @@ import { useGetExperiencesQuery } from '@/app/api/experiencesApi'
 import { useGetTalentsQuery } from '@/app/api/talentsApi'
 import { FilterChip, StatusBadge } from '@/components/data-display'
 import { StarFillIcon } from '@/components/icons'
+import { FadeUp, StaggerGroup } from '@/components/motion'
 import {
   Breadcrumbs,
   DetailSectionTab,
@@ -319,42 +320,44 @@ export function SearchResultsPage() {
       </PageSection>
 
       <PageSection padTop={14} padBottom={0}>
-        <h1 className="text-heading-h2 text-ink-primary">Results for “{query}”</h1>
-        <p className="mt-[6px] text-[15px] text-ink-secondary">
-          {results.length} matches across events, talents, experiences and auctions.
-        </p>
-        <div className="mt-xl flex flex-wrap gap-[8px]">
-          {SUGGESTIONS.map((s) => (
-            <FilterChip
-              key={s}
-              className="h-[32px] rounded-[16px] px-md text-[13px]"
-              onClick={() => {
-                window.location.href = `/search?q=${encodeURIComponent(s)}`
-              }}
-            >
-              {s}
-            </FilterChip>
-          ))}
-        </div>
-        {/*
-          Entity tabs match detail-section metrics (15px / ink-brand / muted), not DS
-          `Tab` (14.5px / ink-brand-mid). Count badges are local to this frame.
-        */}
-        <DetailSectionTabs className="mt-[18px] gap-0 border-border-default" aria-label="Result types">
-          {tabCounts.map((t) => (
-            <DetailSectionTab
-              key={t.label}
-              active={tab === t.label}
-              onClick={() => setTab(t.label)}
-              className="flex h-[46px] items-center gap-[7px] px-[15px] pb-0"
-            >
-              {t.label}
-              <span className="rounded-[10px] bg-bg-skeleton px-[7px] py-[2px] text-[12px] font-extrabold text-ink-secondary">
-                {t.count}
-              </span>
-            </DetailSectionTab>
-          ))}
-        </DetailSectionTabs>
+        <FadeUp>
+          <h1 className="text-heading-h2 text-ink-primary">Results for “{query}”</h1>
+          <p className="mt-[6px] text-[15px] text-ink-secondary">
+            {results.length} matches across events, talents, experiences and auctions.
+          </p>
+          <div className="mt-xl flex flex-wrap gap-[8px]">
+            {SUGGESTIONS.map((s) => (
+              <FilterChip
+                key={s}
+                className="h-[32px] rounded-[16px] px-md text-[13px]"
+                onClick={() => {
+                  window.location.href = `/search?q=${encodeURIComponent(s)}`
+                }}
+              >
+                {s}
+              </FilterChip>
+            ))}
+          </div>
+          {/*
+            Entity tabs match detail-section metrics (15px / ink-brand / muted), not DS
+            `Tab` (14.5px / ink-brand-mid). Count badges are local to this frame.
+          */}
+          <DetailSectionTabs className="mt-[18px] gap-0 border-border-default" aria-label="Result types">
+            {tabCounts.map((t) => (
+              <DetailSectionTab
+                key={t.label}
+                active={tab === t.label}
+                onClick={() => setTab(t.label)}
+                className="flex h-[46px] items-center gap-[7px] px-[15px] pb-0"
+              >
+                {t.label}
+                <span className="rounded-[10px] bg-bg-skeleton px-[7px] py-[2px] text-[12px] font-extrabold text-ink-secondary">
+                  {t.count}
+                </span>
+              </DetailSectionTab>
+            ))}
+          </DetailSectionTabs>
+        </FadeUp>
       </PageSection>
 
       <PageSection padTop={24} padBottom={96}>
@@ -462,7 +465,7 @@ export function SearchResultsPage() {
             }
           />
 
-          <div className="mt-lg flex flex-col gap-[10px]">
+          <StaggerGroup className="mt-lg flex flex-col gap-[10px]">
             {filtered.map((result) => (
               <Link
                 key={result.title}
@@ -509,7 +512,7 @@ export function SearchResultsPage() {
                 </div>
               </Link>
             ))}
-          </div>
+          </StaggerGroup>
 
           {filtered.length < results.length && (
             <div className="mt-[26px] flex justify-center">

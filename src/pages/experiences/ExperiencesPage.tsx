@@ -3,6 +3,7 @@ import { useGetExperienceCategoriesQuery, useGetExperiencesQuery } from '@/app/a
 import { ExperienceCard } from '@/components/cards'
 import { FilterChip } from '@/components/data-display'
 import { ChevronDownIcon, MinusIcon, PlusIcon } from '@/components/icons'
+import { FadeUp, StaggerGroup } from '@/components/motion'
 import { Breadcrumbs } from '@/components/navigation'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
@@ -86,12 +87,14 @@ export function ExperiencesPage() {
       </PageSection>
 
       <PageSection padTop={14} padBottom={0}>
-        <CatalogPageHead
-          title="Experiences, not just seats"
-          subtitle={`Small-group things to do with a time slot and a guide — desert dinners, heritage walks, studio sessions. Pick a date, pick a time, done in three taps.${
-            isError ? ' Showing local preview while the API is unreachable.' : ''
-          }${isFetching ? ' Updating…' : ''}`}
-        />
+        <FadeUp>
+          <CatalogPageHead
+            title="Experiences, not just seats"
+            subtitle={`Small-group things to do with a time slot and a guide — desert dinners, heritage walks, studio sessions. Pick a date, pick a time, done in three taps.${
+              isError ? ' Showing local preview while the API is unreachable.' : ''
+            }${isFetching ? ' Updating…' : ''}`}
+          />
+        </FadeUp>
 
         <div className="mt-3xl flex h-[72px] w-full items-center rounded-[18px] border border-border-default bg-surface-default px-[14px]">
           <label className="relative min-w-0 flex-1 px-sm">
@@ -178,7 +181,7 @@ export function ExperiencesPage() {
       </PageSection>
 
       <PageSection padTop={18} padBottom={0}>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <StaggerGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {shown.slice(0, 8).map((exp) => (
             <LinkedCard
               key={exp.slug ?? exp.title}
@@ -197,7 +200,7 @@ export function ExperiencesPage() {
               />
             </LinkedCard>
           ))}
-        </div>
+        </StaggerGroup>
       </PageSection>
 
       <PageSection padTop={88} padBottom={96}>

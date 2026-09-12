@@ -52,7 +52,7 @@ const SETTINGS_TILES = [
   {
     title: 'Wallet & payouts',
     desc: 'Balance and bank',
-    tag: ACCOUNT_USER.wallet,
+    tag: 'Open',
     href: '/wallet',
     icon: WalletIcon,
   },
@@ -107,6 +107,13 @@ export function ProfilePage() {
   const [logout, logoutState] = useLogoutMutation()
   const displayName = user?.name ?? ACCOUNT_USER.name
   const initials = user?.name ? initialsFromName(user.name) : ACCOUNT_USER.initials
+  const walletLabel =
+    user?.walletBalance != null
+      ? `SAR ${Number(user.walletBalance).toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })}`
+      : ACCOUNT_USER.wallet
 
   async function handleSignOut() {
     try {
@@ -153,7 +160,7 @@ export function ProfilePage() {
               <p className="text-[12px] text-ink-muted">Attended</p>
             </div>
             <div className="text-center">
-              <p className="text-[22px] font-extrabold text-ink-primary">{ACCOUNT_USER.wallet}</p>
+              <p className="text-[22px] font-extrabold text-ink-primary">{walletLabel}</p>
               <p className="text-[12px] text-ink-muted">Wallet</p>
             </div>
             <Link to="/settings">
@@ -224,7 +231,7 @@ export function ProfilePage() {
             <p className="text-[12px] font-bold tracking-[0.08em] text-bg-page/70 uppercase">
               Wallet
             </p>
-            <p className="mt-sm text-[36px] font-extrabold">{ACCOUNT_USER.wallet}</p>
+            <p className="mt-sm text-[36px] font-extrabold">{walletLabel}</p>
             <p className="mt-xs text-[13px] text-bg-page/65">SAR 21 pending</p>
             <ul className="mt-xl flex flex-col gap-md">
               {WALLET_TXNS.slice(0, 3).map((txn) => (
@@ -319,7 +326,9 @@ export function ProfilePage() {
                 <p className="mt-md text-[16px] font-bold text-ink-primary">{tile.title}</p>
                 <p className="mt-sm text-[13px] text-ink-secondary">{tile.desc}</p>
                 <div className="mt-lg">
-                  <StatusBadge tone="successTint">{tile.tag}</StatusBadge>
+                  <StatusBadge tone="successTint">
+                    {tile.href === '/wallet' ? walletLabel : tile.tag}
+                  </StatusBadge>
                 </div>
               </Link>
             )

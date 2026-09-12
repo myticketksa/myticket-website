@@ -1,5 +1,18 @@
 import { Link } from 'react-router-dom'
+import { useGetFavoritesQuery, useGetWalletQuery } from '@/app/api/accountApis'
+import { useGetOrdersQuery } from '@/app/api/ordersApi'
+import { useAppSelector } from '@/app/hooks'
+import { selectAuthUser } from '@/features/auth/authSlice'
 import { ACCOUNT_NAV_LINKS, ACCOUNT_USER, SIDEBAR_RECS } from './fixtures'
+
+function formatWallet(value: unknown) {
+  if (value == null || value === '') return ACCOUNT_USER.walletBalance
+  const raw = String(value)
+  if (/sar/i.test(raw)) return raw
+  const num = Number(value)
+  if (!Number.isFinite(num)) return raw
+  return `SAR ${num.toFixed(2)}`
+}
 
 function Panel({
   title,
@@ -21,16 +34,19 @@ function Panel({
 }
 
 export function AccountWalletCard({
-  balance = ACCOUNT_USER.walletBalance,
+  balance,
 }: {
   balance?: string
 }) {
+  const user = useAppSelector(selectAuthUser)
+  const display = balance ?? formatWallet(user?.walletBalance)
+
   return (
     <div className="rounded-[20px] border border-border-default bg-surface-inverse p-xl text-bg-page">
       <p className="text-[12px] font-bold tracking-[0.08em] text-bg-page uppercase">Wallet</p>
-      <p className="mt-sm text-[38px] leading-none font-extrabold tracking-[-1.14px]">{balance}</p>
+      <p className="mt-sm text-[38px] leading-none font-extrabold tracking-[-1.14px]">{display}</p>
       <p className="mt-[6px] text-[13px] text-bg-page">
-        SAR 21 cashback pending until after Winter Nights.
+        Cashback and refunds land here after events clear.
       </p>
       <Link
         to="/wallet"
@@ -110,10 +126,53 @@ export function AccountSupportCard() {
 
 /** Default aside stack used by My Tickets and sibling list screens. */
 export function DefaultAccountAside() {
+  const user = useAppSelector(selectAuthUser)
+  const { data: orders } = useGetOrdersQuery()
+  const { data: favorites } = useGetFavoritesQuery()
+  useGetWalletQuery()
+
+  const upcomingCount = Array.isArray(orders)
+    ? orders.filter((order) => {
+        const status = String(order.status ?? order.state ?? '').toLowerCase()
+        return !status.includes('past') && !status.includes('cancel') && !status.includes('refund')
+      }).length
+    : undefined
+  const savedCount = Array.isArray(favorites) ? favorites.length : undefined
+
+  const navLinks = ACCOUNT_NAV_LINKS.map((item) => {
+    if (item.href === '/my-tickets' && upcomingCount != null) {
+      return { ...item, meta: `${upcomingCount} upcoming` }
+    }
+    if (item.href === '/saved' && savedCount != null) {
+      return { ...item, meta: `${savedCount} saved` }
+    }
+    if (item.href === '/wallet' && user?.walletBalance != null) {
+      return { ...item, meta: formatWallet(user.walletBalance) }
+    }
+    return item
+  })
+
   return (
     <div className="flex flex-col gap-[14px]">
-      <AccountWalletCard />
-      <AccountNavCard />
+      <AccountWalletCard balance={formatWallet(user?.walletBalance)} />
+      <Panel title="Also in your account">
+        <ul className="flex flex-col">
+          {navLinks.map((item) => (
+            <li
+              key={item.label}
+              className="border-b border-border-divider py-[11px] last:border-b-0 last:pb-0 first:pt-0"
+            >
+              <Link
+                to={item.href}
+                className="flex items-center justify-between gap-md text-[14px] text-ink-primary hover:text-ink-brand"
+              >
+                <span className="font-medium">{item.label}</span>
+                <span className="text-[13px] font-normal text-ink-muted">{item.meta}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Panel>
       <AccountRecsCard />
       <AccountSupportCard />
     </div>

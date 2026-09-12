@@ -1,5 +1,6 @@
 import { baseApi } from './baseApi'
 import { asList, unwrapData } from '@/lib/api/unwrap'
+import { normalizeWalletResponse } from '@/lib/api/mappers/wallet'
 
 export type ApiRecord = Record<string, unknown>
 
@@ -18,9 +19,12 @@ export const accountApis = baseApi.injectEndpoints({
       query: (eventId) => ({ url: `/favorites/${eventId}`, method: 'DELETE' }),
       invalidatesTags: ['Favorite'],
     }),
-    getWallet: build.query<ApiRecord, void>({
+    getWallet: build.query<
+      { transactions: ApiRecord[]; pagination?: ApiRecord },
+      void
+    >({
       query: () => '/wallet',
-      transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
+      transformResponse: (response: unknown) => normalizeWalletResponse(response),
       providesTags: ['Wallet'],
     }),
     topUpWallet: build.mutation<ApiRecord, { amount: number; paymentMethod: string }>({

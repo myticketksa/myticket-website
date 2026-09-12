@@ -11,11 +11,12 @@ import { fieldShell } from './TextInput'
  * is only set on the other two.
  */
 const search = cva(
-  'flex items-center border-[1.5px] border-border-default transition-colors duration-normal ease-standard focus-within:border-border-focus',
+  'flex items-center border-[1.5px] border-border-default transition-[border-color,max-width,box-shadow] duration-normal ease-standard focus-within:border-border-focus',
   {
     variants: {
       size: {
-        field: 'h-search gap-control-gap rounded-search bg-surface-default px-lg',
+        field:
+          'h-search w-full max-w-[240px] gap-control-gap rounded-search bg-surface-default px-lg focus-within:max-w-[280px]',
         pill: 'h-chip gap-sm rounded-chip px-[14px]',
         icon: 'size-icon-btn justify-center rounded-icon-btn bg-surface-default',
       },

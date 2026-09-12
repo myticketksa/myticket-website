@@ -8,28 +8,44 @@ import { Spinner } from './Spinner'
  *
  * Radius is height/2 at every size, so the shape is a true pill and each size
  * gets its own radius token rather than sharing `--radius-control`.
+ *
+ * Primary / cardCta use a solid overlay that fades in on hover so the
+ * gradient→flat brand settle is smooth (CSS cannot interpolate gradient→solid).
  */
 const button = cva(
-  'inline-flex items-center justify-center gap-control-gap whitespace-nowrap transition-colors duration-normal ease-standard disabled:cursor-not-allowed',
+  [
+    'relative inline-flex items-center justify-center gap-control-gap overflow-hidden whitespace-nowrap',
+    'transition-[color,border-color,background-color,transform,box-shadow] duration-normal ease-standard',
+    'active:scale-[0.97] active:duration-100',
+    'disabled:cursor-not-allowed disabled:active:scale-100',
+    'motion-reduce:active:scale-100',
+  ].join(' '),
   {
     variants: {
       variant: {
-        // The gradient collapses to a flat brand fill on hover. That is the
-        // design, not a shortcut.
-        primary:
-          'bg-brand-gradient text-ink-inverse hover:bg-none hover:bg-brand-primary',
+        primary: [
+          'bg-brand-gradient text-ink-inverse',
+          'before:pointer-events-none before:absolute before:inset-0 before:bg-brand-primary',
+          'before:opacity-0 before:transition-opacity before:duration-normal before:ease-standard',
+          'hover:before:opacity-100',
+        ].join(' '),
         secondary:
           'border-[1.5px] border-border-default bg-surface-default text-ink-primary hover:border-border-brand hover:text-ink-brand',
-        ghost: 'text-ink-secondary hover:text-ink-brand',
-        // Destructive is the one style drawn with a 1px border instead of 1.5px.
+        ghost:
+          'text-ink-secondary hover:bg-[color-mix(in_srgb,var(--color-brand-primary)_6%,transparent)] hover:text-ink-brand',
         destructive:
           'border border-border-danger bg-surface-default text-state-danger hover:bg-state-danger-tint',
-        icon: 'border-[1.5px] border-border-default bg-surface-default text-ink-primary hover:border-border-brand',
-        // Figma `Button — State-card CTA` (207:1687). Carries the two-stop
-        // gradient/cta-compact rather than the three-stop ramp, which Figma keeps
-        // "distinct" deliberately. Only valid at size sm, where it also takes 16px
-        // padding instead of the 15px the standard S button uses.
-        cardCta: 'bg-brand-gradient-compact text-ink-inverse hover:bg-none hover:bg-brand-primary',
+        icon: [
+          'border-[1.5px] border-border-default bg-surface-default text-ink-primary',
+          'hover:border-border-brand hover:scale-105 active:scale-[0.93]',
+          'motion-reduce:hover:scale-100 motion-reduce:active:scale-100',
+        ].join(' '),
+        cardCta: [
+          'bg-brand-gradient-compact text-ink-inverse',
+          'before:pointer-events-none before:absolute before:inset-0 before:bg-brand-primary',
+          'before:opacity-0 before:transition-opacity before:duration-normal before:ease-standard',
+          'hover:before:opacity-100',
+        ].join(' '),
       },
       size: {
         lg: 'h-btn-lg rounded-btn-lg px-btn-pad-lg text-[15px]',
@@ -38,14 +54,10 @@ const button = cva(
       },
     },
     compoundVariants: [
-      // Size L is the only size set in Bold; M and S are SemiBold.
       { size: 'lg', class: 'font-bold' },
       { size: 'md', class: 'font-semibold' },
       { size: 'sm', class: 'font-semibold' },
       { variant: 'cardCta', size: 'sm', class: 'px-lg' },
-      // Icon buttons are square — force equal sides and kill size padding so
-      // cva's `px-btn-pad-*` cannot widen them into pills (twMerge alone is not
-      // applied inside `cva()`).
       { variant: 'icon', size: 'lg', class: 'aspect-square w-btn-lg !px-0' },
       { variant: 'icon', size: 'md', class: 'aspect-square w-btn-md !px-0' },
       { variant: 'icon', size: 'sm', class: 'aspect-square w-btn-sm !px-0' },
@@ -84,18 +96,24 @@ export function Button({
       aria-busy={loading || undefined}
       className={cn(
         button({ variant, size }),
-        // Disabled and Loading are drawn at Primary M only, but both read as
-        // state layers over whatever style they land on.
         loading && 'opacity-75',
         disabled &&
           !loading &&
-          'border-transparent bg-bg-skeleton bg-none text-ink-disabled hover:bg-bg-skeleton hover:text-ink-disabled',
+          'border-transparent bg-bg-skeleton bg-none text-ink-disabled before:hidden hover:bg-bg-skeleton hover:text-ink-disabled',
         className,
       )}
       {...props}
     >
-      {loading ? <Spinner size={14} /> : icon}
-      {children}
+      <span className="relative z-10 inline-flex items-center justify-center gap-control-gap">
+        {loading ? (
+          <span className="inline-flex animate-[spinner-fade_150ms_var(--ease-micro)_both]">
+            <Spinner size={14} />
+          </span>
+        ) : (
+          icon
+        )}
+        {children}
+      </span>
     </button>
   )
 }

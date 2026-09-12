@@ -12,6 +12,7 @@ import {
 } from '@/components/cards'
 import { CategoryChip } from '@/components/data-display'
 import { ArrowRightIcon } from '@/components/icons'
+import { FadeUp, StaggerGroup } from '@/components/motion'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { mapCategoryLabel } from '@/lib/api/mappers/categories'
@@ -51,14 +52,16 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
 
   return (
     <PageSection padTop={84} padBottom={0}>
-      <HomeSectionHeader
-        overline="Who's performing"
-        overlineTone="brand"
-        heading="Artists on stage this season"
-        lede="Follow a singer, band or comedian and see every date they play — then get your tickets for the night that suits you."
-        link={{ label: 'Browse all talents', to: '/talents' }}
-      />
-      <div className="mt-[26px] grid grid-cols-2 gap-[18px] md:grid-cols-3 lg:grid-cols-5">
+      <FadeUp>
+        <HomeSectionHeader
+          overline="Who's performing"
+          overlineTone="brand"
+          heading="Artists on stage this season"
+          lede="Follow a singer, band or comedian and see every date they play — then get your tickets for the night that suits you."
+          link={{ label: 'Browse all talents', to: '/talents' }}
+        />
+      </FadeUp>
+      <StaggerGroup className="mt-[26px] grid grid-cols-2 gap-[18px] md:grid-cols-3 lg:grid-cols-5">
         {talents.map((talent, i) => (
           <Link
             key={talent.slug}
@@ -77,7 +80,7 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
             />
           </Link>
         ))}
-      </div>
+      </StaggerGroup>
     </PageSection>
   )
 }
@@ -100,14 +103,16 @@ export function HomeCategories({ apiCategories }: { apiCategories?: EventApiReco
 
   return (
     <PageSection padTop={72} padBottom={0}>
-      <HomeSectionHeader
-        overline="What's on"
-        heading="Browse by category"
-        lede="Seventeen categories, from stadium football to heritage walks."
-        ledeMaxWidth={null}
-        link={{ label: 'Full taxonomy', to: '/events' }}
-      />
-      <div className="mt-[22px] -mr-page-gutter overflow-hidden">
+      <FadeUp>
+        <HomeSectionHeader
+          overline="What's on"
+          heading="Browse by category"
+          lede="Seventeen categories, from stadium football to heritage walks."
+          ledeMaxWidth={null}
+          link={{ label: 'Full taxonomy', to: '/events' }}
+        />
+      </FadeUp>
+      <FadeUp className="mt-[22px] -mr-page-gutter overflow-hidden">
         <div className="flex gap-[9px] pr-page-gutter">
           {categories.map((cat) => (
             <CategoryChip
@@ -120,7 +125,7 @@ export function HomeCategories({ apiCategories }: { apiCategories?: EventApiReco
             </CategoryChip>
           ))}
         </div>
-      </div>
+      </FadeUp>
     </PageSection>
   )
 }
@@ -157,13 +162,15 @@ export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
 
   return (
     <PageSection padTop={60} padBottom={0}>
-      <HomeSectionHeader
-        overline="On sale now"
-        heading="Upcoming events"
-        lede={`${filtered.length} of 1,284 events · updated a moment ago`}
-        trailing={<HomeTimeTabs value={tab} onChange={setTab} />}
-      />
-      <div className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <FadeUp>
+        <HomeSectionHeader
+          overline="On sale now"
+          heading="Upcoming events"
+          lede={`${filtered.length} of 1,284 events · updated a moment ago`}
+          trailing={<HomeTimeTabs value={tab} onChange={setTab} />}
+        />
+      </FadeUp>
+      <StaggerGroup className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {filtered.map((event, i) => (
           <Link
             key={event.slug}
@@ -184,7 +191,7 @@ export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
             />
           </Link>
         ))}
-      </div>
+      </StaggerGroup>
     </PageSection>
   )
 }
@@ -240,6 +247,7 @@ export function HomeFeatured({
 
   return (
     <PageSection padTop={76} padBottom={0}>
+      <FadeUp>
       <div
         className="relative flex flex-col gap-[28px] overflow-hidden rounded-[28px] border border-[#f7dfd3] bg-home-featured px-[46px] pt-[46px] pb-[50px]"
       >
@@ -259,10 +267,13 @@ export function HomeFeatured({
           </div>
           <Link
             to="/events?featured=1"
-            className="relative flex shrink-0 items-center gap-[5px] text-[14px] font-bold text-brand-gradient-end"
+            className="group/link relative flex shrink-0 items-center gap-[5px] text-[14px] font-bold text-brand-gradient-end transition-colors duration-fast ease-standard hover:text-ink-brand"
           >
             See the full selection
-            <ArrowRightIcon size={14} />
+            <ArrowRightIcon
+              size={14}
+              className="shrink-0 transition-transform duration-fast ease-standard group-hover/link:translate-x-0.5 motion-reduce:group-hover/link:translate-x-0"
+            />
           </Link>
         </div>
 
@@ -281,6 +292,7 @@ export function HomeFeatured({
           ))}
         </div>
       </div>
+      </FadeUp>
     </PageSection>
   )
 }
@@ -289,14 +301,16 @@ export function HomeFeatured({
 export function HomeAuctions() {
   return (
     <PageSection padTop={88} padBottom={0}>
-      <HomeSectionHeader
-        overline="Resale auction"
-        heading="Tickets ending soonest"
-        lede="Real tickets, transferred to you by their owner. MyTicket handles the money and takes a 10% commission from the seller."
-        ledeMaxWidth={560}
-        link={{ label: 'All auction listings', to: '/auctions' }}
-      />
-      <div className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <FadeUp>
+        <HomeSectionHeader
+          overline="Resale auction"
+          heading="Tickets ending soonest"
+          lede="Real tickets, transferred to you by their owner. MyTicket handles the money and takes a 10% commission from the seller."
+          ledeMaxWidth={560}
+          link={{ label: 'All auction listings', to: '/auctions' }}
+        />
+      </FadeUp>
+      <StaggerGroup className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {HOME_AUCTIONS.map((auction) => (
           <Link
             key={auction.title}
@@ -306,7 +320,7 @@ export function HomeAuctions() {
             <AuctionCard {...auction} className="h-[214px]" />
           </Link>
         ))}
-      </div>
+      </StaggerGroup>
     </PageSection>
   )
 }
@@ -322,14 +336,16 @@ export function HomeExperiences({ apiExperiences }: { apiExperiences?: Experienc
 
   return (
     <PageSection padTop={88} padBottom={0}>
-      <HomeSectionHeader
-        overline="Open year-round"
-        heading="Experiences & destinations"
-        lede="Places worth the drive — open now, all year round."
-        ledeMaxWidth={null}
-        link={{ label: 'Browse all experiences', to: '/experiences' }}
-      />
-      <div className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <FadeUp>
+        <HomeSectionHeader
+          overline="Open year-round"
+          heading="Experiences & destinations"
+          lede="Places worth the drive — open now, all year round."
+          ledeMaxWidth={null}
+          link={{ label: 'Browse all experiences', to: '/experiences' }}
+        />
+      </FadeUp>
+      <StaggerGroup className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {experiences.map((experience, i) => (
           <Link
             key={experience.slug}
@@ -348,7 +364,7 @@ export function HomeExperiences({ apiExperiences }: { apiExperiences?: Experienc
             />
           </Link>
         ))}
-      </div>
+      </StaggerGroup>
     </PageSection>
   )
 }
@@ -362,57 +378,59 @@ export function HomeCta() {
 
   return (
     <PageSection padTop={96} padBottom={0}>
-      <div className="relative overflow-hidden rounded-[28px]">
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              'linear-gradient(153deg, var(--color-brand-gradient-start) 13%, var(--color-ink-brand) 50%, var(--color-ink-brand-strong) 87%)',
-          }}
-        />
-        <img
-          src={ctaBand}
-          alt=""
-          aria-hidden
-          className="absolute inset-0 size-full object-cover opacity-90 mix-blend-overlay"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              'linear-gradient(121deg, color-mix(in srgb, var(--color-ink-primary) 90%, transparent) 29%, color-mix(in srgb, var(--color-ink-brand-strong) 42%, transparent) 93%)',
-          }}
-        />
+      <FadeUp distance={0} scaleFrom={0.98}>
+        <div className="relative overflow-hidden rounded-[28px]">
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'linear-gradient(153deg, var(--color-brand-gradient-start) 13%, var(--color-ink-brand) 50%, var(--color-ink-brand-strong) 87%)',
+            }}
+          />
+          <img
+            src={ctaBand}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 size-full object-cover opacity-90 mix-blend-overlay"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'linear-gradient(121deg, color-mix(in srgb, var(--color-ink-primary) 90%, transparent) 29%, color-mix(in srgb, var(--color-ink-brand-strong) 42%, transparent) 93%)',
+            }}
+          />
 
-        <div className="relative flex max-w-[772px] flex-col px-[56px] py-[70px]">
-          <h2 className="text-display-cta text-ink-inverse">
-            Create an account and keep every ticket in one place.
-          </h2>
-          <p className="mt-lg text-[17px] leading-[1.55] font-medium text-ink-inverse">
-            Save what you like, get told when tickets drop, hold your wallet balance and
-            cashback, and carry your QR codes with you.
-          </p>
-          <div className="mt-[30px] flex flex-wrap gap-md">
-            <Button
-              size="lg"
-              className="h-[52px] rounded-[26px] bg-surface-default px-[28px] text-[15px] font-bold text-ink-primary hover:bg-surface-default"
-              onClick={() => navigate('/register')}
-            >
-              Create a free account
-            </Button>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="h-[52px] rounded-[26px] border-[1.5px] border-ink-inverse bg-transparent px-[28px] text-[15px] font-bold text-ink-inverse hover:border-ink-inverse hover:text-ink-inverse"
-              onClick={() => navigate('/sign-in')}
-            >
-              Sign in
-            </Button>
+          <div className="relative flex max-w-[772px] flex-col px-[56px] py-[70px]">
+            <h2 className="text-display-cta text-ink-inverse">
+              Create an account and keep every ticket in one place.
+            </h2>
+            <p className="mt-lg text-[17px] leading-[1.55] font-medium text-ink-inverse">
+              Save what you like, get told when tickets drop, hold your wallet balance and
+              cashback, and carry your QR codes with you.
+            </p>
+            <div className="mt-[30px] flex flex-wrap gap-md">
+              <Button
+                size="lg"
+                className="h-[52px] rounded-[26px] bg-surface-default px-[28px] text-[15px] font-bold text-ink-primary hover:bg-surface-default"
+                onClick={() => navigate('/register')}
+              >
+                Create a free account
+              </Button>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="h-[52px] rounded-[26px] border-[1.5px] border-ink-inverse bg-transparent px-[28px] text-[15px] font-bold text-ink-inverse hover:border-ink-inverse hover:text-ink-inverse"
+                onClick={() => navigate('/sign-in')}
+              >
+                Sign in
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </FadeUp>
     </PageSection>
   )
 }

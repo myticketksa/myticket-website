@@ -26,7 +26,7 @@ export function Spinner({ size = 14, className, label = 'Loading' }: SpinnerProp
       role={label ? 'status' : undefined}
       aria-label={label ?? undefined}
       aria-hidden={label ? undefined : true}
-      className={cn('shrink-0 animate-spin', className)}
+      className={cn('shrink-0 animate-[spin_0.8s_linear_infinite] motion-reduce:animate-none', className)}
     >
       <path
         d="M14 7C14 10.866 10.866 14 7 14C3.13401 14 0 10.866 0 7C0 3.13401 3.13401 0 7 0C10.866 0 14 3.13401 14 7ZM2 7C2 9.76142 4.23858 12 7 12C9.76142 12 12 9.76142 12 7C12 4.23858 9.76142 2 7 2C4.23858 2 2 4.23858 2 7Z"

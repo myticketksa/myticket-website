@@ -4,6 +4,7 @@ import checkIcon from '@/assets/auth/check-15.svg'
 import registerHero from '@/assets/auth/register-hero.png'
 import signInHero from '@/assets/auth/sign-in-hero.png'
 import { Logo } from '@/components/navigation'
+import { PageFade } from '@/components/motion'
 import { cn } from '@/lib/cn'
 
 /**
@@ -100,7 +101,9 @@ export function AuthLayout({ hero }: AuthLayoutProps) {
   if (isReset) {
     return (
       <div className="flex min-h-dvh w-full flex-col bg-bg-page">
-        <Outlet />
+        <PageFade>
+          <Outlet />
+        </PageFade>
       </div>
     )
   }
@@ -121,7 +124,9 @@ export function AuthLayout({ hero }: AuthLayoutProps) {
         )}
       >
         <div className={cn('w-full', isRegister ? 'max-w-[452px]' : 'max-w-[428px]')}>
-          <Outlet />
+          <PageFade>
+            <Outlet />
+          </PageFade>
         </div>
       </div>
     </div>

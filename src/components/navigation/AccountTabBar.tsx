@@ -1,13 +1,13 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react'
+import { LayoutGroup, motion, useReducedMotion } from 'motion/react'
 import { cn } from '@/lib/cn'
+import { easeStandard, motionTokens } from '@/lib/motion'
 
 /**
  * Account tab bar — 46 tall (44 row + 2px underline), distinct from DS `Tab`/`Tabs`
  * (`207:2841`, 31 tall). Verified on My Tickets `207:9485`.
  *
- * Active label uses `--ink-brand` with a brand-gradient underline; inactive uses
- * `--ink-muted` with an unpainted underline slot so height stays locked. Optional
- * count chips sit after the label on a `--border-divider` pill.
+ * Active underline slides between items via shared `layoutId`.
  */
 export interface AccountTabBarItemProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
@@ -23,19 +23,24 @@ export function AccountTabBarItem({
   className,
   ...props
 }: AccountTabBarItemProps) {
+  const reduce = useReducedMotion()
+
   return (
     <button
       type="button"
       role="tab"
       aria-selected={active}
-      className={cn('inline-flex flex-col items-stretch', className)}
+      className={cn(
+        'inline-flex flex-col items-stretch transition-colors duration-micro ease-micro',
+        className,
+      )}
       {...props}
     >
       <span className="flex h-[44px] items-center justify-center gap-[8px] px-lg">
         <span
           className={cn(
             'text-[15px] leading-[normal] font-semibold whitespace-nowrap',
-            active ? 'text-ink-brand' : 'text-ink-muted',
+            active ? 'text-ink-brand' : 'text-ink-muted hover:text-ink-secondary',
           )}
         >
           {label}
@@ -46,10 +51,19 @@ export function AccountTabBarItem({
           </span>
         )}
       </span>
-      <span
-        aria-hidden="true"
-        className={cn('h-[2px] w-full', active && 'bg-brand-gradient')}
-      />
+      <span aria-hidden="true" className="relative h-[2px] w-full">
+        {active ? (
+          <motion.span
+            layoutId="account-tab-underline"
+            className="absolute inset-0 bg-brand-gradient"
+            transition={
+              reduce
+                ? { duration: 0 }
+                : { type: 'tween', duration: motionTokens.standard.duration, ease: easeStandard }
+            }
+          />
+        ) : null}
+      </span>
     </button>
   )
 }
@@ -60,15 +74,17 @@ export interface AccountTabBarProps extends HTMLAttributes<HTMLDivElement> {
 
 export function AccountTabBar({ children, className, ...props }: AccountTabBarProps) {
   return (
-    <div
-      role="tablist"
-      className={cn(
-        'flex h-[46px] items-end gap-[6px] overflow-x-auto border-b border-border-default',
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </div>
+    <LayoutGroup id="account-tabs">
+      <div
+        role="tablist"
+        className={cn(
+          'flex h-[46px] items-end gap-[6px] overflow-x-auto border-b border-border-default',
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    </LayoutGroup>
   )
 }
