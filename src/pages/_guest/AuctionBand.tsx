@@ -26,7 +26,7 @@ export function PromoBand({
   return (
     <div
       className={cn(
-        'flex w-full items-center justify-between gap-4xl overflow-hidden rounded-[22px] px-[44px] py-4xl',
+        'flex w-full flex-col items-stretch gap-xl overflow-hidden rounded-[22px] px-xl py-3xl sm:flex-row sm:items-center sm:justify-between sm:gap-4xl sm:px-[44px] sm:py-4xl',
         inverse
           ? 'bg-surface-inverse'
           : 'border border-border-default bg-surface-default',
@@ -54,7 +54,7 @@ export function PromoBand({
       <Link
         to={ctaTo}
         className={cn(
-          'flex h-btn-lg shrink-0 items-center gap-[6px] rounded-btn-lg px-3xl text-[15px] font-semibold',
+          'flex h-btn-lg w-full shrink-0 items-center justify-center gap-[6px] rounded-btn-lg px-3xl text-[15px] font-semibold sm:w-auto',
           inverse
             ? 'bg-bg-page text-ink-primary'
             : 'bg-brand-gradient text-ink-inverse',

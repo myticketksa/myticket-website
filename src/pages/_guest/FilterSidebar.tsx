@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FilterChip } from '@/components/data-display'
 import { Checkbox } from '@/components/ui'
 import { cn } from '@/lib/cn'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 import {
   CITY_FACETS,
   OTHER_FILTERS,
@@ -64,8 +66,8 @@ function FilterGroupLabel({ children }: { children: ReactNode }) {
 }
 
 export function FilterSidebar({
-  title = 'Filters',
-  clearLabel = 'Clear all',
+  title,
+  clearLabel,
   onClear,
   onChange,
   groups,
@@ -74,6 +76,9 @@ export function FilterSidebar({
   children,
   interactive = true,
 }: FilterSidebarProps) {
+  const { t } = useTranslation('catalog')
+  const resolvedTitle = title ?? t('results.filters')
+  const resolvedClear = clearLabel ?? t('results.clearAll')
   const baseId = useId()
   const [when, setWhen] = useState('Any date')
   const [rating, setRating] = useState('Any')
@@ -109,14 +114,14 @@ export function FilterSidebar({
       style={{ width }}
     >
       <div className="flex w-full items-center justify-between">
-        <p className="text-[16px] font-semibold text-ink-primary">{title}</p>
+        <p className="text-[16px] font-semibold text-ink-primary">{resolvedTitle}</p>
         <button
           type="button"
           disabled={!interactive}
           onClick={clear}
           className="text-[13px] font-semibold text-ink-brand disabled:cursor-not-allowed disabled:text-ink-disabled"
         >
-          {clearLabel}
+          {resolvedClear}
         </button>
       </div>
 
@@ -137,7 +142,7 @@ export function FilterSidebar({
                       disabled={!interactive}
                       className="h-[32px] rounded-[16px] px-md text-[13px] disabled:cursor-not-allowed disabled:opacity-55"
                     >
-                      {opt.label}
+                      {catalogLabel(t, opt.label)}
                     </FilterChip>
                   ))}
                 </div>
@@ -148,7 +153,7 @@ export function FilterSidebar({
                     <Checkbox
                       key={opt.label}
                       id={`${baseId}-${group.id}-${i}`}
-                      label={opt.label}
+                      label={catalogLabel(t, opt.label)}
                       count={opt.count}
                       fullWidth
                       disabled={!interactive}
@@ -165,7 +170,7 @@ export function FilterSidebar({
                       disabled={!interactive}
                       className="h-[34px] min-w-0 flex-1 rounded-[9px] px-md text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-55"
                     >
-                      {opt.label}
+                      {catalogLabel(t, opt.label)}
                     </FilterChip>
                   ))}
                 </div>
@@ -177,7 +182,7 @@ export function FilterSidebar({
         ) : (
           <>
             <div className="flex w-full flex-col">
-              <FilterGroupLabel>When</FilterGroupLabel>
+              <FilterGroupLabel>{t('filters.when')}</FilterGroupLabel>
               <div className="mt-md flex flex-wrap gap-[7px]">
                 {WHEN_OPTIONS.map((opt) => (
                   <FilterChip
@@ -187,7 +192,7 @@ export function FilterSidebar({
                     onClick={() => interactive && setWhen(opt)}
                     className="h-[32px] rounded-[16px] px-md text-[13px] disabled:cursor-not-allowed disabled:opacity-55"
                   >
-                    {opt}
+                    {catalogLabel(t, opt)}
                   </FilterChip>
                 ))}
               </div>
@@ -211,13 +216,13 @@ export function FilterSidebar({
             <div className="h-px w-full bg-border-divider" />
 
             <div className="flex w-full flex-col">
-              <FilterGroupLabel>City</FilterGroupLabel>
+              <FilterGroupLabel>{t('filters.city')}</FilterGroupLabel>
               <div className="mt-md flex flex-col gap-[9px]">
                 {CITY_FACETS.map((city, i) => (
                   <Checkbox
                     key={city.label}
                     id={`${baseId}-city-${i}`}
-                    label={city.label}
+                    label={catalogLabel(t, city.label)}
                     count={city.count}
                     fullWidth
                     disabled={!interactive}
@@ -234,9 +239,11 @@ export function FilterSidebar({
 
             <div className="flex w-full flex-col">
               <div className="flex items-baseline justify-between">
-                <FilterGroupLabel>Price</FilterGroupLabel>
+                <FilterGroupLabel>{t('filters.price')}</FilterGroupLabel>
                 <p className="text-[13px] text-ink-secondary">
-                  Up to SAR {maxPrice >= PRICE_MAX ? '1,500+' : maxPrice.toLocaleString('en-US')}
+                  {t('filters.upToPrice', {
+                    price: maxPrice >= PRICE_MAX ? '1,500+' : maxPrice.toLocaleString('en-US'),
+                  })}
                 </p>
               </div>
               <PriceSlider
@@ -248,7 +255,7 @@ export function FilterSidebar({
               <div className="mt-md">
                 <Checkbox
                   id={`${baseId}-free`}
-                  label={FREE_ENTRY}
+                  label={catalogLabel(t, FREE_ENTRY)}
                   fullWidth
                   disabled={!interactive}
                   checked={other.includes(FREE_ENTRY)}
@@ -262,7 +269,7 @@ export function FilterSidebar({
             <div className="h-px w-full bg-border-divider" />
 
             <div className="flex w-full flex-col">
-              <FilterGroupLabel>Rating</FilterGroupLabel>
+              <FilterGroupLabel>{t('filters.rating')}</FilterGroupLabel>
               <div className="mt-md flex gap-[7px]">
                 {RATING_OPTIONS.map((opt) => (
                   <FilterChip
@@ -272,7 +279,7 @@ export function FilterSidebar({
                     onClick={() => interactive && setRating(opt)}
                     className="h-[34px] min-w-0 flex-1 rounded-[9px] px-md text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-55"
                   >
-                    {opt}
+                    {catalogLabel(t, opt)}
                   </FilterChip>
                 ))}
               </div>
@@ -281,13 +288,13 @@ export function FilterSidebar({
             <div className="h-px w-full bg-border-divider" />
 
             <div className="flex w-full flex-col">
-              <FilterGroupLabel>Other</FilterGroupLabel>
+              <FilterGroupLabel>{t('filters.other')}</FilterGroupLabel>
               <div className="mt-md flex flex-col gap-[9px]">
                 {OTHER_FILTERS.map((label, i) => (
                   <Checkbox
                     key={label}
                     id={`${baseId}-other-${i}`}
-                    label={label}
+                    label={catalogLabel(t, label)}
                     fullWidth
                     disabled={!interactive}
                     checked={other.includes(label)}
@@ -316,6 +323,7 @@ function PriceSlider({
   value?: number
   onChange?: (value: number) => void
 }) {
+  const { t } = useTranslation('catalog')
   const pct = ((value - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100
 
   return (
@@ -336,7 +344,7 @@ function PriceSlider({
           step={25}
           value={value}
           disabled={disabled}
-          aria-label="Maximum price"
+          aria-label={t('filters.maxPrice')}
           onChange={(e) => onChange?.(Number(e.target.value))}
           className="absolute inset-0 z-10 m-0 h-full w-full cursor-pointer appearance-none bg-transparent disabled:cursor-not-allowed [&::-webkit-slider-thumb]:size-[14px] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-brand-primary [&::-webkit-slider-thumb]:bg-surface-default"
         />

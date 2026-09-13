@@ -78,7 +78,7 @@ export function AccountTabBar({ children, className, ...props }: AccountTabBarPr
       <div
         role="tablist"
         className={cn(
-          'flex h-[46px] items-end gap-[6px] overflow-x-auto border-b border-border-default',
+          'flex h-[46px] items-end gap-[6px] overflow-x-auto overscroll-x-contain border-b border-border-default [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
           className,
         )}
         {...props}

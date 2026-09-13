@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useGetTalentCategoriesQuery, useGetTalentsQuery } from '@/app/api/talentsApi'
 import { TalentCard, TalentDirectoryCard } from '@/components/cards'
 import { FilterChip } from '@/components/data-display'
@@ -7,6 +8,7 @@ import { Checkbox } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { mapCategoryLabels } from '@/lib/api/mappers/categories'
 import { mapApiTalentToCard } from '@/lib/api/mappers/talents'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 import {
   BusinessStrip,
   CatalogBody,
@@ -37,10 +39,7 @@ const TALENT_CHIPS = [
 
 const WHEN_OPTIONS = ['Anytime', 'This week', 'This month', 'Next 3 months'] as const
 
-const SORT_MODES = [
-  { key: 'soonest', label: 'Playing soonest' },
-  { key: 'rating', label: 'Top rated' },
-] as const
+const SORT_KEYS = ['soonest', 'rating'] as const
 
 function parseRatingFloor(option: string): number | null {
   if (option === 'Any') return null
@@ -70,17 +69,18 @@ function matchesChip(discipline: string, chip: string): boolean {
     Hosts: ['host'],
     'Dance troupes': ['dance'],
   }
-  return (map[chip] ?? [chip.toLowerCase().replace(/s$/, '')]).some((t) => d.includes(t))
+  return (map[chip] ?? [chip.toLowerCase().replace(/s$/, '')]).some((term) => d.includes(term))
 }
 
 /** Talents directory — Figma `207:5539`. Talents API with fixture fallback. */
 export function TalentsPage() {
+  const { t } = useTranslation(['catalog', 'common'])
   const baseId = useId()
   const [chip, setChip] = useState('All talents')
   const [when, setWhen] = useState<(typeof WHEN_OPTIONS)[number]>('Anytime')
   const [cities, setCities] = useState<string[]>([])
   const [rating, setRating] = useState('Any')
-  const [sortKey, setSortKey] = useState<(typeof SORT_MODES)[number]['key']>('soonest')
+  const [sortKey, setSortKey] = useState<(typeof SORT_KEYS)[number]>('soonest')
 
   const { data: apiTalents, isFetching, isError } = useGetTalentsQuery()
   const { data: apiCategories } = useGetTalentCategoriesQuery()
@@ -120,15 +120,15 @@ export function TalentsPage() {
 
   const filtered = useMemo(() => {
     const floor = parseRatingFloor(rating)
-    return catalog.filter((t) => {
-      if (!matchesChip(t.discipline, chip)) return false
+    return catalog.filter((talent) => {
+      if (!matchesChip(talent.discipline, chip)) return false
       if (
         cities.length > 0 &&
-        !cities.some((c) => talentCityHaystack(t).includes(c.toLowerCase()))
+        !cities.some((c) => talentCityHaystack(talent).includes(c.toLowerCase()))
       ) {
         return false
       }
-      if (floor !== null && Number.parseFloat(t.rating) < floor) return false
+      if (floor !== null && Number.parseFloat(talent.rating) < floor) return false
       return true
     })
   }, [catalog, chip, cities, rating])
@@ -141,24 +141,32 @@ export function TalentsPage() {
     return list
   }, [filtered, sortKey])
 
-  const sortMode = SORT_MODES.find((m) => m.key === sortKey) ?? SORT_MODES[0]
+  const sortLabels = {
+    soonest: t('results.sortPlayingSoonest'),
+    rating: t('results.sortTopRated'),
+  } as const
   const cycleSort = () => {
-    const idx = SORT_MODES.findIndex((m) => m.key === sortKey)
-    setSortKey(SORT_MODES[(idx + 1) % SORT_MODES.length]!.key)
+    const idx = SORT_KEYS.indexOf(sortKey)
+    setSortKey(SORT_KEYS[(idx + 1) % SORT_KEYS.length]!)
   }
+
+  const subtitleParts = [
+    t('pages.talentsSubtitle'),
+    isError ? t('pages.apiPreview') : null,
+    isFetching ? t('pages.updating') : null,
+  ].filter(Boolean)
 
   return (
     <>
       <PageSection padTop={14} padBottom={0}>
         <FadeUp>
           <CatalogPageHead
-            eyebrow="Who's performing"
-            title="Follow the artists, catch every show"
-            subtitle={`Public profiles show name, craft and rating — then find their tickets on events.${
-              isError ? ' Showing local preview while the API is unreachable.' : ''
-            }${isFetching ? ' Updating…' : ''}`}
+            eyebrow={t('pages.talentsEyebrow')}
+            title={t('pages.talentsTitle')}
+            subtitle={subtitleParts.join(' ')}
             chips={talentChips.map((label) => ({
               label,
+              displayLabel: catalogLabel(t, label),
               selected: label === chip,
             }))}
             onChipSelect={setChip}
@@ -167,18 +175,18 @@ export function TalentsPage() {
       </PageSection>
 
       <PageSection padTop={30} padBottom={0}>
-        <FadeUp className="mb-[18px] flex items-end justify-between gap-4xl">
+        <FadeUp className="mb-[18px] flex flex-col items-start gap-md sm:flex-row sm:items-end sm:justify-between sm:gap-4xl">
           <div>
-            <h2 className="text-heading-h2 text-ink-primary">On stage this season</h2>
+            <h2 className="text-heading-h2 text-ink-primary">{t('pages.onStageSeason')}</h2>
             <p className="mt-sm text-body-default text-ink-secondary">
-              Limited public profiles — follow shows from the events calendar.
+              {t('pages.onStageLede')}
             </p>
           </div>
           <a
             href="#directory"
             className="flex items-center gap-[5px] text-[14px] font-bold text-ink-brand-mid"
           >
-            All talents →
+            {t('pages.allTalentsLink')}
           </a>
         </FadeUp>
         <StaggerGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -209,8 +217,8 @@ export function TalentsPage() {
           filterWidth={252}
           filters={
             <FilterSidebar
-              title="Narrow it down"
-              clearLabel="Clear"
+              title={t('filters.narrowItDown')}
+              clearLabel={t('common:actions.clear')}
               width={252}
               interactive
               onClear={clearFilters}
@@ -218,7 +226,7 @@ export function TalentsPage() {
               <div className="flex w-full flex-col gap-[22px]">
                 <div>
                   <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-                    When
+                    {t('filters.when')}
                   </p>
                   <div className="mt-md flex flex-col gap-[7px]">
                     {WHEN_OPTIONS.map((label) => (
@@ -228,7 +236,7 @@ export function TalentsPage() {
                         onClick={() => setWhen(label)}
                         className="h-[36px] w-full justify-start rounded-[9px] px-md text-[14px]"
                       >
-                        {label}
+                        {catalogLabel(t, label)}
                       </FilterChip>
                     ))}
                   </div>
@@ -236,14 +244,14 @@ export function TalentsPage() {
                 <div className="h-px bg-border-divider" />
                 <div>
                   <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-                    Playing in
+                    {t('filters.playingIn')}
                   </p>
                   <div className="mt-md flex flex-col gap-[9px]">
                     {CITY_FACETS.slice(0, 5).map((c, i) => (
                       <Checkbox
                         key={c.label}
                         id={`${baseId}-city-${i}`}
-                        label={c.label}
+                        label={catalogLabel(t, c.label)}
                         count={c.count}
                         fullWidth
                         checked={cities.includes(c.label)}
@@ -255,7 +263,7 @@ export function TalentsPage() {
                 <div className="h-px bg-border-divider" />
                 <div>
                   <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-                    Rating
+                    {t('filters.rating')}
                   </p>
                   <div className="mt-md flex flex-wrap gap-[7px]">
                     {RATING_OPTIONS.map((opt) => (
@@ -265,7 +273,7 @@ export function TalentsPage() {
                         onClick={() => setRating(opt)}
                         className="h-[32px] rounded-[16px] px-md text-[13px] font-semibold"
                       >
-                        {opt}
+                        {catalogLabel(t, opt)}
                       </FilterChip>
                     ))}
                   </div>
@@ -275,8 +283,12 @@ export function TalentsPage() {
           }
         >
           <ResultsToolbar
-            countLabel={`${Math.min(9, shown.length)} of ${shown.length} talents`}
-            sortValue={sortMode.label}
+            countLabel={t('results.countTalents', {
+              count: Math.min(9, shown.length),
+              total: shown.length,
+            })}
+            sortLabel={t('results.sort')}
+            sortValue={sortLabels[sortKey]}
             onSortClick={cycleSort}
             showViewToggle={false}
           />
@@ -299,17 +311,17 @@ export function TalentsPage() {
       <PageSection padTop={80} padBottom={0}>
         <PromoBand
           tone="inverse"
-          heading="Never miss a date"
-          body="Create an account to save events and get told when tickets drop for artists you care about."
-          ctaLabel="Create your account →"
+          heading={t('pages.talentsPromoHeading')}
+          body={t('pages.talentsPromoBody')}
+          ctaLabel={t('pages.talentsPromoCta')}
           ctaTo="/register"
         />
       </PageSection>
 
       <BusinessStrip
-        heading="Are you a performer?"
-        body="Submit a talent request from your guest account. Our team reviews it and follows up outside the platform — there is no separate talent login."
-        ctaLabel="Submit as talent"
+        heading={t('pages.performerHeading')}
+        body={t('pages.performerBody')}
+        ctaLabel={t('pages.performerCta')}
         ctaTo="/apply/talent"
       />
     </>

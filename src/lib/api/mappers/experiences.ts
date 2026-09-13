@@ -36,6 +36,94 @@ export type MappedExperience = ExperienceCardProps & {
   meta: string
   place: string
   tags: string[]
+  about?: string
+  includes?: string[]
+  photos?: string[]
+  banner?: string
+  isFavorite?: boolean
+  mapQuery?: string
+  openingHours?: { dayOfWeek: number; open: string; close: string; isClosed: boolean }[]
+}
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
+
+/** Parse bilingual / JSON-string `includes` payloads into a string list. */
+export function parseExperienceIncludes(value: unknown): string[] {
+  const asArray = (input: unknown): string[] => {
+    if (!Array.isArray(input)) return []
+    return input.map((item) => localizedString(item)).filter(Boolean)
+  }
+
+  if (Array.isArray(value)) return asArray(value)
+
+  const text = localizedString(value)
+  if (!text) return []
+
+  try {
+    const parsed = JSON.parse(text) as unknown
+    const fromJson = asArray(parsed)
+    if (fromJson.length > 0) return fromJson
+  } catch {
+    /* not JSON — fall through */
+  }
+
+  if (text.includes('|')) {
+    return text
+      .split('|')
+      .map((part) => part.trim())
+      .filter(Boolean)
+  }
+
+  return [text]
+}
+
+/** `lng:lat` or `lat,lng` → Google Maps query `lat,lng`. */
+export function experienceMapQuery(location: unknown): string | undefined {
+  const raw = localizedString(location)
+  if (!raw) return undefined
+  const colon = raw.match(/^(-?\d+(?:\.\d+)?)\s*:\s*(-?\d+(?:\.\d+)?)$/)
+  if (colon) {
+    // API seed uses longitude:latitude (e.g. 46.6753:24.7136 for Riyadh).
+    const lng = colon[1]!
+    const lat = colon[2]!
+    return `${lat},${lng}`
+  }
+  const comma = raw.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/)
+  if (comma) return `${comma[1]},${comma[2]}`
+  return raw
+}
+
+function parseOpeningHours(value: unknown) {
+  if (!Array.isArray(value)) return undefined
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null
+      const row = item as ApiRecord
+      const dayOfWeek = Number(row.dayOfWeek ?? row.day_of_week)
+      if (!Number.isFinite(dayOfWeek)) return null
+      return {
+        dayOfWeek,
+        open: String(row.open ?? '00:00'),
+        close: String(row.close ?? '00:00'),
+        isClosed: Boolean(row.isClosed ?? row.is_closed),
+      }
+    })
+    .filter((row): row is NonNullable<typeof row> => row != null)
+}
+
+export function formatOpeningHoursLine(hours: MappedExperience['openingHours']): string | undefined {
+  if (!hours?.length) return undefined
+  const openDays = hours.filter((h) => !h.isClosed)
+  if (openDays.length === 0) return 'Closed'
+  const sample = openDays[0]!
+  const sameHours = openDays.every((h) => h.open === sample.open && h.close === sample.close)
+  if (sameHours && openDays.length >= 5) {
+    const days = openDays.map((h) => DAY_NAMES[h.dayOfWeek] ?? String(h.dayOfWeek)).join(', ')
+    return `${days} · ${sample.open}–${sample.close}`
+  }
+  return openDays
+    .map((h) => `${DAY_NAMES[h.dayOfWeek] ?? h.dayOfWeek} ${h.open}–${h.close}`)
+    .join(' · ')
 }
 
 /** Map flexible experience API rows into card props; keep fixtures usable as fallback. */
@@ -77,38 +165,60 @@ export function mapApiExperienceToCard(exp: ApiRecord): MappedExperience {
   const price = formatMoneySar(exp.price ?? exp.from_price ?? exp.price_per_person)
 
   const tags = tagsFrom(exp)
+  const includes = parseExperienceIncludes(exp.includes)
+  const includeTags = includes.slice(0, 2)
   const flag = pickLocalized(exp, ['flag', 'badge', 'status_label'])
-  const image =
+  const photos = Array.isArray(exp.photos)
+    ? exp.photos.map((item) => localizedString(item)).filter(Boolean)
+    : []
+  const cover =
     pickLocalized(exp, ['cover', 'banner', 'image', 'cover_image', 'thumbnail']) ||
-    localizedString(nestedValue(exp, ['photos', 'cover'])) ||
+    photos[0] ||
     undefined
+  const banner = pickLocalized(exp, ['banner']) || cover
 
   const summary =
-    pickLocalized(exp, ['summary', 'description']) ||
+    pickLocalized(exp, ['summary', 'description', 'about']) ||
     localizedString(exp.about) ||
     localizedString(nestedValue(exp, ['place', 'about_en'])) ||
     undefined
 
   const reviewsRaw = pickLocalized(exp, ['reviews_label'])
   const reviews = reviewsRaw || (reviewCount ? `${reviewCount} reviews` : undefined)
+  const mapQuery = experienceMapQuery(exp.location ?? exp.map_location)
+  const openingHours = parseOpeningHours(exp.opening_hours ?? exp.openingHours)
+
+  // When API only sends coordinates, avoid showing raw lng:lat as the place line.
+  const placeLooksLikeCoords = Boolean(mapQuery && /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.test(mapQuery))
+  const placeLabel = placeLooksLikeCoords ? 'Meeting point' : place || location || '—'
 
   return {
     id: exp.id != null ? String(exp.id) : undefined,
     slug,
     title,
-    location,
+    location: placeLooksLikeCoords ? placeLabel : location,
     meta,
-    place,
+    place: placeLabel,
     rating,
     guests,
     price,
     flag: flag || undefined,
-    tags,
+    tags: tags.length > 0 ? tags : includeTags,
     category: category || undefined,
     summary,
+    about: summary,
+    includes: includes.length > 0 ? includes : undefined,
+    photos: photos.length > 0 ? photos : cover ? [cover] : undefined,
+    banner: banner || undefined,
+    isFavorite:
+      exp.isFavorite != null || exp.is_favorite != null
+        ? Boolean(exp.isFavorite ?? exp.is_favorite)
+        : undefined,
+    mapQuery,
+    openingHours,
     reviews,
     eyebrow: meta || undefined,
-    image: image || undefined,
+    image: cover || undefined,
   }
 }
 

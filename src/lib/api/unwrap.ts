@@ -29,10 +29,11 @@ export function asList<T = Record<string, unknown>>(payload: unknown): T[] {
 export function apiErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
   if (!error || typeof error !== 'object') return fallback
   const err = error as {
-    data?: { message?: string; errors?: Record<string, string[]> }
+    data?: { message?: string; errors?: Record<string, string[]>; error?: string }
     error?: string
     status?: number
   }
+  if (err.status === 413) return 'Uploaded files are too large. Please choose smaller files and try again.'
   if (err.data?.message) return err.data.message
   if (err.data?.errors) {
     const first = Object.values(err.data.errors)[0]

@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { Link, useNavigate } from 'react-router-dom'
 import { StatusBadge, type StatusTone } from '@/components/data-display'
+import { EmptyState } from '@/components/feedback'
 import { Button } from '@/components/ui'
 import { AccountPageHead } from '@/layouts'
-import { SUBMISSIONS } from '@/pages/_account/fixtures'
 import { useGetMySubmissionsQuery } from '@/app/api/experiencesApi'
 
 interface SubmissionItem {
@@ -17,18 +18,17 @@ interface SubmissionItem {
   cover: string
 }
 
-function mapSubmission(record: Record<string, unknown>, index: number): SubmissionItem {
-  const fallback = SUBMISSIONS[index % SUBMISSIONS.length]
-  const status = String(record.status ?? record.state ?? fallback.status)
+function mapSubmission(record: Record<string, unknown>): SubmissionItem {
+  const status = String(record.status ?? record.state ?? 'Submitted')
   return {
-    id: String(record.id ?? record.reference ?? fallback.id),
-    name: String(record.name ?? record.title ?? fallback.name),
+    id: String(record.id ?? record.reference ?? ''),
+    name: String(record.name ?? record.title ?? 'Submission'),
     status,
-    meta: String(record.meta ?? record.location ?? record.submitted_at ?? fallback.meta),
-    note: String(record.note ?? record.message ?? fallback.note),
-    cta: String(record.cta ?? fallback.cta),
-    aux: record.aux ? String(record.aux) : 'aux' in fallback ? fallback.aux : undefined,
-    cover: String(record.cover ?? record.image ?? record.image_url ?? fallback.cover),
+    meta: String(record.meta ?? record.location ?? record.submitted_at ?? ''),
+    note: String(record.note ?? record.message ?? ''),
+    cta: String(record.cta ?? 'View submission'),
+    aux: record.aux ? String(record.aux) : undefined,
+    cover: String(record.cover ?? record.image ?? record.image_url ?? ''),
   }
 }
 
@@ -41,27 +41,40 @@ function submissionTone(status: string): StatusTone {
 
 /** My submissions — Figma `207:7362`. */
 export function MySubmissionsPage() {
-  const { data: submissions } = useGetMySubmissionsQuery()
+  const { t } = useTranslation('account')
+  const navigate = useNavigate()
+  const { data: submissions, isLoading } = useGetMySubmissionsQuery()
   const items = useMemo(() => {
     if (submissions && submissions.length > 0) return submissions.map(mapSubmission)
-    return [...SUBMISSIONS]
+    return []
   }, [submissions])
 
   return (
     <>
       <AccountPageHead
-        eyebrow="Your account"
-        title="Places you've added"
-        subtitle="Every experience you've submitted, and where it is in review."
+        eyebrow={t('eyebrow')}
+        title={t('submissions.title')}
+        subtitle={t('submissions.subtitle')}
         className="[&>div]:max-w-[1040px]"
         actions={
           <Link to="/submit-experience">
-            <Button size="lg">+ Add a place</Button>
+            <Button size="lg">{t('submissions.addPlace')}</Button>
           </Link>
         }
       />
 
       <div className="mx-auto w-full max-w-[1040px] px-page-gutter pt-3xl pb-[96px]">
+        {!isLoading && items.length === 0 && (
+          <div className="flex justify-center py-3xl">
+            <EmptyState
+              variant="firstUse"
+              title={t('submissions.emptyTitle')}
+              body={t('submissions.emptyBody')}
+              ctaLabel={t('submissions.addPlace')}
+              onCtaClick={() => navigate('/submit-experience')}
+            />
+          </div>
+        )}
         <ul className="flex flex-col gap-[14px]">
           {items.map((item) => (
             <li

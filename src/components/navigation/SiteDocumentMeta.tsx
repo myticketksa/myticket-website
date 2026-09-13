@@ -1,74 +1,73 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLocation, matchPath } from 'react-router-dom'
-import {
-  absoluteUrl,
-  formatDocumentTitle,
-  SITE_DESCRIPTION,
-} from '@/lib/site'
+import { useLocale } from '@/i18n/locale'
+import { absoluteUrl, formatDocumentTitle } from '@/lib/site'
 
 /**
- * Route → browser-tab title. Patterns are checked in order; first match wins.
+ * Route → browser-tab title key under `meta:titles.*`.
+ * Patterns are checked in order; first match wins.
  * Detail routes keep a stable section title (slug-specific titles can be set later).
  */
-const TITLE_RULES: { pattern: string; title: string }[] = [
-  { pattern: '/', title: 'MyTicket' },
-  { pattern: '/events', title: 'Events' },
-  { pattern: '/events/:slug/seats', title: 'Choose seats' },
-  { pattern: '/events/:slug', title: 'Event' },
-  { pattern: '/search', title: 'Search' },
-  { pattern: '/talents', title: 'Talents' },
-  { pattern: '/talents/:slug', title: 'Talent' },
-  { pattern: '/experiences', title: 'Experiences' },
-  { pattern: '/experiences/:slug', title: 'Experience' },
-  { pattern: '/auctions', title: 'Auctions' },
-  { pattern: '/auctions/:slug', title: 'Auction' },
-  { pattern: '/checkout', title: 'Checkout' },
-  { pattern: '/order-confirmation', title: 'Order confirmed' },
-  { pattern: '/sign-in', title: 'Sign in' },
-  { pattern: '/register', title: 'Create account' },
-  { pattern: '/reset-password', title: 'Reset password' },
-  { pattern: '/profile', title: 'Profile' },
-  { pattern: '/settings', title: 'Settings' },
-  { pattern: '/my-tickets', title: 'My tickets' },
-  { pattern: '/my-tickets/:id/gift', title: 'Gift ticket' },
-  { pattern: '/my-tickets/:id/resell', title: 'Resell ticket' },
-  { pattern: '/my-tickets/:id/refund', title: 'Request refund' },
-  { pattern: '/my-tickets/:id', title: 'Ticket' },
-  { pattern: '/gift/claim/:giftTicketId', title: 'Claim gift' },
-  { pattern: '/saved', title: 'Saved' },
-  { pattern: '/notifications', title: 'Notifications' },
-  { pattern: '/wallet', title: 'Wallet' },
-  { pattern: '/my-reviews', title: 'My reviews' },
-  { pattern: '/my-submissions', title: 'My submissions' },
-  { pattern: '/my-vendor-application', title: 'Vendor application' },
-  { pattern: '/my-talent-application', title: 'Talent application' },
-  { pattern: '/my-auction-activity', title: 'Auction activity' },
-  { pattern: '/submit-experience', title: 'Submit experience' },
-  { pattern: '/become-business', title: 'Become a business' },
-  { pattern: '/apply/vendor', title: 'Apply as vendor' },
-  { pattern: '/apply/organizer', title: 'Organizer partnership' },
-  { pattern: '/apply/talent', title: 'Apply as talent' },
-  { pattern: '/application-submitted', title: 'Application submitted' },
-  { pattern: '/support', title: 'Support' },
-  { pattern: '/support/new', title: 'New support case' },
-  { pattern: '/support/chat', title: 'Support chat' },
-  { pattern: '/about', title: 'About' },
-  { pattern: '/help', title: 'Help' },
-  { pattern: '/legal', title: 'Legal' },
-  { pattern: '/for-vendors', title: 'For vendors' },
-  { pattern: '/for-organizers', title: 'For organizers' },
-  { pattern: '/for-talents', title: 'For talents' },
-  { pattern: '/maintenance', title: 'Maintenance' },
-  { pattern: '/probe', title: 'Component probe' },
+const TITLE_RULES: { pattern: string; titleKey: string }[] = [
+  { pattern: '/', titleKey: 'titles.home' },
+  { pattern: '/events', titleKey: 'titles.events' },
+  { pattern: '/events/:slug/seats', titleKey: 'titles.chooseSeats' },
+  { pattern: '/events/:slug', titleKey: 'titles.event' },
+  { pattern: '/search', titleKey: 'titles.search' },
+  { pattern: '/talents', titleKey: 'titles.talents' },
+  { pattern: '/talents/:slug', titleKey: 'titles.talent' },
+  { pattern: '/experiences', titleKey: 'titles.experiences' },
+  { pattern: '/experiences/:slug', titleKey: 'titles.experience' },
+  { pattern: '/auctions', titleKey: 'titles.auctions' },
+  { pattern: '/auctions/:slug', titleKey: 'titles.auction' },
+  { pattern: '/checkout', titleKey: 'titles.checkout' },
+  { pattern: '/order-confirmation', titleKey: 'titles.orderConfirmed' },
+  { pattern: '/sign-in', titleKey: 'titles.signIn' },
+  { pattern: '/register', titleKey: 'titles.createAccount' },
+  { pattern: '/reset-password', titleKey: 'titles.resetPassword' },
+  { pattern: '/profile', titleKey: 'titles.profile' },
+  { pattern: '/settings', titleKey: 'titles.settings' },
+  { pattern: '/my-tickets', titleKey: 'titles.myTickets' },
+  { pattern: '/my-tickets/:id/gift', titleKey: 'titles.giftTicket' },
+  { pattern: '/my-tickets/:id/resell', titleKey: 'titles.resellTicket' },
+  { pattern: '/my-tickets/:id/refund', titleKey: 'titles.requestRefund' },
+  { pattern: '/my-tickets/:id', titleKey: 'titles.ticket' },
+  { pattern: '/gift/claim/:giftTicketId', titleKey: 'titles.claimGift' },
+  { pattern: '/saved', titleKey: 'titles.saved' },
+  { pattern: '/notifications', titleKey: 'titles.notifications' },
+  { pattern: '/wallet', titleKey: 'titles.wallet' },
+  { pattern: '/my-reviews', titleKey: 'titles.myReviews' },
+  { pattern: '/my-submissions', titleKey: 'titles.mySubmissions' },
+  { pattern: '/my-vendor-application', titleKey: 'titles.vendorApplication' },
+  { pattern: '/my-talent-application', titleKey: 'titles.talentApplication' },
+  { pattern: '/my-auction-activity', titleKey: 'titles.auctionActivity' },
+  { pattern: '/submit-experience', titleKey: 'titles.submitExperience' },
+  { pattern: '/become-business', titleKey: 'titles.becomeBusiness' },
+  { pattern: '/apply/vendor', titleKey: 'titles.applyVendor' },
+  { pattern: '/apply/organizer', titleKey: 'titles.organizerPartnership' },
+  { pattern: '/apply/talent', titleKey: 'titles.applyTalent' },
+  { pattern: '/application-submitted', titleKey: 'titles.applicationSubmitted' },
+  { pattern: '/support', titleKey: 'titles.support' },
+  { pattern: '/support/new', titleKey: 'titles.newSupportCase' },
+  { pattern: '/support/chat', titleKey: 'titles.supportChat' },
+  { pattern: '/about', titleKey: 'titles.about' },
+  { pattern: '/help', titleKey: 'titles.help' },
+  { pattern: '/legal', titleKey: 'titles.legal' },
+  { pattern: '/for-vendors', titleKey: 'titles.forVendors' },
+  { pattern: '/for-organizers', titleKey: 'titles.forOrganizers' },
+  { pattern: '/for-talents', titleKey: 'titles.forTalents' },
+  { pattern: '/maintenance', titleKey: 'titles.maintenance' },
+  { pattern: '/probe', titleKey: 'titles.probe' },
 ]
 
-function titleForPath(pathname: string): string {
+function titleKeyForPath(pathname: string): string | null {
   for (const rule of TITLE_RULES) {
     if (matchPath({ path: rule.pattern, end: true }, pathname)) {
-      return rule.title
+      return rule.titleKey
     }
   }
-  return 'Page not found'
+  return null
 }
 
 function setMetaTag(attr: 'name' | 'property', key: string, content: string) {
@@ -88,21 +87,36 @@ function setMetaTag(attr: 'name' | 'property', key: string, content: string) {
  */
 export function SiteDocumentMeta() {
   const { pathname } = useLocation()
+  const { locale } = useLocale()
+  const { t, i18n } = useTranslation('meta')
 
   useEffect(() => {
-    const pageTitle = titleForPath(pathname)
-    document.title = formatDocumentTitle(pageTitle === 'MyTicket' ? null : pageTitle)
-    setMetaTag('name', 'description', SITE_DESCRIPTION)
+    const titleKey = titleKeyForPath(pathname)
+    const pageTitle = titleKey ? t(titleKey) : t('notFound')
+    const siteName = t('siteName')
+    const isHome = !titleKey || titleKey === 'titles.home' || pageTitle === siteName
+
+    document.title = formatDocumentTitle(isHome ? null : pageTitle, {
+      homeTitle: t('homeTitle'),
+      tagline: t('tagline'),
+      titleFormat: t('titleFormat'),
+      siteName,
+    })
+
+    const description = t('description')
+    setMetaTag('name', 'description', description)
 
     const pageUrl = absoluteUrl(pathname === '/' ? '/' : pathname)
     const imageUrl = absoluteUrl('/og-image.png')
+    const ogLocale = locale === 'ar' ? 'ar_SA' : 'en_SA'
 
     setMetaTag('property', 'og:title', document.title)
-    setMetaTag('property', 'og:description', SITE_DESCRIPTION)
+    setMetaTag('property', 'og:description', description)
     setMetaTag('property', 'og:url', pageUrl)
     setMetaTag('property', 'og:image', imageUrl)
+    setMetaTag('property', 'og:locale', ogLocale)
     setMetaTag('name', 'twitter:title', document.title)
-    setMetaTag('name', 'twitter:description', SITE_DESCRIPTION)
+    setMetaTag('name', 'twitter:description', description)
     setMetaTag('name', 'twitter:image', imageUrl)
 
     let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
@@ -112,7 +126,7 @@ export function SiteDocumentMeta() {
       document.head.appendChild(canonical)
     }
     canonical.href = pageUrl
-  }, [pathname])
+  }, [pathname, locale, t, i18n.language])
 
   return null
 }

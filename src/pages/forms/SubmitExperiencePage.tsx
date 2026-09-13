@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ImagePlaceholder } from '@/components/data-display'
 import {
@@ -20,7 +21,7 @@ import { toastPushed } from '@/features/ui/uiSlice'
 import { mapApiIdLabelOptions } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
-const STEPS = ['The place', 'Hours & services', 'Contact', 'Photos & review'] as const
+const STEP_KEYS = ['place', 'hours', 'contact', 'photos'] as const
 
 const SERVICE_OPTIONS = [
   'Guided tour',
@@ -143,6 +144,7 @@ function buildFormData(draft: ExperienceDraft): FormData {
 
 /** Submit experience — FormData keys match Postman `POST /experiences`. */
 export function SubmitExperiencePage() {
+  const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const [step, setStep] = useState(0)
@@ -150,6 +152,11 @@ export function SubmitExperiencePage() {
   const [createExperience, createState] = useCreateExperienceMutation()
   const { data: apiCities } = useGetCitiesQuery()
   const { data: apiCategories } = useGetExperienceCategoriesQuery()
+
+  const steps = useMemo(
+    () => STEP_KEYS.map((key) => t(`forms:experience.steps.${key}`)),
+    [t],
+  )
 
   const cityOptions = useMemo(
     () =>
@@ -183,18 +190,20 @@ export function SubmitExperiencePage() {
 
   function validateStep(current: number): string | null {
     if (current === 0) {
-      if (draft.name.trim().length < 3) return 'Give the place a name'
-      if (draft.about.trim().length < 80) return 'Description needs at least 80 characters'
+      if (draft.name.trim().length < 3) return t('forms:experience.validation.name')
+      if (draft.about.trim().length < 80) return t('forms:experience.validation.about')
       return null
     }
     if (current === 1) {
-      if (draft.hours.length === 0) return 'Add at least one opening day'
-      if (!draft.maxGuests || Number(draft.maxGuests) < 1) return 'Set a max guest count'
+      if (draft.hours.length === 0) return t('forms:experience.validation.hours')
+      if (!draft.maxGuests || Number(draft.maxGuests) < 1) {
+        return t('forms:experience.validation.maxGuests')
+      }
       return null
     }
     if (current === 2) {
       if (!draft.email.trim() && !draft.phone.trim()) {
-        return 'Add an email or phone so guests can reach you'
+        return t('forms:experience.validation.contact')
       }
       return null
     }
@@ -208,37 +217,37 @@ export function SubmitExperiencePage() {
       return
     }
 
-    if (step < STEPS.length - 1) {
+    if (step < STEP_KEYS.length - 1) {
       setStep((value) => value + 1)
       return
     }
 
     try {
       await createExperience(buildFormData(draft)).unwrap()
-      dispatch(toastPushed('success', 'Experience submitted for review'))
+      dispatch(toastPushed('success', t('forms:experience.success')))
       navigate('/my-submissions')
     } catch (err) {
-      dispatch(toastPushed('error', apiErrorMessage(err, 'Could not submit experience')))
+      dispatch(toastPushed('error', apiErrorMessage(err, t('forms:experience.error'))))
     }
   }
 
   return (
     <FormWizardShell
-      eyebrow="Add a place to MyTicket"
-      title="Know a place worth the trip?"
-      subtitle="Add it to Experiences and help other people find it. Our team checks every submission before it goes live — usually within 3 working days."
+      eyebrow={t('forms:experience.eyebrow')}
+      title={t('forms:experience.title')}
+      subtitle={t('forms:experience.subtitle')}
       draftSaved
-      steps={[...STEPS]}
+      steps={steps}
       activeStep={step}
       backDisabled={step === 0}
       onBack={() => setStep((value) => Math.max(0, value - 1))}
       onContinue={() => void handleContinue()}
       continueLabel={
         createState.isLoading
-          ? 'Submitting…'
-          : step === STEPS.length - 1
-            ? 'Submit for review'
-            : 'Continue'
+          ? t('common:states.submitting')
+          : step === STEP_KEYS.length - 1
+            ? t('forms:experience.submitReview')
+            : t('common:actions.continue')
       }
       trackHref="/my-submissions"
       onClear={() => {
@@ -248,14 +257,14 @@ export function SubmitExperiencePage() {
     >
       {step === 0 && (
         <div className="flex flex-col gap-xl">
-          <Field label="What's it called?" htmlFor="name">
+          <Field label={t('forms:experience.fields.name')} htmlFor="name">
             <TextInput
               id="name"
               value={draft.name}
               onChange={(event) => patch({ name: event.target.value })}
             />
           </Field>
-          <Field label="Arabic name (optional)" htmlFor="name-ar">
+          <Field label={t('forms:experience.fields.nameAr')} htmlFor="name-ar">
             <TextInput
               id="name-ar"
               dir="rtl"
@@ -265,7 +274,7 @@ export function SubmitExperiencePage() {
             />
           </Field>
           <div className="grid gap-md sm:grid-cols-2">
-            <Field label="Category" htmlFor="category">
+            <Field label={t('forms:experience.fields.category')} htmlFor="category">
               <Select
                 id="category"
                 value={draft.category}
@@ -278,7 +287,7 @@ export function SubmitExperiencePage() {
                 ))}
               </Select>
             </Field>
-            <Field label="Type" htmlFor="type">
+            <Field label={t('forms:experience.fields.type')} htmlFor="type">
               <Select
                 id="type"
                 value={draft.type}
@@ -286,15 +295,17 @@ export function SubmitExperiencePage() {
                   patch({ type: event.target.value as ExperienceDraft['type'] })
                 }
               >
-                <option value="activity">Activity</option>
-                <option value="attraction">Attraction</option>
+                <option value="activity">{t('forms:experience.types.activity')}</option>
+                <option value="attraction">{t('forms:experience.types.attraction')}</option>
               </Select>
             </Field>
           </div>
           <div>
             <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
-              Where exactly is it?{' '}
-              <span className="font-medium text-ink-muted">— drop the pin</span>
+              {t('forms:experience.fields.where')}{' '}
+              <span className="font-medium text-ink-muted">
+                {t('forms:experience.fields.dropPin')}
+              </span>
             </p>
             <ImagePlaceholder
               ratio="fill"
@@ -325,14 +336,14 @@ export function SubmitExperiencePage() {
               </Select>
             </div>
             <div className="mt-md grid gap-md sm:grid-cols-2">
-              <Field label="Latitude" htmlFor="lat">
+              <Field label={t('forms:experience.fields.latitude')} htmlFor="lat">
                 <TextInput
                   id="lat"
                   value={draft.latitude}
                   onChange={(event) => patch({ latitude: event.target.value })}
                 />
               </Field>
-              <Field label="Longitude" htmlFor="lng">
+              <Field label={t('forms:experience.fields.longitude')} htmlFor="lng">
                 <TextInput
                   id="lng"
                   value={draft.longitude}
@@ -342,7 +353,7 @@ export function SubmitExperiencePage() {
             </div>
           </div>
           <div>
-            <Field label="Describe it for someone who's never been" htmlFor="desc">
+            <Field label={t('forms:experience.fields.about')} htmlFor="desc">
               <Textarea
                 id="desc"
                 rows={4}
@@ -351,7 +362,7 @@ export function SubmitExperiencePage() {
               />
             </Field>
             <div className="mt-[6px] flex items-start justify-between gap-md text-[12px] font-medium text-ink-muted">
-              <p>What is it, who&apos;s it for, when&apos;s it best?</p>
+              <p>{t('forms:experience.fields.aboutHint')}</p>
               <p className="shrink-0">{draft.about.length} / 600 · min 80</p>
             </div>
           </div>
@@ -361,7 +372,9 @@ export function SubmitExperiencePage() {
       {step === 1 && (
         <div className="flex flex-col gap-xl">
           <div className="flex flex-col gap-md">
-            <p className="text-[13px] font-semibold text-ink-primary">Opening hours</p>
+            <p className="text-[13px] font-semibold text-ink-primary">
+              {t('forms:experience.fields.openingHours')}
+            </p>
             {draft.hours.map((hour, index) => (
               <div
                 key={`${hour.dayOfWeek}-${index}`}
@@ -398,7 +411,7 @@ export function SubmitExperiencePage() {
                     checked={hour.isClosed}
                     onChange={(event) => updateHour(index, { isClosed: event.target.checked })}
                   />
-                  Closed
+                  {t('forms:experience.fields.closed')}
                 </label>
               </div>
             ))}
@@ -414,19 +427,19 @@ export function SubmitExperiencePage() {
                 })
               }
             >
-              + Add another day
+              {t('forms:experience.fields.addDay')}
             </button>
           </div>
 
           <ChipMultiSelect
-            label="Services included"
+            label={t('forms:experience.fields.services')}
             options={[...SERVICE_OPTIONS]}
             value={draft.services}
             onChange={(services) => patch({ services })}
           />
 
           <div className="grid gap-md sm:grid-cols-2">
-            <Field label="Max guests" htmlFor="max-guests">
+            <Field label={t('forms:experience.fields.maxGuests')} htmlFor="max-guests">
               <TextInput
                 id="max-guests"
                 type="number"
@@ -435,7 +448,7 @@ export function SubmitExperiencePage() {
                 onChange={(event) => patch({ maxGuests: event.target.value })}
               />
             </Field>
-            <Field label="Price per guest (SAR)" htmlFor="price">
+            <Field label={t('forms:experience.fields.price')} htmlFor="price">
               <TextInput
                 id="price"
                 type="number"
@@ -450,7 +463,7 @@ export function SubmitExperiencePage() {
 
       {step === 2 && (
         <div className="flex flex-col gap-xl">
-          <Field label="Contact email" htmlFor="email">
+          <Field label={t('forms:experience.fields.email')} htmlFor="email">
             <TextInput
               id="email"
               type="email"
@@ -459,7 +472,7 @@ export function SubmitExperiencePage() {
               placeholder="host@example.com"
             />
           </Field>
-          <Field label="Phone" htmlFor="phone">
+          <Field label={t('forms:experience.fields.phone')} htmlFor="phone">
             <TextInput
               id="phone"
               type="tel"
@@ -468,7 +481,7 @@ export function SubmitExperiencePage() {
               placeholder="+966 5X XXX XXXX"
             />
           </Field>
-          <Field label="Website (optional)" htmlFor="website">
+          <Field label={t('forms:experience.fields.website')} htmlFor="website">
             <TextInput
               id="website"
               value={draft.website}
@@ -476,7 +489,7 @@ export function SubmitExperiencePage() {
               placeholder="https://"
             />
           </Field>
-          <Field label="Instagram (optional)" htmlFor="instagram">
+          <Field label={t('forms:experience.fields.instagram')} htmlFor="instagram">
             <TextInput
               id="instagram"
               value={draft.instagram}
@@ -490,22 +503,22 @@ export function SubmitExperiencePage() {
       {step === 3 && (
         <div className="flex flex-col gap-xl">
           <FileDropButton
-            label="Cover photo"
-            hint="Shown on catalog cards · JPG or PNG"
+            label={t('forms:experience.fields.cover')}
+            hint={t('forms:experience.fields.coverHint')}
             accept="image/*"
             fileName={draft.cover?.name}
             onFiles={(files) => patch({ cover: files[0] })}
           />
           <FileDropButton
-            label="Banner photo"
-            hint="Wide hero for the detail page"
+            label={t('forms:experience.fields.banner')}
+            hint={t('forms:experience.fields.bannerHint')}
             accept="image/*"
             fileName={draft.banner?.name}
             onFiles={(files) => patch({ banner: files[0] })}
           />
           <FileDropButton
-            label="Gallery photos"
-            hint="Up to several extras"
+            label={t('forms:experience.fields.gallery')}
+            hint={t('forms:experience.fields.galleryHint')}
             accept="image/*"
             multiple
             fileName={
@@ -517,7 +530,9 @@ export function SubmitExperiencePage() {
           />
 
           <div className="rounded-[16px] border border-border-default bg-bg-page p-xl text-[14px] text-ink-secondary">
-            <p className="text-[15px] font-semibold text-ink-primary">Ready to submit</p>
+            <p className="text-[15px] font-semibold text-ink-primary">
+              {t('forms:experience.fields.ready')}
+            </p>
             <ul className="mt-md flex flex-col gap-[6px]">
               <li>
                 <span className="font-semibold text-ink-primary">{draft.name || '—'}</span>

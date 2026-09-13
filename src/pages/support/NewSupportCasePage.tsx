@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { PlusIcon } from '@/components/icons'
 import { Button, Field, Select, Textarea, TextInput } from '@/components/ui'
@@ -9,36 +10,27 @@ import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
-const KINDS = [
-  {
-    id: 'working',
-    title: "Something isn't working",
-    body: 'A problem with an order, ticket, refund, payment, or the site itself.',
-  },
-  {
-    id: 'right',
-    title: "Something wasn't right",
-    body: 'A complaint about an organizer, a venue, safety, or how you were treated.',
-  },
-] as const
-
-const URGENCY = ['Low', 'Normal', 'Urgent'] as const
+const KIND_IDS = ['working', 'right'] as const
+const URGENCY_IDS = ['low', 'normal', 'urgent'] as const
 
 /** New support case — Figma `207:11781`. Opens support chat (no cases CRUD API). */
 export function NewSupportCasePage() {
+  const { t } = useTranslation('account')
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const [sendMessage, sendState] = useSendChatMessageMutation()
-  const [kind, setKind] = useState<(typeof KINDS)[number]['id']>('working')
-  const [urgency, setUrgency] = useState<(typeof URGENCY)[number]>('Normal')
+  const [kind, setKind] = useState<(typeof KIND_IDS)[number]>('working')
+  const [urgency, setUrgency] = useState<(typeof URGENCY_IDS)[number]>('normal')
   const [subject, setSubject] = useState('')
   const [details, setDetails] = useState('')
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    const tag = kind === 'working' ? t('support.tagIssue') : t('support.tagComplaint')
+    const urgencyLabel = t(`support.urgency.${urgency}`)
     const message = [
-      `[${kind === 'working' ? 'Issue' : 'Complaint'} · ${urgency}]`,
-      subject.trim() || 'Support request',
+      `[${tag} · ${urgencyLabel}]`,
+      subject.trim() || t('support.defaultSubject'),
       details.trim(),
     ]
       .filter(Boolean)
@@ -46,10 +38,10 @@ export function NewSupportCasePage() {
 
     try {
       await sendMessage({ channel: 'support', message }).unwrap()
-      dispatch(toastPushed('success', 'Sent to support — continue in chat'))
+      dispatch(toastPushed('success', t('support.success')))
       navigate('/support/chat')
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not reach support')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('support.error'))))
       navigate('/support/chat')
     }
   }
@@ -57,42 +49,44 @@ export function NewSupportCasePage() {
   return (
     <>
       <FunnelHeader
-        label="Raise something with us"
+        label={t('support.header')}
         backHref="/support"
-        backLabel="My support cases"
+        backLabel={t('support.backToCases')}
       />
 
       <PageSection padTop={44} padBottom={96}>
         <div className="mx-auto w-full max-w-[720px]">
-          <h1 className="text-[42px] leading-[1.04] font-extrabold tracking-[-1.47px] text-ink-primary">
-            Tell us what&apos;s wrong.
+          <h1 className="text-[28px] leading-[1.04] font-extrabold tracking-[-1.47px] text-ink-primary sm:text-[36px] lg:text-[42px]">
+            {t('support.newTitle')}
           </h1>
           <p className="mt-[10px] max-w-[620px] text-[16px] text-ink-secondary">
-            You&apos;ll get a reference straight away and can follow every reply from{' '}
+            {t('support.ledeBefore')}{' '}
             <Link to="/support" className="font-semibold text-ink-brand">
-              your support cases
+              {t('support.ledeLink')}
             </Link>
             .
           </p>
 
           <div className="mt-[26px] grid gap-[12px] sm:grid-cols-2">
-            {KINDS.map((item) => {
-              const active = kind === item.id
+            {KIND_IDS.map((id) => {
+              const active = kind === id
               return (
                 <button
-                  key={item.id}
+                  key={id}
                   type="button"
-                  onClick={() => setKind(item.id)}
+                  onClick={() => setKind(id)}
                   className={cn(
-                    'rounded-[18px] border-[1.5px] px-[22px] py-[20px] text-left',
+                    'rounded-[18px] border-[1.5px] px-[22px] py-[20px] text-start',
                     active
                       ? 'border-ink-brand bg-bg-tint-brand'
                       : 'border-border-default bg-surface-default',
                   )}
                 >
-                  <p className="text-[16px] font-bold text-ink-primary">{item.title}</p>
+                  <p className="text-[16px] font-bold text-ink-primary">
+                    {t(`support.kinds.${id}.title`)}
+                  </p>
                   <p className="mt-[4px] text-[13px] leading-[1.5] text-ink-secondary">
-                    {item.body}
+                    {t(`support.kinds.${id}.body`)}
                   </p>
                 </button>
               )
@@ -104,20 +98,20 @@ export function NewSupportCasePage() {
             onSubmit={(event) => void handleSubmit(event)}
           >
             <div className="grid gap-[16px] sm:grid-cols-2">
-              <Field label="What's it about?" htmlFor="about">
+              <Field label={t('support.aboutLabel')} htmlFor="about">
                 <Select id="about" defaultValue="orders">
-                  <option value="orders">Orders & payments</option>
-                  <option value="tickets">Tickets & entry</option>
-                  <option value="account">Account & wallet</option>
-                  <option value="other">Something else</option>
+                  <option value="orders">{t('support.topics.orders')}</option>
+                  <option value="tickets">{t('support.topics.tickets')}</option>
+                  <option value="account">{t('support.topics.account')}</option>
+                  <option value="other">{t('support.topics.other')}</option>
                 </Select>
               </Field>
               <div>
                 <p className="mb-[8px] text-[13px] font-semibold text-ink-primary">
-                  How urgent is it?
+                  {t('support.urgencyLabel')}
                 </p>
                 <div className="flex gap-[8px]">
-                  {URGENCY.map((level) => (
+                  {URGENCY_IDS.map((level) => (
                     <button
                       key={level}
                       type="button"
@@ -129,27 +123,27 @@ export function NewSupportCasePage() {
                           : 'border border-border-default bg-surface-default text-ink-primary',
                       )}
                     >
-                      {level}
+                      {t(`support.urgency.${level}`)}
                     </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            <Field label="Subject" htmlFor="subject">
+            <Field label={t('support.subjectLabel')} htmlFor="subject">
               <TextInput
                 id="subject"
-                placeholder="e.g. Paid twice for the same order"
+                placeholder={t('support.subjectPlaceholder')}
                 value={subject}
                 onChange={(event) => setSubject(event.target.value)}
               />
             </Field>
 
-            <Field label="What happened?" htmlFor="details">
+            <Field label={t('support.detailsLabel')} htmlFor="details">
               <Textarea
                 id="details"
                 rows={5}
-                placeholder="The more detail, the faster we can help — what you did, what you expected, what happened instead."
+                placeholder={t('support.detailsPlaceholder')}
                 value={details}
                 onChange={(event) => setDetails(event.target.value)}
               />
@@ -159,37 +153,38 @@ export function NewSupportCasePage() {
               <Field
                 label={
                   <>
-                    Link it to something{' '}
-                    <span className="font-medium text-ink-muted">— optional</span>
+                    {t('support.linkLabel')}{' '}
+                    <span className="font-medium text-ink-muted">{t('support.optional')}</span>
                   </>
                 }
                 htmlFor="link"
               >
                 <Select id="link" defaultValue="">
-                  <option value="">Nothing specific</option>
+                  <option value="">{t('support.linkNone')}</option>
                   <option value="MT-2026-84193">MT-2026-84193 · Winter Nights</option>
                   <option value="MT-2026-84702">MT-2026-84702 · Warehouse Set</option>
                 </Select>
               </Field>
               <div>
                 <p className="mb-[8px] text-[13px] font-semibold text-ink-primary">
-                  Attachment <span className="font-medium text-ink-muted">— optional</span>
+                  {t('support.attachmentLabel')}{' '}
+                  <span className="font-medium text-ink-muted">{t('support.optional')}</span>
                 </p>
                 <button
                   type="button"
                   className="flex h-[46px] w-full items-center justify-center gap-[6px] rounded-[12px] border-[1.5px] border-dashed border-border-dashed bg-bg-page text-[13.5px] font-semibold text-ink-secondary"
                 >
                   <PlusIcon size={14} weight="bold" />
-                  Add a screenshot or file
+                  {t('support.addAttachment')}
                 </button>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-[12px]">
               <Button type="submit" size="lg" loading={sendState.isLoading}>
-                Submit the case
+                {t('support.submit')}
               </Button>
-              <p className="text-[13px] text-ink-muted">We usually reply within one working day.</p>
+              <p className="text-[13px] text-ink-muted">{t('support.replySla')}</p>
             </div>
           </form>
         </div>

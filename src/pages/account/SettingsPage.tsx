@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { Breadcrumbs } from '@/components/navigation'
 import {
@@ -17,10 +18,10 @@ import { PageSection } from '@/layouts'
 import { ACCOUNT_USER } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
 import { useDeleteAccountMutation } from '@/app/api/accountApis'
-import { useLogoutMutation } from '@/app/api/authApi'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { credentialsCleared, selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
+import { useSignOut } from '@/lib/auth/useSignOut'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
 type NavItem = {
@@ -37,62 +38,61 @@ type NavItem = {
   undrawn?: boolean
 }
 
-const NAV: { group: string; items: NavItem[] }[] = [
+type NavGroupId = 'account' | 'money' | 'communication' | 'privacy'
+
+const NAV_STRUCTURE: {
+  group: NavGroupId
+  items: Omit<NavItem, 'label'>[]
+}[] = [
   {
-    group: 'ACCOUNT',
+    group: 'account',
     items: [
-      { id: 'personal', label: 'Personal details', icon: <UserIcon size={14} /> },
+      { id: 'personal', icon: <UserIcon size={14} /> },
       {
         id: 'security',
-        label: 'Security & sign-in',
         icon: <LockIcon size={14} />,
-        tag: '2FA on',
+        tag: 'twoFaOn',
         undrawn: true,
       },
       {
         id: 'language',
-        label: 'Language & region',
         icon: <GlobeEastIcon size={14} />,
         undrawn: true,
       },
     ],
   },
   {
-    group: 'MONEY',
+    group: 'money',
     items: [
       {
         id: 'payments',
-        label: 'Payment methods',
         icon: <CreditCardIcon size={14} />,
         tag: '3',
         undrawn: true,
       },
       {
         id: 'wallet',
-        label: 'Wallet & payouts',
         icon: <WalletIcon size={14} />,
         href: '/wallet',
       },
     ],
   },
   {
-    group: 'COMMUNICATION',
+    group: 'communication',
     items: [
       {
         id: 'notifications',
-        label: 'Notifications',
         icon: <BellRingingIcon size={14} />,
-        tag: '4 on',
+        tag: 'notificationsOn',
         href: '/notifications',
       },
     ],
   },
   {
-    group: 'PRIVACY',
+    group: 'privacy',
     items: [
       {
         id: 'privacy',
-        label: 'Privacy & data',
         icon: <ShieldIcon size={14} />,
         undrawn: true,
       },
@@ -136,9 +136,17 @@ function ContactRow({
   )
 }
 
-function NavRow({ item, active }: { item: NavItem; active: boolean }) {
+function NavRow({
+  item,
+  active,
+  comingSoon,
+}: {
+  item: NavItem
+  active: boolean
+  comingSoon: string
+}) {
   const className = cn(
-    'flex h-[40px] w-full items-center gap-[11px] rounded-[12px] px-[11px] text-left text-[14px]',
+    'flex h-[40px] w-full items-center gap-[11px] rounded-[12px] px-[11px] text-start text-[14px]',
     active
       ? 'bg-border-divider font-semibold text-ink-brand'
       : 'font-medium text-ink-secondary hover:bg-bg-page',
@@ -168,7 +176,7 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
     <button
       type="button"
       aria-current={active ? 'page' : undefined}
-      title={item.undrawn ? 'Coming soon' : undefined}
+      title={item.undrawn ? comingSoon : undefined}
       onClick={() => {
         /* Undrawn panes: keep Personal details active — no invented content. */
       }}
@@ -195,40 +203,63 @@ function initialsFromName(name: string): string {
 }
 
 export function SettingsPage() {
+  const { t } = useTranslation('account')
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const user = useAppSelector(selectAuthUser)
-  const [logout, logoutState] = useLogoutMutation()
+  const { signOut, isLoading: logoutLoading } = useSignOut()
   const [deleteAccount, deleteState] = useDeleteAccountMutation()
   const [deletePassword, setDeletePassword] = useState('')
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    return () => {
+      if (photoUrl) URL.revokeObjectURL(photoUrl)
+    }
+  }, [photoUrl])
+
+  function handlePhotoUpload(file: File | undefined) {
+    if (!file) return
+    if (file.size > 4 * 1024 * 1024) {
+      dispatch(toastPushed('error', t('settings.photoTooLarge')))
+      return
+    }
+    setPhotoUrl((current) => {
+      if (current) URL.revokeObjectURL(current)
+      return URL.createObjectURL(file)
+    })
+  }
 
   const displayName = user?.name ?? ACCOUNT_USER.name
   const displayEmail = user?.email ?? ACCOUNT_USER.email
   const displayPhone = user?.phone ?? ACCOUNT_USER.mobile
   const initials = user?.name ? initialsFromName(user.name) : ACCOUNT_USER.initials
 
-  async function handleSignOut() {
-    try {
-      await logout().unwrap()
-    } catch {
-      /* Clear local session even if the API call fails */
-    }
-    dispatch(credentialsCleared())
-    navigate('/sign-in')
-  }
+  const nav = NAV_STRUCTURE.map((group) => ({
+    group: t(`settings.groups.${group.group}`),
+    items: group.items.map((item) => {
+      const label =
+        item.id === 'personal' ? t('settings.personal') : t(`settings.nav.${item.id}`)
+      let tag = item.tag
+      if (item.tag === 'twoFaOn') tag = t('settings.tags.twoFaOn')
+      if (item.tag === 'notificationsOn') tag = t('settings.tags.notificationsOn', { count: 4 })
+      return { ...item, label, tag }
+    }),
+  }))
 
   async function handleDeleteAccount() {
     if (!deletePassword.trim()) {
-      dispatch(toastPushed('error', 'Enter your password to delete this account'))
+      dispatch(toastPushed('error', t('settings.deleteNeedPassword')))
       return
     }
     try {
       await deleteAccount({ password: deletePassword.trim() }).unwrap()
       dispatch(credentialsCleared())
-      dispatch(toastPushed('success', 'Account deleted'))
+      dispatch(toastPushed('success', t('settings.deleteSuccess')))
       navigate('/')
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not delete account')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('settings.deleteError'))))
     }
   }
 
@@ -237,23 +268,21 @@ export function SettingsPage() {
       <PageSection padTop={30} padBottom={0}>
         <Breadcrumbs
           items={[
-            { label: 'Account', href: '/profile' },
-            { label: 'Settings' },
-            { label: 'Personal details' },
+            { label: t('settings.breadcrumbAccount'), href: '/profile' },
+            { label: t('settings.title') },
+            { label: t('settings.personal') },
           ]}
         />
-        <h1 className="mt-[10px] text-[46px] leading-[1.03] font-extrabold tracking-[-1.61px] text-ink-primary">
-          Settings
+        <h1 className="mt-[10px] text-[28px] leading-[1.03] font-extrabold tracking-[-1.61px] text-ink-primary sm:text-[36px] lg:text-[46px]">
+          {t('settings.title')}
         </h1>
-        <p className="mt-[6px] text-[16px] text-ink-secondary">
-          Your details, how you pay, and what we&apos;re allowed to send you.
-        </p>
+        <p className="mt-[6px] text-[16px] text-ink-secondary">{t('settings.subtitle')}</p>
       </PageSection>
 
       <PageSection padTop={24} padBottom={96}>
         <div className="flex flex-col gap-[34px] lg:flex-row lg:items-start">
           <nav className="w-full shrink-0 rounded-[20px] border border-border-default bg-surface-default p-[10px] lg:w-[268px]">
-            {NAV.map((group) => (
+            {nav.map((group) => (
               <div key={group.group} className="px-[10px] pt-[10px] pb-[6px]">
                 <p className="text-[11px] font-bold tracking-[0.08em] text-ink-muted uppercase">
                   {group.group}
@@ -261,7 +290,11 @@ export function SettingsPage() {
                 <ul className="mt-[6px] flex flex-col gap-[2px]">
                   {group.items.map((item) => (
                     <li key={item.id}>
-                      <NavRow item={item} active={item.id === 'personal'} />
+                      <NavRow
+                        item={item}
+                        active={item.id === 'personal'}
+                        comingSoon={t('settings.comingSoon')}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -272,38 +305,66 @@ export function SettingsPage() {
               <button
                 type="button"
                 className="mt-md flex h-[40px] w-full items-center gap-[11px] rounded-[12px] px-[11px] text-[14px] font-semibold text-state-danger hover:bg-bg-page"
-                onClick={() => void handleSignOut()}
-                disabled={logoutState.isLoading}
+                onClick={() => void signOut()}
+                disabled={logoutLoading}
               >
                 <PowerIcon size={14} />
-                Sign out
+                {t('settings.signOut')}
               </button>
             </div>
           </nav>
 
           <div className="flex min-w-0 flex-1 flex-col gap-lg">
             <section className="rounded-[20px] border border-border-default bg-surface-default p-[26px]">
-              <h2 className="text-[19px] font-semibold text-ink-primary">Personal details</h2>
-              <p className="mt-xs text-[14px] text-ink-secondary">
-                Your name must match the ID you bring to age-restricted events.
-              </p>
+              <h2 className="text-[19px] font-semibold text-ink-primary">{t('settings.personal')}</h2>
+              <p className="mt-xs text-[14px] text-ink-secondary">{t('settings.personalHint')}</p>
 
               <div className="mt-[22px] flex flex-wrap items-center gap-[18px]">
-                <Avatar
-                  initials={initials}
-                  size="lg"
-                  className="!size-[66px] !rounded-[33px] !bg-surface-inverse !text-[25px] !tracking-[-0.75px] !text-bg-page"
-                />
+                <div className="relative size-[66px] shrink-0 overflow-hidden rounded-[33px]">
+                  {photoUrl ? (
+                    <img src={photoUrl} alt="" className="size-full object-cover" />
+                  ) : (
+                    <Avatar
+                      initials={initials}
+                      size="lg"
+                      className="!size-[66px] !rounded-[33px] !bg-surface-inverse !text-[25px] !tracking-[-0.75px] !text-bg-page"
+                    />
+                  )}
+                </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-semibold text-ink-primary">Profile photo</p>
-                  <p className="mt-[3px] text-[13px] text-ink-secondary">PNG or JPG, up to 4 MB.</p>
+                  <p className="text-[15px] font-semibold text-ink-primary">{t('settings.photoTitle')}</p>
+                  <p className="mt-[3px] text-[13px] text-ink-secondary">{t('settings.photoHint')}</p>
                 </div>
                 <div className="flex gap-sm">
-                  <Button variant="secondary" size="sm" className="bg-bg-page">
-                    Upload
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg"
+                    className="sr-only"
+                    onChange={(event) => {
+                      handlePhotoUpload(event.target.files?.[0])
+                      event.target.value = ''
+                    }}
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="bg-bg-page"
+                    onClick={() => photoInputRef.current?.click()}
+                  >
+                    {t('settings.upload')}
                   </Button>
-                  <Button variant="secondary" size="sm">
-                    Remove
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setPhotoUrl((current) => {
+                        if (current) URL.revokeObjectURL(current)
+                        return null
+                      })
+                    }}
+                  >
+                    {t('settings.remove')}
                   </Button>
                 </div>
               </div>
@@ -311,41 +372,45 @@ export function SettingsPage() {
               <div className="my-[22px] h-px bg-border-divider" />
 
               <div className="grid gap-lg sm:grid-cols-2">
-                <Field label="Full name" htmlFor="full-name">
+                <Field label={t('settings.fullName')} htmlFor="full-name">
                   <TextInput id="full-name" defaultValue={displayName} className="h-[46px]" />
                 </Field>
-                <Field label="Display name" htmlFor="display-name">
+                <Field label={t('settings.displayName')} htmlFor="display-name">
                   <TextInput
                     id="display-name"
                     defaultValue={displayName.split(' ')[0] ?? ACCOUNT_USER.displayName}
                     className="h-[46px]"
                   />
                 </Field>
-                <Field label="Date of birth" htmlFor="dob">
+                <Field label={t('settings.dateOfBirth')} htmlFor="dob">
                   <TextInput
                     id="dob"
                     defaultValue={ACCOUNT_USER.dateOfBirth}
                     className="h-[46px]"
                     trailing={
-                      <span className="shrink-0 text-[12px] text-ink-muted">Used for age limits</span>
+                      <span className="shrink-0 text-[12px] text-ink-muted">
+                        {t('settings.ageLimits')}
+                      </span>
                     }
                   />
                 </Field>
-                <Field label="City" htmlFor="city">
+                <Field label={t('settings.city')} htmlFor="city">
                   <TextInput id="city" defaultValue={ACCOUNT_USER.city} className="h-[46px]" />
                 </Field>
-                <Field label="National ID / Iqama" htmlFor="nid">
+                <Field label={t('settings.nationalId')} htmlFor="nid">
                   <TextInput
                     id="nid"
                     defaultValue={ACCOUNT_USER.nationalId}
                     readOnly
                     className="h-[46px] bg-bg-page"
                     trailing={
-                      <span className="shrink-0 text-[12px] text-ink-muted">Verified</span>
+                      <span className="shrink-0 text-[12px] text-ink-muted">
+                        {t('settings.verified')}
+                      </span>
                     }
                   />
                 </Field>
-                <Field label="Member since" htmlFor="member">
+                <Field label={t('settings.memberSince')} htmlFor="member">
                   <TextInput
                     id="member"
                     defaultValue={ACCOUNT_USER.memberSince}
@@ -357,53 +422,52 @@ export function SettingsPage() {
             </section>
 
             <section className="rounded-[20px] border border-border-default bg-surface-default p-[26px]">
-              <h2 className="text-[19px] font-semibold text-ink-primary">Email & phone</h2>
-              <p className="mt-xs text-[14px] text-ink-secondary">
-                Tickets, receipts and door alerts go here.
-              </p>
+              <h2 className="text-[19px] font-semibold text-ink-primary">{t('settings.emailPhone')}</h2>
+              <p className="mt-xs text-[14px] text-ink-secondary">{t('settings.emailPhoneHint')}</p>
               <div className="mt-xl flex flex-col gap-md">
                 <ContactRow
                   value={displayEmail}
-                  hint="Tickets, receipts and account emails"
-                  badge="Verified"
-                  action="Change"
+                  hint={t('settings.hintEmail')}
+                  badge={t('settings.verified')}
+                  action={t('settings.change')}
                 />
                 <ContactRow
                   value={displayPhone}
-                  hint="Door alerts and SMS ticket delivery"
-                  badge="Verified"
-                  action="Change"
+                  hint={t('settings.hintPhone')}
+                  badge={t('settings.verified')}
+                  action={t('settings.change')}
                 />
                 <ContactRow
                   value="sara.work@example.com"
-                  hint="Backup email"
-                  badge="Unconfirmed"
+                  hint={t('settings.hintBackup')}
+                  badge={t('settings.unconfirmed')}
                   badgeTone="warning"
-                  action="Resend"
+                  action={t('settings.resend')}
                 />
               </div>
             </section>
 
             <div className="mt-[2px] flex flex-wrap items-center justify-between gap-sm rounded-[18px] border border-border-default bg-surface-default px-[22px] py-lg">
               <p className="text-[13px] text-ink-muted">
-                Last saved 22 July 2026 · changes apply straight away
+                {t('settings.lastSaved', { date: '22 July 2026' })}
               </p>
               <div className="flex gap-[9px]">
                 <Button variant="secondary" size="md" className="bg-bg-page">
-                  Discard
+                  {t('settings.discard')}
                 </Button>
-                <Button size="md">Save changes</Button>
+                <Button size="md">{t('settings.saveChanges')}</Button>
               </div>
             </div>
 
             <section className="rounded-[20px] border border-border-default bg-surface-default p-[26px]">
-              <h2 className="text-[19px] font-semibold text-ink-primary">Delete account</h2>
-              <p className="mt-xs text-[14px] text-ink-secondary">
-                Permanently remove your MyTicket account. Tickets already issued stay valid for the
-                event.
-              </p>
+              <h2 className="text-[19px] font-semibold text-ink-primary">{t('settings.deleteTitle')}</h2>
+              <p className="mt-xs text-[14px] text-ink-secondary">{t('settings.deleteBody')}</p>
               <div className="mt-[18px] flex flex-wrap items-end gap-md">
-                <Field label="Confirm with password" htmlFor="delete-password" className="min-w-[220px] flex-1">
+                <Field
+                  label={t('settings.confirmPassword')}
+                  htmlFor="delete-password"
+                  className="min-w-[220px] flex-1"
+                >
                   <TextInput
                     id="delete-password"
                     type="password"
@@ -419,7 +483,7 @@ export function SettingsPage() {
                   loading={deleteState.isLoading}
                   onClick={() => void handleDeleteAccount()}
                 >
-                  Delete account
+                  {t('settings.deleteAccount')}
                 </Button>
               </div>
             </section>

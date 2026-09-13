@@ -161,13 +161,13 @@ export function ExperienceCard({
         )}
 
         {isHome && category && (
-          <p className="absolute bottom-[10px] left-[10px] rounded-[12px] bg-ink-primary px-[10px] py-[5px] text-[11px] font-bold text-ink-inverse">
+          <p className="absolute bottom-[10px] start-[10px] rounded-[12px] bg-ink-primary px-[10px] py-[5px] text-[11px] font-bold text-ink-inverse">
             {category}
           </p>
         )}
 
         {!isHome && flag && (
-          <p className="absolute top-[12px] left-[12px] rounded-[13px] bg-bg-page px-[10px] py-[5px] text-[11px] font-bold text-ink-brand">
+          <p className="absolute top-[12px] start-[12px] rounded-[13px] bg-bg-page px-[10px] py-[5px] text-[11px] font-bold text-ink-brand">
             {flag}
           </p>
         )}

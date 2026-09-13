@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { ApiRecord as EventApiRecord } from '@/app/api/eventsApi'
 import type { ApiRecord as ExperienceApiRecord } from '@/app/api/experiencesApi'
 import type { ApiRecord as TalentApiRecord } from '@/app/api/talentsApi'
@@ -19,6 +20,8 @@ import { mapCategoryLabel } from '@/lib/api/mappers/categories'
 import { mapApiEventToCard } from '@/lib/api/mappers/events'
 import { mapApiExperienceToCard } from '@/lib/api/mappers/experiences'
 import { mapApiTalentToCard } from '@/lib/api/mappers/talents'
+import { useEventFavorites } from '@/lib/favorites/useEventFavorites'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 import { slugify } from '@/pages/_guest'
 import ctaBand from '@/assets/home/cta-band.jpg'
 import driftBlob from '@/assets/home/drift-blob.svg'
@@ -43,25 +46,26 @@ import { HomeTimeTabs } from './HomeTimeTabs'
 
 /** Limited public talent strip — avatar, name, discipline, rating only. */
 export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) {
+  const { t } = useTranslation('catalog')
   const talents = useMemo(() => {
     if (apiTalents && apiTalents.length > 0) {
       return apiTalents.map(mapApiTalentToCard).slice(0, HOME_TALENTS.length)
     }
-    return HOME_TALENTS.map((t) => ({ ...t, slug: slugify(t.name) }))
+    return HOME_TALENTS.map((talent) => ({ ...talent, slug: slugify(talent.name) }))
   }, [apiTalents])
 
   return (
     <PageSection padTop={84} padBottom={0}>
       <FadeUp>
         <HomeSectionHeader
-          overline="Who's performing"
+          overline={t('home.talentsOverline')}
           overlineTone="brand"
-          heading="Artists on stage this season"
-          lede="Follow a singer, band or comedian and see every date they play — then get your tickets for the night that suits you."
-          link={{ label: 'Browse all talents', to: '/talents' }}
+          heading={t('home.talentsHeading')}
+          lede={t('home.talentsLede')}
+          link={{ label: t('home.browseAllTalents'), to: '/talents' }}
         />
       </FadeUp>
-      <StaggerGroup className="mt-[26px] grid grid-cols-2 gap-[18px] md:grid-cols-3 lg:grid-cols-5">
+      <StaggerGroup className="mt-[26px] grid grid-cols-2 gap-[12px] sm:gap-[18px] md:grid-cols-3 lg:grid-cols-5">
         {talents.map((talent, i) => (
           <Link
             key={talent.slug}
@@ -91,6 +95,7 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
  * (Figma `207:4446` is a static clipped row; "Full taxonomy" is the overflow exit).
  */
 export function HomeCategories({ apiCategories }: { apiCategories?: EventApiRecord[] }) {
+  const { t } = useTranslation('catalog')
   const categories = useMemo(() => {
     if (apiCategories && apiCategories.length > 0) {
       return apiCategories.slice(0, HOME_CATEGORIES.length).map((row, index) => ({
@@ -105,15 +110,15 @@ export function HomeCategories({ apiCategories }: { apiCategories?: EventApiReco
     <PageSection padTop={72} padBottom={0}>
       <FadeUp>
         <HomeSectionHeader
-          overline="What's on"
-          heading="Browse by category"
-          lede="Seventeen categories, from stadium football to heritage walks."
+          overline={t('home.whatsOn')}
+          heading={t('home.browseCategory')}
+          lede={t('home.browseCategoryLede')}
           ledeMaxWidth={null}
-          link={{ label: 'Full taxonomy', to: '/events' }}
+          link={{ label: t('home.fullTaxonomy'), to: '/events' }}
         />
       </FadeUp>
-      <FadeUp className="mt-[22px] -mr-page-gutter overflow-hidden">
-        <div className="flex gap-[9px] pr-page-gutter">
+      <FadeUp className="mt-[22px] -me-page-gutter overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:overflow-hidden">
+        <div className="flex w-max gap-[9px] pr-page-gutter sm:w-auto">
           {categories.map((cat) => (
             <CategoryChip
               key={cat.label}
@@ -121,7 +126,7 @@ export function HomeCategories({ apiCategories }: { apiCategories?: EventApiReco
               count={cat.count}
               className="shrink-0"
             >
-              {cat.label}
+              {catalogLabel(t, cat.label)}
             </CategoryChip>
           ))}
         </div>
@@ -144,7 +149,9 @@ function matchesEventWindow(
 
 /** Figma `207:4459` — pad-top 60, time tabs + 2×4 EventCard Home. */
 export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
+  const { t } = useTranslation('catalog')
   const [tab, setTab] = useState<(typeof HOME_EVENT_TABS)[number]>('All')
+  const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
 
   const events = useMemo(() => {
     if (apiEvents && apiEvents.length > 0) {
@@ -164,9 +171,9 @@ export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
     <PageSection padTop={60} padBottom={0}>
       <FadeUp>
         <HomeSectionHeader
-          overline="On sale now"
-          heading="Upcoming events"
-          lede={`${filtered.length} of 1,284 events · updated a moment ago`}
+          overline={t('home.onSaleNow')}
+          heading={t('home.eventsHeading')}
+          lede={t('home.eventsCountMoment', { count: filtered.length })}
           trailing={<HomeTimeTabs value={tab} onChange={setTab} />}
         />
       </FadeUp>
@@ -188,6 +195,12 @@ export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
               category={'category' in event ? event.category : undefined}
               flag={'flag' in event ? event.flag : undefined}
               image={'image' in event && event.image ? event.image : HOME_EVENT_IMAGES[i]}
+              favourited={'id' in event ? isFavourite(event.id) : false}
+              onToggleFavourite={
+                'id' in event && canFavourite(event.id)
+                  ? () => void toggleFavourite(event.id)
+                  : undefined
+              }
             />
           </Link>
         ))}
@@ -207,6 +220,7 @@ export function HomeFeatured({
   apiAds?: EventApiRecord[]
   apiEvents?: EventApiRecord[]
 }) {
+  const { t } = useTranslation('catalog')
   const panels = useMemo(() => {
     const fromAds = (apiAds ?? []).slice(0, 3).map((ad, i) => {
       const fallback = HOME_FEATURED_PANELS[i]!
@@ -249,27 +263,29 @@ export function HomeFeatured({
     <PageSection padTop={76} padBottom={0}>
       <FadeUp>
       <div
-        className="relative flex flex-col gap-[28px] overflow-hidden rounded-[28px] border border-[#f7dfd3] bg-home-featured px-[46px] pt-[46px] pb-[50px]"
+        className="relative flex flex-col gap-[28px] overflow-hidden rounded-[28px] border border-[#f7dfd3] bg-home-featured px-lg pt-3xl pb-3xl sm:px-[46px] sm:pt-[46px] sm:pb-[50px]"
       >
         <img
           src={driftBlob}
           alt=""
           aria-hidden
-          className="pointer-events-none absolute top-[-181px] right-[-21px] size-[520px]"
+          className="pointer-events-none absolute top-[-181px] end-[-21px] size-[520px]"
         />
 
-        <div className="relative flex items-end justify-between gap-4xl">
+        <div className="relative flex flex-col items-start gap-md sm:flex-row sm:items-end sm:justify-between sm:gap-4xl">
           <div className="flex min-w-0 flex-1 flex-col">
             <p className="text-label-overline text-brand-gradient-end uppercase">
-              Curated by MyTicket
+              {t('home.curatedBy')}
             </p>
-            <h2 className="text-heading-h1 mt-[10px] text-ink-primary">Featured events</h2>
+            <h2 className="mt-[10px] text-[28px] font-bold tracking-[-0.03em] text-ink-primary sm:text-heading-h1">
+              {t('home.featuredEvents')}
+            </h2>
           </div>
           <Link
             to="/events?featured=1"
             className="group/link relative flex shrink-0 items-center gap-[5px] text-[14px] font-bold text-brand-gradient-end transition-colors duration-fast ease-standard hover:text-ink-brand"
           >
-            See the full selection
+            {t('home.seeFullSelection')}
             <ArrowRightIcon
               size={14}
               className="shrink-0 transition-transform duration-fast ease-standard group-hover/link:translate-x-0.5 motion-reduce:group-hover/link:translate-x-0"
@@ -299,15 +315,16 @@ export function HomeFeatured({
 
 /** Figma `207:4505` — pad-top 88, 4× AuctionCard. */
 export function HomeAuctions() {
+  const { t } = useTranslation('catalog')
   return (
     <PageSection padTop={88} padBottom={0}>
       <FadeUp>
         <HomeSectionHeader
-          overline="Resale auction"
-          heading="Tickets ending soonest"
-          lede="Real tickets, transferred to you by their owner. MyTicket handles the money and takes a 10% commission from the seller."
+          overline={t('home.auctionsOverline')}
+          heading={t('home.auctionsHeading')}
+          lede={t('home.auctionsLede')}
           ledeMaxWidth={560}
-          link={{ label: 'All auction listings', to: '/auctions' }}
+          link={{ label: t('home.allAuctionListings'), to: '/auctions' }}
         />
       </FadeUp>
       <StaggerGroup className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -327,6 +344,7 @@ export function HomeAuctions() {
 
 /** Figma `207:4522` — pad-top 88, 4× ExperienceCard Home. */
 export function HomeExperiences({ apiExperiences }: { apiExperiences?: ExperienceApiRecord[] }) {
+  const { t } = useTranslation('catalog')
   const experiences = useMemo(() => {
     if (apiExperiences && apiExperiences.length > 0) {
       return apiExperiences.map(mapApiExperienceToCard).slice(0, HOME_EXPERIENCES.length)
@@ -338,11 +356,11 @@ export function HomeExperiences({ apiExperiences }: { apiExperiences?: Experienc
     <PageSection padTop={88} padBottom={0}>
       <FadeUp>
         <HomeSectionHeader
-          overline="Open year-round"
-          heading="Experiences & destinations"
-          lede="Places worth the drive — open now, all year round."
+          overline={t('home.experiencesOverline')}
+          heading={t('home.experiencesHeading')}
+          lede={t('home.experiencesLede')}
           ledeMaxWidth={null}
-          link={{ label: 'Browse all experiences', to: '/experiences' }}
+          link={{ label: t('home.browseAllExperiences'), to: '/experiences' }}
         />
       </FadeUp>
       <StaggerGroup className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -375,6 +393,7 @@ export function HomeExperiences({ apiExperiences }: { apiExperiences?: Experienc
  */
 export function HomeCta() {
   const navigate = useNavigate()
+  const { t } = useTranslation(['catalog', 'common'])
 
   return (
     <PageSection padTop={96} padBottom={0}>
@@ -403,13 +422,12 @@ export function HomeCta() {
             }}
           />
 
-          <div className="relative flex max-w-[772px] flex-col px-[56px] py-[70px]">
-            <h2 className="text-display-cta text-ink-inverse">
-              Create an account and keep every ticket in one place.
+          <div className="relative flex max-w-[772px] flex-col px-xl py-3xl sm:px-[56px] sm:py-[70px]">
+            <h2 className="text-[32px] leading-[1.12] font-bold tracking-[-0.03em] text-ink-inverse sm:text-[40px] lg:text-display-cta">
+              {t('home.ctaHeading')}
             </h2>
             <p className="mt-lg text-[17px] leading-[1.55] font-medium text-ink-inverse">
-              Save what you like, get told when tickets drop, hold your wallet balance and
-              cashback, and carry your QR codes with you.
+              {t('home.ctaLede')}
             </p>
             <div className="mt-[30px] flex flex-wrap gap-md">
               <Button
@@ -417,7 +435,7 @@ export function HomeCta() {
                 className="h-[52px] rounded-[26px] bg-surface-default px-[28px] text-[15px] font-bold text-ink-primary hover:bg-surface-default"
                 onClick={() => navigate('/register')}
               >
-                Create a free account
+                {t('home.ctaCreateAccount')}
               </Button>
               <Button
                 size="lg"
@@ -425,7 +443,7 @@ export function HomeCta() {
                 className="h-[52px] rounded-[26px] border-[1.5px] border-ink-inverse bg-transparent px-[28px] text-[15px] font-bold text-ink-inverse hover:border-ink-inverse hover:text-ink-inverse"
                 onClick={() => navigate('/sign-in')}
               >
-                Sign in
+                {t('common:actions.signIn')}
               </Button>
             </div>
           </div>
@@ -437,21 +455,21 @@ export function HomeCta() {
 
 /** Guest business strip — partnerships + Vendor/Talent submit forms (no marketplace). */
 export function HomeBusinessStrip() {
+  const { t } = useTranslation('catalog')
   return (
     <PageSection padTop={72} padBottom={96}>
       <div className="flex flex-col items-start gap-lg overflow-hidden rounded-[16px] border border-border-default bg-surface-default px-2xl py-lg sm:flex-row sm:items-center">
         <p className="min-w-0 flex-1 text-[14px] leading-normal text-ink-muted">
-          <span className="font-bold text-ink-primary">Working behind the ticket?</span>
+          <span className="font-bold text-ink-primary">{t('home.businessLead')}</span>
           <span className="text-ink-secondary">
             {' '}
-            Organizers partner with us through the office. Talents and vendors can submit a
-            request from their guest account — we review and follow up outside the app.
+            {t('home.businessBody')}
           </span>
         </p>
         <div className="flex shrink-0 flex-wrap gap-lg text-[13.5px] font-bold text-brand-identity-end">
-          <Link to="/for-organizers">For organizers</Link>
-          <Link to="/for-talents">For talents</Link>
-          <Link to="/for-vendors">For vendors</Link>
+          <Link to="/for-organizers">{t('home.forOrganizers')}</Link>
+          <Link to="/for-talents">{t('home.forTalents')}</Link>
+          <Link to="/for-vendors">{t('home.forVendors')}</Link>
         </div>
       </div>
     </PageSection>

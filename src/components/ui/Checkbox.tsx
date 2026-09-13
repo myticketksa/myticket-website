@@ -71,7 +71,7 @@ export function Checkbox({
         <span
           className={cn(
             'text-[13px] leading-[1.5] text-ink-muted',
-            fullWidth && 'ml-auto',
+            fullWidth && 'ms-auto',
           )}
         >
           {count}

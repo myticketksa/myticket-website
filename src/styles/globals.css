@@ -66,6 +66,10 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  html[dir='rtl'] body {
+    font-family: var(--font-arabic), var(--font-sans);
+  }
+
   :focus-visible {
     outline: var(--size-focus-ring) solid var(--color-border-focus);
     outline-offset: 2px;

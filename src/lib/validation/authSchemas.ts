@@ -1,65 +1,84 @@
 import * as yup from 'yup'
 import { normalizeAuthIdentifier, normalizeSaudiPhone } from '@/lib/api/formPayload'
 
-export const signInSchema = yup.object({
-  identifier: yup.string().trim().required('Enter your mobile number or email'),
-  password: yup.string().required('Enter your password'),
-  keepSignedIn: yup.boolean().default(true),
-})
+/** Locale-aware message lookup (i18next `t` or a plain function). */
+export type ValidationMessage = (key: string) => string
 
-export type SignInValues = yup.InferType<typeof signInSchema>
+export function createSignInSchema(t: ValidationMessage) {
+  return yup.object({
+    identifier: yup.string().trim().required(t('enterMobileOrEmail')),
+    password: yup.string().required(t('enterPassword')),
+    keepSignedIn: yup.boolean().default(true),
+  })
+}
+
+export type SignInValues = yup.InferType<ReturnType<typeof createSignInSchema>>
+
+/** @deprecated Prefer createSignInSchema(t) for locale-aware messages. */
+export const signInSchema = createSignInSchema((key) => key)
 
 /** Matches Postman `POST /auth/register`: name, email, phone, password. */
-export const registerSchema = yup.object({
-  name: yup.string().trim().required('Enter your full name'),
-  email: yup.string().trim().email('Enter a valid email').required('Enter your email'),
-  phone: yup
-    .string()
-    .trim()
-    .required('Enter your mobile number')
-    .test('phone', 'Enter a valid Saudi mobile number', (value) => {
-      const digits = normalizeSaudiPhone(value ?? '')
-      return /^9665\d{8}$/.test(digits)
-    }),
-  password: yup
-    .string()
-    .min(8, 'Use at least 8 characters')
-    .required('Create a password'),
-  acceptedTerms: yup
-    .boolean()
-    .oneOf([true], 'Accept the Terms and Privacy Policy to continue')
-    .required(),
-})
+export function createRegisterSchema(t: ValidationMessage) {
+  return yup.object({
+    name: yup.string().trim().required(t('enterFullName')),
+    email: yup.string().trim().email(t('enterValidEmail')).required(t('enterEmail')),
+    phone: yup
+      .string()
+      .trim()
+      .required(t('enterMobile'))
+      .test('phone', t('enterValidSaudiMobile'), (value) => {
+        const digits = normalizeSaudiPhone(value ?? '')
+        return /^9665\d{8}$/.test(digits)
+      }),
+    password: yup.string().min(8, t('passwordMin')).required(t('createPassword')),
+    acceptedTerms: yup.boolean().oneOf([true], t('acceptTerms')).required(),
+  })
+}
 
-export type RegisterValues = yup.InferType<typeof registerSchema>
+export type RegisterValues = yup.InferType<ReturnType<typeof createRegisterSchema>>
 
-export const forgotPasswordSchema = yup.object({
-  email: yup.string().trim().email('Enter a valid email').required('Enter your email'),
-})
+/** @deprecated Prefer createRegisterSchema(t). */
+export const registerSchema = createRegisterSchema((key) => key)
 
-export type ForgotPasswordValues = yup.InferType<typeof forgotPasswordSchema>
+export function createForgotPasswordSchema(t: ValidationMessage) {
+  return yup.object({
+    email: yup.string().trim().email(t('enterValidEmail')).required(t('enterEmail')),
+  })
+}
 
-export const resetPasswordSchema = yup.object({
-  email: yup.string().trim().email('Enter a valid email').required('Enter your email'),
-  code: yup.string().trim().required('Enter the code we sent'),
-  password: yup
-    .string()
-    .min(8, 'Use at least 8 characters')
-    .required('Enter a new password'),
-  password_confirmation: yup
-    .string()
-    .oneOf([yup.ref('password')], 'Passwords must match')
-    .required('Confirm your password'),
-})
+export type ForgotPasswordValues = yup.InferType<ReturnType<typeof createForgotPasswordSchema>>
 
-export type ResetPasswordValues = yup.InferType<typeof resetPasswordSchema>
+/** @deprecated Prefer createForgotPasswordSchema(t). */
+export const forgotPasswordSchema = createForgotPasswordSchema((key) => key)
 
-export const otpVerifySchema = yup.object({
-  identifier: yup.string().trim().required(),
-  code: yup.string().trim().min(4).required('Enter the one-time code'),
-})
+export function createResetPasswordSchema(t: ValidationMessage) {
+  return yup.object({
+    email: yup.string().trim().email(t('enterValidEmail')).required(t('enterEmail')),
+    code: yup.string().trim().required(t('enterCode')),
+    password: yup.string().min(8, t('passwordMin')).required(t('enterNewPassword')),
+    password_confirmation: yup
+      .string()
+      .oneOf([yup.ref('password')], t('passwordsMustMatch'))
+      .required(t('confirmPassword')),
+  })
+}
 
-export type OtpVerifyValues = yup.InferType<typeof otpVerifySchema>
+export type ResetPasswordValues = yup.InferType<ReturnType<typeof createResetPasswordSchema>>
+
+/** @deprecated Prefer createResetPasswordSchema(t). */
+export const resetPasswordSchema = createResetPasswordSchema((key) => key)
+
+export function createOtpVerifySchema(t: ValidationMessage) {
+  return yup.object({
+    identifier: yup.string().trim().required(),
+    code: yup.string().trim().min(4).required(t('enterOtp')),
+  })
+}
+
+export type OtpVerifyValues = yup.InferType<ReturnType<typeof createOtpVerifySchema>>
+
+/** @deprecated Prefer createOtpVerifySchema(t). */
+export const otpVerifySchema = createOtpVerifySchema((key) => key)
 
 /** @deprecated Prefer explicit email + phone fields for register. */
 export function splitIdentity(identity: string): { email?: string; phone?: string } {

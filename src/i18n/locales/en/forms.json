@@ -1,0 +1,202 @@
+{
+  "talent": {
+    "eyebrow": "{{role}} request",
+    "title": "Submit a {{role}} request.",
+    "subtitle": "Share your portfolio basics. Our team reviews every request — typically 2–5 working days. You stay signed in as a guest; acceptance does not unlock a separate login.",
+    "notice": "Admin review only. If accepted, we contact you outside the platform when a match comes up — there is no in-app booking flow.",
+    "track": "Track your {{role}} request",
+    "submit": "Submit request",
+    "success": "Talent request submitted",
+    "error": "Could not submit request",
+    "steps": {
+      "account": "Account",
+      "performer": "The performer",
+      "portfolio": "Portfolio",
+      "categories": "Categories & ID",
+      "review": "Review"
+    },
+    "fields": {
+      "stageName": "Stage / performer name",
+      "stagePlaceholder": "How guests should see you",
+      "city": "Home city",
+      "bio": "Short bio",
+      "bioPlaceholder": "Who you are on stage, what you play or perform, and a highlight gig.",
+      "portfolioTitle": "Portfolio piece",
+      "portfolioHint": "A live video works hardest — photo or clip of a real performance.",
+      "portfolioUpload": "Upload a portfolio piece",
+      "portfolioFileHint": "Video or image · max 25 MB",
+      "portfolioLink": "Portfolio link (optional)",
+      "portfolioLinkPlaceholder": "YouTube, Instagram, SoundCloud…",
+      "categories": "Performance categories",
+      "categoriesHint": "Pick the crafts you actually deliver.",
+      "idNumber": "Government ID / Iqama",
+      "idPlaceholder": "National ID or Iqama number",
+      "idUpload": "Upload ID photo",
+      "idUploadHint": "Clear photo of both sides · JPG or PNG",
+      "confirm": "I confirm this information is accurate. I understand acceptance does not create a talent login, and booking contact after review happens outside MyTicket.",
+      "filesSelected_one": "{{count}} file selected",
+      "filesSelected_other": "{{count}} files selected",
+      "idPhotoTitle": "Photo of your ID",
+      "idPhotoHint": "PDF or image · max 10 MB",
+      "reviewStage": "Stage name",
+      "reviewCity": "City",
+      "reviewCategories": "Categories",
+      "reviewPortfolio": "Portfolio link",
+      "reviewId": "ID on file",
+      "noneAdded": "None added"
+    }
+  },
+  "vendor": {
+    "eyebrow": "{{role}} request",
+    "title": "Submit a {{role}} request.",
+    "subtitle": "Tell us about your services. Our team reviews every request — typically 2–5 working days. You stay signed in as a guest; acceptance does not unlock a separate login.",
+    "notice": "Admin review only. If accepted, we contact you outside the platform when we need your services — there is no in-app browse-and-book flow.",
+    "track": "Track your {{role}} request",
+    "submit": "Submit request",
+    "success": "Vendor request submitted",
+    "error": "Could not submit request",
+    "steps": {
+      "account": "Account",
+      "business": "The business",
+      "services": "Services",
+      "credentials": "Credentials & work",
+      "review": "Review"
+    },
+    "fields": {
+      "businessName": "Business / trading name",
+      "businessPlaceholder": "e.g. Nova Stage Systems",
+      "city": "Primary city",
+      "address": "Business address",
+      "addressPlaceholder": "Street, district, city",
+      "story": "Tell us about the business",
+      "storyPlaceholder": "What you deliver, who you usually work with, and a recent job you're proud of.",
+      "services": "Services you provide",
+      "coverage": "Coverage area",
+      "contact": "Primary contact name",
+      "contactPlaceholder": "Name of the person we should call",
+      "cr": "Commercial registration (CR) number",
+      "crPlaceholder": "e.g. 202405043",
+      "licenceUpload": "Upload licence or credential",
+      "workUpload": "Add at least one work photo",
+      "confirm": "I confirm this information is accurate. I understand acceptance does not create a vendor login, and contact after review happens outside MyTicket.",
+      "servicesHint": "Pick everything you can deliver on a show night.",
+      "coverageHint": "Where can you actually show up?",
+      "licenceTitle": "Business licence or credentials",
+      "licenceHint": "PDF or image · max 10 MB",
+      "workTitle": "Photos of previous work",
+      "workHint": "Shows of stages, catering setups, security posts — real jobs",
+      "reviewBusiness": "Business",
+      "reviewCity": "City",
+      "reviewServices": "Services",
+      "reviewCoverage": "Coverage",
+      "reviewContact": "Contact",
+      "reviewCr": "CR number",
+      "filesSelected_one": "{{count}} file selected",
+      "filesSelected_other": "{{count}} files selected"
+    }
+  },
+  "organizer": {
+    "eyebrow": "{{role}} partnership",
+    "officeEyebrow": "Office partnership",
+    "title": "Become a {{role}} through our office.",
+    "subtitle": "There is no self-serve application. Organizer accounts are created by MyTicket after a contract is signed at our office. Guests keep buying tickets as usual until then.",
+    "notice": "Ready to talk? Open a support case or email the partnerships desk — we'll schedule the office visit.",
+    "track": "Track your {{role}} request",
+    "submit": "Contact partnerships",
+    "emailCta": "Email partnerships@myticket.sa",
+    "backLabel": "Back to for organizers",
+    "learnMorePrefix": "Learn more on",
+    "forRole": "For {{role}}",
+    "success": "Partnership inquiry noted",
+    "error": "Could not reach partnerships",
+    "steps": {
+      "meet": {
+        "title": "Meet at the office",
+        "body": "Partnership starts with a real conversation and a signed contract — not an online form."
+      },
+      "agreement": {
+        "title": "Agreement in place",
+        "body": "Once terms are set, our team prepares your organizer workspace behind the scenes."
+      },
+      "account": {
+        "title": "Admin creates your account",
+        "body": "You do not self-register as an organizer. We create the account after the office agreement."
+      }
+    }
+  },
+  "experience": {
+    "eyebrow": "Add a place to MyTicket",
+    "title": "Know a place worth the trip?",
+    "subtitle": "Add it to Experiences and help other people find it. Our team checks every submission before it goes live — usually within 3 working days.",
+    "success": "Experience submitted for review",
+    "error": "Could not submit experience",
+    "submitReview": "Submit for review",
+    "steps": {
+      "place": "The place",
+      "hours": "Hours & services",
+      "contact": "Contact",
+      "photos": "Photos & review"
+    },
+    "fields": {
+      "name": "What's it called?",
+      "nameAr": "Arabic name (optional)",
+      "category": "Category",
+      "type": "Type",
+      "where": "Where exactly is it?",
+      "dropPin": "— drop the pin",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "about": "Describe it for someone who's never been",
+      "aboutHint": "What is it, who's it for, when's it best?",
+      "openingHours": "Opening hours",
+      "closed": "Closed",
+      "addDay": "+ Add another day",
+      "services": "Services included",
+      "maxGuests": "Max guests",
+      "price": "Price per guest (SAR)",
+      "email": "Contact email",
+      "phone": "Phone",
+      "website": "Website (optional)",
+      "instagram": "Instagram (optional)",
+      "cover": "Cover photo",
+      "coverHint": "Shown on catalog cards · JPG or PNG",
+      "banner": "Banner photo",
+      "bannerHint": "Wide hero for the detail page",
+      "gallery": "Gallery photos",
+      "galleryHint": "Up to several extras",
+      "ready": "Ready to submit"
+    },
+    "types": {
+      "activity": "Activity",
+      "attraction": "Attraction"
+    },
+    "validation": {
+      "name": "Give the place a name",
+      "about": "Description needs at least 80 characters",
+      "hours": "Add at least one opening day",
+      "maxGuests": "Set a max guest count",
+      "contact": "Add an email or phone so guests can reach you"
+    }
+  },
+  "submitted": {
+    "header": "Request received",
+    "backHome": "Back to MyTicket",
+    "title": "It's with our team.",
+    "body": "Your {{role}} request is in. We review every submission by hand — expect an answer within 2–5 working days, by notification and email. You remain a guest; acceptance does not change your login.",
+    "reference": "Application reference",
+    "whileYouWait": "While you wait",
+    "waitGuest": "Everything guest-side keeps working — buy tickets, use your wallet, write reviews.",
+    "waitStatus": "Follow your request status on your account — pending, accepted, or rejected.",
+    "waitContact": "If we need anything, we'll reach out — contact after acceptance happens outside the platform.",
+    "trackCta": "Track your {{role}} request",
+    "browseEvents": "Browse events meanwhile"
+  },
+  "review": {
+    "notSet": "Not set yet",
+    "heading": "What we'll review",
+    "provided": "Provided"
+  },
+  "accountDone": {
+    "subtitle": "Your guest account stays a guest. Tickets, wallet and reviews stay untouched — this form is a request only."
+  }
+}

@@ -19,10 +19,53 @@ interface AuthState {
   user: AuthUser | null
 }
 
+/** Normalize login / stored user so `walletBalance` is always a finite number when present. */
+export function normalizeAuthUser(raw: unknown): AuthUser | null {
+  if (!raw || typeof raw !== 'object') return null
+  const record = raw as Record<string, unknown>
+  const id = Number(record.id)
+  if (!Number.isFinite(id)) return null
+
+  const walletRaw = record.walletBalance ?? record.wallet_balance ?? record.balance
+  const walletNum = walletRaw == null || walletRaw === '' ? undefined : Number(walletRaw)
+
+  return {
+    id,
+    name: String(record.name ?? ''),
+    email: String(record.email ?? ''),
+    phone: String(record.phone ?? ''),
+    role: String(record.role ?? 'default'),
+    emailVerified: Boolean(record.emailVerified ?? record.email_verified),
+    walletBalance: walletNum != null && Number.isFinite(walletNum) ? walletNum : undefined,
+    created_at:
+      record.created_at != null
+        ? String(record.created_at)
+        : record.createdAt != null
+          ? String(record.createdAt)
+          : undefined,
+  }
+}
+
+/** Format the saved login wallet balance for UI (AccountWalletCard, profile, wallet page). */
+export function formatAuthWalletBalance(
+  value: unknown,
+  fallback = 'SAR 0',
+): string {
+  if (value == null || value === '') return fallback
+  const raw = String(value)
+  if (/sar/i.test(raw)) return raw
+  const num = Number(value)
+  if (!Number.isFinite(num)) return raw
+  return `SAR ${num.toLocaleString(undefined, {
+    minimumFractionDigits: num % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  })}`
+}
+
 function readStoredUser(): AuthUser | null {
   try {
     const raw = localStorage.getItem(USER_KEY)
-    return raw ? (JSON.parse(raw) as AuthUser) : null
+    return raw ? normalizeAuthUser(JSON.parse(raw)) : null
   } catch {
     return null
   }
@@ -39,12 +82,13 @@ const authSlice = createSlice({
   reducers: {
     credentialsSet(
       state,
-      action: PayloadAction<{ token: string; user: AuthUser; persist?: boolean }>,
+      action: PayloadAction<{ token: string; user: AuthUser | Record<string, unknown>; persist?: boolean }>,
     ) {
-      const { token, user, persist = true } = action.payload
+      const { token, persist = true } = action.payload
+      const user = normalizeAuthUser(action.payload.user)
       state.token = token
       state.user = user
-      if (persist) {
+      if (persist && user) {
         localStorage.setItem(TOKEN_KEY, token)
         localStorage.setItem(USER_KEY, JSON.stringify(user))
       } else {
@@ -74,4 +118,8 @@ export function selectAuthUser(state: { auth: AuthState }) {
 
 export function selectIsAuthenticated(state: { auth: AuthState }) {
   return Boolean(state.auth.token)
+}
+
+export function selectWalletBalance(state: { auth: AuthState }) {
+  return state.auth.user?.walletBalance
 }

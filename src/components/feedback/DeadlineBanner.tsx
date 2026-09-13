@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { useLiveRemaining } from '@/lib/countdown/useLiveRemaining'
 
 /**
  * Figma `DeadlineBanner` — node 207:2895.
@@ -52,6 +53,7 @@ export interface DeadlineBannerProps {
 }
 
 export function DeadlineBanner({ title, subtitle, timer, className }: DeadlineBannerProps) {
+  const remaining = useLiveRemaining(timer)
   return (
     <div
       className={cn(
@@ -73,7 +75,7 @@ export function DeadlineBanner({ title, subtitle, timer, className }: DeadlineBa
         aria-live="polite"
         className="shrink-0 text-[15px] font-extrabold tabular-nums whitespace-nowrap text-ink-brand-strong"
       >
-        {timer}
+        {remaining}
       </span>
     </div>
   )

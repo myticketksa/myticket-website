@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
 
 /**
@@ -52,15 +53,16 @@ export interface BreadcrumbsProps {
   className?: string
 }
 
-export function Breadcrumbs({ items, label = 'Breadcrumb', className }: BreadcrumbsProps) {
+export function Breadcrumbs({ items, label, className }: BreadcrumbsProps) {
+  const { t } = useTranslation('common')
   return (
-    <nav aria-label={label} className={cn('text-body-caption', className)}>
-      <ol className="flex items-center gap-sm whitespace-nowrap">
+    <nav aria-label={label ?? t('a11y.breadcrumb')} className={cn('text-body-caption', className)}>
+      <ol className="flex items-center gap-sm overflow-x-auto overscroll-x-contain whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map((item, index) => {
           const isCurrent = index === items.length - 1
 
           return (
-            <li key={index} className="flex items-center gap-sm">
+            <li key={index} className="flex shrink-0 items-center gap-sm">
               {index > 0 && (
                 <span aria-hidden="true" className="text-ink-muted">
                   /
@@ -74,7 +76,9 @@ export function Breadcrumbs({ items, label = 'Breadcrumb', className }: Breadcru
               ) : (
                 <span
                   aria-current={isCurrent ? 'page' : undefined}
-                  className={isCurrent ? 'text-ink-primary' : 'text-ink-muted'}
+                  className={cn(
+                    isCurrent ? 'max-w-[12rem] truncate text-ink-primary sm:max-w-none' : 'text-ink-muted',
+                  )}
                 >
                   {item.label}
                 </span>

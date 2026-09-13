@@ -105,9 +105,9 @@ export function TalentDetailPage() {
             />
           </div>
 
-          <div className="mt-[22px] flex items-center justify-center gap-[8px]">
-            <h1 className="text-display-hero text-ink-primary">{talent.name}</h1>
-            {talent.verified && <VerifiedIcon size={28} />}
+          <div className="mt-[22px] flex flex-wrap items-center justify-center gap-[8px]">
+            <h1 className="min-w-0 text-center text-display-hero text-ink-primary">{talent.name}</h1>
+            {talent.verified && <VerifiedIcon size={28} className="shrink-0" />}
           </div>
 
           <p className="mt-[10px] text-[17px] text-ink-secondary">{talent.discipline}</p>

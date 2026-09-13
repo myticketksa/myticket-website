@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   ChipMultiSelect,
@@ -24,9 +25,10 @@ import {
 import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { mapApiIdLabelOptions, type IdLabelOption } from '@/lib/api/formPayload'
+import { clearDraft, loadDraft, saveDraft } from '@/lib/forms/draftStorage'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
-const STEPS = ['Account', 'The performer', 'Portfolio', 'Categories & ID', 'Review'] as const
+const STEP_KEYS = ['account', 'performer', 'portfolio', 'categories', 'review'] as const
 
 const FALLBACK_CATEGORIES: IdLabelOption[] = [
   { value: '1', label: 'Singer' },
@@ -74,6 +76,7 @@ const EMPTY_DRAFT: TalentDraft = {
 
 /** Apply talent — FormData keys match Postman `POST /applications/talent`. */
 export function ApplyTalentPage() {
+  const { t } = useTranslation(['forms', 'common'])
   const { roleLabel } = useLocale()
   const talent = roleLabel('talent')
   const navigate = useNavigate()
@@ -83,6 +86,30 @@ export function ApplyTalentPage() {
   const { data: apiCategories } = useGetPerformanceCategoriesQuery()
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<TalentDraft>(EMPTY_DRAFT)
+  const [draftSaved, setDraftSaved] = useState(false)
+  const [restoredNote, setRestoredNote] = useState(false)
+
+  const steps = useMemo(
+    () => STEP_KEYS.map((key) => t(`forms:talent.steps.${key}`)),
+    [t],
+  )
+
+  useEffect(() => {
+    const stored = loadDraft<Record<string, unknown>>('talent')
+    if (!stored) return
+    setStep(Math.min(stored.step, STEP_KEYS.length - 1))
+    setDraft({
+      ...EMPTY_DRAFT,
+      ...(stored.draft as Partial<TalentDraft>),
+      profilePhoto: undefined,
+      portfolioMedia: [],
+      categoryIds: Array.isArray(stored.draft.categoryIds)
+        ? (stored.draft.categoryIds as string[])
+        : [],
+      terms: Boolean(stored.draft.terms),
+    })
+    setRestoredNote(true)
+  }, [])
 
   const categoryOptions = useMemo(
     () => mapApiIdLabelOptions(apiCategories, FALLBACK_CATEGORIES),
@@ -94,7 +121,7 @@ export function ApplyTalentPage() {
     [apiCities],
   )
 
-  const lastStep = STEPS.length - 1
+  const lastStep = STEP_KEYS.length - 1
   const cityLabel =
     cityOptions.find((city) => city.value === draft.cityId)?.label ?? draft.cityId
   const categoryLabels = draft.categoryIds.map(
@@ -103,6 +130,13 @@ export function ApplyTalentPage() {
 
   function patch(partial: Partial<TalentDraft>) {
     setDraft((prev) => ({ ...prev, ...partial }))
+  }
+
+  function handleSaveExit() {
+    saveDraft('talent', step, draft as unknown as Record<string, unknown>)
+    setDraftSaved(true)
+    dispatch(toastPushed('success', t('common:draft.savedToast')))
+    navigate('/')
   }
 
   async function handleContinue() {
@@ -125,31 +159,40 @@ export function ApplyTalentPage() {
 
     try {
       await applyTalent(body).unwrap()
-      dispatch(toastPushed('success', 'Talent request submitted'))
+      clearDraft('talent')
+      dispatch(toastPushed('success', t('forms:talent.success')))
       navigate('/application-submitted?role=talent')
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not submit request')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('forms:talent.error'))))
     }
   }
 
   function handleClear() {
+    clearDraft('talent')
     setDraft(EMPTY_DRAFT)
     setStep(0)
+    setDraftSaved(false)
+    setRestoredNote(false)
   }
 
   return (
     <FormWizardShell
-      eyebrow={`${talent} request`}
-      title={`Submit a ${talent} request.`}
-      subtitle="Share your portfolio basics. Our team reviews every request — typically 2–5 working days. You stay signed in as a guest; acceptance does not unlock a separate login."
+      eyebrow={t('forms:talent.eyebrow', { role: talent })}
+      title={t('forms:talent.title', { role: talent })}
+      subtitle={t('forms:talent.subtitle')}
+      draftSaved={draftSaved}
       notice={
         <p>
-          <span className="font-bold text-ink-brand-strong">Admin review only.</span> If accepted,
-          we contact you outside the platform when a match comes up — there is no in-app booking
-          flow.
+          {t('forms:talent.notice')}
+          {restoredNote ? (
+            <>
+              {' '}
+              <span className="text-ink-secondary">{t('common:draft.restoredNote')}</span>
+            </>
+          ) : null}
         </p>
       }
-      steps={[...STEPS]}
+      steps={steps}
       activeStep={step}
       backDisabled={step === 0}
       onBack={() => setStep((prev) => Math.max(0, prev - 1))}
@@ -157,29 +200,28 @@ export function ApplyTalentPage() {
       continueLabel={
         step === lastStep
           ? applyState.isLoading
-            ? 'Submitting…'
-            : 'Submit request'
-          : 'Continue'
+            ? t('common:states.submitting')
+            : t('forms:talent.submit')
+          : t('common:actions.continue')
       }
       trackHref="/my-talent-application"
-      trackLabel={`Track your ${talent} request`}
+      trackLabel={t('forms:talent.track', { role: talent })}
       onClear={handleClear}
+      onSaveExit={handleSaveExit}
     >
-      {step === 0 && (
-        <AccountDonePanel subtitle="Your guest account stays a guest. Tickets, wallet and reviews stay untouched — this form is a request only." />
-      )}
+      {step === 0 && <AccountDonePanel subtitle={t('forms:accountDone.subtitle')} />}
 
       {step === 1 && (
         <div className="flex flex-col gap-xl">
-          <Field label="Stage / performer name" htmlFor="talent-stage-name">
+          <Field label={t('forms:talent.fields.stageName')} htmlFor="talent-stage-name">
             <TextInput
               id="talent-stage-name"
               value={draft.stageName}
               onChange={(event) => patch({ stageName: event.target.value })}
-              placeholder="How guests should see you"
+              placeholder={t('forms:talent.fields.stagePlaceholder')}
             />
           </Field>
-          <Field label="Home city" htmlFor="talent-city">
+          <Field label={t('forms:talent.fields.city')} htmlFor="talent-city">
             <Select
               id="talent-city"
               value={draft.cityId}
@@ -192,13 +234,13 @@ export function ApplyTalentPage() {
               ))}
             </Select>
           </Field>
-          <Field label="Short bio" htmlFor="talent-bio">
+          <Field label={t('forms:talent.fields.bio')} htmlFor="talent-bio">
             <Textarea
               id="talent-bio"
               rows={4}
               value={draft.bio}
               onChange={(event) => patch({ bio: event.target.value })}
-              placeholder="Who you are on stage, what you play or perform, and a highlight gig."
+              placeholder={t('forms:talent.fields.bioPlaceholder')}
             />
           </Field>
         </div>
@@ -208,30 +250,32 @@ export function ApplyTalentPage() {
         <div className="flex flex-col gap-xl">
           <div>
             <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
-              Portfolio piece
+              {t('forms:talent.fields.portfolioTitle')}
             </p>
             <p className="mb-[10px] text-[13px] text-ink-secondary">
-              A live video works hardest — photo or clip of a real performance.
+              {t('forms:talent.fields.portfolioHint')}
             </p>
             <FileDropButton
-              label="Upload a portfolio piece"
-              hint="Video or image · max 25 MB"
+              label={t('forms:talent.fields.portfolioUpload')}
+              hint={t('forms:talent.fields.portfolioFileHint')}
               accept="image/*,video/*"
               multiple
               fileName={
                 draft.portfolioMedia.length
-                  ? `${draft.portfolioMedia.length} file${draft.portfolioMedia.length > 1 ? 's' : ''} selected`
+                  ? t('forms:talent.fields.filesSelected', {
+                      count: draft.portfolioMedia.length,
+                    })
                   : undefined
               }
               onFiles={(files) => patch({ portfolioMedia: files })}
             />
           </div>
-          <Field label="Portfolio link (optional)" htmlFor="talent-link">
+          <Field label={t('forms:talent.fields.portfolioLink')} htmlFor="talent-link">
             <TextInput
               id="talent-link"
               value={draft.portfolioLink}
               onChange={(event) => patch({ portfolioLink: event.target.value })}
-              placeholder="YouTube, Instagram, SoundCloud…"
+              placeholder={t('forms:talent.fields.portfolioLinkPlaceholder')}
             />
           </Field>
         </div>
@@ -240,25 +284,27 @@ export function ApplyTalentPage() {
       {step === 3 && (
         <div className="flex flex-col gap-xl">
           <ChipMultiSelect
-            label="Performance categories"
-            hint="Pick the crafts you actually deliver."
+            label={t('forms:talent.fields.categories')}
+            hint={t('forms:talent.fields.categoriesHint')}
             options={categoryOptions}
             value={draft.categoryIds}
             onChange={(categoryIds) => patch({ categoryIds })}
           />
-          <Field label="Government ID / Iqama" htmlFor="talent-id">
+          <Field label={t('forms:talent.fields.idNumber')} htmlFor="talent-id">
             <TextInput
               id="talent-id"
               value={draft.idNumber}
               onChange={(event) => patch({ idNumber: event.target.value })}
-              placeholder="National ID or Iqama number"
+              placeholder={t('forms:talent.fields.idPlaceholder')}
             />
           </Field>
           <div>
-            <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">Photo of your ID</p>
+            <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
+              {t('forms:talent.fields.idPhotoTitle')}
+            </p>
             <FileDropButton
-              label="Upload ID photo"
-              hint="PDF or image · max 10 MB"
+              label={t('forms:talent.fields.idUpload')}
+              hint={t('forms:talent.fields.idPhotoHint')}
               accept="image/*,.pdf"
               fileName={draft.profilePhoto?.name}
               onFiles={(files) => patch({ profilePhoto: files[0] })}
@@ -272,25 +318,28 @@ export function ApplyTalentPage() {
           <ReviewSummary
             rows={[
               {
-                label: 'Stage name',
-                value: draft.stageName.trim() || 'Not set yet',
+                label: t('forms:talent.fields.reviewStage'),
+                value: draft.stageName.trim() || t('forms:review.notSet'),
               },
-              { label: 'City', value: cityLabel },
-              { label: 'Categories', value: joinOrDash(categoryLabels) },
+              { label: t('forms:talent.fields.reviewCity'), value: cityLabel },
               {
-                label: 'Portfolio link',
-                value: draft.portfolioLink.trim() || 'None added',
+                label: t('forms:talent.fields.reviewCategories'),
+                value: joinOrDash(categoryLabels),
               },
               {
-                label: 'ID on file',
-                value: draft.idNumber.trim() ? 'Provided' : 'Not set yet',
+                label: t('forms:talent.fields.reviewPortfolio'),
+                value: draft.portfolioLink.trim() || t('forms:talent.fields.noneAdded'),
+              },
+              {
+                label: t('forms:talent.fields.reviewId'),
+                value: draft.idNumber.trim() ? t('forms:review.provided') : t('forms:review.notSet'),
               },
             ]}
           />
           <ReviewTerms
             checked={draft.terms}
             onCheckedChange={(terms) => patch({ terms })}
-            label="I confirm this information is accurate. I understand acceptance does not create a talent login, and booking contact after review happens outside MyTicket."
+            label={t('forms:talent.fields.confirm')}
           />
         </div>
       )}

@@ -22,10 +22,31 @@ export function absoluteUrl(path = '/'): string {
   return `${SITE_ORIGIN}${normalized}`
 }
 
+export type FormatDocumentTitleOptions = {
+  /** Localized home title, e.g. `MyTicket — Live events…`. */
+  homeTitle?: string
+  /** Localized tagline used when `homeTitle` is omitted. */
+  tagline?: string
+  /** Template with `{{page}}`, e.g. `{{page}} · MyTicket`. */
+  titleFormat?: string
+  siteName?: string
+}
+
 /** Browser tab title: `Page · MyTicket` (home uses the marketing title). */
-export function formatDocumentTitle(pageTitle?: string | null): string {
+export function formatDocumentTitle(
+  pageTitle?: string | null,
+  options?: FormatDocumentTitleOptions,
+): string {
   const page = pageTitle?.trim()
-  if (!page) return `${SITE_NAME} — ${SITE_TAGLINE}`
-  if (page === SITE_NAME) return `${SITE_NAME} — ${SITE_TAGLINE}`
-  return `${page} · ${SITE_NAME}`
+  const siteName = options?.siteName ?? SITE_NAME
+  const tagline = options?.tagline ?? SITE_TAGLINE
+  const homeTitle = options?.homeTitle ?? `${siteName} — ${tagline}`
+
+  if (!page || page === siteName) return homeTitle
+
+  if (options?.titleFormat) {
+    return options.titleFormat.replace(/\{\{\s*page\s*\}\}/g, page)
+  }
+
+  return `${page} · ${siteName}`
 }

@@ -1,9 +1,14 @@
-import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Dialog as DialogPrimitive } from 'radix-ui'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { Avatar, CountBadge } from '@/components/data-display'
-import { BellIcon, HeartGlyphIcon } from '@/components/icons'
+import { BellIcon, CloseIcon, HeartGlyphIcon, MenuIcon, PowerIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
+import { mobileNavToggled, selectMobileNavOpen } from '@/features/ui/uiSlice'
 import { useLocale } from '@/i18n/locale'
+import { useSignOut } from '@/lib/auth/useSignOut'
 import { cn } from '@/lib/cn'
 import { Logo } from './Logo'
 import { NavItem } from './NavItem'
@@ -12,57 +17,14 @@ import { SearchPill } from './SearchPill'
 /**
  * Figma `SiteHeader` — node 207:2936, State=Signed out `207:2937` / Signed in `207:2954`.
  *
- * An 80px shell (`--size-header`) on `--bg-page` under a 1px `--border-default` rule, with
- * a 1400 inner band and 40 gutters — the same shell `SiteFooter` uses. Inside: the logo at
- * 73×40, the nav at a 24 gap, a flex spacer, the search slot, then the auth or account
- * cluster at a 14 gap. The 38px gap on the content row is what separates the logo from the
- * nav.
- *
- * The blur is the one measurement that needs converting rather than copying. The attached
- * effect style is `Blur/Header`, a background blur of radius 14, and `--blur-header` holds
- * that Figma value; CSS `backdrop-filter` takes a standard deviation, which is half the
- * Figma radius, so the class is `backdrop-blur-[7px]` — exactly what Figma's own codegen
- * emits. The token is not used directly here because doing so would double the blur.
- *
- * **The search slot flexes.** Figma gives it `flex 1 1 auto` between a 200 minimum and a
- * 300 maximum, which is the entire reason `SearchPill` exists alongside `SearchField`.
- *
- * **All five nav items are real `NavItem` instances,** which Figma is emphatic about:
- * *"Select the header instance and set the relevant nav item to State=Active — do NOT
- * restyle the label by hand."* Hence `activeItem`, matched against the item label, rather
- * than a colour prop. Figma also records which pages have no active item at all (Home,
- * Event Details, Search Results, Auction) and that detail pages use `section` on their
- * parent's item, so both are expressible.
- *
- * Three places this header draws its own version of an atom rather than instancing it, all
- * near misses:
- *
- * - The **language pill** is h36 / padding 13 / 13px, where the DS `LanguagePill`
- *   (`207:1793`) is h32 / padding 12 / 12px. Three mismatches, so it is local. Both are
- *   Cairo, and the header's has a fill where the atom's is transparent.
- * - The **count badge** is 17 tall with a 17 minimum and 10px/800 type, where `CountBadge`
- *   web is 16/16 at 9.5px/800. One pixel and half a point out, which is exactly the kind of
- *   drift that argues for the atom — so `CountBadge` is used with the size overridden, and
- *   the offset is −5.5 rather than the atom's documented −4.
- * - The **notifications button** is a 36 box at radius 18, where `Button variant="icon"`
- *   size S is 36 at radius 18 — a match on both, but it also carries the 1.5px border and
- *   white ground, so it is a genuine instance and is built as one.
- *
- * The avatar chip is where the header contradicted the design system: `Avatar` documents
- * that no 32px size exists, and `207:2974` draws one at radius 16 with 13px/700 initials.
- * The atom gained an `md` size for it.
- *
- * One thing kept against my instinct: the **Sign in button carries a 16px heart**
- * (`I207:2952;207:1666`). A heart on a sign-in action reads like the `Button` component's
- * default icon slot left in place rather than intent. It is drawn in the source, so it is
- * drawn here, and `signInIcon` exists to switch it off in one place if the design agrees it
- * is a leftover.
- *
- * **Not built:** any mobile or condensed arrangement, a nav overflow, a search-expanded
- * state, and the account dropdown the avatar chip implies — the source draws the chip but
- * no menu.
+ * Desktop (`lg+`) matches the Figma 1400 band layout. Below `lg`, nav collapses into an
+ * accessible drawer driven by `ui.mobileNavOpen` — the desktop row is otherwise unchanged.
  */
+export type NavId = 'Events' | 'Talents' | 'Experiences'
+
 export interface HeaderNavLink {
+  /** Stable id for active matching (English). Display text comes from `label`. */
+  id?: NavId | string
   label: string
   href: string
 }
@@ -71,10 +33,11 @@ export interface SiteHeaderProps {
   state?: 'signedOut' | 'signedIn'
   nav?: HeaderNavLink[]
   /**
-   * The label of the nav item to mark. `active` is a listing page on its own item;
+   * Nav item id to mark. `active` is a listing page on its own item;
    * `section` is a detail page marking its parent. Omit on pages with no active item.
+   * Callers (e.g. MainLayout) pass English ids: `Events` | `Talents` | `Experiences`.
    */
-  activeItem?: string
+  activeItem?: NavId | string
   activeItemState?: 'active' | 'section'
   showSearch?: boolean
   /** Signed-in only. */
@@ -87,19 +50,25 @@ export interface SiteHeaderProps {
   className?: string
 }
 
-const DEFAULT_NAV: HeaderNavLink[] = [
-  { label: 'Events', href: '/events' },
-  { label: 'Talents', href: '/talents' },
-  { label: 'Experiences', href: '/experiences' },
+const DEFAULT_NAV: { id: NavId; href: string }[] = [
+  { id: 'Events', href: '/events' },
+  { id: 'Talents', href: '/talents' },
+  { id: 'Experiences', href: '/experiences' },
 ]
+
+function navItemActive(item: HeaderNavLink, activeItem?: string) {
+  if (!activeItem) return false
+  return (item.id ?? item.label) === activeItem
+}
 
 /**
  * h36, padding `0 13`, 1.5px border, pill radius, 13px/700 Cairo. Not the DS
  * `LanguagePill`, which is h32 / 12 / 12px. Toggles en ↔ ar and document dir.
  */
-function HeaderLanguagePill() {
+function HeaderLanguagePill({ className }: { className?: string }) {
+  const { t } = useTranslation('common')
   const { locale, toggleLocale } = useLocale()
-  const nextLabel = locale === 'en' ? 'العربية' : 'English'
+  const nextLabel = locale === 'en' ? t('language.arabic') : t('language.english')
 
   return (
     <button
@@ -107,17 +76,201 @@ function HeaderLanguagePill() {
       lang={locale === 'en' ? 'ar' : 'en'}
       dir="auto"
       onClick={toggleLocale}
-      aria-label={locale === 'en' ? 'Switch to Arabic' : 'Switch to English'}
-      className="font-arabic inline-flex h-[36px] shrink-0 items-center justify-center rounded-pill border-[1.5px] border-border-default bg-surface-default px-[13px] text-[13px] font-bold whitespace-nowrap text-ink-secondary transition-[color,border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:text-ink-primary"
+      aria-label={locale === 'en' ? t('language.switchToArabic') : t('language.switchToEnglish')}
+      className={cn(
+        'font-arabic inline-flex h-[36px] shrink-0 items-center justify-center rounded-pill border-[1.5px] border-border-default bg-surface-default px-[13px] text-[13px] font-bold whitespace-nowrap text-ink-secondary transition-[color,border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:text-ink-primary',
+        className,
+      )}
     >
       {nextLabel}
     </button>
   )
 }
 
+function AuthCluster({
+  state,
+  account,
+  signInIcon,
+  onNavigate,
+  onClose,
+}: {
+  state: 'signedOut' | 'signedIn'
+  account?: SiteHeaderProps['account']
+  signInIcon: boolean
+  onNavigate: (path: string) => void
+  onClose?: () => void
+}) {
+  const { t } = useTranslation(['nav', 'common'])
+
+  if (state === 'signedOut') {
+    return (
+      <div className="flex shrink-0 items-center gap-[14px]">
+        <HeaderLanguagePill />
+        <Button
+          variant="secondary"
+          size="md"
+          icon={signInIcon ? <HeartGlyphIcon size={16} /> : undefined}
+          onClick={() => onNavigate('/sign-in')}
+        >
+          {t('common:actions.signIn')}
+        </Button>
+        <Button size="md" onClick={() => onNavigate('/register')}>
+          {t('common:actions.createAccount')}
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex shrink-0 items-center gap-[14px]">
+      <HeaderLanguagePill />
+
+      <span className="relative shrink-0">
+        <Button
+          variant="icon"
+          size="sm"
+          aria-label={t('nav:notifications')}
+          onClick={() => onNavigate('/notifications')}
+        >
+          <BellIcon size={16} />
+        </Button>
+        {account?.notifications !== undefined && (
+          <span className="absolute -top-[5.5px] -end-[5.5px]">
+            <CountBadge
+              count={account.notifications}
+              className="h-[17px] min-w-[17px] rounded-[9px] text-[10px]"
+            />
+          </span>
+        )}
+      </span>
+
+      <Link
+        to="/my-tickets"
+        onClick={onClose}
+        className="text-[15px] font-bold whitespace-nowrap text-ink-primary transition-[color,opacity] duration-micro ease-micro hover:text-ink-secondary"
+      >
+        {t('nav:myTickets')}
+      </Link>
+
+      <Link
+        to="/profile"
+        onClick={onClose}
+        className="flex shrink-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pe-[14px] ps-[5px] transition-[border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:opacity-95"
+      >
+        <Avatar initials={account?.initials ?? ''} size="md" />
+        <span className="text-[14px] font-bold whitespace-nowrap text-ink-primary">
+          {account?.name}
+        </span>
+      </Link>
+    </div>
+  )
+}
+
+/** Mobile drawer auth — language / bell / avatar on one row; tickets + sign out below. */
+function MobileDrawerAuth({
+  state,
+  account,
+  signInIcon,
+  onNavigate,
+  onClose,
+}: {
+  state: 'signedOut' | 'signedIn'
+  account?: SiteHeaderProps['account']
+  signInIcon: boolean
+  onNavigate: (path: string) => void
+  onClose: () => void
+}) {
+  const { t } = useTranslation(['nav', 'common'])
+  const { signOut, isLoading } = useSignOut()
+
+  if (state === 'signedOut') {
+    return (
+      <div className="mb-xl flex flex-col gap-sm">
+        <HeaderLanguagePill className="self-start" />
+        <Button
+          variant="secondary"
+          size="md"
+          icon={signInIcon ? <HeartGlyphIcon size={16} /> : undefined}
+          onClick={() => onNavigate('/sign-in')}
+          className="w-full"
+        >
+          {t('common:actions.signIn')}
+        </Button>
+        <Button size="md" onClick={() => onNavigate('/register')} className="w-full">
+          {t('common:actions.createAccount')}
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mb-xl flex flex-col gap-md">
+      <div className="flex items-center gap-sm">
+        <HeaderLanguagePill />
+        <span className="relative shrink-0">
+          <Button
+            variant="icon"
+            size="sm"
+            aria-label={t('nav:notifications')}
+            onClick={() => onNavigate('/notifications')}
+          >
+            <BellIcon size={16} />
+          </Button>
+          {account?.notifications !== undefined && (
+            <span className="absolute -top-[5.5px] -end-[5.5px]">
+              <CountBadge
+                count={account.notifications}
+                className="h-[17px] min-w-[17px] rounded-[9px] text-[10px]"
+              />
+            </span>
+          )}
+        </span>
+        <Link
+          to="/profile"
+          onClick={onClose}
+          className="ms-auto flex shrink-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pe-[12px] ps-[5px] transition-[border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:opacity-95"
+          aria-label={
+            account?.name
+              ? t('nav:profileNamed', { name: account.name })
+              : t('nav:profile')
+          }
+        >
+          <Avatar initials={account?.initials ?? ''} size="md" />
+          {account?.name ? (
+            <span className="max-w-[7rem] truncate text-[13px] font-bold text-ink-primary">
+              {account.name}
+            </span>
+          ) : null}
+        </Link>
+      </div>
+
+      <Link
+        to="/my-tickets"
+        onClick={onClose}
+        className="text-[15px] font-bold text-ink-primary transition-[color,opacity] duration-micro ease-micro hover:text-ink-secondary"
+      >
+        {t('nav:myTickets')}
+      </Link>
+
+      <button
+        type="button"
+        className="flex h-[40px] w-full items-center gap-[11px] rounded-[12px] px-[11px] text-[14px] font-semibold text-state-danger hover:bg-bg-page disabled:opacity-60"
+        disabled={isLoading}
+        onClick={() => {
+          onClose()
+          void signOut()
+        }}
+      >
+        <PowerIcon size={14} />
+        {t('common:actions.signOut')}
+      </button>
+    </div>
+  )
+}
+
 export function SiteHeader({
   state = 'signedOut',
-  nav = DEFAULT_NAV,
+  nav,
   activeItem,
   activeItemState = 'active',
   showSearch = true,
@@ -125,13 +278,48 @@ export function SiteHeader({
   signInIcon = true,
   className,
 }: SiteHeaderProps) {
+  const { t } = useTranslation(['nav', 'common'])
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const dispatch = useAppDispatch()
+  const mobileNavOpen = useAppSelector(selectMobileNavOpen)
+
+  const resolvedNav: HeaderNavLink[] =
+    nav ??
+    DEFAULT_NAV.map((item) => ({
+      id: item.id,
+      href: item.href,
+      label: t(`nav:${item.id.toLowerCase()}`),
+    }))
+
+  useEffect(() => {
+    dispatch(mobileNavToggled(false))
+  }, [pathname, dispatch])
+
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)')
+    const onChange = () => {
+      if (mql.matches) dispatch(mobileNavToggled(false))
+    }
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [dispatch])
 
   function onSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
     const q = String(data.get('q') ?? '').trim()
     navigate(q ? `/search?q=${encodeURIComponent(q)}` : '/search')
+    dispatch(mobileNavToggled(false))
+  }
+
+  function go(path: string) {
+    dispatch(mobileNavToggled(false))
+    navigate(path)
+  }
+
+  function closeDrawer() {
+    dispatch(mobileNavToggled(false))
   }
 
   return (
@@ -141,18 +329,18 @@ export function SiteHeader({
         className,
       )}
     >
-      <div className="flex h-full w-full max-w-[1400px] items-center gap-[38px] px-gutter-desktop">
-        <Link to="/" aria-label="MyTicket home" className="shrink-0">
+      <div className="flex h-full w-full max-w-[1400px] items-center gap-md px-gutter-desktop lg:gap-[38px]">
+        <Link to="/" aria-label={t('nav:home')} className="shrink-0">
           <Logo height={40} alt="" />
         </Link>
 
-        <nav aria-label="Main" className="flex shrink-0 items-center gap-2xl">
-          {nav.map((item) => (
+        <nav aria-label={t('nav:main')} className="hidden shrink-0 items-center gap-2xl lg:flex">
+          {resolvedNav.map((item) => (
             <NavItem
-              key={item.label}
+              key={item.id ?? item.href}
               label={item.label}
               href={item.href}
-              state={item.label === activeItem ? activeItemState : 'default'}
+              state={navItemActive(item, activeItem) ? activeItemState : 'default'}
             />
           ))}
         </nav>
@@ -162,69 +350,103 @@ export function SiteHeader({
         {showSearch && (
           <form
             onSubmit={onSearch}
-            className="min-w-[200px] max-w-[300px] flex-1 shrink-0 transition-[max-width] duration-normal ease-standard focus-within:max-w-[320px]"
+            className="hidden min-w-0 max-w-[300px] flex-1 sm:block lg:min-w-[200px] lg:shrink-0 lg:transition-[max-width] lg:duration-normal lg:ease-standard lg:focus-within:max-w-[320px]"
           >
-            <SearchPill name="q" className="w-full" />
+            <SearchPill name="q" className="w-full" placeholder={t('nav:searchPlaceholder')} />
           </form>
         )}
 
-        {state === 'signedOut' ? (
-          <div className="flex shrink-0 items-center gap-[14px]">
-            <HeaderLanguagePill />
+        <div className="hidden lg:block">
+          <AuthCluster
+            state={state}
+            account={account}
+            signInIcon={signInIcon}
+            onNavigate={go}
+          />
+        </div>
+
+        <div className="flex shrink-0 items-center gap-sm lg:hidden">
+          {state === 'signedIn' && (
             <Button
-              variant="secondary"
-              size="md"
-              icon={signInIcon ? <HeartGlyphIcon size={16} /> : undefined}
-              onClick={() => navigate('/sign-in')}
+              variant="icon"
+              size="sm"
+              aria-label={t('nav:notifications')}
+              onClick={() => go('/notifications')}
             >
-              Sign in
+              <BellIcon size={16} />
             </Button>
-            <Button size="md" onClick={() => navigate('/register')}>
-              Create account
-            </Button>
-          </div>
-        ) : (
-          <div className="flex shrink-0 items-center gap-[14px]">
-            <HeaderLanguagePill />
-
-            <span className="relative shrink-0">
-              <Button
-                variant="icon"
-                size="sm"
-                aria-label="Notifications"
-                onClick={() => navigate('/notifications')}
-              >
-                <BellIcon size={16} />
-              </Button>
-              {account?.notifications !== undefined && (
-                <span className="absolute -top-[5.5px] -right-[5.5px]">
-                  <CountBadge
-                    count={account.notifications}
-                    className="h-[17px] min-w-[17px] rounded-[9px] text-[10px]"
-                  />
-                </span>
-              )}
-            </span>
-
-            <Link
-              to="/my-tickets"
-              className="text-[15px] font-bold whitespace-nowrap text-ink-primary transition-[color,opacity] duration-micro ease-micro hover:text-ink-secondary"
-            >
-              My tickets
-            </Link>
-
-            <Link
-              to="/profile"
-              className="flex shrink-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pr-[14px] pl-[5px] transition-[border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:opacity-95"
-            >
-              <Avatar initials={account?.initials ?? ''} size="md" />
-              <span className="text-[14px] font-bold whitespace-nowrap text-ink-primary">
-                {account?.name}
-              </span>
-            </Link>
-          </div>
-        )}
+          )}
+          <Button
+            variant="icon"
+            size="sm"
+            aria-label={mobileNavOpen ? t('nav:closeMenu') : t('nav:openMenu')}
+            aria-expanded={mobileNavOpen}
+            aria-controls="site-mobile-nav"
+            onClick={() => dispatch(mobileNavToggled())}
+          >
+            {mobileNavOpen ? <CloseIcon size={18} /> : <MenuIcon size={18} />}
+          </Button>
+        </div>
       </div>
+
+      <DialogPrimitive.Root
+        open={mobileNavOpen}
+        onOpenChange={(open) => dispatch(mobileNavToggled(open))}
+      >
+        {mobileNavOpen ? (
+          <DialogPrimitive.Portal>
+            <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-surface-inverse/55 backdrop-blur-[1.5px] lg:hidden" />
+            <DialogPrimitive.Content
+              id="site-mobile-nav"
+              aria-describedby={undefined}
+              className="fixed inset-y-0 end-0 z-50 flex w-[min(100vw-2.5rem,360px)] flex-col overflow-y-auto border-s border-border-default bg-bg-page p-xl shadow-overlay outline-none lg:hidden"
+            >
+              <div className="mb-xl flex items-center justify-between gap-md">
+                <DialogPrimitive.Title className="text-[16px] font-bold text-ink-primary">
+                  {t('nav:menu')}
+                </DialogPrimitive.Title>
+                <DialogPrimitive.Close asChild>
+                  <Button variant="icon" size="sm" aria-label={t('nav:closeMenu')}>
+                    <CloseIcon size={18} />
+                  </Button>
+                </DialogPrimitive.Close>
+              </div>
+
+              <MobileDrawerAuth
+                state={state}
+                account={account}
+                signInIcon={signInIcon}
+                onNavigate={go}
+                onClose={closeDrawer}
+              />
+
+              <div className="mb-xl h-px w-full bg-border-divider" />
+
+              <nav aria-label={t('nav:main')} className="flex flex-col gap-md">
+                {resolvedNav.map((item) => (
+                  <NavItem
+                    key={item.id ?? item.href}
+                    label={item.label}
+                    href={item.href}
+                    state={navItemActive(item, activeItem) ? activeItemState : 'default'}
+                    className="min-h-[44px] items-center"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      go(item.href)
+                    }}
+                  />
+                ))}
+              </nav>
+
+              {showSearch && (
+                <form onSubmit={onSearch} className="mt-xl sm:hidden">
+                  <SearchPill name="q" className="w-full" placeholder={t('nav:searchPlaceholder')} />
+                </form>
+              )}
+            </DialogPrimitive.Content>
+          </DialogPrimitive.Portal>
+        ) : null}
+      </DialogPrimitive.Root>
     </header>
   )
 }

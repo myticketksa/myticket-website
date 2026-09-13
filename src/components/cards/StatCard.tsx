@@ -1,6 +1,7 @@
 import type { HTMLAttributes, ReactNode } from 'react'
 import { Countdown, PriceDisplay } from '@/components/data-display'
 import { cn } from '@/lib/cn'
+import { useLiveRemaining } from '@/lib/countdown/useLiveRemaining'
 
 /**
  * Figma `StatCard` — node `207:3085`.
@@ -31,6 +32,14 @@ export function StatCard({
   children,
   ...props
 }: StatCardProps) {
+  const remaining = useLiveRemaining(endsIn ?? '')
+  const timer = endsIn
+    ? remaining.startsWith('Ends') || endsIn.startsWith('Ends')
+      ? remaining.startsWith('Ends')
+        ? remaining
+        : `Ends ${remaining}`
+      : `Ends ${remaining}`
+    : undefined
   return (
     <div
       className={cn(
@@ -41,9 +50,9 @@ export function StatCard({
     >
       <div className="flex w-full items-baseline justify-between overflow-hidden pb-[2px]">
         <p className="text-[13px] leading-[1.5] font-medium text-ink-muted">{label}</p>
-        {endsIn && (
+        {timer && (
           <Countdown urgent={urgent} className="shrink-0 text-[12px] font-bold">
-            {endsIn.startsWith('Ends') ? endsIn : `Ends ${endsIn}`}
+            {timer}
           </Countdown>
         )}
       </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   useFavoriteExperienceMutation,
@@ -21,6 +21,7 @@ import {
   mapApiExperienceToCard,
   resolveExperienceFromList,
   resolveExperienceId,
+  type MappedExperience,
 } from '@/lib/api/mappers/experiences'
 import {
   CATALOG_EXPERIENCES,
@@ -33,6 +34,13 @@ import {
   slugify,
   StickyCtaCard,
 } from '@/pages/_guest'
+
+const DEFAULT_INCLUDES = [
+  'Licensed local host and safety briefing',
+  'Transport from the city meeting point',
+  'Light refreshments during the experience',
+  'Free cancellation up to 48 hours before start',
+] as const
 
 /** Experience detail — Figma `207:7048`. Experiences API with fixture fallback. */
 export function ExperienceDetailPage() {
@@ -47,11 +55,14 @@ export function ExperienceDetailPage() {
   const [unfavoriteExperience, unfavState] = useUnfavoriteExperienceMutation()
   const [saved, setSaved] = useState(false)
 
-  const catalog = useMemo(() => {
+  const catalog = useMemo((): MappedExperience[] => {
     if (apiExperiences && apiExperiences.length > 0) {
       return apiExperiences.map(mapApiExperienceToCard)
     }
-    return CATALOG_EXPERIENCES.map((e) => ({ ...e, slug: slugify(e.title) }))
+    return CATALOG_EXPERIENCES.map((e) => ({
+      ...e,
+      slug: slugify(e.title),
+    })) as MappedExperience[]
   }, [apiExperiences])
 
   const resolvedId = useMemo(
@@ -67,7 +78,7 @@ export function ExperienceDetailPage() {
     skip: !resolvedId,
   })
 
-  const experience = useMemo(() => {
+  const experience = useMemo((): MappedExperience => {
     const fromList =
       catalog.find((e) => e.slug === slugOrId || slugify(e.title) === slugOrId) ??
       (apiExperiences?.length
@@ -90,7 +101,36 @@ export function ExperienceDetailPage() {
     return experience.rating
   }, [apiReviews, experience.rating])
 
+  useEffect(() => {
+    if (typeof experience.isFavorite === 'boolean') {
+      setSaved(experience.isFavorite)
+    }
+  }, [experience.isFavorite])
+
   const guestLabel = experience.guests ?? 'Up to 12 guests'
+  const aboutText =
+    experience.about ??
+    experience.summary ??
+    'A hosted experience on MyTicket — small groups, verified hosts, and clear cancellation. Meet at the published pickup point; transfers and equipment are included unless noted otherwise.'
+  const includesList =
+    experience.includes && experience.includes.length > 0
+      ? experience.includes
+      : [...DEFAULT_INCLUDES]
+
+  const galleryMain =
+    experience.banner ?? experience.image ?? experience.photos?.[0] ?? EXPERIENCE_DETAIL_GALLERY.main
+  const galleryThumbs = useMemo(() => {
+    const photos = experience.photos?.filter(Boolean) ?? []
+    if (photos.length === 0) return [...EXPERIENCE_DETAIL_GALLERY.thumbs]
+    const rest = photos.filter((src) => src !== galleryMain)
+    const pool = rest.length > 0 ? rest : photos
+    return [0, 1, 2].map((i) => pool[i] ?? pool[0] ?? galleryMain)
+  }, [experience.photos, galleryMain])
+  const moreLabel =
+    (experience.photos?.length ?? 0) > 4
+      ? `+${(experience.photos?.length ?? 0) - 4} photos`
+      : '+24 photos'
+  const mapsQuery = experience.mapQuery ?? experience.place
 
   async function handleSave() {
     if (!isAuthenticated) {
@@ -132,15 +172,15 @@ export function ExperienceDetailPage() {
         <FadeUp>
           <DetailGallery
             category={experience.meta.split(' · ')[0]}
-            moreLabel="+24 photos"
-            mainImage={experience.image ?? EXPERIENCE_DETAIL_GALLERY.main}
-            thumbs={EXPERIENCE_DETAIL_GALLERY.thumbs}
+            moreLabel={moreLabel}
+            mainImage={galleryMain}
+            thumbs={galleryThumbs}
           />
         </FadeUp>
       </PageSection>
 
       <PageSection padTop={34} padBottom={0}>
-        <div className="flex items-start gap-[48px]">
+        <div className="flex flex-col items-start gap-[48px] lg:flex-row">
           <article className="min-w-0 flex-1">
             <FadeUp>
               <p className="text-label-overline text-ink-brand-mid">{experience.meta}</p>
@@ -169,17 +209,14 @@ export function ExperienceDetailPage() {
 
             <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">About</h2>
             <p className="mt-[18px] max-w-[720px] text-[16px] leading-[1.6] text-ink-secondary">
-              {'summary' in experience && experience.summary
-                ? experience.summary
-                : 'A hosted experience on MyTicket — small groups, verified hosts, and clear cancellation. Meet at the published pickup point; transfers and equipment are included unless noted otherwise.'}
+              {aboutText}
             </p>
 
             <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">What’s included</h2>
             <ul className="mt-[18px] max-w-[720px] list-disc space-y-sm pl-xl text-[15px] text-ink-secondary">
-              <li>Licensed local host and safety briefing</li>
-              <li>Transport from the city meeting point</li>
-              <li>Light refreshments during the experience</li>
-              <li>Free cancellation up to 48 hours before start</li>
+              {includesList.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
 
             <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">Meeting point</h2>
@@ -194,7 +231,7 @@ export function ExperienceDetailPage() {
               <div className="flex items-center justify-between gap-lg px-lg py-md">
                 <p className="text-[14px] text-ink-secondary">{experience.place}</p>
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(experience.place)}`}
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex h-[36px] items-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand"

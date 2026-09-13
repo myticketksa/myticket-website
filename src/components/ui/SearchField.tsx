@@ -1,5 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import type { InputHTMLAttributes } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
 import { MagnifyingGlassIcon } from '@/components/icons'
 import { fieldShell } from './TextInput'
@@ -41,16 +42,17 @@ export interface SearchFieldProps
 export function SearchField({
   className,
   size = 'field',
-  placeholder = 'Search events, artists…',
+  placeholder,
   ...props
 }: SearchFieldProps) {
+  const { t } = useTranslation(['nav', 'common'])
   const variant = size ?? 'field'
 
   if (variant === 'icon') {
     return (
       <button
         type="button"
-        aria-label={props['aria-label'] ?? 'Search'}
+        aria-label={props['aria-label'] ?? t('common:actions.search')}
         className={cn(search({ size: variant }), 'text-ink-brand', className)}
       >
         <MagnifyingGlassIcon size={GLYPH.icon} />
@@ -63,7 +65,7 @@ export function SearchField({
       <MagnifyingGlassIcon size={GLYPH[variant]} className="shrink-0 text-ink-brand" />
       <input
         type="search"
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('nav:searchPlaceholder')}
         className={cn(
           fieldShell,
           TEXT[variant],

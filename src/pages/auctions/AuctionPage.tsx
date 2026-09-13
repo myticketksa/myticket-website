@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { StatCard } from '@/components/cards'
 import { FilterChip, StatusBadge } from '@/components/data-display'
@@ -11,37 +12,28 @@ import {
   ResultsToolbar,
   slugify,
 } from '@/pages/_guest'
+import { LiveRemaining } from '@/lib/countdown/LiveRemaining'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 
 const FILTERS = ['Ending soon', 'Under face value', 'Seats together', 'My watchlist'] as const
 
 const KPIS = [
-  { label: 'Live listings', value: '214', note: 'Across 48 events' },
-  { label: 'Ending within an hour', value: '9', note: 'Bid before the clock hits zero' },
-  { label: 'Average saving', value: '18%', note: 'Vs face value this week' },
-  { label: 'Transfers completed', value: '12.4k', note: 'Verified, money held in escrow' },
+  { labelKey: 'pages.kpiLiveListings', value: '214', noteKey: 'pages.kpiLiveNote' },
+  { labelKey: 'pages.kpiEndingHour', value: '9', noteKey: 'pages.kpiEndingNote' },
+  { labelKey: 'pages.kpiAvgSaving', value: '18%', noteKey: 'pages.kpiAvgNote' },
+  { labelKey: 'pages.kpiTransfers', value: '12.4k', noteKey: 'pages.kpiTransfersNote' },
 ] as const
 
 const STEPS = [
-  {
-    title: 'Find a listing',
-    body: 'Browse resale tickets for sold-out or hard-to-get nights.',
-  },
-  {
-    title: 'Place a bid or buy now',
-    body: 'Money is held safely until the ticket is transferred to you.',
-  },
-  {
-    title: 'Win and receive',
-    body: 'The ticket moves into your MyTicket wallet — no screenshots.',
-  },
-  {
-    title: 'Go to the show',
-    body: 'Scan your QR at the gate like any primary ticket.',
-  },
+  { titleKey: 'pages.stepFindTitle', bodyKey: 'pages.stepFindBody' },
+  { titleKey: 'pages.stepBidTitle', bodyKey: 'pages.stepBidBody' },
+  { titleKey: 'pages.stepWinTitle', bodyKey: 'pages.stepWinBody' },
+  { titleKey: 'pages.stepGoTitle', bodyKey: 'pages.stepGoBody' },
 ] as const
 
 /** Auction hub — Figma `207:10792`. */
 export function AuctionPage() {
+  const { t } = useTranslation(['catalog', 'nav'])
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('Ending soon')
 
   const listings = useMemo(() => {
@@ -66,20 +58,20 @@ export function AuctionPage() {
       <PageSection padTop={26} padBottom={0}>
         <Breadcrumbs
           items={[
-            { label: 'Home', href: '/' },
-            { label: 'Auctions', href: '/auctions' },
+            { label: t('nav:main'), href: '/' },
+            { label: t('nav:auctions'), href: '/auctions' },
           ]}
         />
       </PageSection>
 
       <PageSection padTop={14} padBottom={0}>
         <CatalogPageHead
-          eyebrow="Resale auction"
-          title="Ticket auction"
-          subtitle="Verified fan-to-fan transfers for sold-out nights. Bid, buy now, or list a ticket you can no longer use."
+          eyebrow={t('pages.auctionEyebrow')}
+          title={t('pages.auctionTitle')}
+          subtitle={t('pages.auctionSubtitle')}
           actions={
             <Button size="lg" className="shrink-0" disabled title="Listing opens from My Tickets">
-              List a ticket for sale
+              {t('pages.listTicketSale')}
             </Button>
           }
         />
@@ -88,8 +80,8 @@ export function AuctionPage() {
       <PageSection padTop={26} padBottom={0}>
         <div className="grid grid-cols-2 gap-lg lg:grid-cols-4">
           {KPIS.map((kpi) => (
-            <StatCard key={kpi.label} label={kpi.label} caption={kpi.note}>
-              <p className="text-[32px] font-extrabold tracking-[-0.8px] text-ink-primary tabular-nums">
+            <StatCard key={kpi.labelKey} label={t(kpi.labelKey)} caption={t(kpi.noteKey)}>
+              <p className="text-[24px] font-extrabold tracking-[-0.8px] text-ink-primary tabular-nums sm:text-[32px]">
                 {kpi.value}
               </p>
             </StatCard>
@@ -98,8 +90,8 @@ export function AuctionPage() {
       </PageSection>
 
       <PageSection padTop={30} padBottom={96}>
-        <div className="flex items-start gap-[32px]">
-          <div className="min-w-0 flex-1">
+        <div className="flex flex-col items-start gap-[32px] lg:flex-row">
+          <div className="min-w-0 w-full flex-1">
             <div className="flex flex-wrap items-center justify-between gap-lg">
               <div className="flex flex-wrap gap-[7px]">
                 {FILTERS.map((label) => (
@@ -109,14 +101,15 @@ export function AuctionPage() {
                     onClick={() => setFilter(label)}
                     className="h-[36px] rounded-[18px]"
                   >
-                    {label}
+                    {catalogLabel(t, label)}
                   </FilterChip>
                 ))}
               </div>
               <ResultsToolbar
-                countLabel={`${listings.length} live listings`}
+                countLabel={t('results.countAuctions', { count: listings.length })}
                 showViewToggle={false}
-                sortValue="Ending soon"
+                sortValue={t('results.sortEndingSoon')}
+                sortLabel={t('results.sort')}
                 className="w-auto shrink-0"
               />
             </div>
@@ -128,8 +121,8 @@ export function AuctionPage() {
                   to={`/auctions/${slugify(listing.title)}`}
                   className="overflow-hidden rounded-[18px] border border-border-default bg-surface-default"
                 >
-                  <div className="flex gap-0 p-lg">
-                    <div className="relative h-[116px] w-[148px] shrink-0 overflow-hidden rounded-[12px]">
+                  <div className="flex flex-col gap-0 p-lg sm:flex-row">
+                    <div className="relative h-[160px] w-full shrink-0 overflow-hidden rounded-[12px] sm:h-[116px] sm:w-[148px]">
                       <img
                         src={listing.image}
                         alt=""
@@ -140,16 +133,16 @@ export function AuctionPage() {
                         Figma: surface-inverse / 10px / tracking 0.5 / inset 8.
                       */}
                       <span className="absolute top-[8px] left-[8px] rounded-[10px] bg-surface-inverse px-[8px] py-[4px] text-[10px] font-bold tracking-[0.5px] text-bg-page uppercase">
-                        {listing.category}
+                        {catalogLabel(t, listing.category)}
                       </span>
                     </div>
-                    <div className="flex min-w-0 flex-1 flex-col px-[18px]">
-                      <div className="flex items-center gap-[8px]">
+                    <div className="flex min-w-0 flex-1 flex-col px-0 pt-md sm:px-[18px] sm:pt-0">
+                      <div className="flex flex-wrap items-center gap-[8px]">
                         <p className="text-[12px] font-extrabold tabular-nums text-brand-gradient-end">
-                          Ends in {listing.endsIn}
+                          <LiveRemaining initial={listing.endsIn} prefix={t('pages.endsIn')} />
                         </p>
                         {listing.tag && (
-                          <StatusBadge tone="brandTint">{listing.tag}</StatusBadge>
+                          <StatusBadge tone="brandTint">{catalogLabel(t, listing.tag)}</StatusBadge>
                         )}
                       </div>
                       <h3 className="mt-[5px] text-[18px] font-semibold text-ink-primary">
@@ -157,42 +150,42 @@ export function AuctionPage() {
                       </h3>
                       <p className="mt-[5px] text-[14px] text-ink-secondary">{listing.meta}</p>
                       <p className="mt-[5px] text-[13px] text-ink-muted">{listing.seatInfo}</p>
-                      <div className="mt-auto flex items-center gap-[14px] pt-md text-[13px] text-ink-secondary">
+                      <div className="mt-auto flex flex-wrap items-center gap-[14px] pt-md text-[13px] text-ink-secondary">
                         <span className="flex items-center gap-[6px]">
                           <span className="flex size-5 items-center justify-center rounded-full bg-identity-gradient text-[10px] font-bold text-ink-inverse">
                             {listing.seller.slice(0, 1)}
                           </span>
                           {listing.seller}
                         </span>
-                        <span>{listing.bids} bids</span>
-                        <span>{listing.watching} watching</span>
+                        <span>{t('pages.bids', { count: listing.bids })}</span>
+                        <span>{t('pages.watching', { count: listing.watching })}</span>
                       </div>
                     </div>
-                    <div className="flex w-[232px] shrink-0 flex-col border-l border-border-divider pl-[18px]">
+                    <div className="flex w-full shrink-0 flex-col border-t border-border-divider pt-md sm:w-[232px] sm:border-t-0 sm:border-l sm:pt-0 sm:pl-[18px]">
                       <div className="flex items-baseline justify-between">
-                        <span className="text-[13px] text-ink-muted">Highest bid</span>
+                        <span className="text-[13px] text-ink-muted">{t('pages.highestBid')}</span>
                         <span className="text-[22px] font-extrabold tabular-nums text-brand-identity-end">
                           {listing.highestBid}
                         </span>
                       </div>
                       <div className="mt-sm flex items-baseline justify-between">
-                        <span className="text-[13px] text-ink-muted">Buy now</span>
+                        <span className="text-[13px] text-ink-muted">{t('pages.buyNow')}</span>
                         <span className="text-[15px] font-bold tabular-nums text-ink-primary">
                           {listing.buyNow}
                         </span>
                       </div>
                       <p className="mt-sm text-[12px] text-ink-muted">
-                        Face value {listing.faceValue}
+                        {t('pages.faceValue', { value: listing.faceValue })}
                       </p>
                       <div className="mt-auto flex flex-col gap-sm pt-md">
                         <Button className="pointer-events-none h-[40px] rounded-[20px]">
-                          Place a bid
+                          {t('pages.placeBid')}
                         </Button>
                         <Button
                           variant="secondary"
                           className="pointer-events-none h-[40px] rounded-[20px]"
                         >
-                          Buy now
+                          {t('pages.buyNow')}
                         </Button>
                       </div>
                     </div>
@@ -202,24 +195,24 @@ export function AuctionPage() {
             </div>
           </div>
 
-          <aside className="flex w-[396px] shrink-0 flex-col gap-[14px]">
+          <aside className="flex w-full shrink-0 flex-col gap-[14px] lg:w-[396px]">
             <div className="rounded-[18px] border border-border-default bg-surface-default p-xl">
               <h2 className="text-[18px] font-semibold text-ink-primary">
-                How the auction works
+                {t('pages.howAuctionWorks')}
               </h2>
               <p className="mt-xs text-[14px] leading-[1.45] text-ink-secondary">
-                Escrow-held payments and verified transfers — not screenshots.
+                {t('pages.howAuctionLede')}
               </p>
               <div className="mt-lg flex flex-col gap-[14px]">
                 {STEPS.map((step, i) => (
-                  <div key={step.title} className="flex gap-md">
+                  <div key={step.titleKey} className="flex gap-md">
                     <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-identity-gradient text-[12px] font-bold text-ink-inverse">
                       {i + 1}
                     </div>
                     <div>
-                      <p className="text-[14px] font-semibold text-ink-primary">{step.title}</p>
+                      <p className="text-[14px] font-semibold text-ink-primary">{t(step.titleKey)}</p>
                       <p className="mt-[2px] text-[13px] leading-[1.45] text-ink-secondary">
-                        {step.body}
+                        {t(step.bodyKey)}
                       </p>
                     </div>
                   </div>
@@ -228,22 +221,21 @@ export function AuctionPage() {
             </div>
 
             <div className="rounded-[18px] border border-border-default bg-surface-inverse p-[22px] text-bg-page">
-              <h2 className="text-heading-h3 text-bg-page">Can’t make the show?</h2>
+              <h2 className="text-heading-h3 text-bg-page">{t('pages.cantMakeShow')}</h2>
               <p className="mt-sm text-[14px] leading-[1.5] text-bg-page/72">
-                List your ticket on the auction. Money is held until the buyer receives a
-                verified transfer.
+                {t('pages.cantMakeBody')}
               </p>
               <Button
                 className="mt-lg h-[46px] w-full rounded-[23px] bg-bg-page text-ink-primary hover:bg-bg-page"
                 disabled
                 title="Listing opens from My Tickets"
               >
-                List a ticket
+                {t('pages.listTicket')}
               </Button>
             </div>
 
             <div className="rounded-[18px] border border-border-default bg-surface-default p-xl">
-              <h2 className="text-[16px] font-semibold text-ink-primary">Watchlist</h2>
+              <h2 className="text-[16px] font-semibold text-ink-primary">{t('pages.watchlist')}</h2>
               <div className="mt-md flex flex-col gap-[11px]">
                 {CATALOG_AUCTIONS.slice(0, 3).map((item) => (
                   <Link
@@ -261,7 +253,7 @@ export function AuctionPage() {
                       <p className="text-[12px] text-ink-muted">{item.highestBid}</p>
                     </div>
                     <span className="text-[12px] font-extrabold tabular-nums text-brand-gradient-end">
-                      {item.endsIn.slice(0, 5)}
+                      <LiveRemaining initial={item.endsIn} />
                     </span>
                   </Link>
                 ))}

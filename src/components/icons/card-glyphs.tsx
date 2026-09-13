@@ -39,8 +39,12 @@ export function CircleFillIcon({ size = 8, ...props }: CardGlyphProps) {
 }
 
 /** Drawn at 15px inside the event card's 32px favourite button. */
-export function HeartGlyphIcon({ size = 15, ...props }: CardGlyphProps) {
-  return <Heart size={size} weight="regular" {...props} />
+export function HeartGlyphIcon({
+  size = 15,
+  filled,
+  ...props
+}: CardGlyphProps & { filled?: boolean }) {
+  return <Heart size={size} weight={filled ? 'fill' : 'regular'} {...props} />
 }
 
 /** Drawn at 13px beside the organizer directory card's name. */

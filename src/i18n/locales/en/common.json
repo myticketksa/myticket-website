@@ -1,0 +1,102 @@
+{
+  "roles": {
+    "vendor": "Vendor",
+    "organizer": "Organizer",
+    "talent": "Talent"
+  },
+  "actions": {
+    "continue": "Continue",
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saveExit": "Save & exit",
+    "clear": "Clear",
+    "close": "Close",
+    "search": "Search",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "createAccount": "Create account",
+    "browseEvents": "Browse events",
+    "learnMore": "Learn more",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "remove": "Remove",
+    "edit": "Edit",
+    "viewAll": "View all"
+  },
+  "states": {
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "submitting": "Submitting…",
+    "free": "Free",
+    "soldOut": "Sold out",
+    "unavailable": "Unavailable"
+  },
+  "empty": {
+    "defaultTitle": "Nothing here yet",
+    "defaultBody": "When there’s something to show, it will appear here.",
+    "clearFilters": "Clear all filters"
+  },
+  "draft": {
+    "saved": "Draft saved just now — you can leave and pick this up any time",
+    "savedToast": "Draft saved — pick it up anytime",
+    "restoredNote": "Draft restored — re-attach any photos or files before submitting."
+  },
+  "wizard": {
+    "eyebrow": "Application",
+    "partOf": "Part {{current}} of {{total}}",
+    "trackSubmissions": "Track your submissions",
+    "alreadySent": "Already sent one?",
+    "clearAndStartOver": "Clear and start over"
+  },
+  "pagination": {
+    "showing": "Showing {{shown}} of {{total}}",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{page}}",
+    "aria": "Pagination"
+  },
+  "a11y": {
+    "breadcrumb": "Breadcrumb",
+    "accountSections": "Account sections",
+    "closeFilters": "Close filters",
+    "dismiss": "Dismiss",
+    "attachFile": "Attach file"
+  },
+  "time": {
+    "daysShort": "{{count}}d",
+    "hoursShort": "{{count}}h",
+    "minutesShort": "{{count}}m",
+    "secondsShort": "{{count}}s"
+  },
+  "currency": {
+    "free": "Free",
+    "sarFallback": "SAR —"
+  },
+  "language": {
+    "switchToArabic": "Switch to Arabic",
+    "switchToEnglish": "Switch to English",
+    "arabic": "العربية",
+    "english": "English"
+  },
+  "catalog": {
+    "searchPlaceholder": "Search events, experiences, talents…",
+    "try": "Try",
+    "filters": "Filters",
+    "done": "Done"
+  },
+  "notFound": {
+    "title": "This page has left the venue.",
+    "body": "The link may be old, the event may have finished, or we've simply moved it. Search for what you were after, or start again from the home page.",
+    "try": "Try",
+    "tonight": "On tonight instead",
+    "support": "Something's broken? Tell support →",
+    "quick": {
+      "events": "All events",
+      "tonight": "Tonight in Riyadh",
+      "experiences": "Experiences",
+      "tickets": "My tickets",
+      "help": "Help centre"
+    }
+  }
+}

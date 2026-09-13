@@ -40,4 +40,9 @@ const uiSlice = createSlice({
 })
 
 export const { toastPushed, toastDismissed, mobileNavToggled } = uiSlice.actions
+
+export function selectMobileNavOpen(state: { ui: UiState }) {
+  return state.ui.mobileNavOpen
+}
+
 export default uiSlice.reducer

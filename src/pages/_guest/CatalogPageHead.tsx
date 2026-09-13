@@ -5,7 +5,10 @@ import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 
 export interface CatalogChip {
+  /** Stable filter value (fixture / API English label). */
   label: string
+  /** Localized chip text; defaults to `label`. */
+  displayLabel?: string
   selected?: boolean
 }
 
@@ -37,14 +40,14 @@ export function CatalogPageHead({
         <p className="text-label-overline mb-sm text-ink-brand-mid">{eyebrow}</p>
       )}
 
-      <div className="flex w-full items-end justify-between gap-4xl">
+      <div className="flex w-full flex-col items-start gap-lg sm:flex-row sm:items-end sm:justify-between sm:gap-4xl">
         <div className="min-w-0 flex-1">
           <h1 className="text-display-hero text-ink-primary">{title}</h1>
           <p className="mt-[10px] max-w-[620px] text-[17px] leading-[1.45] font-normal text-ink-secondary">
             {subtitle}
           </p>
         </div>
-        {actions}
+        {actions && <div className="w-full shrink-0 sm:w-auto">{actions}</div>}
       </div>
 
       {chips && chips.length > 0 && (
@@ -55,7 +58,7 @@ export function CatalogPageHead({
               selected={chip.selected}
               onClick={() => onChipSelect?.(chip.label)}
             >
-              {chip.label}
+              {chip.displayLabel ?? chip.label}
             </FilterChip>
           ))}
         </div>
@@ -72,11 +75,11 @@ export function CatalogSaveAlertActions({
   alertLabel?: string
 }) {
   return (
-    <div className="flex shrink-0 gap-[10px]">
-      <Button variant="secondary" icon={<HeartGlyphIcon size={16} />}>
+    <div className="flex w-full shrink-0 flex-col gap-[10px] sm:w-auto sm:flex-row">
+      <Button variant="secondary" icon={<HeartGlyphIcon size={16} />} className="w-full sm:w-auto">
         {saveLabel}
       </Button>
-      <Button>{alertLabel}</Button>
+      <Button className="w-full sm:w-auto">{alertLabel}</Button>
     </div>
   )
 }

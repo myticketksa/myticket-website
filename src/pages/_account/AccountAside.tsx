@@ -1,18 +1,9 @@
 import { Link } from 'react-router-dom'
-import { useGetFavoritesQuery, useGetWalletQuery } from '@/app/api/accountApis'
-import { useGetOrdersQuery } from '@/app/api/ordersApi'
+import { useTranslation } from 'react-i18next'
+import { useGetFavoritesQuery } from '@/app/api/accountApis'
 import { useAppSelector } from '@/app/hooks'
-import { selectAuthUser } from '@/features/auth/authSlice'
-import { ACCOUNT_NAV_LINKS, ACCOUNT_USER, SIDEBAR_RECS } from './fixtures'
-
-function formatWallet(value: unknown) {
-  if (value == null || value === '') return ACCOUNT_USER.walletBalance
-  const raw = String(value)
-  if (/sar/i.test(raw)) return raw
-  const num = Number(value)
-  if (!Number.isFinite(num)) return raw
-  return `SAR ${num.toFixed(2)}`
-}
+import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
+import { ACCOUNT_NAV_LINKS, SIDEBAR_RECS } from './fixtures'
 
 function Panel({
   title,
@@ -33,38 +24,55 @@ function Panel({
   )
 }
 
-export function AccountWalletCard({
-  balance,
-}: {
-  balance?: string
-}) {
+/**
+ * Shared wallet credit card — Figma aside on My Tickets and siblings.
+ * Always reads `user.walletBalance` from the saved login session.
+ */
+export function AccountWalletCard() {
+  const { t } = useTranslation('account')
   const user = useAppSelector(selectAuthUser)
-  const display = balance ?? formatWallet(user?.walletBalance)
+  const display = formatAuthWalletBalance(user?.walletBalance)
 
   return (
     <div className="rounded-[20px] border border-border-default bg-surface-inverse p-xl text-bg-page">
-      <p className="text-[12px] font-bold tracking-[0.08em] text-bg-page uppercase">Wallet</p>
-      <p className="mt-sm text-[38px] leading-none font-extrabold tracking-[-1.14px]">{display}</p>
-      <p className="mt-[6px] text-[13px] text-bg-page">
-        Cashback and refunds land here after events clear.
+      <p className="text-[12px] font-bold tracking-[0.08em] text-bg-page uppercase">
+        {t('wallet.title')}
       </p>
+      <p className="mt-sm text-[38px] leading-none font-extrabold tracking-[-1.14px]">{display}</p>
+      <p className="mt-[6px] text-[13px] text-bg-page">{t('wallet.lede')}</p>
       <Link
         to="/wallet"
         className="mt-lg flex h-[40px] w-full items-center justify-center rounded-[20px] bg-bg-page text-[14px] font-semibold text-ink-primary hover:text-ink-brand"
       >
-        Open wallet
+        {t('wallet.open')}
       </Link>
     </div>
   )
 }
 
+function useAccountNavLinks(savedCount?: number) {
+  const { t } = useTranslation('account')
+
+  return ACCOUNT_NAV_LINKS.map((item) => {
+    const label = t(`aside.links.${item.id}.label`)
+    const meta =
+      item.id === 'favourites' && savedCount != null
+        ? t('nav.savedMeta', { count: savedCount })
+        : t(`aside.links.${item.id}.meta`)
+    return { id: item.id, href: item.href, label, meta }
+  })
+}
+
 export function AccountNavCard() {
+  const { t } = useTranslation('account')
+  const navLinks = useAccountNavLinks()
+
   return (
-    <Panel title="Also in your account">
+    <Panel title={t('aside.alsoInAccount')}>
       <ul className="flex flex-col">
-        {ACCOUNT_NAV_LINKS.map((item) => (
+        {navLinks.map((item) => (
           <li
-            key={item.label}
+            key={item.id}
             className="border-b border-border-divider py-[11px] last:border-b-0 last:pb-0 first:pt-0"
           >
             <Link
@@ -82,8 +90,9 @@ export function AccountNavCard() {
 }
 
 export function AccountRecsCard() {
+  const { t } = useTranslation('account')
   return (
-    <Panel title="Because you're going to Winter Nights">
+    <Panel title={t('aside.recsTitle')}>
       <ul className="flex flex-col gap-md">
         {SIDEBAR_RECS.map((item) => (
           <li key={item.title}>
@@ -108,17 +117,18 @@ export function AccountRecsCard() {
 }
 
 export function AccountSupportCard() {
+  const { t } = useTranslation('account')
   return (
     <Panel>
-      <p className="text-[15px] font-semibold text-ink-primary">Something wrong with an order?</p>
+      <p className="text-[15px] font-semibold text-ink-primary">{t('aside.supportTitle')}</p>
       <p className="mt-[6px] text-[13px] leading-[1.5] text-ink-secondary">
-        Raise a case and our support team picks it up within a day.
+        {t('aside.supportBody')}
       </p>
       <Link
         to="/support/new"
         className="mt-[14px] flex h-[40px] w-full items-center justify-center rounded-[20px] border border-border-default bg-bg-page text-[14px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand"
       >
-        Get help with a ticket
+        {t('aside.supportCta')}
       </Link>
     </Panel>
   )
@@ -126,40 +136,19 @@ export function AccountSupportCard() {
 
 /** Default aside stack used by My Tickets and sibling list screens. */
 export function DefaultAccountAside() {
-  const user = useAppSelector(selectAuthUser)
-  const { data: orders } = useGetOrdersQuery()
+  const { t } = useTranslation('account')
   const { data: favorites } = useGetFavoritesQuery()
-  useGetWalletQuery()
-
-  const upcomingCount = Array.isArray(orders)
-    ? orders.filter((order) => {
-        const status = String(order.status ?? order.state ?? '').toLowerCase()
-        return !status.includes('past') && !status.includes('cancel') && !status.includes('refund')
-      }).length
-    : undefined
   const savedCount = Array.isArray(favorites) ? favorites.length : undefined
-
-  const navLinks = ACCOUNT_NAV_LINKS.map((item) => {
-    if (item.href === '/my-tickets' && upcomingCount != null) {
-      return { ...item, meta: `${upcomingCount} upcoming` }
-    }
-    if (item.href === '/saved' && savedCount != null) {
-      return { ...item, meta: `${savedCount} saved` }
-    }
-    if (item.href === '/wallet' && user?.walletBalance != null) {
-      return { ...item, meta: formatWallet(user.walletBalance) }
-    }
-    return item
-  })
+  const navLinks = useAccountNavLinks(savedCount)
 
   return (
     <div className="flex flex-col gap-[14px]">
-      <AccountWalletCard balance={formatWallet(user?.walletBalance)} />
-      <Panel title="Also in your account">
+      <AccountWalletCard />
+      <Panel title={t('aside.alsoInAccount')}>
         <ul className="flex flex-col">
           {navLinks.map((item) => (
             <li
-              key={item.label}
+              key={item.id}
               className="border-b border-border-divider py-[11px] last:border-b-0 last:pb-0 first:pt-0"
             >
               <Link

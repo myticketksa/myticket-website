@@ -34,6 +34,7 @@ export {
   UploadSimple as UploadIcon,
   MagnifyingGlass as MagnifyingGlassIcon,
   DotsThree as MoreIcon,
+  List as MenuIcon,
 
   // status and feedback
   Info as InfoIcon,

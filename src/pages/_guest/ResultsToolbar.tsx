@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { List, SquaresFour } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 import { FilterChip } from '@/components/data-display'
 import { ChevronDownIcon } from '@/components/icons'
 import { cn } from '@/lib/cn'
@@ -26,7 +27,7 @@ export function ResultsToolbar({
   countLabel,
   activeFilter,
   onClearFilter,
-  sortLabel = 'Sort',
+  sortLabel,
   sortValue = 'Date — soonest',
   onSortClick,
   showViewToggle = true,
@@ -35,13 +36,15 @@ export function ResultsToolbar({
   trailing,
   className,
 }: ResultsToolbarProps) {
+  const { t } = useTranslation('catalog')
+  const resolvedSortLabel = sortLabel ?? t('results.sort')
   const sortEnabled = Boolean(onSortClick)
   const viewEnabled = Boolean(onViewChange)
 
   return (
-    <div className={cn('flex w-full items-center justify-between gap-lg', className)}>
-      <div className="flex items-center gap-row-gap">
-        <p className="text-[15px] font-normal whitespace-nowrap text-ink-secondary">
+    <div className={cn('flex w-full flex-wrap items-center justify-between gap-md sm:gap-lg', className)}>
+      <div className="flex min-w-0 flex-wrap items-center gap-row-gap">
+        <p className="text-[15px] font-normal text-ink-secondary">
           {countLabel}
         </p>
         {activeFilter && (
@@ -64,7 +67,7 @@ export function ResultsToolbar({
                 !sortEnabled && 'cursor-not-allowed opacity-55',
               )}
             >
-              <span className="text-[13px] text-ink-muted">{sortLabel}</span>
+              <span className="text-[13px] text-ink-muted">{resolvedSortLabel}</span>
               <span className="text-[14px] font-medium text-ink-primary">{sortValue}</span>
               <ChevronDownIcon size={12} className="text-ink-primary" />
             </button>
@@ -79,7 +82,7 @@ export function ResultsToolbar({
               >
                 <button
                   type="button"
-                  aria-label="Grid view"
+                  aria-label={t('results.gridView')}
                   aria-pressed={view === 'grid'}
                   disabled={!viewEnabled}
                   onClick={() => onViewChange?.('grid')}
@@ -94,7 +97,7 @@ export function ResultsToolbar({
                 </button>
                 <button
                   type="button"
-                  aria-label="List view"
+                  aria-label={t('results.listView')}
                   aria-pressed={view === 'list'}
                   disabled={!viewEnabled}
                   onClick={() => onViewChange?.('list')}

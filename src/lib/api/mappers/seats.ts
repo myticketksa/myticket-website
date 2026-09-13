@@ -59,8 +59,13 @@ function seatNumber(record: ApiRecord, indexInRow: number): number {
 }
 
 function seatId(record: ApiRecord, row: string, number: number): string {
-  const raw = record.id ?? record.seatId ?? record.seat_id
-  if (raw != null && String(raw).trim()) return String(raw)
+  const candidates = [record.id, record.seatId, record.seat_id]
+  for (const raw of candidates) {
+    if (raw != null && /^\d+$/.test(String(raw).trim())) return String(raw).trim()
+  }
+  for (const raw of candidates) {
+    if (raw != null && String(raw).trim()) return String(raw).trim()
+  }
   return `${row}${number}`
 }
 

@@ -22,7 +22,7 @@ export function BusinessStrip({
     <PageSection padTop={72} padBottom={96} className={className}>
       <div
         className={cn(
-          'flex w-full items-center justify-between gap-4xl rounded-[18px] border border-border-default bg-surface-default px-[32px] py-[26px]',
+          'flex w-full flex-col items-stretch gap-lg rounded-[18px] border border-border-default bg-surface-default px-lg py-[22px] sm:flex-row sm:items-center sm:justify-between sm:gap-4xl sm:px-[32px] sm:py-[26px]',
         )}
       >
         <div className="min-w-0 flex-1">
@@ -31,7 +31,7 @@ export function BusinessStrip({
         </div>
         <Link
           to={ctaTo}
-          className="flex h-[46px] shrink-0 items-center justify-center rounded-[23px] border-[1.5px] border-border-default bg-surface-default px-[22px] text-[14px] font-semibold text-ink-primary"
+          className="flex h-[46px] w-full shrink-0 items-center justify-center rounded-[23px] border-[1.5px] border-border-default bg-surface-default px-[22px] text-[14px] font-semibold text-ink-primary sm:w-auto"
         >
           {ctaLabel}
         </Link>

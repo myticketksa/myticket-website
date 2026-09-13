@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import driftBlob from '@/assets/home/drift-blob.svg'
 import coverAlula from '@/assets/marketing/404-alula.png'
@@ -9,11 +10,11 @@ import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 
 const QUICK = [
-  { label: 'All events', href: '/events' },
-  { label: 'Tonight in Riyadh', href: '/search?q=riyadh+tonight' },
-  { label: 'Experiences', href: '/experiences' },
-  { label: 'My tickets', href: '/my-tickets' },
-  { label: 'Help centre', href: '/help' },
+  { id: 'events', href: '/events' },
+  { id: 'tonight', href: '/search?q=riyadh+tonight' },
+  { id: 'experiences', href: '/experiences' },
+  { id: 'tickets', href: '/my-tickets' },
+  { id: 'help', href: '/help' },
 ] as const
 
 const TONIGHT = [
@@ -42,6 +43,7 @@ const TONIGHT = [
 
 /** 404 Not Found — Figma `207:12542`. Under MainLayout. */
 export function NotFoundPage() {
+  const { t } = useTranslation('common')
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
 
@@ -57,7 +59,7 @@ export function NotFoundPage() {
         src={driftBlob}
         alt=""
         aria-hidden
-        className="pointer-events-none absolute top-[-160px] right-[-120px] size-[520px]"
+        className="pointer-events-none absolute top-[-160px] end-[-120px] size-[520px]"
       />
       <div className="relative grid items-center gap-[60px] lg:grid-cols-[minmax(0,645px)_minmax(0,615px)]">
         <div>
@@ -65,11 +67,10 @@ export function NotFoundPage() {
             404
           </p>
           <h1 className="mt-[20px] text-[40px] leading-[1.04] font-extrabold tracking-[-1.4px] text-ink-primary sm:text-[46px] sm:tracking-[-1.61px]">
-            This page has left the venue.
+            {t('notFound.title')}
           </h1>
           <p className="mt-[14px] max-w-[480px] text-[17px] leading-[1.6] font-medium text-ink-secondary">
-            The link may be old, the event may have finished, or we&apos;ve simply moved it. Search
-            for what you were after, or start again from the home page.
+            {t('notFound.body')}
           </p>
 
           <form
@@ -81,24 +82,26 @@ export function NotFoundPage() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search events, experiences, talents…"
+                placeholder={t('catalog.searchPlaceholder')}
                 className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-ink-primary outline-none placeholder:text-ink-muted"
               />
             </div>
             <Button size="lg" type="submit" className="!h-[52px] !rounded-[12px] !px-[26px]">
-              Search
+              {t('actions.search')}
             </Button>
           </form>
 
           <div className="mt-[22px] flex flex-wrap items-center gap-[8px]">
-            <span className="pr-[4px] text-[13px] font-semibold text-ink-muted">Try</span>
+            <span className="pe-[4px] text-[13px] font-semibold text-ink-muted">
+              {t('notFound.try')}
+            </span>
             {QUICK.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
                 className="rounded-[16px] border-[1.5px] border-border-default bg-surface-default px-[14px] py-[7px] text-[13px] font-semibold text-ink-secondary hover:border-border-brand hover:text-ink-brand"
               >
-                {item.label}
+                {t(`notFound.quick.${item.id}`)}
               </Link>
             ))}
           </div>
@@ -106,7 +109,7 @@ export function NotFoundPage() {
 
         <aside className="flex flex-col gap-[14px]">
           <p className="text-[12px] font-extrabold tracking-[1.2px] text-ink-brand-mid uppercase">
-            On tonight instead
+            {t('notFound.tonight')}
           </p>
           <ul className="flex flex-col gap-[14px]">
             {TONIGHT.map((event) => (
@@ -131,7 +134,7 @@ export function NotFoundPage() {
                       {event.place}
                     </p>
                   </div>
-                  <p className="shrink-0 pr-[6px] text-[18px] font-extrabold text-brand-identity-end">
+                  <p className="shrink-0 pe-[6px] text-[18px] font-extrabold text-brand-identity-end">
                     {event.price}
                   </p>
                 </Link>
@@ -142,7 +145,7 @@ export function NotFoundPage() {
             to="/support/new"
             className="mt-[2px] text-[14px] font-semibold text-ink-brand hover:text-ink-brand-mid"
           >
-            Something&apos;s broken? Tell support →
+            {t('notFound.support')}
           </Link>
         </aside>
       </div>

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import checkIcon from '@/assets/checkout/check-26.svg'
 import { DownloadIcon, ShareIcon } from '@/components/icons'
@@ -11,11 +12,7 @@ import { useAppSelector } from '@/app/hooks'
 import { selectAuthUser } from '@/features/auth/authSlice'
 import { mapOrderConfirmation } from '@/lib/api/mappers/orders'
 
-const NEXT_STEPS = [
-  'Your tickets live in My tickets — offline QR codes work even without signal.',
-  'Share a ticket with a friend and they get their own QR the moment they accept.',
-  "We'll remind you an hour before doors with the gate and bag-policy notes.",
-] as const
+const NEXT_STEP_KEYS = ['offline', 'share', 'remind'] as const
 
 /** Dense QR-like matrix — Figma `207:8498` draws a seeded ~105px module grid (no lib in deps). */
 function TicketQr({ seed }: { seed: number }) {
@@ -99,6 +96,7 @@ function resolveOrderId(searchParams: URLSearchParams) {
  * Data from `GET /tickets/orders/:id` (My tickets order details).
  */
 export function OrderConfirmationPage() {
+  const { t } = useTranslation('checkout')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const user = useAppSelector(selectAuthUser)
@@ -124,10 +122,10 @@ export function OrderConfirmationPage() {
       ticketCount: 0,
       reference: orderId || '—',
       placedAt: '—',
-      eventTitle: isFetching ? 'Loading…' : 'Order details unavailable',
+      eventTitle: isFetching ? t('confirmation.loadingTitle') : t('confirmation.unavailableTitle'),
       eventMeta: '—',
-      tierLabel: 'TICKET',
-      holder: user?.name ?? 'Ticket holder',
+      tierLabel: t('confirmation.ticketFallback'),
+      holder: user?.name ?? t('confirmation.ticketHolder'),
       tickets: [] as { id: string; seat: string; gate: string }[],
       subtotal: 'SAR 0.00',
       serviceFee: 'SAR 0.00',
@@ -137,14 +135,14 @@ export function OrderConfirmationPage() {
       cardPaid: 'SAR 0.00',
       cashback: 'SAR 0.00',
       apiNote: isError
-        ? 'Could not load this order. Open My tickets and try again.'
+        ? t('confirmation.loadError')
         : isFetching
-          ? 'Loading order details…'
+          ? t('confirmation.loadingNote')
           : orderId
-            ? 'Order not found.'
-            : 'Complete checkout to see your tickets here.',
+            ? t('confirmation.notFound')
+            : t('confirmation.completeCheckout'),
     }
-  }, [isError, isFetching, order, orderId, user?.email, user?.name])
+  }, [isError, isFetching, order, orderId, t, user?.email, user?.name])
 
   return (
     <PageSection padTop={52} padBottom={96}>
@@ -152,18 +150,17 @@ export function OrderConfirmationPage() {
         <div className="flex size-[64px] items-center justify-center rounded-[32px] bg-state-success-tint">
           <img src={checkIcon} alt="" className="size-[26px]" />
         </div>
-        <h1 className="mt-[18px] text-[50px] leading-[1.02] font-extrabold tracking-[-1.75px] text-ink-primary">
-          You&apos;re going.
+        <h1 className="mt-[18px] text-[32px] leading-[1.02] font-extrabold tracking-[-1.75px] text-ink-primary sm:text-[40px] lg:text-[50px]">
+          {t('confirmation.title')}
         </h1>
         <p className="mt-[10px] max-w-[640px] text-[17px] leading-[1.5] text-ink-secondary">
-          Payment went through and your {view.ticketCount} tickets are ready. We&apos;ve emailed them
-          to {view.email} too.
+          {t('confirmation.subtitle', { count: view.ticketCount, email: view.email })}
         </p>
         {view.apiNote ? (
           <p className="mt-[8px] max-w-[560px] text-[13px] text-ink-muted">{view.apiNote}</p>
         ) : null}
         <p className="mt-[10px] text-[13.5px] font-bold">
-          <span className="text-ink-muted">Order reference</span>{' '}
+          <span className="text-ink-muted">{t('confirmation.orderReference')}</span>{' '}
           <span className="text-ink-primary">{view.reference}</span>{' '}
           <span className="text-ink-muted">· {view.placedAt}</span>
         </p>
@@ -174,38 +171,38 @@ export function OrderConfirmationPage() {
           {view.tickets.map((ticket, index) => (
             <article
               key={ticket.id}
-              className="flex overflow-hidden rounded-[20px] border border-border-default bg-surface-default"
+              className="flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
             >
-              <div className="min-w-0 flex-1 px-[26px] py-[22px]">
+              <div className="min-w-0 flex-1 px-lg py-[18px] sm:px-[26px] sm:py-[22px]">
                 <p className="text-[12px] font-bold tracking-[0.96px] text-brand-gradient-end">
                   {view.tierLabel}
                 </p>
-                <h2 className="mt-[6px] text-[24px] leading-[1.1] font-extrabold tracking-[-0.6px] text-ink-primary">
+                <h2 className="mt-[6px] text-[20px] leading-[1.1] font-extrabold tracking-[-0.6px] text-ink-primary sm:text-[24px]">
                   {view.eventTitle}
                 </h2>
                 <p className="mt-[6px] text-[14px] text-ink-secondary">{view.eventMeta}</p>
                 <div className="mt-lg grid gap-[26px] sm:grid-cols-3">
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
-                      SEAT
+                      {t('confirmation.seat')}
                     </p>
                     <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{ticket.seat}</p>
                   </div>
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
-                      HOLDER
+                      {t('confirmation.holder')}
                     </p>
                     <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{view.holder}</p>
                   </div>
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
-                      TICKET NO.
+                      {t('confirmation.ticketNo')}
                     </p>
                     <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{ticket.id}</p>
                   </div>
                 </div>
               </div>
-              <div className="flex shrink-0 flex-col items-center justify-center gap-sm border-l-[1.5px] border-dashed border-border-default bg-bg-page px-[22px] py-[18px]">
+              <div className="flex shrink-0 flex-col items-center justify-center gap-sm border-t-[1.5px] border-dashed border-border-default bg-bg-page px-[22px] py-[18px] sm:border-t-0 sm:border-l-[1.5px]">
                 <div className="rounded-[10px] border border-border-default bg-surface-default p-sm">
                   <TicketQr seed={index + 1} />
                 </div>
@@ -215,14 +212,16 @@ export function OrderConfirmationPage() {
           ))}
 
           <section className="rounded-[18px] border border-border-default bg-surface-default p-[22px]">
-            <h3 className="text-[17px] font-semibold text-ink-primary">What happens next</h3>
+            <h3 className="text-[17px] font-semibold text-ink-primary">{t('confirmation.whatNext')}</h3>
             <ol className="mt-lg flex flex-col gap-[14px]">
-              {NEXT_STEPS.map((step, index) => (
-                <li key={step} className="flex items-start gap-[12px]">
+              {NEXT_STEP_KEYS.map((key, index) => (
+                <li key={key} className="flex items-start gap-[12px]">
                   <span className="flex size-[28px] shrink-0 items-center justify-center rounded-pill bg-bg-tint-brand text-[13px] font-bold text-ink-brand">
                     {index + 1}
                   </span>
-                  <p className="pt-[3px] text-[14px] leading-[1.5] text-ink-primary">{step}</p>
+                  <p className="pt-[3px] text-[14px] leading-[1.5] text-ink-primary">
+                    {t(`confirmation.nextSteps.${key}`)}
+                  </p>
                 </li>
               ))}
             </ol>
@@ -231,7 +230,7 @@ export function OrderConfirmationPage() {
 
         <aside className="flex w-full shrink-0 flex-col gap-md lg:w-[340px]">
           <div className="rounded-[20px] border border-border-default bg-surface-default p-[24px]">
-            <h3 className="text-[15px] font-semibold text-ink-primary">What you paid</h3>
+            <h3 className="text-[15px] font-semibold text-ink-primary">{t('confirmation.whatPaid')}</h3>
             <div className="mt-md flex flex-col gap-sm text-[14px]">
               <div className="flex justify-between gap-md">
                 <span className="text-ink-secondary">
@@ -240,22 +239,24 @@ export function OrderConfirmationPage() {
                 <PriceDisplay context="row">{view.subtotal}</PriceDisplay>
               </div>
               <div className="flex justify-between gap-md">
-                <span className="text-ink-secondary">Service fee</span>
+                <span className="text-ink-secondary">{t('confirmation.serviceFee')}</span>
                 <PriceDisplay context="row">{view.serviceFee}</PriceDisplay>
               </div>
               <div className="flex justify-between gap-md">
-                <span className="text-ink-secondary">VAT 15%</span>
+                <span className="text-ink-secondary">{t('confirmation.vat')}</span>
                 <PriceDisplay context="row">{view.vat}</PriceDisplay>
               </div>
             </div>
             <Divider tone="divider" className="my-md" />
             <div className="flex items-baseline justify-between">
-              <span className="text-[15px] font-semibold text-ink-primary">Total</span>
+              <span className="text-[15px] font-semibold text-ink-primary">
+                {t('confirmation.total')}
+              </span>
               <PriceDisplay context="amount">{view.total}</PriceDisplay>
             </div>
             <div className="mt-md flex flex-col gap-[6px] text-[13px] text-ink-secondary">
               <div className="flex justify-between">
-                <span>Wallet balance</span>
+                <span>{t('confirmation.walletBalance')}</span>
                 <span>{view.walletPaid}</span>
               </div>
               <div className="flex justify-between">
@@ -264,7 +265,7 @@ export function OrderConfirmationPage() {
               </div>
             </div>
             <div className="mt-md flex items-center justify-between rounded-[14px] bg-bg-tint-brand px-lg py-[14px] text-[13px] font-semibold text-ink-brand-strong">
-              <span>Cashback earned</span>
+              <span>{t('confirmation.cashbackEarned')}</span>
               <span>+ {view.cashback}</span>
             </div>
           </div>
@@ -275,18 +276,18 @@ export function OrderConfirmationPage() {
             className="h-[50px] w-full rounded-[25px] text-[15px] font-bold"
             onClick={() => navigate('/my-tickets')}
           >
-            Go to my tickets
+            {t('confirmation.viewTickets')}
           </Button>
 
           <div className="grid grid-cols-2 gap-sm">
             <Button type="button" variant="secondary" size="sm" icon={<DownloadIcon size={14} />}>
-              Download all
+              {t('confirmation.downloadAll')}
             </Button>
             <Button type="button" variant="secondary" size="sm">
-              Add to phone wallet
+              {t('confirmation.addToWallet')}
             </Button>
             <Button type="button" variant="secondary" size="sm" icon={<ShareIcon size={14} />}>
-              Share the night
+              {t('confirmation.shareNight')}
             </Button>
             <Link
               to="/events"
@@ -297,14 +298,14 @@ export function OrderConfirmationPage() {
                 'hover:border-border-brand hover:text-ink-brand',
               )}
             >
-              Keep browsing
+              {t('confirmation.keepBrowsing')}
             </Link>
           </div>
 
           <p className="text-[12px] leading-[1.55] text-ink-muted">
-            Full refund until 72 hours before doors. After that, list unused tickets on the{' '}
+            {t('confirmation.refundNote')}{' '}
             <Link to="/auctions" className="font-semibold text-ink-brand">
-              resale auction
+              {t('confirmation.resaleAuction')}
             </Link>
             .
           </p>

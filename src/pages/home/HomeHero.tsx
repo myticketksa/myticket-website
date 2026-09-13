@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { ApiRecord } from '@/app/api/eventsApi'
 import {
   ArrowLeftIcon,
@@ -13,6 +14,7 @@ import { FadeUp } from '@/components/motion'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
 import { mapApiEventToCard } from '@/lib/api/mappers/events'
+import { useEventFavorites } from '@/lib/favorites/useEventFavorites'
 import { slugify } from '@/pages/_guest'
 import { HOME_FEATURED, HOME_POPULAR } from './home-data'
 import { HOME_HERO_IMAGES } from './home-media'
@@ -31,15 +33,17 @@ import { HOME_HERO_IMAGES } from './home-media'
  */
 
 const REGION_OPTIONS = [
-  'All Saudi Arabia',
-  'Riyadh',
-  'Jeddah',
-  'Dammam',
-] as const
+  { value: 'All Saudi Arabia', key: 'all' as const },
+  { value: 'Riyadh', key: 'riyadh' as const },
+  { value: 'Jeddah', key: 'jeddah' as const },
+  { value: 'Dammam', key: 'dammam' as const },
+]
 
 export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
+  const { t } = useTranslation(['catalog', 'common'])
   const [slide, setSlide] = useState(0)
-  const [region, setRegion] = useState<(typeof REGION_OPTIONS)[number]>('All Saudi Arabia')
+  const [region, setRegion] = useState(REGION_OPTIONS[0]!.value)
+  const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
 
   const featuredSource = useMemo(() => {
     if (apiEvents && apiEvents.length > 0) {
@@ -55,6 +59,7 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
           flag: mapped.flag,
           slug: mapped.slug,
           image: mapped.image,
+          id: mapped.id,
         }
       })
     }
@@ -76,10 +81,13 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
   const goPrev = () => setSlide((s) => (s - 1 + slideCount) % slideCount)
   const goNext = () => setSlide((s) => (s + 1) % slideCount)
 
+  const regionOpt = REGION_OPTIONS.find((r) => r.value === region)
+  const regionLabel = regionOpt ? t(`home.regions.${regionOpt.key}`) : region
+
   const searchPlaceholder =
     region === 'All Saudi Arabia'
-      ? 'Search events, experiences, talents and vendors'
-      : `Search in ${region}`
+      ? t('home.searchPlaceholderAll')
+      : t('home.searchInRegion', { region: regionLabel })
 
   return (
     <PageSection
@@ -95,17 +103,17 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
         <div className="flex w-full max-w-[675px] flex-col pt-xl">
           <FadeUp inView={false} delay={0.05} distance={8}>
             <div
-              className="inline-flex w-fit items-center gap-[9px] rounded-[22px] bg-identity-gradient py-[7px] pr-[15px] pl-[11px] text-[13px] font-bold text-ink-inverse shadow-[0px_8px_22px_-10px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)]"
+              className="inline-flex max-w-full flex-wrap items-center gap-[9px] rounded-[22px] bg-identity-gradient py-[7px] pe-[15px] ps-[11px] text-[13px] font-bold text-ink-inverse shadow-[0px_8px_22px_-10px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)]"
             >
-              <span className="size-[7px] rounded-pill bg-ink-inverse" aria-hidden />
-              1,284 events live across the Kingdom right now
+              <span className="size-[7px] shrink-0 rounded-pill bg-ink-inverse" aria-hidden />
+              {t('home.liveCount')}
             </div>
           </FadeUp>
 
           <FadeUp inView={false} delay={0.1} distance={12}>
-            <h1 className="text-display-hero-xl mt-[26px] text-ink-primary">
-              <span className="block">Everything happening</span>
-              <span className="block">in Saudi Arabia,</span>
+            <h1 className="mt-[26px] text-[36px] leading-[1.08] font-bold tracking-[-0.04em] text-ink-primary sm:text-[48px] lg:text-display-hero-xl">
+              <span className="block">{t('home.heroLine1')}</span>
+              <span className="block">{t('home.heroLine2')}</span>
               <span
                 className="block bg-clip-text text-transparent"
                 style={{
@@ -113,13 +121,12 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
                     'linear-gradient(135deg, var(--color-brand-gradient-start) 0%, var(--color-ink-brand) 46%, var(--color-ink-brand-strong) 100%)',
                 }}
               >
-                in one place.
+                {t('home.heroTitleAccent')}
               </span>
             </h1>
 
             <p className="mt-2xl max-w-[480px] text-[18px] leading-[1.55] font-medium text-ink-secondary">
-              Concerts, matches, festivals, conferences and the people who make them happen.
-              Find it, book it, and hold your ticket here.
+              {t('home.heroLede')}
             </p>
           </FadeUp>
 
@@ -138,38 +145,36 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
             </label>
             <span className="hidden h-[28px] w-px bg-border-default sm:block" />
             <label className="relative flex h-[58px] shrink-0 items-center gap-sm px-[14px]">
-              <span className="sr-only">Region</span>
+              <span className="sr-only">{t('home.region')}</span>
               <select
                 name="region"
                 value={region}
-                onChange={(e) =>
-                  setRegion(e.target.value as (typeof REGION_OPTIONS)[number])
-                }
-                className="appearance-none bg-transparent pr-lg text-[15px] font-semibold text-ink-secondary outline-none cursor-pointer"
+                onChange={(e) => setRegion(e.target.value)}
+                className="appearance-none bg-transparent pe-lg text-[15px] font-semibold text-ink-secondary outline-none cursor-pointer"
               >
                 {REGION_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
+                  <option key={opt.value} value={opt.value}>
+                    {t(`home.regions.${opt.key}`)}
                   </option>
                 ))}
               </select>
               <ChevronDownIcon
                 size={12}
-                className="pointer-events-none absolute right-[14px] text-ink-primary"
+                className="pointer-events-none absolute end-[14px] text-ink-primary"
               />
             </label>
             <button
               type="submit"
               className="flex h-[58px] shrink-0 items-center justify-center rounded-[14px] bg-identity-gradient px-[30px] text-[15px] font-bold text-ink-inverse shadow-[0px_8px_20px_-8px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)]"
             >
-              Search
+              {t('common:actions.search')}
             </button>
           </form>
           </FadeUp>
 
           <FadeUp inView={false} delay={0.25} distance={0}>
           <div className="mt-[18px] flex flex-wrap items-center gap-sm">
-            <span className="text-[13px] font-semibold text-ink-muted">Popular</span>
+            <span className="text-[13px] font-semibold text-ink-muted">{t('home.popular')}</span>
             {HOME_POPULAR.map((term) => (
               <PopularChip key={term} href={`/search?q=${encodeURIComponent(term)}`}>
                 {term}
@@ -181,14 +186,14 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
 
         <FadeUp inView={false} delay={0.3} distance={16} className="flex w-full max-w-[593px] flex-col gap-[14px]">
           <div className="flex h-[36px] items-center justify-between">
-            <p className="text-label-overline text-brand-gradient-end">Featured this week</p>
+            <p className="text-label-overline text-brand-gradient-end">{t('home.featured')}</p>
             {/* Figma `207:4402` — flat 8px gap: link text, 13px arrow, then 36×36 prev/next. */}
             <div className="flex items-center gap-sm">
               <Link
                 to="/events"
                 className="group/link flex items-center gap-sm text-[13px] font-bold text-brand-gradient-end transition-colors duration-fast ease-standard hover:text-ink-brand"
               >
-                See all featured
+                {t('home.seeAllFeatured')}
                 <ArrowRightIcon
                   size={13}
                   className="shrink-0 transition-transform duration-fast ease-standard group-hover/link:translate-x-0.5 motion-reduce:group-hover/link:translate-x-0"
@@ -196,7 +201,7 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
               </Link>
               <button
                 type="button"
-                aria-label="Previous featured"
+                aria-label={t('home.prevFeatured')}
                 onClick={goPrev}
                 className="flex size-[36px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border-[1.5px] border-border-default bg-surface-default text-ink-primary transition-colors duration-normal ease-standard hover:border-border-brand"
               >
@@ -204,7 +209,7 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
               </button>
               <button
                 type="button"
-                aria-label="Next featured"
+                aria-label={t('home.nextFeatured')}
                 onClick={goNext}
                 className="flex size-[36px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border-[1.5px] border-border-default bg-surface-default text-ink-primary transition-colors duration-normal ease-standard hover:border-border-brand"
               >
@@ -220,7 +225,7 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
                 <Link
                   key={`${slide}-${card.title}`}
                   to={`/events/${'slug' in card && card.slug ? card.slug : slugify(card.title)}`}
-                  className="min-w-0 flex-1"
+                  className={cn('min-w-0 flex-1', i > 0 && 'hidden sm:block')}
                 >
                   <FeaturedHeroCard
                     date={card.date}
@@ -236,20 +241,26 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
                         : HOME_HERO_IMAGES[imageIndex >= 0 ? imageIndex : i]
                     }
                     className="w-full"
+                    favourited={'id' in card ? isFavourite(card.id) : false}
+                    onToggleFavourite={
+                      'id' in card && canFavourite(card.id)
+                        ? () => void toggleFavourite(card.id)
+                        : undefined
+                    }
                   />
                 </Link>
               )
             })}
           </div>
 
-          <div className="flex gap-[7px]" role="tablist" aria-label="Featured slides">
+          <div className="flex gap-[7px]" role="tablist" aria-label={t('home.featuredSlides')}>
             {featuredSlides.map((_, i) => (
               <button
                 key={i}
                 type="button"
                 role="tab"
                 aria-selected={i === slide}
-                aria-label={`Featured slide ${i + 1}`}
+                aria-label={t('home.featuredSlide', { n: i + 1 })}
                 onClick={() => setSlide(i)}
                 className={cn(
                   'h-[6px] rounded-[3px] transition-[width,background] duration-normal ease-standard',

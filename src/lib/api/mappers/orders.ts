@@ -177,3 +177,139 @@ export function mapOrderConfirmation(
     cashback: money(order.cashback ?? order.cashback_earned ?? 0),
   }
 }
+
+export type MyTicketCard = {
+  id: string
+  orderId: string
+  title: string
+  meta: string
+  status: 'UPCOMING' | 'AWAITING SEAT' | 'PAST' | 'TRANSFERRED' | 'LISTED'
+  countdown?: string
+  facts: { label: string; value: string }[]
+  note?: string
+  cover: string
+  actions: Array<'qr' | 'transfer' | 'resell' | 'refund'>
+}
+
+function countdownFromStart(startTime: unknown): string | undefined {
+  const raw = localizedString(startTime)
+  if (!raw) return undefined
+  const start = new Date(raw)
+  if (Number.isNaN(start.getTime())) return undefined
+  const diffMs = start.getTime() - Date.now()
+  if (diffMs <= 0) return undefined
+  const days = Math.ceil(diffMs / (24 * 60 * 60 * 1000))
+  if (days <= 0) return undefined
+  return `IN ${days} DAY${days === 1 ? '' : 'S'}`
+}
+
+function seatFacts(order: ApiRecord): { tier: string; row: string; seats: string } {
+  const ticketType = asRecord(order.ticketType ?? order.ticket_type)
+  const tier = localizedString(ticketType?.name, 'Ticket')
+
+  const seats = Array.isArray(order.seats) ? order.seats : []
+  const ticketSeats = Array.isArray(order.tickets)
+    ? order.tickets
+        .map((item) => formatSeatLabel(asRecord(item)?.seat, ''))
+        .filter(Boolean)
+    : []
+
+  const labels =
+    seats.length > 0
+      ? seats.map((item) => formatSeatLabel(item)).filter((label) => label !== '—')
+      : ticketSeats
+
+  const row =
+    localizedString(asRecord(order.seat)?.row) ||
+    localizedString(asRecord(seats[0])?.row) ||
+    '—'
+
+  return {
+    tier,
+    row,
+    seats: labels.length > 0 ? labels.join(', ') : String(order.quantity ?? '—'),
+  }
+}
+
+function resolveTicketStatus(order: ApiRecord): MyTicketCard['status'] {
+  const payment = localizedString(order.paymentStatus ?? order.payment_status).toLowerCase()
+  const orderStatus = localizedString(order.orderStatus ?? order.order_status ?? order.status).toLowerCase()
+  const event = asRecord(order.event)
+  const startRaw = event?.startTime ?? event?.starts_at ?? order.starts_at
+  const start = startRaw ? new Date(String(startRaw)) : null
+  const isPast = start != null && !Number.isNaN(start.getTime()) && start.getTime() < Date.now()
+
+  if (orderStatus.includes('transfer')) return 'TRANSFERRED'
+  if (orderStatus.includes('list') || orderStatus.includes('resale')) return 'LISTED'
+  if (isPast) return 'PAST'
+  if (payment.includes('pending') && !labelsHasSeat(order)) return 'AWAITING SEAT'
+  return 'UPCOMING'
+}
+
+function labelsHasSeat(order: ApiRecord) {
+  if (Array.isArray(order.seats) && order.seats.length > 0) return true
+  if (!Array.isArray(order.tickets)) return false
+  return order.tickets.some((item) => asRecord(item)?.seat != null)
+}
+
+/**
+ * Map `GET /tickets/orders` rows into the My Tickets card view model.
+ * Sample: nested `event`, `ticketType`, `tickets[].seat`, `seats[]`, payment/order status.
+ */
+export function mapOrderToMyTicket(order: ApiRecord): MyTicketCard {
+  const event = asRecord(order.event)
+  const id = String(order.id ?? order.order_id ?? '')
+  const title =
+    (event && pickLocalized(event, ['title', 'name'])) ||
+    localizedString(order.event_title ?? order.title, `Order ${id || '—'}`)
+
+  const when = event
+    ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
+    : formatApiDate(order.starts_at ?? order.date)
+  const place =
+    (event && pickLocalized(event, ['place', 'venue', 'location'])) ||
+    localizedString(order.venue ?? order.place)
+  const meta = [when, place].filter(Boolean).join(' · ') || '—'
+
+  const cover = localizedString(
+    event?.cover ?? event?.banner ?? order.cover ?? order.image,
+  )
+  const { tier, row, seats } = seatFacts(order)
+  const status = resolveTicketStatus(order)
+  const payment = localizedString(order.paymentStatus ?? order.payment_status).toLowerCase()
+
+  const actions: MyTicketCard['actions'] =
+    status === 'PAST'
+      ? ['qr']
+      : status === 'TRANSFERRED'
+        ? ['qr']
+        : status === 'LISTED'
+          ? ['qr']
+          : ['qr', 'transfer', 'resell', 'refund']
+
+  return {
+    id: id || title,
+    orderId: String(order.reference ?? order.order_number ?? id),
+    title,
+    meta,
+    status,
+    countdown: status === 'UPCOMING' || status === 'AWAITING SEAT'
+      ? countdownFromStart(event?.startTime ?? event?.starts_at)
+      : undefined,
+    facts: [
+      { label: 'TIER', value: tier },
+      { label: 'ROW', value: row },
+      { label: 'SEATS', value: seats },
+      { label: 'GATE', value: localizedString(order.gate ?? order.entry, '—') },
+    ],
+    note:
+      payment === 'pending'
+        ? 'Payment pending'
+        : order.note
+          ? String(order.note)
+          : undefined,
+    cover,
+    actions,
+  }
+}
+

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Divider } from '@/components/data-display'
 import { Button, Checkbox, Field, TextInput } from '@/components/ui'
@@ -11,8 +12,8 @@ import { credentialsSet } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 import {
-  otpVerifySchema,
-  registerSchema,
+  createOtpVerifySchema,
+  createRegisterSchema,
   toRegisterPayload,
   type OtpVerifyValues,
   type RegisterValues,
@@ -23,14 +24,25 @@ import {
  * Body matches Postman `POST /auth/register`: name, email, phone, password.
  */
 export function RegisterPage() {
+  const { t } = useTranslation(['auth', 'validation', 'common'])
+  const { t: tv } = useTranslation('validation')
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const [step, setStep] = useState<'form' | 'verify'>('form')
   const [registerUser, registerState] = useRegisterMutation()
   const [verifyEmail, verifyState] = useVerifyEmailMutation()
 
+  const registerResolver = useMemo(
+    () => yupResolver(createRegisterSchema((key) => tv(key))),
+    [tv],
+  )
+  const otpResolver = useMemo(
+    () => yupResolver(createOtpVerifySchema((key) => tv(key))),
+    [tv],
+  )
+
   const form = useForm<RegisterValues>({
-    resolver: yupResolver(registerSchema),
+    resolver: registerResolver,
     defaultValues: {
       name: '',
       email: '',
@@ -41,7 +53,7 @@ export function RegisterPage() {
   })
 
   const verifyForm = useForm<OtpVerifyValues>({
-    resolver: yupResolver(otpVerifySchema),
+    resolver: otpResolver,
     defaultValues: { identifier: '', code: '' },
   })
 
@@ -51,9 +63,9 @@ export function RegisterPage() {
       await registerUser(body).unwrap()
       verifyForm.setValue('identifier', body.email)
       setStep('verify')
-      dispatch(toastPushed('success', 'Check your email for a verification code'))
+      dispatch(toastPushed('success', t('auth:register.checkEmail')))
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not create account')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('auth:register.error'))))
     }
   }
 
@@ -70,10 +82,10 @@ export function RegisterPage() {
           persist: true,
         }),
       )
-      dispatch(toastPushed('success', 'Account verified'))
+      dispatch(toastPushed('success', t('auth:register.success')))
       navigate('/')
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not verify')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('auth:register.verifyError'))))
     }
   }
 
@@ -86,28 +98,27 @@ export function RegisterPage() {
           to="/sign-in"
           className="flex h-[36px] flex-1 items-center justify-center rounded-[18px] text-[14px] font-semibold text-ink-secondary"
         >
-          Sign in
+          {t('auth:register.signIn')}
         </Link>
         <span className="flex h-[36px] flex-1 items-center justify-center rounded-[18px] bg-brand-gradient text-[14px] font-semibold text-ink-inverse">
-          Create account
+          {t('auth:register.tab')}
         </span>
       </div>
 
-      <h1 className="mt-2xl text-[42px] leading-[1.05] font-extrabold tracking-[-1.47px] text-ink-primary">
-        {step === 'form' ? 'Create your account' : 'Verify your email'}
+      <h1 className="mt-2xl text-[28px] leading-[1.05] font-extrabold tracking-[-1.47px] text-ink-primary sm:text-[36px] lg:text-[42px]">
+        {step === 'form' ? t('auth:register.title') : t('auth:register.verifyTitle')}
       </h1>
       <p className="mt-sm text-[15px] leading-[1.45] text-ink-secondary">
         {step === 'form' ? (
           <>
-            Guest accounts buy tickets, save favourites and use the wallet. Business requests come
-            after you sign in.{' '}
+            {t('auth:register.subtitle')}{' '}
             <Link to="/sign-in" className="font-bold text-ink-brand">
-              Sign in instead
+              {t('auth:register.signInInstead')}
             </Link>
             .
           </>
         ) : (
-          <>Enter the code we sent to finish creating your guest account.</>
+          <>{t('auth:register.verifySubtitle')}</>
         )}
       </p>
 
@@ -115,14 +126,14 @@ export function RegisterPage() {
         <form className="mt-[28px] flex flex-col" onSubmit={form.handleSubmit(onRegister)}>
           <div className="flex flex-col gap-[14px]">
             <Field
-              label="Full name"
+              label={t('auth:register.name')}
               htmlFor="register-name"
               error={form.formState.errors.name?.message}
             >
               <TextInput
                 id="register-name"
                 type="text"
-                placeholder="Sara Alghamdi"
+                placeholder={t('auth:register.namePlaceholder')}
                 autoComplete="name"
                 className="h-[50px]"
                 {...form.register('name')}
@@ -130,14 +141,14 @@ export function RegisterPage() {
             </Field>
 
             <Field
-              label="Email"
+              label={t('auth:register.email')}
               htmlFor="register-email"
               error={form.formState.errors.email?.message}
             >
               <TextInput
                 id="register-email"
                 type="email"
-                placeholder="you@email.com"
+                placeholder={t('auth:register.emailPlaceholder')}
                 autoComplete="email"
                 className="h-[50px]"
                 {...form.register('email')}
@@ -145,7 +156,7 @@ export function RegisterPage() {
             </Field>
 
             <Field
-              label="Mobile number"
+              label={t('auth:register.phone')}
               htmlFor="register-phone"
               error={form.formState.errors.phone?.message}
             >
@@ -153,7 +164,7 @@ export function RegisterPage() {
                 id="register-phone"
                 type="tel"
                 inputMode="tel"
-                placeholder="5X XXX XXXX"
+                placeholder={t('auth:register.phonePlaceholder')}
                 autoComplete="tel"
                 className="h-[50px]"
                 {...form.register('phone')}
@@ -169,7 +180,7 @@ export function RegisterPage() {
             </Field>
 
             <Field
-              label="Password"
+              label={t('auth:register.password')}
               htmlFor="register-password"
               error={form.formState.errors.password?.message}
             >
@@ -190,13 +201,13 @@ export function RegisterPage() {
             onCheckedChange={(value) => form.setValue('acceptedTerms', value === true)}
             label={
               <span>
-                I agree to the{' '}
+                {t('auth:register.termsPrefix')}{' '}
                 <Link to="/legal" className="font-semibold text-ink-brand">
-                  Terms
+                  {t('auth:register.terms')}
                 </Link>{' '}
-                and{' '}
+                {t('auth:register.termsAnd')}{' '}
                 <Link to="/legal" className="font-semibold text-ink-brand">
-                  Privacy Policy
+                  {t('auth:register.privacy')}
                 </Link>
               </span>
             }
@@ -213,13 +224,13 @@ export function RegisterPage() {
             loading={busy}
             className="mt-[22px] h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
           >
-            Create account
+            {t('auth:register.submit')}
           </Button>
         </form>
       ) : (
         <form className="mt-[28px] flex flex-col" onSubmit={verifyForm.handleSubmit(onVerify)}>
           <Field
-            label="Verification code"
+            label={t('auth:register.verifyCode')}
             htmlFor="register-code"
             error={verifyForm.formState.errors.code?.message}
           >
@@ -237,41 +248,49 @@ export function RegisterPage() {
             loading={busy}
             className="mt-[22px] h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
           >
-            Verify and continue
+            {t('auth:register.verifySubmit')}
           </Button>
         </form>
       )}
 
       <div className="mt-[26px] flex items-center gap-[14px]">
         <Divider tone="border" className="flex-1" />
-        <span className="shrink-0 text-[13px] text-ink-muted">or continue with</span>
+        <span className="shrink-0 text-[13px] text-ink-muted">
+          {t('auth:register.orContinueWith')}
+        </span>
         <Divider tone="border" className="flex-1" />
       </div>
 
       <div className="mt-[14px] flex gap-[10px]">
-        {(['Apple', 'Google', 'Nafath'] as const).map((provider) => (
+        {(
+          [
+            ['apple', t('auth:providers.apple')],
+            ['google', t('auth:providers.google')],
+            ['nafath', t('auth:providers.nafath')],
+          ] as const
+        ).map(([key, label]) => (
           <Button
-            key={provider}
+            key={key}
             type="button"
             variant="secondary"
             size="md"
             className="h-12 flex-1 rounded-[24px] border border-border-default bg-surface-default font-semibold"
             onClick={(event) => event.preventDefault()}
           >
-            {provider}
+            {label}
           </Button>
         ))}
       </div>
 
       <div className="mt-[28px] rounded-[14px] border border-border-default bg-bg-warm px-lg py-[14px]">
         <p className={cn('text-[13px] leading-[1.5] text-ink-body')}>
-          Applying as a business?{' '}
+          {t('auth:register.businessLead')}{' '}
           <Link to="/become-business" className="text-ink-brand underline-offset-2 hover:underline">
-            Submit a vendor or talent request
+            {t('auth:register.vendorTalentLink')}
           </Link>{' '}
-          after you create a guest account — or{' '}
+          {t('auth:register.businessAfter')}{' '}
           <Link to="/for-organizers" className="text-ink-brand underline-offset-2 hover:underline">
-            contact us about organizer partnership
+            {t('auth:register.organizerLink')}
           </Link>
           .
         </p>

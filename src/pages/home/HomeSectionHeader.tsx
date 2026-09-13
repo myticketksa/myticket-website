@@ -39,7 +39,7 @@ export function HomeSectionHeader({
   className,
 }: HomeSectionHeaderProps) {
   return (
-    <div className={cn('flex items-end justify-between gap-4xl', className)}>
+    <div className={cn('flex flex-col items-start gap-lg sm:flex-row sm:items-end sm:justify-between sm:gap-4xl', className)}>
       <div className="flex min-w-0 flex-1 flex-col">
         <p
           className={cn(
@@ -49,7 +49,9 @@ export function HomeSectionHeader({
         >
           {overline}
         </p>
-        <h2 className="text-heading-h2-home mt-[10px] text-ink-primary">{heading}</h2>
+        <h2 className="mt-[10px] text-[28px] leading-[1.15] font-bold tracking-[-0.03em] text-ink-primary sm:text-[36px] lg:text-heading-h2-home">
+          {heading}
+        </h2>
         {lede && (
           <p
             className="mt-sm text-[16px] font-medium text-ink-secondary"
@@ -60,7 +62,7 @@ export function HomeSectionHeader({
         )}
       </div>
 
-      {trailing}
+      {trailing && <div className="w-full min-w-0 sm:w-auto sm:shrink-0">{trailing}</div>}
 
       {!trailing && link && (
         <Link

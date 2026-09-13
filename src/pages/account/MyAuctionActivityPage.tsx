@@ -1,13 +1,16 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { StatusBadge } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { AccountPageHead } from '@/layouts'
 import { AUCTION_ACTIVITY } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
+import { LiveRemaining } from '@/lib/countdown/LiveRemaining'
 
 /** My auction activity — Figma `207:11538`. */
 export function MyAuctionActivityPage() {
+  const { t } = useTranslation('account')
   const [tab, setTab] = useState(0)
   const selling = AUCTION_ACTIVITY.filter((item) => item.tab === 'selling')
   const bidding = AUCTION_ACTIVITY.filter((item) => item.tab === 'bidding')
@@ -16,24 +19,24 @@ export function MyAuctionActivityPage() {
   return (
     <>
       <AccountPageHead
-        eyebrow="Your account"
-        title="Auction activity"
-        subtitle="Tickets you're selling and seats you're chasing, in one place. We'll nudge you the second anything changes."
+        eyebrow={t('eyebrow')}
+        title={t('auctionActivity.title')}
+        subtitle={t('auctionActivity.subtitle')}
         className="[&>div]:max-w-[1040px]"
         actions={
           <Link to="/auctions">
-            <Button size="md">Browse auctions</Button>
+            <Button size="md">{t('auctionActivity.browse')}</Button>
           </Link>
         }
         tabs={[
           {
-            label: 'Selling',
+            label: t('auctionActivity.selling'),
             count: selling.length,
             active: tab === 0,
             onSelect: () => setTab(0),
           },
           {
-            label: 'Bidding',
+            label: t('auctionActivity.bidding'),
             count: bidding.length,
             active: tab === 1,
             onSelect: () => setTab(1),
@@ -80,7 +83,7 @@ export function MyAuctionActivityPage() {
                     item.timerUrgent ? 'text-ink-brand-strong' : 'text-ink-secondary',
                   )}
                 >
-                  {item.timer}
+                  <LiveRemaining initial={item.timer} />
                 </p>
               </div>
 

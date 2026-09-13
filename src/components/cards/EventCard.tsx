@@ -69,6 +69,7 @@ export interface EventCardProps {
   flag?: string
   image?: string
   onToggleFavourite?: () => void
+  favourited?: boolean
   className?: string
 }
 
@@ -84,6 +85,7 @@ export function EventCard({
   flag,
   image,
   onToggleFavourite,
+  favourited,
   className,
 }: EventCardProps) {
   const isHome = context === 'home'
@@ -112,7 +114,7 @@ export function EventCard({
         {flag && (
           <p
             className={cn(
-              'absolute top-[10px] left-[10px] rounded-[12px] px-[9px] py-xs text-[11px] font-semibold text-ink-inverse',
+              'absolute top-[10px] start-[10px] rounded-[12px] px-[9px] py-xs text-[11px] font-semibold text-ink-inverse',
               // Figma paints age flags (`18+`) and schedule flags (`Today`) with `--ink-brand`;
               // urgency uses gradient-end.
               flag === '18+' || flag === 'Today'
@@ -134,17 +136,18 @@ export function EventCard({
               onToggleFavourite()
             }}
             className={cn(
-              'absolute top-[10px] right-[10px] flex size-[32px] items-center justify-center text-ink-primary',
+              'absolute top-[10px] end-[10px] flex size-[32px] items-center justify-center',
+              favourited ? 'text-ink-brand' : 'text-ink-primary',
               isHome ? 'rounded-icon-btn bg-surface-default' : 'rounded-[16px] bg-bg-page/94',
             )}
           >
-            <HeartGlyphIcon size={isHome ? 15 : 14} />
+            <HeartGlyphIcon size={isHome ? 15 : 14} filled={favourited} />
           </button>
         ) : (
           <span
             aria-hidden
             className={cn(
-              'pointer-events-none absolute top-[10px] right-[10px] flex size-[32px] items-center justify-center text-ink-primary',
+              'pointer-events-none absolute top-[10px] end-[10px] flex size-[32px] items-center justify-center text-ink-primary',
               isHome ? 'rounded-icon-btn bg-surface-default' : 'rounded-[16px] bg-bg-page/94',
             )}
           >
@@ -153,7 +156,7 @@ export function EventCard({
         )}
 
         {category && (
-          <p className="absolute bottom-[10px] left-[10px] rounded-[12px] bg-surface-inverse px-[9px] py-xs text-[11px] font-semibold text-bg-page">
+          <p className="absolute bottom-[10px] start-[10px] rounded-[12px] bg-surface-inverse px-[9px] py-xs text-[11px] font-semibold text-bg-page">
             {category}
           </p>
         )}

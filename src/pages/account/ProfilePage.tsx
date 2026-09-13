@@ -1,7 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useLogoutMutation } from '@/app/api/authApi'
-import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { credentialsCleared, selectAuthUser } from '@/features/auth/authSlice'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useAppSelector } from '@/app/hooks'
+import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
 import {
   ArrowRightIcon,
   BellRingingIcon,
@@ -24,63 +24,48 @@ import {
   AUCTION_ACTIVITY,
   PROFILE_NIGHTS,
   SAVED_ITEMS,
-  WALLET_TXNS,
 } from '@/pages/_account/fixtures'
+import { AccountWalletCard } from '@/pages/_account/AccountAside'
+import { useSignOut } from '@/lib/auth/useSignOut'
 
-const SETTINGS_TILES = [
+const SETTINGS_TILE_KEYS = [
   {
-    title: 'Personal details',
-    desc: 'Name, photo, city',
-    tag: 'Verified',
+    key: 'personal',
     href: '/settings',
     icon: UserIcon,
   },
   {
-    title: 'Email & phone',
-    desc: 'Login contacts',
-    tag: '2 confirmed',
+    key: 'email',
     href: '/settings',
     icon: MailIcon,
   },
   {
-    title: 'Payment methods',
-    desc: 'Cards and Tabby',
-    tag: '3 saved',
+    key: 'payment',
     href: '/settings',
     icon: CreditCardIcon,
   },
   {
-    title: 'Wallet & payouts',
-    desc: 'Balance and bank',
-    tag: 'Open',
+    key: 'wallet',
     href: '/wallet',
     icon: WalletIcon,
   },
   {
-    title: 'Notifications',
-    desc: 'Push, email, SMS',
-    tag: '6 on',
+    key: 'notifications',
     href: '/notifications',
     icon: BellRingingIcon,
   },
   {
-    title: 'Security & sign-in',
-    desc: 'Password and 2FA',
-    tag: '2FA on',
+    key: 'security',
     href: '/settings',
     icon: LockIcon,
   },
   {
-    title: 'Language & region',
-    desc: 'Display and currency',
-    tag: 'English · SAR',
+    key: 'language',
     href: '/settings',
     icon: GlobeEastIcon,
   },
   {
-    title: 'Privacy & data',
-    desc: 'Downloads and delete',
-    tag: 'Manage',
+    key: 'privacy',
     href: '/settings',
     icon: ShieldIcon,
   },
@@ -101,29 +86,12 @@ function initialsFromName(name: string): string {
 }
 
 export function ProfilePage() {
-  const navigate = useNavigate()
-  const dispatch = useAppDispatch()
+  const { t } = useTranslation('account')
   const user = useAppSelector(selectAuthUser)
-  const [logout, logoutState] = useLogoutMutation()
+  const { signOut, isLoading: logoutLoading } = useSignOut()
   const displayName = user?.name ?? ACCOUNT_USER.name
   const initials = user?.name ? initialsFromName(user.name) : ACCOUNT_USER.initials
-  const walletLabel =
-    user?.walletBalance != null
-      ? `SAR ${Number(user.walletBalance).toLocaleString(undefined, {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        })}`
-      : ACCOUNT_USER.wallet
-
-  async function handleSignOut() {
-    try {
-      await logout().unwrap()
-    } catch {
-      /* Clear local session even if the API call fails */
-    }
-    dispatch(credentialsCleared())
-    navigate('/sign-in')
-  }
+  const walletLabel = formatAuthWalletBalance(user?.walletBalance, ACCOUNT_USER.wallet)
 
   return (
     <>
@@ -227,29 +195,7 @@ export function ProfilePage() {
 
       <PageSection padTop={40} padBottom={0}>
         <div className="grid gap-lg lg:grid-cols-2">
-          <div className="rounded-[20px] bg-surface-inverse p-xl text-bg-page">
-            <p className="text-[12px] font-bold tracking-[0.08em] text-bg-page/70 uppercase">
-              Wallet
-            </p>
-            <p className="mt-sm text-[36px] font-extrabold">{walletLabel}</p>
-            <p className="mt-xs text-[13px] text-bg-page/65">SAR 21 pending</p>
-            <ul className="mt-xl flex flex-col gap-md">
-              {WALLET_TXNS.slice(0, 3).map((txn) => (
-                <li key={txn.label} className="flex justify-between gap-md text-[14px]">
-                  <span className="text-bg-page/80">{txn.label}</span>
-                  <span className={txn.tone === 'credit' ? 'text-brand-primary' : ''}>
-                    {txn.amount}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <Link
-              to="/wallet"
-              className="mt-xl flex h-[42px] items-center justify-center rounded-btn-md bg-surface-default text-[14px] font-semibold text-ink-primary"
-            >
-              Open wallet
-            </Link>
-          </div>
+          <AccountWalletCard />
           <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
             <div className="mb-lg flex items-center justify-between">
               <p className="text-[18px] font-extrabold text-ink-primary">Auction activity</p>
@@ -271,7 +217,7 @@ export function ProfilePage() {
       </PageSection>
 
       <PageSection padTop={40} padBottom={0}>
-        <div className="mb-lg flex items-end justify-between">
+        <div className="mb-lg flex flex-wrap items-end justify-between gap-md">
           <h2 className="text-[24px] font-extrabold text-ink-primary">Saved for later</h2>
           <Link to="/saved" className="text-[14px] font-semibold text-ink-brand">
             See all 14 saved →
@@ -311,11 +257,14 @@ export function ProfilePage() {
           </Link>
         </div>
         <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
-          {SETTINGS_TILES.map((tile) => {
+          {SETTINGS_TILE_KEYS.map((tile) => {
             const Icon = tile.icon
+            const title = t(`profile.settingsTiles.${tile.key}.title`)
+            const desc = t(`profile.settingsTiles.${tile.key}.desc`)
+            const tag = t(`profile.settingsTiles.${tile.key}.tag`)
             return (
               <Link
-                key={tile.title}
+                key={tile.key}
                 to={tile.href}
                 className="rounded-[18px] border border-border-default bg-surface-default p-xl hover:border-border-brand"
               >
@@ -323,11 +272,11 @@ export function ProfilePage() {
                   <Icon size={15} className="text-ink-brand" />
                   <ArrowRightIcon size={14} className="text-ink-muted" />
                 </div>
-                <p className="mt-md text-[16px] font-bold text-ink-primary">{tile.title}</p>
-                <p className="mt-sm text-[13px] text-ink-secondary">{tile.desc}</p>
+                <p className="mt-md text-[16px] font-bold text-ink-primary">{title}</p>
+                <p className="mt-sm text-[13px] text-ink-secondary">{desc}</p>
                 <div className="mt-lg">
                   <StatusBadge tone="successTint">
-                    {tile.href === '/wallet' ? walletLabel : tile.tag}
+                    {tile.href === '/wallet' ? walletLabel : tag}
                   </StatusBadge>
                 </div>
               </Link>
@@ -337,9 +286,9 @@ export function ProfilePage() {
             to="/become-business"
             className="flex flex-col justify-between rounded-[18px] border border-border-default bg-surface-default p-xl hover:border-border-brand sm:col-span-2 lg:col-span-4"
           >
-            <div className="flex items-start justify-between gap-md">
-              <div className="flex items-center gap-md">
-                <BriefcaseIcon size={15} className="text-ink-brand" />
+            <div className="flex flex-col items-stretch gap-md sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex items-start gap-md">
+                <BriefcaseIcon size={15} className="mt-[2px] shrink-0 text-ink-brand" />
                 <div>
                   <p className="text-[16px] font-bold text-ink-primary">Become a business</p>
                   <p className="mt-xs text-[13px] text-ink-secondary">
@@ -348,7 +297,9 @@ export function ProfilePage() {
                   </p>
                 </div>
               </div>
-              <Button size="sm">Apply</Button>
+              <Button size="sm" className="w-full sm:w-auto">
+                Apply
+              </Button>
             </div>
           </Link>
         </div>
@@ -366,10 +317,10 @@ export function ProfilePage() {
             <Button
               variant="destructive"
               size="sm"
-              loading={logoutState.isLoading}
-              onClick={() => void handleSignOut()}
+              loading={logoutLoading}
+              onClick={() => void signOut()}
             >
-              Sign out
+              {t('profile.signOut')}
             </Button>
           </div>
         </div>

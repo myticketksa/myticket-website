@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { HeartGlyphIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
@@ -52,10 +53,10 @@ import { cn } from '@/lib/cn'
  * overflow the narrowest phone; and the medallion is `aria-hidden`, because the title
  * and body already carry its meaning.
  */
-const CTA_LABELS: Record<'firstUse' | 'filters' | 'gated', string> = {
-  firstUse: 'Browse events',
-  filters: 'Clear all filters',
-  gated: 'Sign in',
+const CTA_KEYS: Record<'firstUse' | 'filters' | 'gated', string> = {
+  firstUse: 'actions.browseEvents',
+  filters: 'empty.clearFilters',
+  gated: 'actions.signIn',
 }
 
 export interface EmptyStateProps {
@@ -80,7 +81,8 @@ export function EmptyState({
   onCtaClick,
   className,
 }: EmptyStateProps) {
-  const label = ctaLabel ?? CTA_LABELS[variant]
+  const { t } = useTranslation('common')
+  const label = ctaLabel ?? t(CTA_KEYS[variant])
 
   return (
     <div

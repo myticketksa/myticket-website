@@ -1,15 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import {
-  useAddFavoriteMutation,
-  useDeleteFavoriteMutation,
-  useGetFavoritesQuery,
-} from '@/app/api/accountApis'
+import { useTranslation } from 'react-i18next'
+import { Link, useParams } from 'react-router-dom'
 import { useGetEventDetailsQuery, useGetEventsQuery } from '@/app/api/eventsApi'
-import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { selectIsAuthenticated } from '@/features/auth/authSlice'
+import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { apiErrorMessage } from '@/lib/api/unwrap'
+import { useEventFavorites } from '@/lib/favorites/useEventFavorites'
 import { Avatar } from '@/components/data-display'
 import {
   ArrowUpRightIcon,
@@ -59,6 +55,14 @@ const TAB_IDS: Record<Tab, string> = {
   Venue: 'venue',
   Reviews: 'reviews',
   Policies: 'policies',
+}
+
+const TAB_LABEL_KEYS: Record<Tab, string> = {
+  About: 'detail.about',
+  'Line-up': 'detail.lineUp',
+  Venue: 'detail.venue',
+  Reviews: 'detail.reviews',
+  Policies: 'detail.policies',
 }
 
 const REVIEWS = [
@@ -118,18 +122,15 @@ function pickDetailString(record: Record<string, unknown> | undefined, keys: str
 
 /** Event detail — Figma `207:4797` continuous article + scroll-spy tabs. */
 export function EventDetailPage() {
+  const { t } = useTranslation(['catalog', 'common'])
   const { slug } = useParams()
-  const navigate = useNavigate()
   const dispatch = useAppDispatch()
-  const isAuthenticated = useAppSelector(selectIsAuthenticated)
   const slugOrId = slug ?? ''
   const [tab, setTab] = useState<Tab>('About')
   const scrollingToRef = useRef<string | null>(null)
+  const { isFavourite, toggleFavourite } = useEventFavorites()
 
   const { data: apiEvents } = useGetEventsQuery()
-  const { data: favorites } = useGetFavoritesQuery(undefined, { skip: !isAuthenticated })
-  const [addFavorite, addFavState] = useAddFavoriteMutation()
-  const [deleteFavorite, delFavState] = useDeleteFavoriteMutation()
 
   const catalog = useMemo(() => {
     if (apiEvents && apiEvents.length > 0) {
@@ -147,33 +148,22 @@ export function EventDetailPage() {
     skip: !resolvedId,
   })
 
-  const isSaved = useMemo(() => {
-    if (!resolvedId || !favorites?.length) return false
-    return favorites.some((item) => {
-      const id = item.id ?? item.event_id ?? item.eventId
-      return String(id) === String(resolvedId)
-    })
-  }, [favorites, resolvedId])
+  const isSaved = isFavourite(resolvedId)
 
   async function handleSave() {
-    if (!isAuthenticated) {
-      navigate('/sign-in')
-      return
-    }
     if (!resolvedId) {
-      dispatch(toastPushed('error', 'Event is not available to save yet'))
+      dispatch(toastPushed('error', t('detail.saveUnavailable')))
       return
     }
     try {
-      if (isSaved) {
-        await deleteFavorite(resolvedId).unwrap()
-        dispatch(toastPushed('success', 'Removed from saved'))
-      } else {
-        await addFavorite(resolvedId).unwrap()
-        dispatch(toastPushed('success', 'Saved'))
+      const ok = await toggleFavourite(resolvedId)
+      if (ok) {
+        dispatch(
+          toastPushed('success', isSaved ? t('detail.removedSaved') : t('detail.saved')),
+        )
       }
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not update saved')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('detail.saveError'))))
     }
   }
 
@@ -301,7 +291,7 @@ export function EventDetailPage() {
       </PageSection>
 
       <PageSection padTop={34} padBottom={0}>
-        <div className="flex w-full items-start gap-[48px]">
+        <div className="flex w-full flex-col items-start gap-[48px] lg:flex-row">
           <article className="min-w-0 flex-1">
             <FadeUp>
               <h1 className="text-display-hero text-ink-primary">{title}</h1>
@@ -321,11 +311,10 @@ export function EventDetailPage() {
               <Button
                 variant="secondary"
                 className="h-[40px] rounded-[20px] border px-lg"
-                icon={<HeartGlyphIcon size={16} />}
-                loading={addFavState.isLoading || delFavState.isLoading}
+                icon={<HeartGlyphIcon size={16} filled={isSaved} />}
                 onClick={() => void handleSave()}
               >
-                {isSaved ? 'Saved' : 'Save'}
+                {isSaved ? t('detail.saved') : t('common:actions.save')}
               </Button>
               <Button
                 variant="secondary"
@@ -334,7 +323,7 @@ export function EventDetailPage() {
                 disabled
                 title="Share not available yet"
               >
-                Share
+                {t('detail.share')}
               </Button>
               <Button
                 variant="secondary"
@@ -343,19 +332,19 @@ export function EventDetailPage() {
                 disabled
                 title="Calendar export not available yet"
               >
-                Add to calendar
+                {t('detail.addToCalendar')}
               </Button>
             </div>
 
             <div className="sticky top-[var(--spacing-header)] z-10 mt-[34px] bg-bg-page pt-sm">
-              <DetailSectionTabs aria-label="Event sections">
+              <DetailSectionTabs aria-label={t('detail.sectionsAria')}>
                 {TABS.map((item) => (
                   <DetailSectionTab
                     key={item}
                     active={tab === item}
                     onClick={() => jumpTo(item)}
                   >
-                    {item}
+                    {t(TAB_LABEL_KEYS[item])}
                   </DetailSectionTab>
                 ))}
               </DetailSectionTabs>
@@ -388,7 +377,7 @@ export function EventDetailPage() {
               id="line-up"
               className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-[44px]"
             >
-              <h2 className="text-heading-h2-section text-ink-primary">Line-up</h2>
+              <h2 className="text-heading-h2-section text-ink-primary">{t('detail.lineUp')}</h2>
               <p className="mt-[6px] text-[15px] text-ink-secondary">
                 Four acts across one stage. Set times published 48 hours before doors.
               </p>
@@ -439,7 +428,7 @@ export function EventDetailPage() {
                     Open in maps
                   </a>
                 </div>
-                <div className="flex gap-3xl px-3xl pt-[22px] pb-3xl">
+                <div className="flex flex-col gap-3xl px-lg pt-[22px] pb-3xl sm:flex-row sm:px-3xl">
                   {[
                     {
                       label: 'Address',
@@ -482,8 +471,8 @@ export function EventDetailPage() {
               id="reviews"
               className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-[44px]"
             >
-              <div className="flex items-end justify-between gap-lg">
-                <h2 className="text-heading-h2-section text-ink-primary">Reviews</h2>
+              <div className="flex flex-wrap items-end justify-between gap-md">
+                <h2 className="min-w-0 text-heading-h2-section text-ink-primary">{t('detail.reviews')}</h2>
                 <div className="flex items-center gap-[5px] text-[15px] text-ink-secondary">
                   <StarFillIcon size={15} />
                   <span>{EVENT_DETAIL.reviewsSummary}</span>
@@ -520,17 +509,19 @@ export function EventDetailPage() {
               id="policies"
               className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-[44px] pb-2xl"
             >
-              <h2 className="text-heading-h2-section text-ink-primary">Policies</h2>
+              <h2 className="text-heading-h2-section text-ink-primary">{t('detail.policies')}</h2>
               <div className="mt-[18px] rounded-[18px] border border-border-default bg-surface-default px-[22px] py-sm text-[14px]">
                 {POLICIES.map((row, i, arr) => (
                   <div
                     key={row.label}
                     className={cn(
-                      'flex gap-3xl py-lg',
+                      'flex flex-col gap-sm py-lg sm:flex-row sm:gap-3xl',
                       i < arr.length - 1 && 'border-b border-border-divider',
                     )}
                   >
-                    <p className="w-[200px] shrink-0 font-semibold text-ink-primary">{row.label}</p>
+                    <p className="w-full shrink-0 font-semibold text-ink-primary sm:w-[200px]">
+                      {row.label}
+                    </p>
                     <p className="min-w-0 flex-1 leading-[1.5] text-ink-body">{row.body}</p>
                   </div>
                 ))}
@@ -544,8 +535,15 @@ export function EventDetailPage() {
             tiers={EVENT_DETAIL.tiers}
             totals={EVENT_DETAIL.totals}
             total={EVENT_DETAIL.total}
-            primaryLabel="Choose your seats"
+            primaryLabel={t('detail.chooseSeats')}
             primaryTo={`/events/${slug ?? slugify(title)}/seats`}
+            onPrimaryClick={() => {
+              const ticketTypeId =
+                firstTicketTypeId(apiDetail) ??
+                (listCard && 'ticketTypeId' in listCard ? listCard.ticketTypeId : undefined)
+              if (ticketTypeId) sessionStorage.setItem('myticket.ticketId', String(ticketTypeId))
+              if (resolvedId) sessionStorage.setItem('myticket.eventId', String(resolvedId))
+            }}
             footerNote={EVENT_DETAIL.footerNote}
             aside={
               <>

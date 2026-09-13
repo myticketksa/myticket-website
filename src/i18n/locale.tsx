@@ -7,41 +7,18 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n, { STORAGE_KEY, readStoredLocale, type Locale } from './config'
 
-export type Locale = 'en' | 'ar'
-
+export type { Locale }
 export type RoleKey = 'vendor' | 'organizer' | 'talent'
-
-const STORAGE_KEY = 'myticket.locale'
-
-const ROLE_LABELS: Record<Locale, Record<RoleKey, string>> = {
-  en: {
-    vendor: 'Vendor',
-    organizer: 'Organizer',
-    talent: 'Talent',
-  },
-  ar: {
-    vendor: 'المنشأة',
-    organizer: 'منظم الفعالية',
-    talent: 'الموهبة',
-  },
-}
-
-function readStoredLocale(): Locale {
-  if (typeof window === 'undefined') return 'en'
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (raw === 'ar' || raw === 'en') return raw
-  } catch {
-    /* ignore */
-  }
-  return 'en'
-}
 
 function applyDocumentLocale(locale: Locale) {
   if (typeof document === 'undefined') return
   document.documentElement.lang = locale
   document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr'
+  const og = document.head.querySelector<HTMLMetaElement>('meta[property="og:locale"]')
+  if (og) og.content = locale === 'ar' ? 'ar_SA' : 'en_SA'
 }
 
 type LocaleContextValue = {
@@ -55,6 +32,7 @@ const LocaleContext = createContext<LocaleContextValue | null>(null)
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => readStoredLocale())
+  const { t } = useTranslation('common')
 
   useEffect(() => {
     applyDocumentLocale(locale)
@@ -62,6 +40,9 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       window.localStorage.setItem(STORAGE_KEY, locale)
     } catch {
       /* ignore */
+    }
+    if (i18n.language !== locale) {
+      void i18n.changeLanguage(locale)
     }
   }, [locale])
 
@@ -74,8 +55,8 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const roleLabel = useCallback(
-    (role: RoleKey) => ROLE_LABELS[locale][role],
-    [locale],
+    (role: RoleKey) => t(`roles.${role}`),
+    [t],
   )
 
   const value = useMemo(
@@ -96,5 +77,7 @@ export function useLocale() {
 
 /** Standalone helper when a component cannot use the hook (e.g. static maps). */
 export function roleLabelFor(role: RoleKey, locale: Locale = 'en') {
-  return ROLE_LABELS[locale][role]
+  return i18n.getFixedT(locale, 'common')(`roles.${role}`)
 }
+
+export { readStoredLocale, STORAGE_KEY }

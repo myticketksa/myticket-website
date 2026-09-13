@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   CheckIcon,
@@ -9,6 +10,7 @@ import {
   SparkleIcon,
 } from '@/components/icons'
 import { Divider, FilterChip, PriceDisplay } from '@/components/data-display'
+import { EmptyState } from '@/components/feedback'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { useGetEventsQuery } from '@/app/api/eventsApi'
@@ -36,19 +38,13 @@ interface SelectedSeat {
   price: number
 }
 
-const ZONES: { id: Zone; label: string }[] = [
-  { id: 'all', label: 'All zones' },
-  { id: 'vip', label: 'VIP' },
-  { id: 'gold', label: 'Gold' },
-  { id: 'silver', label: 'Silver' },
-  { id: 'bronze', label: 'Bronze' },
-]
+const ZONE_IDS: Zone[] = ['all', 'vip', 'gold', 'silver', 'bronze']
 
-const PRICE_TIERS = [
-  { tone: 'bg-seat-vip', label: 'VIP front rows', left: '34 left', price: 'SAR 680+' },
-  { tone: 'bg-brand-identity-end', label: 'Gold', left: '32 left', price: 'SAR 480+' },
-  { tone: 'bg-ink-brand', label: 'Silver', left: '117 left', price: 'SAR 260+' },
-  { tone: 'bg-ink-secondary', label: 'Bronze rear', left: '73 left', price: 'SAR 180+' },
+const PRICE_TIER_DEFS = [
+  { tone: 'bg-seat-vip', key: 'vip' as const, left: 34, price: 'SAR 680+' },
+  { tone: 'bg-brand-identity-end', key: 'gold' as const, left: 32, price: 'SAR 480+' },
+  { tone: 'bg-ink-brand', key: 'silver' as const, left: 117, price: 'SAR 260+' },
+  { tone: 'bg-ink-secondary', key: 'bronze' as const, left: 73, price: 'SAR 180+' },
 ] as const
 
 const ZOOM_MIN = 75
@@ -150,21 +146,6 @@ const UPPER_ROWS = ['Q', 'R', 'S', 'T', 'U', 'V'].map((row, rowIndex) => ({
 
 const ALL_SEAT_ROWS = [...FLOOR_ROWS, ...MEZZ_ROWS, ...UPPER_ROWS]
 
-const INITIAL_SELECTED: SelectedSeat[] = [
-  {
-    id: 'C11',
-    label: 'Row C, seat 11',
-    category: 'Gold · Floor – Block A',
-    price: 520,
-  },
-  {
-    id: 'C12',
-    label: 'Row C, seat 12',
-    category: 'Gold · Floor – Block A',
-    price: 520,
-  },
-]
-
 function seatMeta(status: SeatStatus): { price: number; category: string } {
   if (status === 'vip') return { price: 680, category: 'VIP · Floor – Block A' }
   if (status === 'silver') return { price: 260, category: 'Silver · Mezzanine – Block B' }
@@ -250,7 +231,7 @@ function SeatBlock({
           const aisle = Math.floor(seats.length / 2)
           return (
             <div key={row} className="flex items-center gap-[8px]">
-              <span className="w-[16px] text-right text-[10px] font-semibold text-ink-muted">
+              <span className="w-[16px] text-end text-[10px] font-semibold text-ink-muted">
                 {row}
               </span>
               <div className="flex gap-[3px]">
@@ -269,7 +250,7 @@ function SeatBlock({
                       key={seat.id}
                       className={cn(
                         !zoneMatch && 'opacity-30',
-                        index === aisle && 'ml-[10px]',
+                        index === aisle && 'ms-[10px]',
                       )}
                     >
                       <SeatButton
@@ -294,29 +275,41 @@ function SeatBlock({
  * Seat Selection — Figma `207:7446`. Purchase header comes from `PurchaseLayout`.
  */
 export function SeatSelectionPage() {
+  const { t } = useTranslation('checkout')
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { slug } = useParams()
   const [zone, setZone] = useState<Zone>('all')
-  const [zoom, setZoom] = useState(100)
+  const [zoom, setZoom] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches ? 70 : 100,
+  )
   const [selected, setSelected] = useState<SelectedSeat[]>([])
   const [holding, setHolding] = useState(false)
   const selectedIds = useMemo(() => new Set(selected.map((seat) => seat.id)), [selected])
   const continuingRef = useRef(false)
 
-  const { data: apiEvents } = useGetEventsQuery()
+  const { data: apiEvents, isLoading: eventsLoading } = useGetEventsQuery()
   const [holdSeats] = useHoldSeatsMutation()
   const [releaseHold] = useReleaseHoldMutation()
   const resolvedEventId = useMemo(
     () => resolveEventId(apiEvents, slug ?? '') ?? (/^\d+$/.test(slug ?? '') ? slug : undefined),
     [apiEvents, slug],
   )
-  const { data: apiSeats } = useGetEventSeatsQuery(resolvedEventId!, {
+  const {
+    data: apiSeats,
+    isLoading: seatsLoading,
+    isFetching: seatsFetching,
+  } = useGetEventSeatsQuery(resolvedEventId!, {
     skip: !resolvedEventId,
   })
 
   const liveRows = useMemo(() => mapApiSeatsToRows(apiSeats ?? []), [apiSeats])
   const usingLiveMap = Boolean(liveRows && liveRows.length > 0)
+  const waitingForSeats =
+    eventsLoading ||
+    (!resolvedEventId && apiEvents === undefined) ||
+    (Boolean(resolvedEventId) && (seatsLoading || (seatsFetching && !usingLiveMap)))
+  const seatsUnavailable = !waitingForSeats && !usingLiveMap
 
   const floorRows = usingLiveMap
     ? liveRows!.slice(0, Math.ceil(liveRows!.length / 3))
@@ -332,12 +325,15 @@ export function SeatSelectionPage() {
     : UPPER_ROWS
 
   useEffect(() => {
-    if (usingLiveMap) {
-      setSelected([])
-      return
-    }
-    setSelected(INITIAL_SELECTED)
-  }, [usingLiveMap])
+    setSelected([])
+  }, [usingLiveMap, resolvedEventId])
+
+  useEffect(() => {
+    const eventRecord = resolveEventFromList(apiEvents, slug ?? '')
+    const ticketTypeId = firstTicketTypeId(eventRecord)
+    if (ticketTypeId) sessionStorage.setItem('myticket.ticketId', String(ticketTypeId))
+    if (resolvedEventId) sessionStorage.setItem('myticket.eventId', String(resolvedEventId))
+  }, [apiEvents, resolvedEventId, slug])
 
   // Release only when the tab is closed / unloaded — not on React Strict Mode remounts
   // or when continuing to checkout (those unmounts used to wipe a valid holdId).
@@ -372,7 +368,7 @@ export function SeatSelectionPage() {
    * Fixture labels like `C11` cannot create an order on the live API.
    */
   async function continueToCheckout() {
-    if (selected.length === 0) return
+    if (selected.length === 0 || waitingForSeats || seatsUnavailable) return
 
     if (resolvedEventId) sessionStorage.setItem('myticket.eventId', resolvedEventId)
     else if (slug) sessionStorage.setItem('myticket.eventId', slug)
@@ -385,22 +381,12 @@ export function SeatSelectionPage() {
     const numericSeatIds = parsePureNumericIds(selected.map((seat) => seat.id))
 
     if (!usingLiveMap || numericSeatIds.length !== selected.length) {
-      dispatch(
-        toastPushed(
-          'error',
-          'Live seat inventory is required for this event. Pick seats from the map once seats load.',
-        ),
-      )
+      dispatch(toastPushed('error', t('seats.liveRequired')))
       return
     }
 
     if (!resolvedEventId || !ticketId) {
-      dispatch(
-        toastPushed(
-          'error',
-          'Ticket type is missing for this event. Open the event page again, then return to seats.',
-        ),
-      )
+      dispatch(toastPushed('error', t('seats.ticketMissing')))
       return
     }
 
@@ -433,14 +419,14 @@ export function SeatSelectionPage() {
       sessionStorage.setItem('myticket.ticketId', String(ticketId))
       navigate('/checkout')
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not hold these seats')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('seats.holdFailed'))))
     } finally {
       setHolding(false)
     }
   }
 
   function toggleSeat(id: string, row: string, number: number, status: SeatStatus) {
-    if (status === 'sold' || status === 'held') return
+    if (!usingLiveMap || status === 'sold' || status === 'held') return
 
     setSelected((current) => {
       if (current.some((seat) => seat.id === id)) {
@@ -457,7 +443,7 @@ export function SeatSelectionPage() {
         ...current,
         {
           id,
-          label: `Row ${row}, seat ${number}`,
+          label: t('seats.rowSeat', { row, number }),
           category: liveSeat?.category ?? meta.category,
           price: liveSeat?.price ?? meta.price,
         },
@@ -466,6 +452,7 @@ export function SeatSelectionPage() {
   }
 
   function pickBestAvailable() {
+    if (!usingLiveMap) return
     const preferred: SeatStatus[] =
       zone === 'all' ? ['gold', 'vip', 'silver', 'bronze'] : [zone]
     const need = 2
@@ -491,7 +478,7 @@ export function SeatSelectionPage() {
               const meta = seatMeta(seat.status)
               picks.push({
                 id: seat.id,
-                label: `Row ${row}, seat ${seat.index}`,
+                label: t('seats.rowSeat', { row, number: seat.index }),
                 category: liveSeat?.category ?? meta.category,
                 price: liveSeat?.price ?? meta.price,
               })
@@ -509,128 +496,158 @@ export function SeatSelectionPage() {
       <section className="min-w-0 flex-1 overflow-hidden rounded-[20px] border border-border-default bg-surface-default">
         <div className="flex flex-wrap items-center justify-between gap-md border-b border-border-divider px-xl py-lg">
           <div className="flex flex-wrap items-center gap-sm">
-            <p className="text-[15px] font-semibold text-ink-primary">Hall 1 — Main Arena</p>
-            <div className="flex flex-wrap gap-sm">
-              {ZONES.map((item) => (
-                <FilterChip
-                  key={item.id}
-                  selected={zone === item.id}
-                  onClick={() => setZone(item.id)}
-                  className="h-8 rounded-pill px-md text-[13px] font-semibold"
+            <p className="text-[15px] font-semibold text-ink-primary">{t('seats.hall')}</p>
+            {usingLiveMap ? (
+              <div className="flex flex-wrap gap-sm">
+                {ZONE_IDS.map((id) => (
+                  <FilterChip
+                    key={id}
+                    selected={zone === id}
+                    onClick={() => setZone(id)}
+                    className="h-8 rounded-pill px-md text-[13px] font-semibold"
+                  >
+                    {t(`seats.zones.${id}`)}
+                  </FilterChip>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          {usingLiveMap ? (
+            <div className="flex items-center gap-sm">
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={<SparkleIcon size={16} />}
+                className="h-[34px] rounded-[17px] bg-bg-page px-[14px]"
+                onClick={pickBestAvailable}
+                disabled={waitingForSeats}
+              >
+                {t('seats.pickBest')}
+              </Button>
+              <div className="flex items-center gap-[4px] rounded-[17px] border border-border-default p-[4px]">
+                <button
+                  type="button"
+                  className="flex h-[26px] w-[28px] items-center justify-center rounded-[13px] text-ink-primary disabled:cursor-not-allowed disabled:text-ink-disabled"
+                  aria-label={t('seats.zoomOut')}
+                  disabled={zoom <= ZOOM_MIN}
+                  onClick={() => setZoom((z) => Math.max(ZOOM_MIN, z - ZOOM_STEP))}
                 >
-                  {item.label}
-                </FilterChip>
-              ))}
+                  <MinusIcon size={15} />
+                </button>
+                <span className="w-[34px] text-center text-[12px] font-semibold text-ink-secondary">
+                  {zoom}%
+                </span>
+                <button
+                  type="button"
+                  className="flex h-[26px] w-[28px] items-center justify-center rounded-[13px] text-ink-primary disabled:cursor-not-allowed disabled:text-ink-disabled"
+                  aria-label={t('seats.zoomIn')}
+                  disabled={zoom >= ZOOM_MAX}
+                  onClick={() => setZoom((z) => Math.min(ZOOM_MAX, z + ZOOM_STEP))}
+                >
+                  <PlusIcon size={15} />
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-sm">
-            <Button
-              size="sm"
-              variant="secondary"
-              icon={<SparkleIcon size={16} />}
-              className="h-[34px] rounded-[17px] bg-bg-page px-[14px]"
-              onClick={pickBestAvailable}
-            >
-              Pick best available
-            </Button>
-            <div className="flex items-center gap-[4px] rounded-[17px] border border-border-default p-[4px]">
-              <button
-                type="button"
-                className="flex h-[26px] w-[28px] items-center justify-center rounded-[13px] text-ink-primary disabled:cursor-not-allowed disabled:text-ink-disabled"
-                aria-label="Zoom out"
-                disabled={zoom <= ZOOM_MIN}
-                onClick={() => setZoom((z) => Math.max(ZOOM_MIN, z - ZOOM_STEP))}
-              >
-                <MinusIcon size={15} />
-              </button>
-              <span className="w-[34px] text-center text-[12px] font-semibold text-ink-secondary">
-                {zoom}%
-              </span>
-              <button
-                type="button"
-                className="flex h-[26px] w-[28px] items-center justify-center rounded-[13px] text-ink-primary disabled:cursor-not-allowed disabled:text-ink-disabled"
-                aria-label="Zoom in"
-                disabled={zoom >= ZOOM_MAX}
-                onClick={() => setZoom((z) => Math.min(ZOOM_MAX, z + ZOOM_STEP))}
-              >
-                <PlusIcon size={15} />
-              </button>
-            </div>
-          </div>
+          ) : waitingForSeats ? (
+            <p className="text-[13px] font-semibold text-ink-secondary">{t('seats.loading')}</p>
+          ) : null}
         </div>
 
-        <div className="overflow-auto bg-gradient-to-b from-bg-page via-surface-default via-[55%] to-surface-default px-2xl pt-[30px] pb-[26px]">
-          <div
-            className="mx-auto flex w-full max-w-[980px] origin-top flex-col items-center transition-transform duration-normal ease-standard"
-            style={{ transform: `scale(${zoom / 100})` }}
-          >
-            <div className="flex h-[46px] w-full items-center justify-center rounded-b-[46px] bg-surface-inverse">
-              <p className="text-[13px] font-bold tracking-[3.64px] text-bg-page">STAGE</p>
-            </div>
+        <div className="overflow-auto bg-gradient-to-b from-bg-page via-surface-default via-[55%] to-surface-default px-md pt-[30px] pb-[26px] sm:px-2xl">
+          {waitingForSeats ? (
+            <p className="py-3xl text-center text-[14px] font-semibold text-ink-secondary">
+              {t('seats.loading')}
+            </p>
+          ) : seatsUnavailable ? (
+            <EmptyState
+              variant="gated"
+              className="mx-auto py-3xl"
+              title={t('seats.unavailableTitle')}
+              body={t('seats.unavailableBody')}
+              ctaLabel={t('seats.backToEvent')}
+              onCtaClick={() => navigate(slug ? `/events/${slug}` : '/events')}
+            />
+          ) : (
+            <>
+              <p className="mb-md text-center text-[12px] text-ink-muted lg:hidden">
+                {t('seats.mapHint')}
+              </p>
+              <div
+                className="mx-auto flex w-full max-w-[980px] origin-top flex-col items-center transition-transform duration-normal ease-standard"
+                style={{ transform: `scale(${zoom / 100})` }}
+              >
+                <div className="flex h-[46px] w-full items-center justify-center rounded-b-[46px] bg-surface-inverse">
+                  <p className="text-[13px] font-bold tracking-[3.64px] text-bg-page">{t('seats.stage')}</p>
+                </div>
 
-            <div className="mt-[34px] w-full">
-              <SeatBlock
-                title="FLOOR — BLOCK A"
-                range="SAR 340 – SAR 720"
-                rows={floorRows}
-                zone={zone}
-                selectedIds={selectedIds}
-                onToggle={toggleSeat}
-              />
-            </div>
+                <div className="mt-[34px] w-full">
+                  <SeatBlock
+                    title={t('seats.blocks.floor')}
+                    range={t('seats.blocks.floorRange')}
+                    rows={floorRows}
+                    zone={zone}
+                    selectedIds={selectedIds}
+                    onToggle={toggleSeat}
+                  />
+                </div>
 
-            <div className="mt-2xl w-full">
-              <SeatBlock
-                title="MEZZANINE — BLOCK B"
-                range="SAR 220 – SAR 380"
-                rows={mezzRows}
-                zone={zone}
-                selectedIds={selectedIds}
-                onToggle={toggleSeat}
-              />
-            </div>
+                <div className="mt-2xl w-full">
+                  <SeatBlock
+                    title={t('seats.blocks.mezzanine')}
+                    range={t('seats.blocks.mezzRange')}
+                    rows={mezzRows}
+                    zone={zone}
+                    selectedIds={selectedIds}
+                    onToggle={toggleSeat}
+                  />
+                </div>
 
-            <div className="mt-2xl w-full">
-              <SeatBlock
-                title="UPPER TIER — BLOCK C"
-                range="SAR 140 – SAR 220"
-                rows={upperRows}
-                zone={zone}
-                selectedIds={selectedIds}
-                onToggle={toggleSeat}
-              />
-            </div>
+                <div className="mt-2xl w-full">
+                  <SeatBlock
+                    title={t('seats.blocks.upper')}
+                    range={t('seats.blocks.upperRange')}
+                    rows={upperRows}
+                    zone={zone}
+                    selectedIds={selectedIds}
+                    onToggle={toggleSeat}
+                  />
+                </div>
 
-            <div className="mt-2xl grid w-full gap-sm md:grid-cols-3">
-              {[
-                { title: 'Standing pit', meta: 'Unreserved · SAR 240' },
-                { title: 'Family lawn', meta: 'Seated on grass · SAR 120' },
-                { title: 'Accessible bay', meta: 'Wheelchair + companion' },
-              ].map((block) => (
-                <button
-                  key={block.title}
-                  type="button"
-                  className="rounded-[14px] border border-border-default bg-bg-page px-lg py-md text-left"
-                >
-                  <p className="text-[14px] font-semibold text-ink-primary">{block.title}</p>
-                  <p className="mt-[2px] text-[12px] text-ink-secondary">{block.meta}</p>
-                </button>
-              ))}
-            </div>
-          </div>
+                <div className="mt-2xl grid w-full gap-sm md:grid-cols-3">
+                  {[
+                    { title: t('seats.extras.standingPit'), meta: t('seats.extras.standingPitMeta') },
+                    { title: t('seats.extras.familyLawn'), meta: t('seats.extras.familyLawnMeta') },
+                    {
+                      title: t('seats.extras.accessibleBay'),
+                      meta: t('seats.extras.accessibleBayMeta'),
+                    },
+                  ].map((block) => (
+                    <button
+                      key={block.title}
+                      type="button"
+                      className="rounded-[14px] border border-border-default bg-bg-page px-lg py-md text-start"
+                    >
+                      <p className="text-[14px] font-semibold text-ink-primary">{block.title}</p>
+                      <p className="mt-[2px] text-[12px] text-ink-secondary">{block.meta}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-lg border-t border-border-divider px-xl py-md">
           {[
-            { className: 'border-border-default bg-surface-default', label: 'Available' },
-            { className: 'border-transparent bg-brand-gradient', label: 'Selected' },
-            { className: 'border-border-default bg-seat-sold', label: 'Sold' },
+            { className: 'border-border-default bg-surface-default', label: t('seats.legend.available') },
+            { className: 'border-transparent bg-brand-gradient', label: t('seats.legend.selected') },
+            { className: 'border-border-default bg-seat-sold', label: t('seats.legend.sold') },
             {
               className:
                 'border-neutral-scrollbar bg-[repeating-linear-gradient(135deg,var(--color-border-divider)_0_3px,var(--color-neutral-scrollbar)_3px_6px)]',
-              label: 'Held by others',
+              label: t('seats.legend.held'),
             },
-            { className: 'border-ink-brand bg-bg-tint-brand', label: 'Accessible' },
+            { className: 'border-ink-brand bg-bg-tint-brand', label: t('seats.legend.accessible') },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-sm">
               <span className={cn('size-[14px] rounded-[4px] border', item.className)} />
@@ -643,9 +660,9 @@ export function SeatSelectionPage() {
       <aside className="flex w-full shrink-0 flex-col gap-md lg:w-[400px]">
         <div className="rounded-[20px] border border-border-default bg-surface-default p-[20px] shadow-[0px_18px_40px_-26px_rgba(25,16,8,0.3),0px_1px_2px_0px_rgba(25,16,8,0.04)]">
           <div className="flex items-baseline justify-between gap-md">
-            <h2 className="text-[17px] font-semibold text-ink-primary">Your seats</h2>
+            <h2 className="text-[17px] font-semibold text-ink-primary">{t('seats.yourSeats')}</h2>
             <p className="text-[13px] text-ink-secondary">
-              {selected.length} of 6 selected
+              {t('seats.selectedOf', { count: selected.length, max: 6 })}
             </p>
           </div>
 
@@ -661,7 +678,7 @@ export function SeatSelectionPage() {
                 </PriceDisplay>
                 <button
                   type="button"
-                  aria-label={`Remove ${seat.label}`}
+                  aria-label={t('seats.removeSeat', { label: seat.label })}
                   className="text-ink-muted hover:text-ink-primary"
                   onClick={() =>
                     setSelected((current) => current.filter((item) => item.id !== seat.id))
@@ -677,21 +694,21 @@ export function SeatSelectionPage() {
 
           <div className="flex flex-col gap-sm text-[14px]">
             <div className="flex justify-between">
-              <span className="text-ink-secondary">Seats subtotal</span>
+              <span className="text-ink-secondary">{t('seats.subtotal')}</span>
               <PriceDisplay context="row">SAR {subtotal.toLocaleString('en-US')}</PriceDisplay>
             </div>
             <div className="flex justify-between">
-              <span className="text-ink-secondary">Service fee</span>
+              <span className="text-ink-secondary">{t('seats.serviceFee')}</span>
               <PriceDisplay context="row">SAR {serviceFee.toLocaleString('en-US')}</PriceDisplay>
             </div>
             <div className="flex justify-between">
-              <span className="text-ink-secondary">VAT 15%</span>
+              <span className="text-ink-secondary">{t('seats.vat')}</span>
               <PriceDisplay context="row">SAR {vat.toLocaleString('en-US')}</PriceDisplay>
             </div>
           </div>
 
           <div className="mt-md flex items-baseline justify-between border-t border-border-divider pt-md">
-            <span className="text-[16px] font-semibold text-ink-primary">Total</span>
+            <span className="text-[16px] font-semibold text-ink-primary">{t('seats.total')}</span>
             <PriceDisplay context="stat">SAR {total.toLocaleString('en-US')}</PriceDisplay>
           </div>
 
@@ -699,42 +716,52 @@ export function SeatSelectionPage() {
             type="button"
             size="lg"
             className="mt-lg h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
-            disabled={holding || selected.length === 0}
+            disabled={
+              holding ||
+              waitingForSeats ||
+              seatsUnavailable ||
+              selected.length === 0 ||
+              !usingLiveMap
+            }
             onClick={() => void continueToCheckout()}
           >
-            {holding
-              ? 'Holding seats…'
-              : `Continue to payment · SAR ${total.toLocaleString('en-US')}`}
+            {waitingForSeats
+              ? t('seats.loading')
+              : holding
+                ? t('seats.holding')
+                : t('seats.continuePayment', {
+                    amount: `SAR ${total.toLocaleString('en-US')}`,
+                  })}
           </Button>
           <p className="mt-md text-center text-[12px] leading-[1.5] text-ink-muted">
-            Seats are held for 10 minutes. Maximum 6 per order.
+            {seatsUnavailable ? t('seats.needLive') : t('seats.holdNote')}
           </p>
         </div>
 
         <div className="rounded-[18px] border border-border-default bg-surface-default p-[18px]">
-          <h3 className="text-[14px] font-semibold text-ink-primary">Seat prices in this hall</h3>
+          <h3 className="text-[14px] font-semibold text-ink-primary">{t('seats.pricesTitle')}</h3>
           <ul className="mt-md flex flex-col gap-[10px]">
-            {PRICE_TIERS.map((tier) => (
-              <li key={tier.label} className="flex items-center gap-[10px]">
+            {PRICE_TIER_DEFS.map((tier) => (
+              <li key={tier.key} className="flex items-center gap-[10px]">
                 <span className={cn('size-[13px] rounded-[4px]', tier.tone)} />
-                <span className="flex-1 text-[13px] text-ink-primary">{tier.label}</span>
-                <span className="text-[13px] text-ink-secondary">{tier.left}</span>
+                <span className="flex-1 text-[13px] text-ink-primary">
+                  {t(`seats.tiers.${tier.key}`)}
+                </span>
+                <span className="text-[13px] text-ink-secondary">
+                  {t('seats.tiers.left', { count: tier.left })}
+                </span>
                 <span className="text-[13px] font-semibold text-ink-primary">{tier.price}</span>
               </li>
             ))}
           </ul>
           <p className="mt-md border-t border-border-divider pt-md text-[12px] leading-[1.5] text-ink-secondary">
-            Prices are per seat and vary by row — front rows cost more than the same tier further
-            back.
+            {t('seats.pricesNote')}
           </p>
         </div>
 
         <div className="flex gap-[10px] rounded-[18px] border border-border-default bg-bg-warm px-lg py-md">
           <InfoIcon size={16} className="mt-[2px] shrink-0 text-ink-brand" />
-          <p className="text-[13px] leading-[1.5] text-ink-primary">
-            Need accessible seating? Choose an accessible bay on the map or message the
-            organizer after checkout — companion seats are held at the same price.
-          </p>
+          <p className="text-[13px] leading-[1.5] text-ink-primary">{t('seats.accessibleNote')}</p>
         </div>
       </aside>
     </div>

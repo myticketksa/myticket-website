@@ -2,7 +2,8 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { SiteFooter, SiteHeader } from '@/components/navigation'
 import { PageFade } from '@/components/motion'
 import { useAppSelector } from '@/app/hooks'
-import { selectAuthUser, selectIsAuthenticated } from '@/features/auth/authSlice'
+import { selectIsAuthenticated } from '@/features/auth/authSlice'
+import { useHeaderAccount } from '@/lib/auth/accountChip'
 
 /**
  * Pattern A — MainLayout. Verified on Home `207:4362`.
@@ -53,15 +54,8 @@ export function MainLayout() {
   const { pathname } = useLocation()
   const nav = resolveNav(pathname)
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
-  const user = useAppSelector(selectAuthUser)
+  const account = useHeaderAccount()
   const signedIn = isAuthenticated || pathname === '/order-confirmation'
-  const displayName = user?.name?.split(' ')[0] ?? 'Sara'
-  const initials =
-    user?.name
-      ?.split(/\s+/)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? '')
-      .join('') || 'SA'
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg-page">
@@ -69,11 +63,7 @@ export function MainLayout() {
         state={signedIn ? 'signedIn' : 'signedOut'}
         activeItem={nav.activeItem}
         activeItemState={nav.activeItemState}
-        account={
-          signedIn
-            ? { name: displayName, initials, notifications: 3 }
-            : undefined
-        }
+        account={signedIn ? account : undefined}
       />
       <main className="flex-1">
         <PageFade>

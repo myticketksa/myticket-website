@@ -20,7 +20,7 @@ export function ToastViewport() {
   }, [toasts, dispatch])
 
   return (
-    <div className="pointer-events-none fixed bottom-[24px] left-[24px] z-[80] flex w-[min(360px,calc(100vw-48px))] flex-col gap-[14px]">
+    <div className="pointer-events-none fixed bottom-[24px] start-[24px] z-[80] flex w-[min(360px,calc(100vw-48px))] flex-col gap-[14px]">
       <AnimatePresence initial={false}>
         {toasts.map((toast) => (
           <motion.div

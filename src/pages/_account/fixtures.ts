@@ -92,12 +92,12 @@ export const MY_TICKETS: TicketFixture[] = [
 ]
 
 export const ACCOUNT_NAV_LINKS = [
-  { label: 'Favourites', meta: '14 saved', href: '/saved' },
-  { label: 'Waitlists', meta: '2 waiting', href: '/saved' },
-  { label: 'My reviews', meta: '6 written', href: '/my-reviews' },
-  { label: 'Vendor application', meta: 'Track status', href: '/my-vendor-application' },
-  { label: 'Talent application', meta: 'Track status', href: '/my-talent-application' },
-  { label: 'Payment methods', meta: '3 saved', href: '/settings' },
+  { id: 'favourites', href: '/saved' },
+  { id: 'waitlists', href: '/saved' },
+  { id: 'reviews', href: '/my-reviews' },
+  { id: 'vendor', href: '/my-vendor-application' },
+  { id: 'talent', href: '/my-talent-application' },
+  { id: 'payment', href: '/settings' },
 ] as const
 
 export const SIDEBAR_RECS = [

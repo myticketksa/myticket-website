@@ -95,7 +95,7 @@ export function Field({
       {children}
       {error && <InlineError className="mt-[6px]">{error}</InlineError>}
       {counter && (
-        <CharacterCounter className="mt-[6px] text-right">{counter}</CharacterCounter>
+        <CharacterCounter className="mt-[6px] text-end">{counter}</CharacterCounter>
       )}
     </div>
   )

@@ -40,7 +40,7 @@ export function PageSection({
   return (
     <section className={cn('w-full', className)} style={paddingStyle} {...props}>
       {inset ? (
-        <div className="mx-auto w-full max-w-[var(--container-page)] px-page-gutter">
+        <div className="mx-auto w-full min-w-0 max-w-[var(--container-page)] px-page-gutter">
           {children}
         </div>
       ) : (

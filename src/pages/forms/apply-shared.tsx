@@ -1,22 +1,44 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Checkbox } from '@/components/ui'
+import { useAppSelector } from '@/app/hooks'
+import { selectAuthUser } from '@/features/auth/authSlice'
+import i18n from '@/i18n/config'
+
+function initialsFromName(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || '—'
+  )
+}
 
 export function AccountDonePanel({
-  initials = 'SA',
-  title = "This part's already done — you're signed in as Sara.",
+  initials,
+  title,
   subtitle,
 }: {
   initials?: string
   title?: string
   subtitle: ReactNode
 }) {
+  const user = useAppSelector(selectAuthUser)
+  const displayName = user?.name?.trim() || 'your account'
+  const firstName = displayName.split(/\s+/)[0] || displayName
+  const resolvedInitials = initials ?? (user?.name ? initialsFromName(user.name) : '—')
+  const resolvedTitle =
+    title ?? `This part's already done — you're signed in as ${firstName}.`
+
   return (
     <div className="flex gap-[16px] rounded-[16px] border border-state-success-border bg-state-success-tint px-[20px] py-[18px]">
       <div className="flex size-[44px] shrink-0 items-center justify-center rounded-[22px] bg-brand-gradient text-[15px] font-bold text-ink-inverse">
-        {initials}
+        {resolvedInitials}
       </div>
       <div className="min-w-0">
-        <p className="text-[15px] font-bold text-state-success">{title}</p>
+        <p className="text-[15px] font-bold text-state-success">{resolvedTitle}</p>
         <p className="mt-[2px] text-[13px] text-ink-secondary">{subtitle}</p>
       </div>
     </div>
@@ -29,9 +51,10 @@ export function ReviewSummary({
 }: {
   rows: { label: string; value: string }[]
 }) {
+  const { t } = useTranslation('forms')
   return (
     <div className="rounded-[16px] border border-border-default bg-bg-page px-[18px] py-[16px]">
-      <p className="text-[14px] font-bold text-ink-primary">What we&apos;ll review</p>
+      <p className="text-[14px] font-bold text-ink-primary">{t('review.heading')}</p>
       <dl className="mt-[12px] flex flex-col gap-[10px]">
         {rows.map((row) => (
           <div
@@ -39,7 +62,7 @@ export function ReviewSummary({
             className="flex items-start justify-between gap-[16px] text-[13.5px]"
           >
             <dt className="shrink-0 font-medium text-ink-muted">{row.label}</dt>
-            <dd className="min-w-0 text-right font-semibold text-ink-primary">{row.value}</dd>
+            <dd className="min-w-0 text-end font-semibold text-ink-primary">{row.value}</dd>
           </div>
         ))}
       </dl>
@@ -67,6 +90,8 @@ export function ReviewTerms({
   )
 }
 
-export function joinOrDash(values: string[], empty = 'Not set yet') {
-  return values.length > 0 ? values.join(', ') : empty
+export function joinOrDash(values: string[], empty?: string) {
+  return values.length > 0
+    ? values.join(', ')
+    : (empty ?? i18n.t('forms:review.notSet'))
 }

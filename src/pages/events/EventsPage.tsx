@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { EventCard } from '@/components/cards'
 import { FadeUp, StaggerGroup } from '@/components/motion'
 import { Breadcrumbs } from '@/components/navigation'
@@ -20,14 +21,12 @@ import {
 import { useGetEventCategoriesQuery, useGetEventsQuery } from '@/app/api/eventsApi'
 import { mapCategoryLabels } from '@/lib/api/mappers/categories'
 import { mapApiEventToCard } from '@/lib/api/mappers/events'
+import { useEventFavorites } from '@/lib/favorites/useEventFavorites'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 
-const SORT_MODES = [
-  { key: 'date', label: 'Date — soonest' },
-  { key: 'price', label: 'Price — low to high' },
-  { key: 'rating', label: 'Rating' },
-] as const
+const SORT_KEYS = ['date', 'price', 'rating'] as const
 
-type SortKey = (typeof SORT_MODES)[number]['key']
+type SortKey = (typeof SORT_KEYS)[number]
 
 function parseRatingFloor(option: string): number | null {
   if (option === 'Any') return null
@@ -52,6 +51,7 @@ function matchesWhen(date: string, when: string): boolean {
 
 /** Events directory — Figma `207:4600`. Events API with fixture fallback. */
 export function EventsPage() {
+  const { t } = useTranslation(['catalog', 'nav', 'common'])
   const [category, setCategory] = useState('All events')
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [sortKey, setSortKey] = useState<SortKey>('date')
@@ -65,6 +65,7 @@ export function EventsPage() {
 
   const { data: apiEvents, isFetching, isError } = useGetEventsQuery()
   const { data: apiCategories } = useGetEventCategoriesQuery()
+  const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
 
   const categoryChips = useMemo(
     () =>
@@ -115,20 +116,35 @@ export function EventsPage() {
     return list
   }, [filtered, sortKey])
 
-  const sortMode = SORT_MODES.find((m) => m.key === sortKey) ?? SORT_MODES[0]
-  const cycleSort = () => {
-    const idx = SORT_MODES.findIndex((m) => m.key === sortKey)
-    setSortKey(SORT_MODES[(idx + 1) % SORT_MODES.length]!.key)
+  const sortLabels: Record<SortKey, string> = {
+    date: t('results.sortDateSoonest'),
+    price: t('results.sortPriceLow'),
+    rating: t('results.sortRating'),
   }
+  const sortModeLabel = sortLabels[sortKey]
+  const cycleSort = () => {
+    const idx = SORT_KEYS.indexOf(sortKey)
+    setSortKey(SORT_KEYS[(idx + 1) % SORT_KEYS.length]!)
+  }
+
+  const categoryDisplay = catalogLabel(t, category)
+  const subtitleParts = [
+    t('pages.eventsSubtitle', {
+      count: shown.length,
+      category: categoryDisplay.toLowerCase(),
+    }),
+    isError ? t('pages.apiPreview') : null,
+    isFetching ? t('pages.updating') : null,
+  ].filter(Boolean)
 
   return (
     <>
       <PageSection padTop={26} padBottom={0}>
         <Breadcrumbs
           items={[
-            { label: 'Home', href: '/' },
-            { label: 'Events', href: '/events' },
-            { label: category },
+            { label: t('nav:main'), href: '/' },
+            { label: t('nav:events'), href: '/events' },
+            { label: categoryDisplay },
           ]}
         />
       </PageSection>
@@ -136,17 +152,21 @@ export function EventsPage() {
       <PageSection padTop={14} padBottom={0}>
         <FadeUp>
           <CatalogPageHead
-            title={`${category} in Saudi Arabia`}
-            subtitle={`${shown.length} ${category.toLowerCase()} on sale — arena shows, festival stages and intimate nights, from Riyadh to Jazan.${
-              isError ? ' Showing local preview while the API is unreachable.' : ''
-            }${isFetching ? ' Updating…' : ''}`}
+            title={t('pages.eventsInSaudi', { category: categoryDisplay })}
+            subtitle={subtitleParts.join(' ')}
             chips={categoryChips.map((label) => ({
               label,
+              displayLabel: catalogLabel(t, label),
               selected: label === category || (label === 'All events' && category === 'All events'),
             }))}
             onChipSelect={setCategory}
             actions={
-              <CatalogSaveAlertActions alertLabel={`Alert me on new ${category.toLowerCase()}`} />
+              <CatalogSaveAlertActions
+                saveLabel={t('pages.saveSearch')}
+                alertLabel={t('pages.alertNewCategory', {
+                  category: categoryDisplay.toLowerCase(),
+                })}
+              />
             }
           />
         </FadeUp>
@@ -171,10 +191,14 @@ export function EventsPage() {
           }
         >
           <ResultsToolbar
-            countLabel={`${Math.min(9, shown.length)} of ${shown.length} events`}
-            activeFilter={category === 'All events' ? undefined : category}
+            countLabel={t('results.countEvents', {
+              count: Math.min(9, shown.length),
+              total: shown.length,
+            })}
+            activeFilter={category === 'All events' ? undefined : categoryDisplay}
             onClearFilter={() => setCategory('All events')}
-            sortValue={sortMode.label}
+            sortLabel={t('results.sort')}
+            sortValue={sortModeLabel}
             onSortClick={cycleSort}
             view={view}
             onViewChange={setView}
@@ -191,7 +215,16 @@ export function EventsPage() {
                 key={event.slug ?? event.title}
                 to={`/events/${event.slug ?? slugify(event.title)}`}
               >
-                <EventCard {...event} context="catalog" />
+                <EventCard
+                  {...event}
+                  context="catalog"
+                  favourited={'id' in event ? isFavourite(event.id) : false}
+                  onToggleFavourite={
+                    'id' in event && canFavourite(event.id)
+                      ? () => void toggleFavourite(event.id)
+                      : undefined
+                  }
+                />
               </LinkedCard>
             ))}
           </StaggerGroup>

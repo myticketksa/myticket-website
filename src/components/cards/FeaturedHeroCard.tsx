@@ -75,6 +75,7 @@ export interface FeaturedHeroCardProps {
   /** Replaces the gradient ground. The gradient stays behind it as the fallback. */
   image?: string
   onToggleFavourite?: () => void
+  favourited?: boolean
   onTickets?: () => void
   className?: string
 }
@@ -89,13 +90,14 @@ export function FeaturedHeroCard({
   flag,
   image,
   onToggleFavourite,
+  favourited,
   onTickets,
   className,
 }: FeaturedHeroCardProps) {
   return (
     <article
       className={cn(
-        'group relative flex h-[494px] flex-col items-start justify-end overflow-hidden rounded-[22px] p-[18px]',
+        'group relative flex h-[360px] flex-col items-start justify-end overflow-hidden rounded-[22px] p-[18px] sm:h-[420px] lg:h-[494px]',
         'bg-[linear-gradient(135deg,var(--color-brand-gradient-start)_13.397%,var(--color-ink-brand)_50%,var(--color-ink-link-hover)_86.603%)]',
         'transition-[transform,box-shadow] duration-normal ease-standard',
         'hover:-translate-y-0.5 hover:shadow-lift',
@@ -113,7 +115,7 @@ export function FeaturedHeroCard({
 
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(25,16,8,0.1)_0%,rgba(25,16,8,0)_30%,rgba(25,16,8,0.62)_70%,rgba(25,16,8,0.95)_100%)]" />
 
-      <div className="absolute top-lg right-lg left-lg flex h-[34px] items-start justify-between">
+      <div className="absolute top-lg end-lg start-lg flex h-[34px] items-start justify-between">
         <div className="flex items-start gap-[6px]">
           {category && (
             <p className="rounded-[13px] bg-surface-default px-[11px] py-[5px] text-[11px] font-bold text-ink-primary">
@@ -136,9 +138,12 @@ export function FeaturedHeroCard({
               e.stopPropagation()
               onToggleFavourite()
             }}
-            className="flex size-icon-btn shrink-0 items-center justify-center rounded-icon-btn bg-surface-default text-ink-primary"
+            className={cn(
+              'flex size-icon-btn shrink-0 items-center justify-center rounded-icon-btn bg-surface-default',
+              favourited ? 'text-ink-brand' : 'text-ink-primary',
+            )}
           >
-            <HeartGlyphIcon size={15} />
+            <HeartGlyphIcon size={15} filled={favourited} />
           </button>
         ) : (
           <span

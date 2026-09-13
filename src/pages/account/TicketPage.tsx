@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useGetEventsQuery } from '@/app/api/eventsApi'
 import { useCancelOrderMutation, useGetOrdersQuery } from '@/app/api/ordersApi'
@@ -37,7 +38,10 @@ const OTHERS_BOOKED_FIXTURE = [
   },
 ] as const
 
-function mapOrderToTicket(order: Record<string, unknown>): TicketFixture {
+function mapOrderToTicket(
+  order: Record<string, unknown>,
+  labels: { when: string; seats: string },
+): TicketFixture {
   const id = String(order.id ?? order.order_id ?? '')
   const title = String(
     order.title ?? order.event_title ?? order.name ?? `Order ${id || '—'}`,
@@ -53,8 +57,8 @@ function mapOrderToTicket(order: Record<string, unknown>): TicketFixture {
     facts: Array.isArray(order.facts)
       ? (order.facts as { label: string; value: string }[])
       : [
-          { label: 'When', value: String(order.starts_at ?? order.date ?? '—') },
-          { label: 'Seats', value: String(order.seats ?? order.quantity ?? '—') },
+          { label: labels.when, value: String(order.starts_at ?? order.date ?? '—') },
+          { label: labels.seats, value: String(order.seats ?? order.quantity ?? '—') },
         ],
     actions: (order.actions as TicketFixture['actions']) ?? ['qr'],
     note: order.note ? String(order.note) : undefined,
@@ -80,9 +84,10 @@ function resolveOrder(
 function resolveTicket(
   orders: Record<string, unknown>[] | undefined,
   id: string,
+  labels: { when: string; seats: string },
 ): TicketFixture {
   const match = resolveOrder(orders, id)
-  if (match) return mapOrderToTicket(match)
+  if (match) return mapOrderToTicket(match, labels)
   return MY_TICKETS.find((item) => item.id === id) ?? MY_TICKETS[0]
 }
 
@@ -97,25 +102,6 @@ function isCancellable(order: Record<string, unknown> | undefined) {
     status.includes('created')
   )
 }
-
-const RULES = [
-  {
-    title: 'Arrive by 19:30',
-    body: 'Security screening takes around 20 minutes at peak.',
-  },
-  {
-    title: 'Cashless venue',
-    body: 'Card and Apple Pay only at all stalls inside the park.',
-  },
-  {
-    title: 'One QR per person',
-    body: 'Each guest needs their own code — transfer before you travel.',
-  },
-  {
-    title: 'No professional cameras',
-    body: "Phones are fine; detachable-lens cameras aren't admitted.",
-  },
-] as const
 
 /** Decorative QR stand-in — Figma draws a dense matrix; a seeded grid keeps the stub readable. */
 function TicketQr({ seed }: { seed: number }) {
@@ -155,6 +141,7 @@ function TicketQr({ seed }: { seed: number }) {
  * FunnelLayout (Logo · TICKET · Back) — no SiteHeader.
  */
 export function TicketPage() {
+  const { t } = useTranslation('account')
   const { id = 'winter-nights' } = useParams()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
@@ -162,22 +149,41 @@ export function TicketPage() {
   const { data: apiEvents } = useGetEventsQuery()
   const [cancelOrder, cancelState] = useCancelOrderMutation()
 
+  const factLabels = useMemo(
+    () => ({ when: t('ticket.factWhen'), seats: t('ticket.factSeats') }),
+    [t],
+  )
+
   const order = useMemo(() => resolveOrder(orders, id), [orders, id])
-  const ticket = useMemo(() => resolveTicket(orders, id), [orders, id])
+  const ticket = useMemo(
+    () => resolveTicket(orders, id, factLabels),
+    [orders, id, factLabels],
+  )
   const canCancel = isCancellable(order)
+
+  const rules = useMemo(
+    () =>
+      [
+        { title: t('ticket.rules.arriveTitle'), body: t('ticket.rules.arriveBody') },
+        { title: t('ticket.rules.cashlessTitle'), body: t('ticket.rules.cashlessBody') },
+        { title: t('ticket.rules.qrTitle'), body: t('ticket.rules.qrBody') },
+        { title: t('ticket.rules.camerasTitle'), body: t('ticket.rules.camerasBody') },
+      ] as const,
+    [t],
+  )
 
   async function handleCancel() {
     const orderId = extractOrderId(order)
     if (!orderId) {
-      dispatch(toastPushed('error', 'Order is not available to cancel'))
+      dispatch(toastPushed('error', t('ticket.cancelUnavailable')))
       return
     }
     try {
       await cancelOrder(orderId).unwrap()
-      dispatch(toastPushed('success', 'Order cancelled'))
+      dispatch(toastPushed('success', t('ticket.cancelSuccess')))
       navigate('/my-tickets')
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not cancel order')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('ticket.cancelError'))))
     }
   }
 
@@ -203,26 +209,26 @@ export function TicketPage() {
   return (
     <>
       <TicketActionHeader
-        label="Ticket"
+        label={t('ticket.label')}
         backHref="/my-tickets"
-        backLabel="Back to my tickets"
+        backLabel={t('ticket.backToTickets')}
       />
       <AccountSplit
         className="!gap-xl pt-[44px] lg:!gap-[40px]"
         aside={
           <div className="flex flex-col gap-[14px]">
             <div className="rounded-[20px] border border-border-default bg-surface-default p-[20px]">
-              <p className="text-[17px] font-semibold text-ink-primary">Order information</p>
+              <p className="text-[17px] font-semibold text-ink-primary">{t('ticket.orderInfo')}</p>
               <dl className="mt-[14px] flex flex-col gap-[9px] text-[14px]">
                 {[
-                  ['Order reference', ticket.orderId],
-                  ['Purchased', '27 July 2026'],
-                  ['Price paid (2 seats, incl. VAT)', 'SAR 1,183'],
-                  ['Platform fee (included)', 'SAR 49'],
+                  [t('ticket.orderReference'), ticket.orderId],
+                  [t('ticket.purchased'), '27 July 2026'],
+                  [t('ticket.pricePaid'), 'SAR 1,183'],
+                  [t('ticket.platformFee'), 'SAR 49'],
                 ].map(([label, value]) => (
                   <div key={label} className="flex justify-between gap-md">
                     <dt className="text-ink-secondary">{label}</dt>
-                    <dd className="text-right font-semibold text-ink-primary">{value}</dd>
+                    <dd className="text-end font-semibold text-ink-primary">{value}</dd>
                   </div>
                 ))}
               </dl>
@@ -231,20 +237,20 @@ export function TicketPage() {
                   tabby
                 </span>
                 <p className="text-[13px] text-ink-secondary">
-                  4 payments of SAR 295.75 · next due 8 Oct
+                  {t('ticket.tabbySchedule', { amount: '295.75', date: '8 Oct' })}
                 </p>
               </div>
               <Button variant="secondary" size="md" className="mt-lg w-full">
-                Download invoice (VAT)
+                {t('ticket.downloadInvoice')}
               </Button>
             </div>
 
             <div className="rounded-[20px] border border-border-default bg-bg-tint-brand p-[20px]">
-              <p className="text-[17px] font-semibold text-ink-primary">Refund policy</p>
+              <p className="text-[17px] font-semibold text-ink-primary">{t('ticket.refundPolicy')}</p>
               <p className="mt-md text-[14px] leading-[1.55] text-ink-secondary">
-                Free cancellation until 5 October 2026. After that, transfer the seat or{' '}
+                {t('ticket.refundPolicyBefore', { date: '5 October 2026' })}{' '}
                 <Link to={`/my-tickets/${ticket.id}/resell`} className="font-semibold text-ink-brand">
-                  list it for resale
+                  {t('ticket.refundPolicyLink')}
                 </Link>
                 .
               </p>
@@ -252,10 +258,10 @@ export function TicketPage() {
 
             <div className="rounded-[20px] bg-surface-inverse p-[22px]">
               <p className="text-[18px] font-extrabold tracking-[-0.36px] text-bg-page">
-                Get the app before the night
+                {t('ticket.appPromoTitle')}
               </p>
               <p className="mt-sm text-[14px] leading-[1.55] text-bg-page/80">
-                Your QR codes work offline, and you&apos;ll get a nudge when doors open.
+                {t('ticket.appPromoBody')}
               </p>
               <div className="mt-lg flex gap-sm">
                 <Button
@@ -276,7 +282,7 @@ export function TicketPage() {
             </div>
 
             <div className="rounded-[20px] border border-border-default bg-surface-default p-[20px]">
-              <p className="text-[15px] font-semibold text-ink-primary">Others also booked</p>
+              <p className="text-[15px] font-semibold text-ink-primary">{t('ticket.othersBooked')}</p>
               <ul className="mt-[12px] flex flex-col gap-[12px]">
                 {othersBooked.map((item) => (
                   <li key={item.title}>
@@ -307,13 +313,15 @@ export function TicketPage() {
       >
         <div className="flex flex-col">
           <div className="flex flex-wrap items-center justify-between gap-md">
-            <p className="text-[17px] font-semibold text-ink-primary">2 tickets</p>
-            <div className="flex gap-sm">
+            <p className="text-[17px] font-semibold text-ink-primary">
+              {t('ticket.ticketCount', { count: 2 })}
+            </p>
+            <div className="flex flex-wrap gap-sm">
               <Button variant="secondary" size="md" className="h-[38px] rounded-[19px]">
-                Add to Apple Wallet
+                {t('ticket.addToAppleWallet')}
               </Button>
               <Button variant="secondary" size="md" className="h-[38px] rounded-[19px]">
-                Download PDF
+                {t('ticket.downloadPdf')}
               </Button>
             </div>
           </div>
@@ -322,29 +330,29 @@ export function TicketPage() {
             {[0, 1].map((seatIndex) => (
               <article
                 key={seatIndex}
-                className="relative flex overflow-hidden rounded-[20px] border border-border-default bg-surface-default"
+                className="relative flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
               >
-                <div className="min-w-0 flex-1 px-[24px] py-[22px]">
+                <div className="min-w-0 flex-1 px-lg py-[18px] sm:px-[24px] sm:py-[22px]">
                   <div className="flex flex-wrap items-center gap-[10px]">
-                    <StatusBadge tone="brandTint">GOLD · FLOOR BLOCK A</StatusBadge>
-                    <StatusBadge tone="successTint">VALID · NOT YET USED</StatusBadge>
+                    <StatusBadge tone="brandTint">{t('ticket.badgeGoldFloor')}</StatusBadge>
+                    <StatusBadge tone="successTint">{t('ticket.badgeValid')}</StatusBadge>
                     <span className="text-[12px] text-ink-muted">
-                      Ticket {ticket.orderId}-{seatIndex + 1}
+                      {t('ticket.ticketId', { id: `${ticket.orderId}-${seatIndex + 1}` })}
                     </span>
                   </div>
-                  <h1 className="mt-[14px] text-[30px] leading-[1.06] font-extrabold tracking-[-0.9px] text-ink-primary">
+                  <h1 className="mt-[14px] text-[24px] leading-[1.06] font-extrabold tracking-[-0.9px] text-ink-primary sm:text-[30px]">
                     {ticket.title}
                   </h1>
                   <p className="mt-[6px] text-[14px] text-ink-secondary">{ticket.meta}</p>
-                  <div className="mt-[20px] flex gap-[18px]">
+                  <div className="mt-[20px] grid grid-cols-2 gap-[12px] sm:grid-cols-5 sm:gap-[18px]">
                     {[
-                      ['HOLDER', 'Sara Alghamdi'],
-                      ['GATE', 'Gate 3'],
-                      ['BLOCK', 'Floor A'],
-                      ['ROW', 'C'],
-                      ['SEAT', String(11 + seatIndex)],
+                      [t('ticket.fieldHolder'), 'Sara Alghamdi'],
+                      [t('ticket.fieldGate'), 'Gate 3'],
+                      [t('ticket.fieldBlock'), 'Floor A'],
+                      [t('ticket.fieldRow'), 'C'],
+                      [t('ticket.fieldSeat'), String(11 + seatIndex)],
                     ].map(([label, value]) => (
-                      <div key={label} className="min-w-0 flex-1">
+                      <div key={label} className="min-w-0">
                         <p className="text-[11px] font-bold tracking-[0.77px] text-ink-muted uppercase">
                           {label}
                         </p>
@@ -359,7 +367,7 @@ export function TicketPage() {
                         size="sm"
                         className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
                       >
-                        Transfer to a guest
+                        {t('ticket.transferGuest')}
                       </Button>
                     </Link>
                     {canCancel && (
@@ -370,7 +378,7 @@ export function TicketPage() {
                         loading={cancelState.isLoading}
                         onClick={() => void handleCancel()}
                       >
-                        Cancel order
+                        {t('ticket.cancelOrder')}
                       </Button>
                     )}
                     <Link to={`/my-tickets/${ticket.id}/refund`}>
@@ -379,7 +387,7 @@ export function TicketPage() {
                         size="sm"
                         className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
                       >
-                        Request a refund
+                        {t('ticket.requestRefund')}
                       </Button>
                     </Link>
                     <Link to={`/my-tickets/${ticket.id}/resell`}>
@@ -388,27 +396,29 @@ export function TicketPage() {
                         size="sm"
                         className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
                       >
-                        List for resale
+                        {t('ticket.listResale')}
                       </Button>
                     </Link>
                   </div>
                 </div>
 
-                <div className="relative flex w-[200px] shrink-0 flex-col items-center justify-center gap-[12px] border-l-2 border-dashed border-border-default bg-bg-page p-[22px] sm:w-[232px]">
+                <div className="relative flex w-full shrink-0 flex-col items-center justify-center gap-[12px] border-t-2 border-dashed border-border-default bg-bg-page p-[22px] sm:w-[200px] sm:border-t-0 sm:border-s-2 md:w-[232px]">
                   <div className="rounded-[12px] border border-border-default bg-surface-default p-[10px]">
                     <TicketQr seed={seatIndex + 1} />
                   </div>
                   <div className="text-center text-[12px] leading-[1.45]">
-                    <p className="font-semibold text-ink-secondary">Scan at Gate 3</p>
-                    <p className="text-ink-muted">Works offline in the app</p>
+                    <p className="font-semibold text-ink-secondary">
+                      {t('ticket.scanAtGate', { gate: '3' })}
+                    </p>
+                    <p className="text-ink-muted">{t('ticket.worksOffline')}</p>
                   </div>
                   <span
                     aria-hidden="true"
-                    className="absolute top-[-11px] left-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
+                    className="absolute top-[-11px] start-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
                   />
                   <span
                     aria-hidden="true"
-                    className="absolute bottom-[-11px] left-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
+                    className="absolute bottom-[-11px] start-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
                   />
                 </div>
               </article>
@@ -416,9 +426,9 @@ export function TicketPage() {
           </div>
 
           <div className="mt-[22px] rounded-[20px] border border-border-default bg-surface-default p-[22px]">
-            <p className="text-[17px] font-semibold text-ink-primary">Entry rules</p>
+            <p className="text-[17px] font-semibold text-ink-primary">{t('ticket.entryRules')}</p>
             <div className="mt-[14px] grid gap-[12px] sm:grid-cols-2">
-              {RULES.map((rule) => (
+              {rules.map((rule) => (
                 <div
                   key={rule.title}
                   className="flex gap-[11px] rounded-[14px] border border-border-default bg-bg-page px-lg py-[14px]"
@@ -434,7 +444,7 @@ export function TicketPage() {
               ))}
             </div>
             <p className="mt-[12px] text-[12px] text-ink-muted">
-              Set by the organizer, Riyadh Season.
+              {t('ticket.rulesSetBy', { name: 'Riyadh Season' })}
             </p>
           </div>
 
@@ -442,7 +452,7 @@ export function TicketPage() {
             to="/events"
             className="mx-auto mt-[40px] text-[14px] font-semibold text-ink-secondary hover:text-ink-brand"
           >
-            ← Back to browsing
+            ← {t('ticket.backToBrowsing')}
           </Link>
         </div>
       </AccountSplit>

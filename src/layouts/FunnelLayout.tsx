@@ -34,12 +34,12 @@ export function FunnelHeader({
         className,
       )}
     >
-      <div className="mx-auto grid h-full w-full max-w-[var(--container-page)] grid-cols-[1fr_auto_1fr] items-center gap-lg px-page-gutter">
+      <div className="mx-auto grid h-full w-full max-w-[var(--container-page)] grid-cols-[1fr_auto_1fr] items-center gap-sm px-page-gutter sm:gap-lg">
         <Link to="/" className="justify-self-start shrink-0" aria-label="MyTicket home">
           <Logo height={36} />
         </Link>
         {showLabel ? (
-          <p className="text-center text-[13px] font-bold tracking-[1.04px] text-ink-muted uppercase">
+          <p className="min-w-0 truncate text-center text-[11px] font-bold tracking-[1.04px] text-ink-muted uppercase sm:text-[13px]">
             {label}
           </p>
         ) : (
@@ -49,10 +49,10 @@ export function FunnelHeader({
           {rightSlot ?? (
             <Link
               to={backHref}
-              className="flex shrink-0 items-center gap-[5px] text-[14px] font-semibold text-ink-secondary transition-colors duration-micro ease-micro hover:text-ink-brand"
+              className="flex shrink-0 items-center gap-[5px] text-[13px] font-semibold text-ink-secondary transition-colors duration-micro ease-micro hover:text-ink-brand sm:text-[14px]"
             >
               <ArrowLeftIcon size={14} />
-              {backLabel}
+              <span className="max-sm:sr-only">{backLabel}</span>
             </Link>
           )}
         </div>

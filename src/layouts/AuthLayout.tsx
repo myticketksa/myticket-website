@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import checkIcon from '@/assets/auth/check-15.svg'
 import registerHero from '@/assets/auth/register-hero.png'
@@ -19,30 +20,6 @@ import { cn } from '@/lib/cn'
 export interface AuthLayoutProps {
   hero?: ReactNode
 }
-
-const SIGN_IN_HERO = {
-  image: signInHero,
-  headline: 'One account for every ticket you hold.',
-  benefits: [
-    'Every ticket in one wallet, with offline QR codes.',
-    'Cashback on each booking, spendable on the next one.',
-    'Alerts the moment a favourite artist announces a date.',
-    "Resell what you can't use through the MyTicket auction.",
-  ],
-  footer: 'Riyadh Season Opening Night · 3,410 people going',
-} as const
-
-const REGISTER_HERO = {
-  image: registerHero,
-  headline: 'Three minutes now, every ticket for good.',
-  benefits: [
-    'Every ticket you buy, held in one wallet with offline QR codes',
-    'Waitlist alerts the second a sold-out ticket is released',
-    'Cashback on bookings, refunds straight back to your balance',
-    'Follow artists and organizers to hear about dates first',
-  ],
-  footer: 'Soundstorm Festival · 180,000 people going',
-} as const
 
 function AuthHeroPanel({
   image,
@@ -95,6 +72,7 @@ function AuthHeroPanel({
 
 export function AuthLayout({ hero }: AuthLayoutProps) {
   const { pathname } = useLocation()
+  const { t } = useTranslation('auth')
   const isReset = pathname === '/reset-password'
   const isRegister = pathname === '/register'
 
@@ -108,8 +86,18 @@ export function AuthLayout({ hero }: AuthLayoutProps) {
     )
   }
 
+  const heroKey = isRegister ? 'register' : 'signIn'
+  const benefits = t(`hero.${heroKey}.benefits`, {
+    returnObjects: true,
+  }) as string[]
+
   const defaultHero = (
-    <AuthHeroPanel {...(isRegister ? REGISTER_HERO : SIGN_IN_HERO)} />
+    <AuthHeroPanel
+      image={isRegister ? registerHero : signInHero}
+      headline={t(`hero.${heroKey}.headline`)}
+      benefits={Array.isArray(benefits) ? benefits : []}
+      footer={t(`hero.${heroKey}.footer`)}
+    />
   )
 
   return (
@@ -119,8 +107,8 @@ export function AuthLayout({ hero }: AuthLayoutProps) {
       </div>
       <div
         className={cn(
-          'flex w-full flex-1 items-center justify-center',
-          'px-[40px] py-[56px] lg:w-[738px] lg:flex-none',
+          'flex w-full min-w-0 flex-1 items-center justify-center',
+          'px-page-gutter py-[40px] sm:py-[56px] lg:w-[738px] lg:flex-none lg:px-[40px]',
         )}
       >
         <div className={cn('w-full', isRegister ? 'max-w-[452px]' : 'max-w-[428px]')}>

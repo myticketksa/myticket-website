@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import eventThumb from '@/assets/checkout/event-thumb.png'
 import { CheckIcon } from '@/components/icons'
@@ -8,7 +9,7 @@ import { cn } from '@/lib/cn'
 import { usePayOrderMutation, useCreateOrderMutation, useApplyPromoCodeMutation } from '@/app/api/ordersApi'
 import { useReleaseHoldMutation } from '@/app/api/seatsApi'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { selectAuthUser } from '@/features/auth/authSlice'
+import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { parsePureNumericIds } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
@@ -27,12 +28,6 @@ const FALLBACK_SEATS: HeldSeat[] = [
   { row: 'C', label: 'Row C, seat 11', meta: 'Gold · Floor Block A', price: 520 },
   { row: 'C', label: 'Row C, seat 12', meta: 'Gold · Floor Block A', price: 520 },
 ]
-
-const ASSURANCES = [
-  'Tickets are issued by the organizer and verified by MyTicket.',
-  'Your money is held safely until the event has taken place.',
-  "Can't make it? Resell through the MyTicket auction in two taps.",
-] as const
 
 function MethodMark({
   children,
@@ -58,9 +53,11 @@ function MethodMark({
  * Checkout — Figma `207:8228`. Purchase header comes from `PurchaseLayout`.
  */
 export function CheckoutPage() {
+  const { t } = useTranslation('checkout')
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const user = useAppSelector(selectAuthUser)
+  const walletLabel = formatAuthWalletBalance(user?.walletBalance)
   const [payOrder, payState] = usePayOrderMutation()
   const [createOrder, createState] = useCreateOrderMutation()
   const [applyPromo, promoState] = useApplyPromoCodeMutation()
@@ -87,12 +84,7 @@ export function CheckoutPage() {
   useEffect(() => {
     if (!hasValidApiHold(hold)) {
       const slug = hold?.slug || sessionStorage.getItem('myticket.eventSlug')
-      dispatch(
-        toastPushed(
-          'error',
-          'Your seat hold is missing or expired. Select seats again to continue.',
-        ),
-      )
+      dispatch(toastPushed('error', t('checkout.holdExpired')))
       navigate(slug ? `/events/${slug}/seats` : '/', { replace: true })
       return
     }
@@ -107,7 +99,7 @@ export function CheckoutPage() {
     }
     window.addEventListener('pagehide', releaseOnUnload)
     return () => window.removeEventListener('pagehide', releaseOnUnload)
-  }, [dispatch, hold, navigate, releaseHold])
+  }, [dispatch, hold, navigate, releaseHold, t])
   const [sendReminders, setSendReminders] = useState(true)
   const [marketing, setMarketing] = useState(false)
   const [promoCode, setPromoCode] = useState('')
@@ -124,18 +116,29 @@ export function CheckoutPage() {
   }, [selectedCount])
 
   const payLabels: Record<PaymentMethod, string> = {
-    card: 'Pay now',
-    apple: 'Pay with Apple Pay',
-    tabby: 'Pay with Tabby',
-    tamara: 'Pay with Tamara',
-    wallet: 'Pay with wallet',
-    sadad: 'Confirm SADAD reservation',
+    card: t('checkout.pay'),
+    apple: t('checkout.payApple'),
+    tabby: t('checkout.payTabby'),
+    tamara: t('checkout.payTamara'),
+    wallet: t('checkout.payWallet'),
+    sadad: t('checkout.paySadad'),
   }
   const payLabel = payLabels[method]
   const paying = payState.isLoading || createState.isLoading
+  const assurances = [
+    t('checkout.assurances.issued'),
+    t('checkout.assurances.held'),
+    t('checkout.assurances.resell'),
+  ] as const
+  const tabbySchedule = [
+    t('checkout.tabbySchedule.today'),
+    t('checkout.tabbySchedule.month1'),
+    t('checkout.tabbySchedule.month2'),
+    t('checkout.tabbySchedule.month3'),
+  ] as const
 
   function buildBeneficiaries(count: number) {
-    const buyerName = user?.name?.trim() || 'Ticket holder'
+    const buyerName = user?.name?.trim() || t('confirmation.ticketHolder')
     return Array.from({ length: count }, (_, index) => {
       const assigned = guestNames[index]?.trim()
       return {
@@ -157,18 +160,13 @@ export function CheckoutPage() {
       sessionStorage.getItem('myticket.eventId') ||
       sessionStorage.getItem('myticket.checkoutEventId')
     if (!eventId) {
-      dispatch(toastPushed('error', 'Event is missing — open seats from the event page again'))
+      dispatch(toastPushed('error', t('checkout.eventMissing')))
       return null
     }
 
     if (!hasValidApiHold(mock)) {
       const seatsPath = mock?.slug ? `/events/${mock.slug}/seats` : '/'
-      dispatch(
-        toastPushed(
-          'error',
-          'Seat hold expired or incomplete. Select seats again before paying.',
-        ),
-      )
+      dispatch(toastPushed('error', t('checkout.holdIncomplete')))
       navigate(seatsPath, { replace: true })
       return null
     }
@@ -186,7 +184,7 @@ export function CheckoutPage() {
       ticketId = Number(storedTicketId)
     }
     if (!ticketId) {
-      dispatch(toastPushed('error', 'Ticket type is missing for this order'))
+      dispatch(toastPushed('error', t('checkout.ticketMissing')))
       return null
     }
 
@@ -195,7 +193,7 @@ export function CheckoutPage() {
         .slice(0, count)
         .findIndex((name) => !name.trim())
       if (missing >= 0) {
-        dispatch(toastPushed('error', `Enter a name for guest ${missing + 1}`))
+        dispatch(toastPushed('error', t('checkout.guestName', { n: missing + 1 })))
         return null
       }
     }
@@ -224,21 +222,21 @@ export function CheckoutPage() {
   async function handleApplyPromo() {
     const code = promoCode.trim()
     if (!code) {
-      dispatch(toastPushed('error', 'Enter a promo code'))
+      dispatch(toastPushed('error', t('checkout.promoEnter')))
       return
     }
     try {
       const orderId = await ensureOrderId()
       if (!orderId) {
-        dispatch(toastPushed('error', 'Create seats first so we can apply a promo'))
+        dispatch(toastPushed('error', t('checkout.promoNeedOrder')))
         return
       }
       await applyPromo({ orderId, promoCode: code }).unwrap()
       setPromoApplied(true)
-      dispatch(toastPushed('success', 'Promo applied'))
+      dispatch(toastPushed('success', t('checkout.promoApplied')))
     } catch (error) {
       setPromoApplied(false)
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Promo could not be applied')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('checkout.promoFailed'))))
     }
   }
 
@@ -257,34 +255,34 @@ export function CheckoutPage() {
         sessionStorage.removeItem('myticket.pendingOrderId')
         clearHoldSession()
         paidRef.current = true
-        dispatch(toastPushed('success', 'Payment submitted'))
+        dispatch(toastPushed('success', t('checkout.paymentSubmitted')))
         navigate(`/order-confirmation?orderId=${pendingOrderId}`)
         return
       }
       navigate('/order-confirmation')
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Payment failed')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('checkout.paymentFailed'))))
     }
   }
 
   return (
     <div className="flex flex-col gap-[40px] lg:flex-row lg:items-start">
       <div className="min-w-0 flex-1">
-        <h1 className="text-[46px] leading-[1.04] font-extrabold tracking-[-1.61px] text-ink-primary">
-          Checkout
+        <h1 className="text-[32px] leading-[1.04] font-extrabold tracking-[-1.61px] text-ink-primary sm:text-[40px] lg:text-[46px]">
+          {t('checkout.title')}
         </h1>
 
         <section className="mt-[30px] rounded-[18px] border border-border-default bg-surface-default p-[22px]">
           <div className="flex flex-wrap items-center justify-between gap-sm">
-            <h2 className="text-[17px] font-semibold text-ink-primary">Ticket holder</h2>
+            <h2 className="text-[17px] font-semibold text-ink-primary">{t('checkout.ticketHolder')}</h2>
             <p className="text-[13px] text-ink-secondary">
-              Signed in as {user?.name ?? 'Sara Al-Harbi'}
+              {t('checkout.signedInAs', { name: user?.name ?? 'Sara Al-Harbi' })}
             </p>
           </div>
 
           <div className="mt-lg flex flex-col gap-[14px]">
             <div className="grid gap-[14px] md:grid-cols-2">
-              <Field label="Full name" htmlFor="checkout-name">
+              <Field label={t('checkout.fullName')} htmlFor="checkout-name">
                 <TextInput
                   id="checkout-name"
                   name="name"
@@ -292,7 +290,7 @@ export function CheckoutPage() {
                   className="bg-bg-page"
                 />
               </Field>
-              <Field label="Mobile number" htmlFor="checkout-mobile">
+              <Field label={t('checkout.mobile')} htmlFor="checkout-mobile">
                 <TextInput
                   id="checkout-mobile"
                   name="mobile"
@@ -301,7 +299,7 @@ export function CheckoutPage() {
                 />
               </Field>
             </div>
-            <Field label="Email for the e-tickets" htmlFor="checkout-email">
+            <Field label={t('checkout.email')} htmlFor="checkout-email">
               <TextInput
                 id="checkout-email"
                 name="email"
@@ -317,12 +315,16 @@ export function CheckoutPage() {
             className="mt-[14px]"
             checked={assignGuests}
             onCheckedChange={(value) => setAssignGuests(value === true)}
-            label="Assign each seat to a different guest (they get their own QR code)"
+            label={t('checkout.assignGuests')}
           />
           {assignGuests && (
             <div className="mt-[14px] grid gap-[14px] md:grid-cols-2">
               {guestNames.map((name, index) => (
-                <Field key={index} label={`Guest ${index + 1}`} htmlFor={`guest-${index}`}>
+                <Field
+                  key={index}
+                  label={t('checkout.guestLabel', { n: index + 1 })}
+                  htmlFor={`guest-${index}`}
+                >
                   <TextInput
                     id={`guest-${index}`}
                     value={name}
@@ -331,7 +333,7 @@ export function CheckoutPage() {
                       next[index] = event.target.value
                       setGuestNames(next)
                     }}
-                    placeholder={user?.name ?? 'Guest full name'}
+                    placeholder={user?.name ?? t('checkout.guestPlaceholder')}
                     className="bg-bg-page"
                   />
                 </Field>
@@ -341,11 +343,8 @@ export function CheckoutPage() {
         </section>
 
         <section className="mt-[18px] rounded-[18px] border border-border-default bg-surface-default p-[22px]">
-          <h2 className="text-[17px] font-semibold text-ink-primary">Payment method</h2>
-          <p className="mt-[6px] text-[14px] text-ink-secondary">
-            All payments are processed in Saudi Riyals and held until the event has taken
-            place.
-          </p>
+          <h2 className="text-[17px] font-semibold text-ink-primary">{t('checkout.paymentMethod')}</h2>
+          <p className="mt-[6px] text-[14px] text-ink-secondary">{t('checkout.paymentLede')}</p>
 
           <RadioGroup
             value={method}
@@ -355,8 +354,8 @@ export function CheckoutPage() {
             <PaymentCard
               value="card"
               selected={method === 'card'}
-              title="Debit or credit card"
-              subtitle="Mada, Visa, Mastercard, Amex"
+              title={t('checkout.methods.card')}
+              subtitle={t('checkout.methods.cardSub')}
               leading={
                 <MethodMark className="w-[62px] bg-surface-inverse text-bg-page">
                   CARD
@@ -367,8 +366,8 @@ export function CheckoutPage() {
             <PaymentCard
               value="apple"
               selected={method === 'apple'}
-              title="Apple Pay"
-              subtitle="Pay with Face ID on this device"
+              title={t('checkout.methods.apple')}
+              subtitle={t('checkout.methods.appleSub')}
               leading={
                 <MethodMark className="w-[62px] bg-surface-inverse text-bg-page">
                   Pay
@@ -379,8 +378,8 @@ export function CheckoutPage() {
             <PaymentCard
               value="tabby"
               selected={method === 'tabby'}
-              title="Tabby"
-              subtitle="Split into 4 interest-free payments"
+              title={t('checkout.methods.tabby')}
+              subtitle={t('checkout.methods.tabbySub')}
               leading={
                 <MethodMark className="bg-brand-gradient-start text-ink-body">
                   tabby
@@ -388,14 +387,14 @@ export function CheckoutPage() {
               }
               trailing={
                 <span className="rounded-[13px] bg-bg-tint-brand px-[10px] py-[5px] text-[12px] font-semibold text-ink-brand-strong">
-                  0% interest
+                  {t('checkout.methods.tabbyBadge')}
                 </span>
               }
             >
               {method === 'tabby' && (
                 <div className="mt-lg w-full border-t border-border-divider pt-lg">
                   <div className="grid grid-cols-2 gap-[10px] sm:grid-cols-4">
-                    {['TODAY', 'IN 1 MONTH', 'IN 2 MONTHS', 'IN 3 MONTHS'].map((label) => (
+                    {tabbySchedule.map((label) => (
                       <div
                         key={label}
                         className="rounded-[12px] border border-border-default bg-bg-page p-md text-center"
@@ -410,8 +409,7 @@ export function CheckoutPage() {
                     ))}
                   </div>
                   <p className="mt-[10px] text-[12px] leading-[1.5] text-ink-secondary">
-                    No fees, no interest. A soft check runs when you confirm — it won&apos;t
-                    affect your credit score.
+                    {t('checkout.methods.tabbyNote')}
                   </p>
                 </div>
               )}
@@ -420,8 +418,8 @@ export function CheckoutPage() {
             <PaymentCard
               value="tamara"
               selected={method === 'tamara'}
-              title="Tamara"
-              subtitle="Pay in 3, or pay in full in 30 days"
+              title={t('checkout.methods.tamara')}
+              subtitle={t('checkout.methods.tamaraSub')}
               leading={
                 <MethodMark className="bg-payment-tamara text-payment-tamara-ink">
                   tamara
@@ -429,7 +427,7 @@ export function CheckoutPage() {
               }
               trailing={
                 <span className="rounded-[13px] bg-payment-tamara-badge px-[10px] py-[5px] text-[12px] font-semibold text-payment-tamara-badge-ink">
-                  Sharia compliant
+                  {t('checkout.methods.tamaraBadge')}
                 </span>
               }
             />
@@ -437,11 +435,11 @@ export function CheckoutPage() {
             <PaymentCard
               value="wallet"
               selected={method === 'wallet'}
-              title="MyTicket wallet"
-              subtitle="Balance SAR 340 · cashback included"
+              title={t('checkout.methods.wallet')}
+              subtitle={t('checkout.methods.walletSub', { balance: walletLabel })}
               leading={
                 <MethodMark className="bg-bg-tint-brand text-ink-link-hover">
-                  SAR 340
+                  {walletLabel}
                 </MethodMark>
               }
             />
@@ -449,8 +447,8 @@ export function CheckoutPage() {
             <PaymentCard
               value="sadad"
               selected={method === 'sadad'}
-              title="Bank transfer (SADAD)"
-              subtitle="Reserved for 6 hours until payment clears"
+              title={t('checkout.methods.sadad')}
+              subtitle={t('checkout.methods.sadadSub')}
               leading={
                 <MethodMark className="bg-border-divider text-ink-body">SADAD</MethodMark>
               }
@@ -459,25 +457,25 @@ export function CheckoutPage() {
         </section>
 
         <section className="mt-[18px] rounded-[18px] border border-border-default bg-surface-default p-[22px]">
-          <h2 className="text-[17px] font-semibold text-ink-primary">Before you pay</h2>
+          <h2 className="text-[17px] font-semibold text-ink-primary">{t('checkout.beforePay')}</h2>
           <div className="mt-[14px] flex flex-col gap-md">
             <Checkbox
               id="accept-refund"
               checked={acceptRefund}
               onCheckedChange={(value) => setAcceptRefund(value === true)}
-              label="I accept the event's refund policy — full refund up to 72 hours before doors."
+              label={t('checkout.acceptRefund')}
             />
             <Checkbox
               id="send-reminders"
               checked={sendReminders}
               onCheckedChange={(value) => setSendReminders(value === true)}
-              label="Send my e-tickets and entry reminders by SMS and email."
+              label={t('checkout.sendReminders')}
             />
             <Checkbox
               id="marketing"
               checked={marketing}
               onCheckedChange={(value) => setMarketing(value === true)}
-              label="Tell me about similar concerts in Riyadh (you can turn this off any time)."
+              label={t('checkout.marketing')}
             />
           </div>
         </section>
@@ -506,7 +504,7 @@ export function CheckoutPage() {
 
           <div className="p-[18px]">
             <h3 className="text-[13px] font-bold tracking-[0.91px] text-ink-muted">
-              YOUR SEATS
+              {t('checkout.yourSeats')}
             </h3>
             <ul className="mt-md flex flex-col gap-[9px]">
               {seats.map((seat) => {
@@ -522,7 +520,7 @@ export function CheckoutPage() {
                     <div className="min-w-0 flex-1">
                       <p className="text-[14px] font-semibold text-ink-primary">{seat.label}</p>
                       <p className="text-[12px] text-ink-secondary">
-                        {seat.meta ?? seat.category ?? 'Selected seat'}
+                        {seat.meta ?? seat.category ?? t('checkout.selectedSeat')}
                       </p>
                     </div>
                     <PriceDisplay context="row" className="font-semibold">
@@ -535,7 +533,7 @@ export function CheckoutPage() {
 
             <div className="mt-lg flex gap-sm">
               <TextInput
-                placeholder="Promo code"
+                placeholder={t('checkout.promoPlaceholder')}
                 value={promoCode}
                 onChange={(event) => {
                   setPromoCode(event.target.value)
@@ -550,7 +548,7 @@ export function CheckoutPage() {
                 className="h-11 rounded-[11px] border border-border-default px-[18px] text-[14px]"
                 onClick={() => void handleApplyPromo()}
               >
-                Apply
+                {t('checkout.promoApply')}
               </Button>
             </div>
 
@@ -558,34 +556,36 @@ export function CheckoutPage() {
               <div className="flex flex-col gap-[8px] text-[14px]">
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">
-                    {seats.length} seat{seats.length === 1 ? '' : 's'}
+                    {t('checkout.seatsCount', { count: seats.length })}
                   </span>
                   <PriceDisplay context="row">SAR {subtotal.toLocaleString()}</PriceDisplay>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-ink-secondary">Promo code</span>
+                  <span className="text-ink-secondary">{t('checkout.promoLabel')}</span>
                   <span className={promoApplied ? 'font-semibold text-ink-brand' : 'text-ink-muted'}>
-                    {promoApplied ? promoCode.trim().toUpperCase() : 'None'}
+                    {promoApplied ? promoCode.trim().toUpperCase() : t('checkout.promoNone')}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-ink-secondary">Service fee</span>
+                  <span className="text-ink-secondary">{t('checkout.serviceFee')}</span>
                   <PriceDisplay context="row">SAR {serviceFee.toLocaleString()}</PriceDisplay>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-ink-secondary">VAT 15%</span>
+                  <span className="text-ink-secondary">{t('checkout.vat')}</span>
                   <PriceDisplay context="row">SAR {vat.toLocaleString()}</PriceDisplay>
                 </div>
               </div>
 
               <div className="mt-[12px] flex items-baseline justify-between border-t border-border-divider pt-[12px]">
-                <span className="text-[16px] font-semibold text-ink-primary">Total due</span>
+                <span className="text-[16px] font-semibold text-ink-primary">
+                  {t('checkout.totalDue')}
+                </span>
                 <PriceDisplay context="stat" className="text-[26px] font-extrabold">
                   SAR {total.toLocaleString()}
                 </PriceDisplay>
               </div>
               <p className="mt-[8px] text-[13px] font-semibold text-ink-brand">
-                Pay SAR {Math.round(total / 4).toLocaleString()} today, then 3 monthly payments
+                {t('checkout.payToday', { amount: Math.round(total / 4).toLocaleString() })}
               </p>
             </div>
 
@@ -596,17 +596,17 @@ export function CheckoutPage() {
               className="mt-[18px] h-[54px] w-full rounded-[27px] text-[16px] font-semibold"
               onClick={() => void handlePay()}
             >
-              {payLabel}
+              {paying ? t('checkout.paying') : payLabel}
             </Button>
             <p className="mt-[10px] text-center text-[12px] leading-[1.5] text-ink-muted">
-              You&apos;ll earn SAR 21 cashback into your MyTicket wallet after the event.
+              {t('checkout.cashbackNote')}
             </p>
           </div>
         </div>
 
         <div className="rounded-[18px] border border-border-default bg-bg-warm px-[18px] py-lg">
           <ul className="flex flex-col gap-[10px]">
-            {ASSURANCES.map((line) => (
+            {assurances.map((line) => (
               <li key={line} className="flex items-start gap-[10px]">
                 <CheckIcon size={13} className="mt-[2px] shrink-0 text-ink-brand" />
                 <span className="text-[13px] leading-[1.45] text-ink-body">{line}</span>

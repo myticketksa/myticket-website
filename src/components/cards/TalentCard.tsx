@@ -77,7 +77,7 @@ export function TalentCard({
         )}
 
         {!limited && nextLabel && (
-          <p className="absolute top-[10px] left-[10px] rounded-[12px] bg-surface-default px-[10px] py-[5px] text-[11px] font-bold text-ink-primary">
+          <p className="absolute top-[10px] start-[10px] rounded-[12px] bg-surface-default px-[10px] py-[5px] text-[11px] font-bold text-ink-primary">
             {nextLabel}
           </p>
         )}
@@ -189,12 +189,12 @@ export function TalentDirectoryCard({
         {image && <img src={image} alt="" className="size-full object-cover" />}
 
         {verified && (
-          <p className="absolute top-md left-md rounded-[13px] bg-bg-page/94 px-[10px] py-[5px] text-[11px] font-bold tracking-[0.44px] text-ink-brand uppercase">
+          <p className="absolute top-md start-md rounded-[13px] bg-bg-page/94 px-[10px] py-[5px] text-[11px] font-bold tracking-[0.44px] text-ink-brand uppercase">
             Verified
           </p>
         )}
 
-        <span className="absolute top-md right-md flex items-center gap-[6px] rounded-[13px] bg-ink-primary/72 px-[10px] py-[5px] text-bg-page">
+        <span className="absolute top-md end-md flex items-center gap-[6px] rounded-[13px] bg-ink-primary/72 px-[10px] py-[5px] text-bg-page">
           <StarFillIcon size={12} className="shrink-0" />
           <span className="text-[12px] font-semibold">{rating}</span>
         </span>

@@ -1,7 +1,12 @@
 export { Logo, type LogoProps } from './Logo'
 export { NavItem, type NavItemProps } from './NavItem'
 export { SearchPill, type SearchPillProps } from './SearchPill'
-export { SiteHeader, type SiteHeaderProps } from './SiteHeader'
+export {
+  SiteHeader,
+  type SiteHeaderProps,
+  type HeaderNavLink,
+  type NavId,
+} from './SiteHeader'
 export { SiteFooter, type SiteFooterProps } from './SiteFooter'
 export { SiteDocumentMeta } from './SiteDocumentMeta'
 export { Breadcrumbs, type BreadcrumbsProps, type BreadcrumbItem } from './Breadcrumbs'

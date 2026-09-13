@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useLocale } from '@/i18n/locale'
 import { cn } from '@/lib/cn'
 import { Logo } from './Logo'
@@ -27,15 +28,8 @@ import { Logo } from './Logo'
  *
  * Column headings are `#D8431A` — the primitive `brand/600` with no semantic text alias,
  * which is why they resolve to `--ink-brand-mid`. Their type is `Label/Overline` exactly.
- *
- * All twenty link strings, both bottom-bar lines and the blurb are the source's copy,
- * verbatim. The `href`s are the obvious slugs and still need reconciling against the
- * router once the route table lands.
  */
 const SOCIAL = ['Instagram', 'X', 'TikTok', 'YouTube'] as const
-
-const BLURB =
-  'The Saudi platform for live experiences — find events, book tickets, and follow the artists you love.'
 
 export interface SiteFooterProps {
   size?: 'full' | 'minimal'
@@ -43,6 +37,7 @@ export interface SiteFooterProps {
 }
 
 export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
+  const { t } = useTranslation('nav')
   const { roleLabel } = useLocale()
   const organizer = roleLabel('organizer')
   const vendor = roleLabel('vendor')
@@ -50,43 +45,43 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
 
   const columns = [
     {
-      heading: 'Platform',
+      heading: t('footer.platform'),
       links: [
-        { label: 'Events', href: '/events' },
-        { label: 'Experiences', href: '/experiences' },
-        { label: 'Talents', href: '/talents' },
-        { label: 'Auction', href: '/auctions' },
+        { label: t('events'), href: '/events' },
+        { label: t('experiences'), href: '/experiences' },
+        { label: t('talents'), href: '/talents' },
+        { label: t('footer.auction'), href: '/auctions' },
       ],
     },
     {
-      heading: 'Account',
+      heading: t('footer.account'),
       links: [
-        { label: 'My tickets', href: '/my-tickets' },
-        { label: 'Favourites & waitlists', href: '/saved' },
-        { label: 'Wallet', href: '/wallet' },
-        { label: 'My reviews', href: '/my-reviews' },
-        { label: 'My submissions', href: '/my-submissions' },
-        { label: 'Settings', href: '/settings' },
+        { label: t('myTickets'), href: '/my-tickets' },
+        { label: t('footer.favouritesWaitlists'), href: '/saved' },
+        { label: t('footer.wallet'), href: '/wallet' },
+        { label: t('footer.myReviews'), href: '/my-reviews' },
+        { label: t('footer.mySubmissions'), href: '/my-submissions' },
+        { label: t('footer.settings'), href: '/settings' },
       ],
     },
     {
-      heading: 'Support',
+      heading: t('footer.support'),
       links: [
-        { label: 'About MyTicket', href: '/about' },
-        { label: 'Help centre', href: '/help' },
-        { label: 'Contact us', href: '/support/new' },
-        { label: 'Terms of service', href: '/legal' },
-        { label: 'Privacy policy', href: '/legal' },
-        { label: 'Cookie policy', href: '/legal' },
+        { label: t('footer.aboutMyTicket'), href: '/about' },
+        { label: t('footer.helpCentre'), href: '/help' },
+        { label: t('footer.contactUs'), href: '/support/new' },
+        { label: t('footer.terms'), href: '/legal' },
+        { label: t('footer.privacy'), href: '/legal' },
+        { label: t('footer.cookies'), href: '/legal' },
       ],
     },
     {
-      heading: 'Business',
+      heading: t('footer.business'),
       links: [
-        { label: `For ${organizer}`, href: '/for-organizers' },
-        { label: `Become a ${talent}`, href: '/apply/talent' },
-        { label: `Become a ${vendor}`, href: '/apply/vendor' },
-        { label: 'Business paths', href: '/become-business' },
+        { label: t('footer.forOrganizers', { role: organizer }), href: '/for-organizers' },
+        { label: t('footer.becomeTalent', { role: talent }), href: '/apply/talent' },
+        { label: t('footer.becomeVendor', { role: vendor }), href: '/apply/vendor' },
+        { label: t('footer.businessPaths'), href: '/become-business' },
       ],
     },
   ] as const
@@ -100,18 +95,25 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
       )}
     >
       {size === 'full' && (
-        <div className="grid w-full max-w-[1400px] grid-cols-[1.4fr_1fr_1fr_1fr_1fr] items-start gap-4xl px-gutter-desktop pt-5xl-min pb-3xl">
-          <div className="flex flex-col items-start">
-            <Link to="/" aria-label="MyTicket home">
+        <div className="grid w-full max-w-[1400px] grid-cols-1 items-start gap-3xl px-gutter-desktop pt-5xl-min pb-3xl sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr] lg:gap-4xl">
+          <div className="flex flex-col items-start sm:col-span-2 lg:col-span-1">
+            <Link to="/" aria-label={t('home')}>
               <Logo height={44} className="mb-[14px]" />
             </Link>
 
-            <p className="mb-xl max-w-[300px] text-body-small text-ink-secondary">{BLURB}</p>
+            <p className="mb-xl max-w-[300px] text-body-small text-ink-secondary">
+              {t('footer.blurb')}
+            </p>
 
-            <div className="mb-[18px] flex items-start gap-sm">
-              {['iOS app', 'Android app'].map((label) => (
+            <div className="mb-[18px] flex flex-wrap items-start gap-sm">
+              {(
+                [
+                  { key: 'ios', label: t('footer.iosApp') },
+                  { key: 'android', label: t('footer.androidApp') },
+                ] as const
+              ).map(({ key, label }) => (
                 <a
-                  key={label}
+                  key={key}
                   href="#"
                   className="rounded-input border-[1.5px] border-border-default bg-surface-default px-[14px] py-[9px] text-[13px] font-semibold whitespace-nowrap text-ink-primary transition-[color,border-color] duration-micro ease-micro hover:border-border-brand hover:text-ink-brand-mid"
                 >
@@ -120,7 +122,7 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
               ))}
             </div>
 
-            <div className="flex items-start gap-[14px]">
+            <div className="flex flex-wrap items-start gap-[14px]">
               {SOCIAL.map((label) => (
                 <a
                   key={label}
@@ -138,10 +140,10 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
               <p className="text-label-overline mb-[14px] text-ink-brand-mid">{column.heading}</p>
               <ul className="flex w-full flex-col items-start gap-[9px]">
                 {column.links.map((link) => (
-                  <li key={link.label}>
+                  <li key={link.href + link.label}>
                     <Link
                       to={link.href}
-                      className="text-body-small whitespace-nowrap text-ink-primary transition-colors duration-micro ease-micro hover:text-ink-brand-mid"
+                      className="text-body-small text-ink-primary transition-colors duration-micro ease-micro hover:text-ink-brand-mid"
                     >
                       {link.label}
                     </Link>
@@ -153,9 +155,9 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
         </div>
       )}
 
-      <div className="flex w-full max-w-[1400px] items-center justify-between border-t border-border-default px-gutter-desktop pt-xl pb-4xl text-body-caption text-ink-muted">
-        <p className="whitespace-nowrap">© 2026 MyTicket. All prices in Saudi Riyals (SAR).</p>
-        <p className="whitespace-nowrap">Riyadh, Kingdom of Saudi Arabia</p>
+      <div className="flex w-full max-w-[1400px] flex-col gap-sm border-t border-border-default px-gutter-desktop pt-xl pb-4xl text-body-caption text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:gap-lg">
+        <p>{t('footer.copyright', { year: 2026 })}</p>
+        <p>{t('footer.madeInKsa')}</p>
       </div>
     </footer>
   )

@@ -33,7 +33,7 @@ export function DetailOrganizerBand({
   return (
     <div
       className={cn(
-        'flex w-full items-center gap-[18px] overflow-hidden rounded-[18px] border border-border-default bg-surface-default p-[22px]',
+        'flex w-full flex-col items-stretch gap-[18px] overflow-hidden rounded-[18px] border border-border-default bg-surface-default p-lg sm:flex-row sm:items-center sm:p-[22px]',
         className,
       )}
     >
@@ -44,13 +44,13 @@ export function DetailOrganizerBand({
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-[7px]">
+        <div className="flex flex-wrap items-center gap-[7px]">
           <p className="text-[19px] font-semibold text-ink-primary">{name}</p>
           <span className="flex size-[16px] items-center justify-center rounded-[8px] bg-state-success text-ink-inverse">
             <CheckGlyphIcon size={12} />
           </span>
         </div>
-        <div className="mt-[3px] flex items-center gap-xs text-[14px] text-ink-secondary">
+        <div className="mt-[3px] flex flex-wrap items-center gap-xs text-[14px] text-ink-secondary">
           <span>{eventsLabel}</span>
           <StarFillIcon size={14} className="text-ink-secondary" />
           <span>
@@ -60,13 +60,13 @@ export function DetailOrganizerBand({
         <p className="mt-sm max-w-[560px] text-[14px] leading-[1.5] text-ink-body">{bio}</p>
       </div>
 
-      <div className="flex shrink-0 flex-col gap-[9px]">
+      <div className="flex w-full shrink-0 flex-col gap-[9px] sm:w-auto">
         <Button className="h-[40px] w-full rounded-[20px] px-xl" onClick={onFollow}>
           Follow
         </Button>
         <Button
           variant="secondary"
-          className="h-[40px] rounded-[20px] border px-xl"
+          className="h-[40px] w-full rounded-[20px] border px-xl"
           onClick={onAllEvents}
         >
           All events

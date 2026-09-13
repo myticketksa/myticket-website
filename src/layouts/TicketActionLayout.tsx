@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { FunnelHeader, FunnelLayout, type FunnelHeaderProps } from './FunnelLayout'
 
 /**
@@ -15,9 +16,10 @@ export interface TicketActionHeaderProps {
 export function TicketActionHeader({
   label,
   backHref,
-  backLabel = 'Back to ticket',
+  backLabel,
   className,
 }: TicketActionHeaderProps) {
+  const { t } = useTranslation('account')
   const { id = 'winter-nights' } = useParams()
   const href = backHref ?? `/my-tickets/${id}`
 
@@ -25,7 +27,7 @@ export function TicketActionHeader({
     <FunnelHeader
       label={label}
       backHref={href}
-      backLabel={backLabel}
+      backLabel={backLabel ?? t('ticket.backToTicket')}
       className={className}
     />
   )

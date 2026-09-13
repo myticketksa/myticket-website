@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Outlet } from 'react-router-dom'
 import { AccountTabBar, AccountTabBarItem, SiteFooter, SiteHeader } from '@/components/navigation'
 import { PageFade } from '@/components/motion'
 import { cn } from '@/lib/cn'
+import { useHeaderAccount } from '@/lib/auth/accountChip'
 
 /**
  * Account page head — title row + tab bar. Shared across ~seventeen account, ticket-action
@@ -36,6 +38,7 @@ export function AccountPageHead({
   tabs,
   className,
 }: AccountPageHeadProps) {
+  const { t } = useTranslation('common')
   const hasTabs = Boolean(tabs && tabs.length > 0)
 
   return (
@@ -47,7 +50,7 @@ export function AccountPageHead({
       )}
     >
       <div className="mx-auto w-full max-w-[var(--container-page)] px-page-gutter pt-4xl">
-        <div className={cn('flex items-end justify-between gap-4xl', !hasTabs && 'pb-xl')}>
+        <div className={cn('flex flex-col items-start justify-between gap-lg sm:flex-row sm:items-end sm:gap-4xl', !hasTabs && 'pb-xl')}>
           <div className="flex min-w-0 flex-col gap-sm">
             {eyebrow && (
               <p className="text-label-overline text-ink-brand-mid">{eyebrow}</p>
@@ -55,11 +58,15 @@ export function AccountPageHead({
             <h1 className="text-heading-h1 text-ink-primary">{title}</h1>
             {subtitle && <p className="text-body-default text-ink-secondary">{subtitle}</p>}
           </div>
-          {actions && <div className="flex shrink-0 items-center gap-sm">{actions}</div>}
+          {actions && (
+            <div className="flex w-full shrink-0 flex-wrap items-center gap-sm sm:w-auto">
+              {actions}
+            </div>
+          )}
         </div>
 
         {hasTabs && (
-          <AccountTabBar className="mt-[26px]" aria-label="Account sections">
+          <AccountTabBar className="mt-[26px]" aria-label={t('a11y.accountSections')}>
             {tabs!.map((tab) => (
               <AccountTabBarItem
                 key={String(tab.label)}
@@ -112,9 +119,10 @@ export function AccountSplit({ children, aside, className }: AccountSplitProps) 
  * diverge without the layout inventing per-route heads.
  */
 export function AccountLayout() {
+  const account = useHeaderAccount()
   return (
     <div className="flex min-h-dvh flex-col bg-bg-page">
-      <SiteHeader state="signedIn" />
+      <SiteHeader state="signedIn" account={account} />
       <div className="flex flex-1 flex-col">
         <PageFade>
           <Outlet />

@@ -17,6 +17,7 @@ import {
   CATALOG_AUCTIONS,
   slugify,
 } from '@/pages/_guest'
+import { useLiveRemaining } from '@/lib/countdown/useLiveRemaining'
 
 type ListingFilter = 'all' | 'together' | 'buyNow' | 'mine'
 
@@ -125,15 +126,16 @@ function breadcrumbLabel(title: string) {
 }
 
 function ListingRow({ listing }: { listing: SeatListing }) {
+  const remaining = useLiveRemaining(listing.endsIn)
   return (
     <article
       className={cn(
-        'flex items-center gap-[18px] rounded-[18px] border-[1.5px] bg-surface-default px-[22px] py-[18px]',
+        'flex flex-col gap-[18px] rounded-[18px] border-[1.5px] bg-surface-default px-lg py-[18px] sm:px-[22px] lg:flex-row lg:items-center',
         listing.yours ? 'border-ink-brand' : 'border-border-default',
       )}
     >
-      <div className="flex w-[336px] shrink-0 flex-col gap-[3px]">
-        <div className="flex items-center gap-sm">
+      <div className="flex w-full min-w-0 flex-col gap-[3px] lg:w-[336px] lg:shrink-0">
+        <div className="flex flex-wrap items-center gap-sm">
           <p className="min-w-0 text-[15.5px] font-bold text-ink-primary">{listing.seat}</p>
           <StatusBadge
             tone={listing.badgeTone}
@@ -148,37 +150,39 @@ function ListingRow({ listing }: { listing: SeatListing }) {
         <p className="text-[13px] text-ink-muted">{listing.meta}</p>
       </div>
 
-      <div className="flex w-[216px] shrink-0 flex-col leading-normal">
-        <p className="text-[12px] text-ink-muted">Highest bid</p>
-        <PriceDisplay context="amount" className="text-[19px] font-bold">
-          {listing.highestBid}
-        </PriceDisplay>
-        <p className="text-[12px] text-ink-muted">{listing.bids} bids</p>
-      </div>
+      <div className="grid w-full grid-cols-2 gap-lg sm:grid-cols-3 lg:contents">
+        <div className="flex w-full flex-col leading-normal lg:w-[216px] lg:shrink-0">
+          <p className="text-[12px] text-ink-muted">Highest bid</p>
+          <PriceDisplay context="amount" className="text-[19px] font-bold">
+            {listing.highestBid}
+          </PriceDisplay>
+          <p className="text-[12px] text-ink-muted">{listing.bids} bids</p>
+        </div>
 
-      <div className="flex w-[216px] shrink-0 flex-col leading-normal">
-        <p className="text-[12px] text-ink-muted">Buy now</p>
-        <PriceDisplay context="row" className="text-[16px] font-bold text-ink-secondary">
-          {listing.buyNow ?? '—'}
-        </PriceDisplay>
-      </div>
+        <div className="flex w-full flex-col leading-normal lg:w-[216px] lg:shrink-0">
+          <p className="text-[12px] text-ink-muted">Buy now</p>
+          <PriceDisplay context="row" className="text-[16px] font-bold text-ink-secondary">
+            {listing.buyNow ?? '—'}
+          </PriceDisplay>
+        </div>
 
-      <div className="flex w-[216px] shrink-0 flex-col leading-normal">
-        <p className="text-[12px] text-ink-muted">Ends in</p>
-        <Countdown
-          urgent={listing.urgent}
-          className={cn(
-            'text-[16px] font-extrabold',
-            listing.urgent ? 'text-brand-gradient-end' : 'text-ink-secondary',
-          )}
-        >
-          {listing.endsIn}
-        </Countdown>
+        <div className="flex w-full flex-col leading-normal lg:w-[216px] lg:shrink-0">
+          <p className="text-[12px] text-ink-muted">Ends in</p>
+          <Countdown
+            urgent={listing.urgent}
+            className={cn(
+              'text-[16px] font-extrabold',
+              listing.urgent ? 'text-brand-gradient-end' : 'text-ink-secondary',
+            )}
+          >
+            {remaining}
+          </Countdown>
+        </div>
       </div>
 
       <div
         className={cn(
-          'flex w-[220px] shrink-0 flex-col items-stretch',
+          'flex w-full shrink-0 flex-col items-stretch lg:w-[220px]',
           listing.kind === 'own' ? 'gap-sm' : 'gap-lg',
         )}
       >
@@ -312,18 +316,18 @@ export function AuctionEventPage() {
       </PageSection>
 
       <PageSection padTop={18} padBottom={0}>
-        <div className="flex items-center gap-3xl rounded-[22px] border border-border-default bg-surface-default p-[22px]">
-          <div className="h-[131px] w-[210px] shrink-0 overflow-hidden rounded-[14px]">
+        <div className="flex flex-col items-stretch gap-3xl rounded-[22px] border border-border-default bg-surface-default p-lg sm:p-[22px] md:flex-row md:items-center">
+          <div className="h-[180px] w-full shrink-0 overflow-hidden rounded-[14px] md:h-[131px] md:w-[210px]">
             <img src={cover} alt="" className="size-full object-cover" />
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col gap-[6px]">
-            <div className="flex items-center gap-[10px]">
+            <div className="flex flex-wrap items-center gap-[10px]">
               <StatusBadge tone="terminal">Sold out</StatusBadge>
               <StatusBadge tone="brandTint">312 on the waitlist</StatusBadge>
             </div>
             <div className="h-[6px] w-px" aria-hidden />
-            <h1 className="text-[34px] leading-[1.05] font-extrabold tracking-[-1.02px] text-ink-primary">
+            <h1 className="text-[26px] leading-[1.05] font-extrabold tracking-[-1.02px] text-ink-primary sm:text-[34px]">
               {event.title}
             </h1>
             <div className="h-[6px] w-px" aria-hidden />
@@ -348,7 +352,7 @@ export function AuctionEventPage() {
             </div>
           </div>
 
-          <div className="flex shrink-0 flex-col items-end border-l border-border-divider pl-3xl">
+          <div className="flex w-full shrink-0 flex-col items-start border-t border-border-divider pt-lg md:w-auto md:items-end md:border-t-0 md:border-s md:pt-0 md:ps-3xl">
             <p className="text-[13px] text-ink-muted">
               {WINTER_NIGHTS_LISTINGS.length} listings · from
             </p>
@@ -374,7 +378,7 @@ export function AuctionEventPage() {
       </PageSection>
 
       <PageSection padTop={22} padBottom={96}>
-        <div className="flex items-center justify-between gap-lg">
+        <div className="flex flex-col items-stretch gap-lg sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-[10px]">
             {filterLabels.map((item) => (
               <FilterChip

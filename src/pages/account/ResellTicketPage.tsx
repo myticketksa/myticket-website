@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { AmountInput, Button, Field, TextInput } from '@/components/ui'
 import { FilterChip } from '@/components/data-display'
@@ -15,6 +16,7 @@ const END_OPTIONS = [
 
 /** Resell ticket — Figma `207:9700`. */
 export function ResellTicketPage() {
+  const { t } = useTranslation('account')
   const { id = 'winter-nights' } = useParams()
   const ticket = MY_TICKETS.find((item) => item.id === id) ?? MY_TICKETS[0]
   const [startingBid, setStartingBid] = useState('250')
@@ -29,20 +31,19 @@ export function ResellTicketPage() {
 
   return (
     <>
-      <TicketActionHeader label="List for resale" />
+      <TicketActionHeader label={t('resell.header')} />
       <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-xl px-page-gutter pt-[48px] pb-[96px] lg:flex-row lg:items-start lg:gap-[32px]">
         <div className="min-w-0 flex-1">
-          <h1 className="text-[36px] leading-[1.03] font-extrabold tracking-[-1.26px] text-ink-primary sm:text-[44px] sm:tracking-[-1.54px]">
-            Let someone else take your seat.
+          <h1 className="text-heading-h1 text-ink-primary">
+            {t('resell.title')}
           </h1>
           <p className="mt-[10px] max-w-[560px] text-[16px] leading-normal text-ink-secondary">
-            Your ticket goes up on the MyTicket auction. Buyers bid or buy instantly, the transfer
-            is handled for you, and the money lands in your wallet.
+            {t('resell.subtitle')}
           </p>
 
           <div className="mt-[30px] flex flex-col gap-xl rounded-[20px] border border-border-default bg-surface-default p-[26px]">
             <div className="grid gap-lg sm:grid-cols-2">
-              <Field label="Starting bid" htmlFor="starting-bid">
+              <Field label={t('resell.startingBid')} htmlFor="starting-bid">
                 <AmountInput
                   id="starting-bid"
                   className="h-[52px] w-full rounded-[13px] px-[14px]"
@@ -53,8 +54,8 @@ export function ResellTicketPage() {
               <Field
                 label={
                   <>
-                    Buy-now price{' '}
-                    <span className="font-medium text-ink-muted">— optional</span>
+                    {t('resell.buyNow')}{' '}
+                    <span className="font-medium text-ink-muted">{t('resell.buyNowOptional')}</span>
                   </>
                 }
                 htmlFor="buy-now"
@@ -70,7 +71,7 @@ export function ResellTicketPage() {
             </div>
 
             <div>
-              <p className="text-[13px] font-semibold text-ink-primary">Auction ends</p>
+              <p className="text-[13px] font-semibold text-ink-primary">{t('resell.auctionEnds')}</p>
               <div className="mt-[8px] flex flex-wrap gap-[8px]">
                 {END_OPTIONS.map((opt) => (
                   <FilterChip
@@ -92,16 +93,16 @@ export function ResellTicketPage() {
             <div className="rounded-[14px] border border-border-default bg-bg-page px-[18px] py-lg">
               <div className="flex flex-col gap-[8px] text-[14px]">
                 <div className="flex items-start justify-between gap-md">
-                  <span className="text-ink-secondary">If it sells at your starting bid</span>
-                  <span className="text-ink-primary">SAR {money(bid)}</span>
+                  <span className="min-w-0 flex-1 text-ink-secondary">If it sells at your starting bid</span>
+                  <span className="shrink-0 text-end text-ink-primary">SAR {money(bid)}</span>
                 </div>
                 <div className="flex items-start justify-between gap-md">
-                  <span className="text-ink-secondary">MyTicket commission · 10%</span>
-                  <span className="text-ink-primary">− SAR {money(fee)}</span>
+                  <span className="min-w-0 flex-1 text-ink-secondary">MyTicket commission · 10%</span>
+                  <span className="shrink-0 text-end text-ink-primary">− SAR {money(fee)}</span>
                 </div>
                 <div className="flex items-start justify-between gap-md border-t border-border-divider pt-[9px] font-bold">
-                  <span className="text-ink-primary">You receive at least</span>
-                  <span className="text-state-success">SAR {money(receive)}</span>
+                  <span className="min-w-0 flex-1 text-ink-primary">You receive at least</span>
+                  <span className="shrink-0 text-end text-state-success">SAR {money(receive)}</span>
                 </div>
               </div>
               <p className="mt-[10px] text-[12.5px] text-ink-muted">
@@ -127,12 +128,12 @@ export function ResellTicketPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-md">
-              <Button size="lg">List it on the auction</Button>
+              <Button size="lg">{t('resell.cta')}</Button>
               <Link
                 to={`/my-tickets/${ticket.id}`}
                 className="inline-flex h-[50px] items-center px-[18px] text-[14px] font-medium text-ink-secondary hover:text-ink-brand"
               >
-                Keep my ticket
+                {t('resell.keepTicket')}
               </Link>
             </div>
           </div>
@@ -157,16 +158,18 @@ export function ResellTicketPage() {
               <p className="mt-[6px] text-[13.5px] text-ink-secondary">Thu 8 Oct · 20:00 · Riyadh</p>
               <dl className="mt-[14px] flex flex-col gap-[7px] text-[13.5px]">
                 <div className="flex items-start justify-between gap-md">
-                  <dt className="text-ink-secondary">Ticket</dt>
-                  <dd className="font-bold text-ink-primary">Gold · Floor A · Row C · Seat 12</dd>
+                  <dt className="shrink-0 text-ink-secondary">Ticket</dt>
+                  <dd className="min-w-0 max-w-[65%] text-end font-bold break-words text-ink-primary">
+                    Gold · Floor A · Row C · Seat 12
+                  </dd>
                 </div>
                 <div className="flex items-start justify-between gap-md">
-                  <dt className="text-ink-secondary">Face value</dt>
-                  <dd className="font-bold text-ink-primary">SAR 280.00</dd>
+                  <dt className="shrink-0 text-ink-secondary">Face value</dt>
+                  <dd className="min-w-0 text-end font-bold text-ink-primary">SAR 280.00</dd>
                 </div>
                 <div className="flex items-start justify-between gap-md">
-                  <dt className="text-ink-secondary">This event sold out</dt>
-                  <dd className="font-bold text-ink-brand-strong">3 weeks ago</dd>
+                  <dt className="shrink-0 text-ink-secondary">This event sold out</dt>
+                  <dd className="min-w-0 text-end font-bold text-ink-brand-strong">3 weeks ago</dd>
                 </div>
               </dl>
             </div>
@@ -181,8 +184,8 @@ export function ResellTicketPage() {
                 ['Active listings for this event', '7'],
               ].map(([label, value]) => (
                 <div key={label} className="flex items-start justify-between gap-md">
-                  <dt className="text-ink-secondary">{label}</dt>
-                  <dd className="font-bold text-ink-primary">{value}</dd>
+                  <dt className="min-w-0 flex-1 text-ink-secondary">{label}</dt>
+                  <dd className="shrink-0 text-end font-bold text-ink-primary">{value}</dd>
                 </div>
               ))}
             </dl>

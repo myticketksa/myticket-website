@@ -1,0 +1,102 @@
+{
+  "roles": {
+    "vendor": "المنشأة",
+    "organizer": "منظم الفعالية",
+    "talent": "الموهبة"
+  },
+  "actions": {
+    "continue": "متابعة",
+    "back": "رجوع",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "saveExit": "حفظ وخروج",
+    "clear": "مسح",
+    "close": "إغلاق",
+    "search": "بحث",
+    "signIn": "تسجيل الدخول",
+    "signOut": "تسجيل الخروج",
+    "createAccount": "إنشاء حساب",
+    "browseEvents": "تصفح الفعاليات",
+    "learnMore": "اعرف المزيد",
+    "submit": "إرسال",
+    "confirm": "تأكيد",
+    "remove": "إزالة",
+    "edit": "تعديل",
+    "viewAll": "عرض الكل"
+  },
+  "states": {
+    "loading": "جاري التحميل…",
+    "saving": "جاري الحفظ…",
+    "submitting": "جاري الإرسال…",
+    "free": "مجاني",
+    "soldOut": "نفدت التذاكر",
+    "unavailable": "غير متاح"
+  },
+  "empty": {
+    "defaultTitle": "لا يوجد شيء هنا بعد",
+    "defaultBody": "عندما يتوفر محتوى، سيظهر هنا.",
+    "clearFilters": "مسح كل عوامل التصفية"
+  },
+  "draft": {
+    "saved": "تم حفظ المسودة للتو — يمكنك المغادرة والعودة لاحقاً",
+    "savedToast": "تم حفظ المسودة — يمكنك إكمالها في أي وقت",
+    "restoredNote": "تمت استعادة المسودة — أعد إرفاق الصور أو الملفات قبل الإرسال."
+  },
+  "wizard": {
+    "eyebrow": "طلب",
+    "partOf": "الجزء {{current}} من {{total}}",
+    "trackSubmissions": "تتبع طلباتك",
+    "alreadySent": "أرسلت طلباً مسبقاً؟",
+    "clearAndStartOver": "مسح والبدء من جديد"
+  },
+  "pagination": {
+    "showing": "عرض {{shown}} من {{total}}",
+    "previous": "السابق",
+    "next": "التالي",
+    "page": "صفحة {{page}}",
+    "aria": "ترقيم الصفحات"
+  },
+  "a11y": {
+    "breadcrumb": "مسار التنقل",
+    "accountSections": "أقسام الحساب",
+    "closeFilters": "إغلاق الفلاتر",
+    "dismiss": "تجاهل",
+    "attachFile": "إرفاق ملف"
+  },
+  "time": {
+    "daysShort": "{{count}}ي",
+    "hoursShort": "{{count}}س",
+    "minutesShort": "{{count}}د",
+    "secondsShort": "{{count}}ث"
+  },
+  "currency": {
+    "free": "مجاني",
+    "sarFallback": "ر.س —"
+  },
+  "language": {
+    "switchToArabic": "التبديل إلى العربية",
+    "switchToEnglish": "التبديل إلى الإنجليزية",
+    "arabic": "العربية",
+    "english": "English"
+  },
+  "catalog": {
+    "searchPlaceholder": "ابحث عن فعاليات وتجارب ومواهب…",
+    "try": "جرّب",
+    "filters": "الفلاتر",
+    "done": "تم"
+  },
+  "notFound": {
+    "title": "هذه الصفحة غادرت المكان.",
+    "body": "قد يكون الرابط قديماً، أو انتهت الفعالية، أو نقلناها. ابحث عما تريد، أو ابدأ من جديد من الصفحة الرئيسية.",
+    "try": "جرّب",
+    "tonight": "الليلة بدلاً من ذلك",
+    "support": "شيء معطل؟ أخبر الدعم ←",
+    "quick": {
+      "events": "كل الفعاليات",
+      "tonight": "الليلة في الرياض",
+      "experiences": "التجارب",
+      "tickets": "تذاكري",
+      "help": "مركز المساعدة"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MagnifyingGlassIcon } from '@/components/icons'
 import { cn } from '@/lib/cn'
 
@@ -32,9 +33,10 @@ export interface SearchPillProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export function SearchPill({
   className,
-  placeholder = 'Search events, artists…',
+  placeholder,
   ...props
 }: SearchPillProps) {
+  const { t } = useTranslation('nav')
   return (
     <div
       className={cn(
@@ -47,7 +49,7 @@ export function SearchPill({
       <MagnifyingGlassIcon size={15} className="shrink-0 text-brand-primary" />
       <input
         type="search"
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('searchPlaceholder')}
         className="min-w-0 flex-1 bg-transparent text-[14px] leading-[1.5] font-medium text-ink-primary outline-none placeholder:text-ink-muted"
         {...props}
       />

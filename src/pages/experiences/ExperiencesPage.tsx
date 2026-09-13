@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useGetExperienceCategoriesQuery, useGetExperiencesQuery } from '@/app/api/experiencesApi'
 import { ExperienceCard } from '@/components/cards'
 import { FilterChip } from '@/components/data-display'
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { mapCategoryLabels } from '@/lib/api/mappers/categories'
 import { mapApiExperienceToCard } from '@/lib/api/mappers/experiences'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 import {
   CATALOG_EXPERIENCES,
   CatalogPageHead,
@@ -29,16 +31,16 @@ const CATEGORIES = [
   'Music',
 ] as const
 
-const WHERE_OPTIONS = [
-  'Anywhere in Saudi Arabia',
-  ...CITY_FACETS.slice(0, 5).map((c) => c.label),
-] as const
-
 /** Experiences directory — Figma `207:6795`. Experiences API with fixture fallback. */
 export function ExperiencesPage() {
+  const { t } = useTranslation(['catalog', 'nav', 'common'])
+  const whereOptions = useMemo(
+    () => ['Anywhere in Saudi Arabia', ...CITY_FACETS.slice(0, 5).map((c) => c.label)] as const,
+    [],
+  )
   const [category, setCategory] = useState('All experiences')
   const [guests, setGuests] = useState(2)
-  const [where, setWhere] = useState<(typeof WHERE_OPTIONS)[number]>('Anywhere in Saudi Arabia')
+  const [where, setWhere] = useState<string>('Anywhere in Saudi Arabia')
 
   const { data: apiExperiences, isFetching, isError } = useGetExperiencesQuery()
   const { data: apiCategories } = useGetExperienceCategoriesQuery()
@@ -74,14 +76,19 @@ export function ExperiencesPage() {
   }, [catalog, category, where])
 
   const shown = filtered
+  const subtitleParts = [
+    t('pages.experiencesSubtitle'),
+    isError ? t('pages.apiPreview') : null,
+    isFetching ? t('pages.updating') : null,
+  ].filter(Boolean)
 
   return (
     <>
       <PageSection padTop={26} padBottom={0}>
         <Breadcrumbs
           items={[
-            { label: 'Home', href: '/' },
-            { label: 'Experiences' },
+            { label: t('nav:main'), href: '/' },
+            { label: t('nav:experiences') },
           ]}
         />
       </PageSection>
@@ -89,58 +96,54 @@ export function ExperiencesPage() {
       <PageSection padTop={14} padBottom={0}>
         <FadeUp>
           <CatalogPageHead
-            title="Experiences, not just seats"
-            subtitle={`Small-group things to do with a time slot and a guide — desert dinners, heritage walks, studio sessions. Pick a date, pick a time, done in three taps.${
-              isError ? ' Showing local preview while the API is unreachable.' : ''
-            }${isFetching ? ' Updating…' : ''}`}
+            title={t('pages.experiencesTitle')}
+            subtitle={subtitleParts.join(' ')}
           />
         </FadeUp>
 
-        <div className="mt-3xl flex h-[72px] w-full items-center rounded-[18px] border border-border-default bg-surface-default px-[14px]">
+        <div className="mt-3xl flex h-auto w-full flex-col gap-md rounded-[18px] border border-border-default bg-surface-default p-md sm:h-[72px] sm:flex-row sm:items-center sm:gap-0 sm:p-0 sm:px-[14px]">
           <label className="relative min-w-0 flex-1 px-sm">
             <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-              Where
+              {t('filters.where')}
             </p>
             <div className="mt-[3px] flex items-center gap-sm">
               <select
                 value={where}
-                onChange={(e) =>
-                  setWhere(e.target.value as (typeof WHERE_OPTIONS)[number])
-                }
+                onChange={(e) => setWhere(e.target.value)}
                 className={cn(
                   'w-full appearance-none bg-transparent text-[15px] font-semibold text-ink-primary outline-none',
                   'cursor-pointer pr-lg',
                 )}
-                aria-label="Where"
+                aria-label={t('filters.where')}
               >
-                {WHERE_OPTIONS.map((opt) => (
+                {whereOptions.map((opt) => (
                   <option key={opt} value={opt}>
-                    {opt}
+                    {catalogLabel(t, opt)}
                   </option>
                 ))}
               </select>
               <ChevronDownIcon size={12} className="pointer-events-none absolute right-sm bottom-[6px] text-ink-primary" />
             </div>
           </label>
-          <div className="mx-[2px] h-[34px] w-px bg-border-divider" />
+          <div className="mx-[2px] hidden h-[34px] w-px bg-border-divider sm:block" />
           <div
-            className="min-w-0 flex-1 cursor-not-allowed px-sm opacity-55"
+            className="min-w-0 flex-1 cursor-not-allowed border-t border-border-divider px-sm pt-md opacity-55 sm:border-t-0 sm:pt-0"
             title="Date picker not available yet"
           >
             <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-              When
+              {t('filters.when')}
             </p>
             <p className="mt-[3px] text-[15px] font-semibold text-ink-disabled">dd/mm/yyyy</p>
           </div>
-          <div className="mx-[2px] h-[34px] w-px bg-border-divider" />
-          <div className="w-[200px] shrink-0 px-sm">
+          <div className="mx-[2px] hidden h-[34px] w-px bg-border-divider sm:block" />
+          <div className="w-full shrink-0 border-t border-border-divider px-sm pt-md sm:w-[200px] sm:border-t-0 sm:pt-0">
             <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-              Guests
+              {t('filters.guests')}
             </p>
             <div className="mt-[3px] flex items-center gap-[12px]">
               <button
                 type="button"
-                aria-label="Fewer guests"
+                aria-label={t('filters.fewerGuests')}
                 onClick={() => setGuests((g) => Math.max(1, g - 1))}
                 className="flex size-[26px] items-center justify-center rounded-full border border-border-default"
               >
@@ -149,7 +152,7 @@ export function ExperiencesPage() {
               <span className="text-[15px] font-semibold tabular-nums">{guests}</span>
               <button
                 type="button"
-                aria-label="More guests"
+                aria-label={t('filters.moreGuests')}
                 onClick={() => setGuests((g) => g + 1)}
                 className="flex size-[26px] items-center justify-center rounded-full border border-border-default"
               >
@@ -158,12 +161,12 @@ export function ExperiencesPage() {
             </div>
           </div>
           <Button
-            className="h-[48px] w-[104px] shrink-0 rounded-[24px]"
+            className="mt-sm h-[48px] w-full shrink-0 rounded-[24px] sm:mt-0 sm:w-[104px]"
             onClick={() => {
               /* Where + category already filter the grid below. */
             }}
           >
-            Search
+            {t('common:actions.search')}
           </Button>
         </div>
 
@@ -174,7 +177,7 @@ export function ExperiencesPage() {
               selected={label === category}
               onClick={() => setCategory(label)}
             >
-              {label}
+              {catalogLabel(t, label)}
             </FilterChip>
           ))}
         </div>
@@ -206,9 +209,9 @@ export function ExperiencesPage() {
       <PageSection padTop={88} padBottom={96}>
         <PromoBand
           tone="inverse"
-          heading="Host an experience"
-          body="If you know a place, a craft or a route worth sharing, set your slots and group size and start taking bookings this week."
-          ctaLabel="Become a host"
+          heading={t('pages.hostExperienceHeading')}
+          body={t('pages.hostExperienceBody')}
+          ctaLabel={t('pages.hostExperienceCta')}
           ctaTo="/submit-experience"
         />
       </PageSection>

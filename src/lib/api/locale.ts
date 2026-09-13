@@ -1,9 +1,33 @@
 /** Shared helpers for MyTicket API records (often bilingual `{ en, ar }`). */
 
+import type { Locale } from '@/i18n/config'
+import { readStoredLocale } from '@/i18n/config'
+
 type ApiRecord = Record<string, unknown>
 
-/** Prefer `en`, then `ar`, then any string leaf on bilingual objects. */
-export function localizedString(value: unknown, fallback = ''): string {
+export type LocalizedOptions = {
+  locale?: Locale
+  fallback?: string
+}
+
+function preferredKeys(locale: Locale): string[] {
+  return locale === 'ar'
+    ? ['ar', 'name_ar', 'title_ar', 'label_ar', 'en', 'name_en', 'name', 'title', 'label']
+    : ['en', 'name_en', 'name', 'title', 'label', 'ar', 'name_ar']
+}
+
+/** Resolve bilingual API values using the active UI locale (defaults to stored). */
+export function localizedString(
+  value: unknown,
+  fallbackOrOptions: string | LocalizedOptions = '',
+): string {
+  const options: LocalizedOptions =
+    typeof fallbackOrOptions === 'string'
+      ? { fallback: fallbackOrOptions }
+      : fallbackOrOptions
+  const fallback = options.fallback ?? ''
+  const locale = options.locale ?? readStoredLocale()
+
   if (value == null) return fallback
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
     const text = String(value).trim()
@@ -11,11 +35,11 @@ export function localizedString(value: unknown, fallback = ''): string {
   }
   if (typeof value === 'object') {
     const record = value as ApiRecord
-    for (const key of ['en', 'ar', 'name', 'title', 'label', 'name_en', 'name_ar']) {
+    for (const key of preferredKeys(locale)) {
       const nested = record[key]
       if (typeof nested === 'string' && nested.trim()) return nested.trim()
       if (nested && typeof nested === 'object') {
-        const deeper = localizedString(nested)
+        const deeper = localizedString(nested, { locale, fallback: '' })
         if (deeper) return deeper
       }
     }
@@ -23,12 +47,20 @@ export function localizedString(value: unknown, fallback = ''): string {
   return fallback
 }
 
-export function pickLocalized(record: ApiRecord, keys: string[], fallback = ''): string {
+export function pickLocalized(
+  record: ApiRecord,
+  keys: string[],
+  fallbackOrOptions: string | LocalizedOptions = '',
+): string {
+  const options: LocalizedOptions =
+    typeof fallbackOrOptions === 'string'
+      ? { fallback: fallbackOrOptions }
+      : fallbackOrOptions
   for (const key of keys) {
-    const text = localizedString(record[key])
+    const text = localizedString(record[key], options)
     if (text) return text
   }
-  return fallback
+  return options.fallback ?? ''
 }
 
 export function nestedValue(record: ApiRecord, path: string[]): unknown {
@@ -40,27 +72,54 @@ export function nestedValue(record: ApiRecord, path: string[]): unknown {
   return current
 }
 
-export function formatMoneySar(value: unknown, fallback = 'SAR —'): string {
-  if (value == null || value === '') return fallback
-  if (typeof value === 'string' && /sar/i.test(value)) return value
-  const n = Number(value)
-  if (!Number.isFinite(n)) return localizedString(value, fallback)
-  if (n === 0) return 'Free'
-  return `SAR ${n % 1 === 0 ? n.toFixed(0) : n.toFixed(2)}`
+function bcp47(locale: Locale): string {
+  return locale === 'ar' ? 'ar-SA' : 'en-SA'
 }
 
-export function formatApiDate(value: unknown): string {
-  const raw = localizedString(value)
+export function formatMoneySar(
+  value: unknown,
+  fallbackOrLocale: string | Locale = 'SAR —',
+  localeArg?: Locale,
+): string {
+  const locale =
+    localeArg ??
+    (fallbackOrLocale === 'en' || fallbackOrLocale === 'ar'
+      ? fallbackOrLocale
+      : readStoredLocale())
+  const fallback =
+    fallbackOrLocale === 'en' || fallbackOrLocale === 'ar' ? 'SAR —' : fallbackOrLocale
+
+  if (value == null || value === '') return fallback
+  if (typeof value === 'string' && /sar|ر\.?\s*س/i.test(value)) return value
+  const n = Number(value)
+  if (!Number.isFinite(n)) return localizedString(value, { locale, fallback })
+  if (n === 0) return locale === 'ar' ? 'مجاني' : 'Free'
+  try {
+    return new Intl.NumberFormat(bcp47(locale), {
+      style: 'currency',
+      currency: 'SAR',
+      numberingSystem: 'latn',
+      maximumFractionDigits: n % 1 === 0 ? 0 : 2,
+    }).format(n)
+  } catch {
+    return `SAR ${n % 1 === 0 ? n.toFixed(0) : n.toFixed(2)}`
+  }
+}
+
+export function formatApiDate(value: unknown, localeArg?: Locale): string {
+  const locale = localeArg ?? readStoredLocale()
+  const raw = localizedString(value, { locale })
   if (!raw) return ''
   const date = new Date(raw)
   if (Number.isNaN(date.getTime())) return raw
-  return date.toLocaleString('en-GB', {
+  return date.toLocaleString(bcp47(locale), {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    numberingSystem: 'latn',
   })
 }
 

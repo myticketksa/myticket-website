@@ -12,6 +12,7 @@ export interface DetailGalleryProps {
 
 /** Detail hero gallery: main photo + 3 thumbs — Figma `207:4809`.
  * Category pill is `--bg-page` at 94% (not dark/translucent); flag is brand-end.
+ * Below `lg`, thumbs become a horizontal strip under the main image.
  */
 export function DetailGallery({
   category,
@@ -22,14 +23,19 @@ export function DetailGallery({
   className,
 }: DetailGalleryProps) {
   return (
-    <div className={cn('flex h-[460px] w-full gap-[14px]', className)}>
-      <div className="relative min-w-0 flex-1 overflow-hidden rounded-[18px]">
+    <div
+      className={cn(
+        'flex w-full flex-col gap-[14px] lg:h-[460px] lg:flex-row',
+        className,
+      )}
+    >
+      <div className="relative aspect-[16/10] min-w-0 overflow-hidden rounded-[18px] lg:aspect-auto lg:h-full lg:flex-1">
         {mainImage ? (
           <img src={mainImage} alt="" className="size-full object-cover" />
         ) : (
           <ImagePlaceholder ratio="fill" caption="Event imagery 16:10" />
         )}
-        <div className="absolute top-[18px] left-[18px] flex gap-sm">
+        <div className="absolute top-[18px] start-[18px] flex gap-sm">
           {category && (
             <span className="rounded-[14px] bg-bg-page/94 px-[11px] py-[6px] text-[12px] font-semibold text-ink-primary">
               {category}
@@ -43,14 +49,14 @@ export function DetailGallery({
         </div>
       </div>
 
-      <div className="flex h-full w-[421px] shrink-0 flex-col gap-[14px]">
+      <div className="flex h-[88px] w-full shrink-0 gap-[14px] lg:h-full lg:w-[421px] lg:flex-col">
         {[0, 1, 2].map((i) => {
           const src = thumbs[i]
           const isLast = i === 2
           return (
             <div
               key={i}
-              className="relative min-h-0 flex-1 overflow-hidden rounded-[14px]"
+              className="relative min-h-0 min-w-0 flex-1 overflow-hidden rounded-[14px]"
             >
               {src ? (
                 <img src={src} alt="" className="size-full object-cover" />
@@ -59,7 +65,7 @@ export function DetailGallery({
               )}
               {isLast && (
                 <div className="absolute inset-0 flex items-center justify-center bg-ink-primary/60">
-                  <p className="text-[15px] font-semibold text-bg-page">{moreLabel}</p>
+                  <p className="text-[13px] font-semibold text-bg-page sm:text-[15px]">{moreLabel}</p>
                 </div>
               )}
             </div>

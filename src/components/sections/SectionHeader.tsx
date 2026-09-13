@@ -54,8 +54,8 @@ export function SectionHeader({
   className,
 }: SectionHeaderProps) {
   return (
-    <div className={cn('flex items-end justify-between gap-4xl', className)}>
-      <div className="flex max-w-[720px] flex-col gap-sm">
+    <div className={cn('flex flex-col items-start gap-lg sm:flex-row sm:items-end sm:justify-between sm:gap-4xl', className)}>
+      <div className="flex min-w-0 max-w-[720px] flex-col gap-sm">
         {overline && <p className="text-label-overline text-ink-brand-mid">{overline}</p>}
 
         <div className="flex flex-col gap-row-gap">

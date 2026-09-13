@@ -1,0 +1,450 @@
+{
+  "nav": {
+    "favourites": "Favourites",
+    "waitlists": "Waitlists",
+    "reviews": "Reviews",
+    "settings": "Settings",
+    "vendorApp": "{{role}} application",
+    "talentApp": "{{role}} application",
+    "tickets": "My tickets",
+    "wallet": "Wallet",
+    "notifications": "Notifications",
+    "saved": "Saved",
+    "savedMeta": "{{count}} saved",
+    "profile": "Profile",
+    "signOut": "Sign out"
+  },
+  "eyebrow": "Your account",
+  "wallet": {
+    "title": "Wallet",
+    "lede": "Cashback and refunds land here after events clear.",
+    "subtitle": "Cashback from nights you've been to, refunds, and money from tickets you've resold. Spend it at checkout or withdraw it to your bank.",
+    "open": "Open wallet",
+    "balance": "Balance",
+    "available": "Available to spend",
+    "pending": "Pending",
+    "earnedYear": "Earned this year",
+    "addFunds": "Add funds",
+    "withdraw": "Withdraw",
+    "topUp": "Top up",
+    "topUpAmount": "Top-up amount (SAR)",
+    "customAmount": "Custom amount",
+    "confirmTopUp": "Confirm top-up · {{amount}}",
+    "invalidAmount": "Enter a valid top-up amount",
+    "topUpSuccess": "Top-up submitted",
+    "topUpFailed": "Top-up failed",
+    "pendingNote": "Cashback clears the day after Winter Nights.",
+    "earnedNote": "Cashback and resale, across 6 nights out.",
+    "activity": "Activity"
+  },
+  "tickets": {
+    "title": "My tickets",
+    "subtitle": "Everything you've booked, in one place. Your QR codes work offline in the app.",
+    "emptyTitle": "No tickets yet",
+    "emptyBody": "When you book a night, your QR codes and seat details will show up here.",
+    "emptyCta": "Browse events",
+    "tabEmptyTitle": "Nothing in this tab",
+    "tabEmptyBody": "Try another tab — your other tickets are still here."
+  },
+  "ticket": {
+    "backToTicket": "Back to ticket",
+    "backToTickets": "Back to my tickets",
+    "label": "Ticket",
+    "orderInfo": "Order information",
+    "orderReference": "Order reference",
+    "purchased": "Purchased",
+    "pricePaid": "Price paid (2 seats, incl. VAT)",
+    "platformFee": "Platform fee (included)",
+    "tabbySchedule": "4 payments of SAR {{amount}} · next due {{date}}",
+    "downloadInvoice": "Download invoice (VAT)",
+    "refundPolicy": "Refund policy",
+    "refundPolicyBefore": "Free cancellation until {{date}}. After that, transfer the seat or",
+    "refundPolicyLink": "list it for resale",
+    "appPromoTitle": "Get the app before the night",
+    "appPromoBody": "Your QR codes work offline, and you'll get a nudge when doors open.",
+    "othersBooked": "Others also booked",
+    "ticketCount": "{{count}} tickets",
+    "addToAppleWallet": "Add to Apple Wallet",
+    "downloadPdf": "Download PDF",
+    "badgeGoldFloor": "GOLD · FLOOR BLOCK A",
+    "badgeValid": "VALID · NOT YET USED",
+    "ticketId": "Ticket {{id}}",
+    "fieldHolder": "HOLDER",
+    "fieldGate": "GATE",
+    "fieldBlock": "BLOCK",
+    "fieldRow": "ROW",
+    "fieldSeat": "SEAT",
+    "transferGuest": "Transfer to a guest",
+    "cancelOrder": "Cancel order",
+    "requestRefund": "Request a refund",
+    "listResale": "List for resale",
+    "scanAtGate": "Scan at Gate {{gate}}",
+    "worksOffline": "Works offline in the app",
+    "entryRules": "Entry rules",
+    "rulesSetBy": "Set by the organizer, {{name}}.",
+    "backToBrowsing": "Back to browsing",
+    "cancelUnavailable": "Order is not available to cancel",
+    "cancelSuccess": "Order cancelled",
+    "cancelError": "Could not cancel order",
+    "factWhen": "When",
+    "factSeats": "Seats",
+    "rules": {
+      "arriveTitle": "Arrive by 19:30",
+      "arriveBody": "Security screening takes around 20 minutes at peak.",
+      "cashlessTitle": "Cashless venue",
+      "cashlessBody": "Card and Apple Pay only at all stalls inside the park.",
+      "qrTitle": "One QR per person",
+      "qrBody": "Each guest needs their own code — transfer before you travel.",
+      "camerasTitle": "No professional cameras",
+      "camerasBody": "Phones are fine; detachable-lens cameras aren't admitted."
+    }
+  },
+  "gift": {
+    "header": "Send a ticket",
+    "title": "Send this ticket to a friend.",
+    "subtitle": "They'll get it instantly and it becomes theirs the moment they claim it — their own name, their own QR code.",
+    "sendTo": "Send it to",
+    "email": "Email address",
+    "phone": "Phone number",
+    "noteLabel": "A note with it",
+    "noteOptional": "— optional",
+    "notePlaceholder": "Happy birthday! See you at the gate at 19:30",
+    "howTitle": "Before you send — how this works",
+    "howClaimBefore": "Once they claim it, the ticket is theirs —",
+    "howClaimEmphasis": "this can't be undone.",
+    "howDeadlineBefore": "They have",
+    "howDeadlineEmphasis": "until Wed 7 Oct, 20:00",
+    "howDeadlineAfter": "to claim. Unclaimed, it comes straight back to you, still valid.",
+    "howQr": "Your old QR code stops working the moment the transfer completes.",
+    "sendingEyebrow": "You're sending",
+    "sendingTicket": "Ticket",
+    "sendingTicketNo": "Ticket no.",
+    "sendingYouPaid": "You paid",
+    "whyScreenshotTitle": "Why not just screenshot it?",
+    "whyScreenshotBody": "A screenshot can be copied and refused at the gate. Sending it through MyTicket makes the transfer official — one valid code, in their name.",
+    "cta": "Send the ticket",
+    "success": "Ticket sent",
+    "error": "Could not send ticket",
+    "errorRecipient": "Enter an email or phone number",
+    "errorOrder": "This order is not ready to gift yet — open it from My tickets after purchase"
+  },
+  "claim": {
+    "header": "Claim a gift",
+    "title": "Someone sent you a ticket.",
+    "subtitle": "Enter the claim token from your gift email or SMS. Once claimed, the ticket and QR are yours.",
+    "giftRef": "Gift reference",
+    "token": "Claim token",
+    "tokenPlaceholder": "Paste the token from your gift message",
+    "cta": "Claim ticket",
+    "success": "Gift claimed — find it in My tickets",
+    "error": "Could not claim this gift",
+    "missingRef": "Missing gift reference",
+    "missingToken": "Enter the claim token from your gift message",
+    "needAccount": "Need an account first?"
+  },
+  "resell": {
+    "header": "List for resale",
+    "title": "Let someone else take your seat.",
+    "subtitle": "Your ticket goes up on the MyTicket auction. Buyers bid or buy instantly, the transfer is handled for you, and the money lands in your wallet.",
+    "startingBid": "Starting bid",
+    "buyNow": "Buy-now price",
+    "buyNowOptional": "— optional",
+    "auctionEnds": "Auction ends",
+    "cta": "List it on the auction",
+    "keepTicket": "Keep my ticket",
+    "success": "Listing submitted",
+    "error": "Could not list ticket"
+  },
+  "refund": {
+    "header": "Request a refund",
+    "title": "Can't make it? Get your money back.",
+    "subtitle": "You're inside the free cancellation window. The refund goes to your MyTicket wallet, where you can spend it or withdraw it to your bank.",
+    "cta": "Request SAR {{amount}} back",
+    "keepTicket": "Keep my ticket",
+    "reasonLabel": "Tell us why",
+    "reasonOptional": "— optional, helps the organizer",
+    "success": "Refund request submitted",
+    "error": "Could not submit refund",
+    "reasonPlaceholder": "e.g. Travel plans changed…"
+  },
+  "saved": {
+    "title": "Saved",
+    "subtitle": "Everything you've hearted, the sold-out nights you're waiting on, and the people you follow.",
+    "emptyTitle": "Nothing saved yet",
+    "emptyBody": "Tap the heart on an event or experience to keep it here.",
+    "filterEmptyTitle": "No saved items in this filter",
+    "filterEmptyBody": "Try another type — your other hearts are still here.",
+    "waitlistsEmptyTitle": "No waitlists yet",
+    "waitlistsEmptyBody": "When you join a sold-out waitlist, it will appear in this tab.",
+    "followingEmptyTitle": "Not following anyone yet",
+    "followingEmptyBody": "Follow an artist or organizer and they will appear in this tab.",
+    "removeAria": "Remove from saved"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "emptyTitle": "You’re all caught up",
+    "emptyBody": "Ticket alerts, auction bids, and application updates will land here.",
+    "noneTitle": "No notifications yet",
+    "noneBody": "Ticket alerts, waitlist claims, and follows will land here.",
+    "filterEmptyTitle": "Nothing in this filter",
+    "filterEmptyBody": "Try another category — your other alerts are still in the inbox.",
+    "inboxSubtitle": "{{unread}} unread · {{total}} in your inbox",
+    "dismissAria": "Dismiss"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Your details, how you pay, and what we're allowed to send you.",
+    "personal": "Personal details",
+    "personalHint": "Your name must match the ID you bring to age-restricted events.",
+    "signOut": "Sign out",
+    "deleteAccount": "Delete account",
+    "breadcrumbAccount": "Account",
+    "groups": {
+      "account": "ACCOUNT",
+      "money": "MONEY",
+      "communication": "COMMUNICATION",
+      "privacy": "PRIVACY"
+    },
+    "nav": {
+      "security": "Security & sign-in",
+      "language": "Language & region",
+      "payments": "Payment methods",
+      "wallet": "Wallet & payouts",
+      "notifications": "Notifications",
+      "privacy": "Privacy & data"
+    },
+    "tags": {
+      "twoFaOn": "2FA on",
+      "notificationsOn": "{{count}} on"
+    },
+    "comingSoon": "Coming soon",
+    "photoTitle": "Profile photo",
+    "photoHint": "PNG or JPG, up to 4 MB.",
+    "upload": "Upload",
+    "remove": "Remove",
+    "fullName": "Full name",
+    "displayName": "Display name",
+    "dateOfBirth": "Date of birth",
+    "ageLimits": "Used for age limits",
+    "city": "City",
+    "nationalId": "National ID / Iqama",
+    "verified": "Verified",
+    "memberSince": "Member since",
+    "emailPhone": "Email & phone",
+    "emailPhoneHint": "Tickets, receipts and door alerts go here.",
+    "hintEmail": "Tickets, receipts and account emails",
+    "hintPhone": "Door alerts and SMS ticket delivery",
+    "hintBackup": "Backup email",
+    "unconfirmed": "Unconfirmed",
+    "change": "Change",
+    "resend": "Resend",
+    "lastSaved": "Last saved {{date}} · changes apply straight away",
+    "discard": "Discard",
+    "saveChanges": "Save changes",
+    "deleteTitle": "Delete account",
+    "deleteBody": "Permanently remove your MyTicket account. Tickets already issued stay valid for the event.",
+    "confirmPassword": "Confirm with password",
+    "photoTooLarge": "Uploaded files are too large. Please choose a file under 4 MB.",
+    "deleteNeedPassword": "Enter your password to delete this account",
+    "deleteSuccess": "Account deleted",
+    "deleteError": "Could not delete account"
+  },
+  "profile": {
+    "title": "Profile",
+    "signOut": "Sign out",
+    "settingsTiles": {
+      "personal": {
+        "title": "Personal details",
+        "desc": "Name, photo, city",
+        "tag": "Verified"
+      },
+      "email": {
+        "title": "Email & phone",
+        "desc": "Login contacts",
+        "tag": "2 confirmed"
+      },
+      "payment": {
+        "title": "Payment methods",
+        "desc": "Cards and Tabby",
+        "tag": "3 saved"
+      },
+      "wallet": {
+        "title": "Wallet & payouts",
+        "desc": "Balance and bank",
+        "tag": "Open"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "desc": "Push, email, SMS",
+        "tag": "6 on"
+      },
+      "security": {
+        "title": "Security & sign-in",
+        "desc": "Password and 2FA",
+        "tag": "2FA on"
+      },
+      "language": {
+        "title": "Language & region",
+        "desc": "Display and currency",
+        "tag": "English · SAR"
+      },
+      "privacy": {
+        "title": "Privacy & data",
+        "desc": "Downloads and delete",
+        "tag": "Manage"
+      }
+    }
+  },
+  "aside": {
+    "alsoInAccount": "Also in your account",
+    "recsTitle": "Because you're going to Winter Nights",
+    "supportTitle": "Something wrong with an order?",
+    "supportBody": "Raise a case and our support team picks it up within a day.",
+    "supportCta": "Get help with a ticket",
+    "links": {
+      "favourites": {
+        "label": "Favourites",
+        "meta": "14 saved"
+      },
+      "waitlists": {
+        "label": "Waitlists",
+        "meta": "2 waiting"
+      },
+      "reviews": {
+        "label": "My reviews",
+        "meta": "6 written"
+      },
+      "vendor": {
+        "label": "Vendor application",
+        "meta": "Track status"
+      },
+      "talent": {
+        "label": "Talent application",
+        "meta": "Track status"
+      },
+      "payment": {
+        "label": "Payment methods",
+        "meta": "3 saved"
+      }
+    }
+  },
+  "reviews": {
+    "title": "Your reviews",
+    "subtitle": "The nights you've been to and what you said about them. Reviews come only from people who were really there — that's why yours matter.",
+    "stars_one": "{{count}} star",
+    "stars_other": "{{count}} stars",
+    "emptyTitle": "Nothing waiting for a review",
+    "emptyBody": "After you attend an event, you can rate it here. Scores come only from people who were really there.",
+    "writtenEmptyTitle": "No reviews written yet",
+    "writtenEmptyBody": "When you post a score, it will show up here so you can come back to it.",
+    "tabWaiting": "Waiting for you",
+    "tabWritten": "Written",
+    "submit": "Submit review",
+    "success": "Review submitted",
+    "error": "Could not submit review",
+    "pickRating": "Pick a star rating",
+    "ratingAria": "Rating",
+    "wordsLabel": "A few words",
+    "wordsOptional": "— optional",
+    "placeholder": "What stood out — entry, sound, seats, the night itself.",
+    "hint": "Tap the stars to start — a score is all that's required, words are up to you. You can change anything for 30 days after posting.",
+    "editUnavailable": "Edit not available yet",
+    "viewEvent": "View event"
+  },
+  "submissions": {
+    "title": "Places you've added",
+    "subtitle": "Every experience you've submitted, and where it is in review.",
+    "addPlace": "+ Add a place",
+    "emptyTitle": "No places added yet",
+    "emptyBody": "Submit an experience and it will show up here while it's in review."
+  },
+  "applications": {
+    "title": "My {{role}} application",
+    "subtitle": "Track the request you submitted. Acceptance does not change your login — you remain a guest.",
+    "requestLabel": "{{role}} request",
+    "viewForm": "View application form",
+    "contactSupport": "Contact support",
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "rejected": "Rejected"
+    }
+  },
+  "auctionActivity": {
+    "title": "Auction activity",
+    "subtitle": "Tickets you're selling and seats you're chasing, in one place. We'll nudge you the second anything changes.",
+    "browse": "Browse auctions",
+    "selling": "Selling",
+    "bidding": "Bidding"
+  },
+  "support": {
+    "casesTitle": "Support cases",
+    "casesSubtitle": "Everything you've raised with us — problems we're fixing and complaints we're looking into.",
+    "newCase": "New case",
+    "chatWithUs": "Chat with us",
+    "emptyTitle": "No support cases yet",
+    "emptyBody": "When you raise something with us, it will show up here so you can follow every reply.",
+    "newTitle": "Tell us what's wrong.",
+    "submit": "Submit the case",
+    "aboutLabel": "What's it about?",
+    "urgencyLabel": "How urgent is it?",
+    "subjectLabel": "Subject",
+    "detailsLabel": "What happened?",
+    "linkLabel": "Link it to something",
+    "optional": "— optional",
+    "attachmentLabel": "Attachment",
+    "chatHeader": "Live support",
+    "chatPlaceholder": "Write a message…",
+    "send": "Send",
+    "header": "Raise something with us",
+    "backToCases": "My support cases",
+    "ledeBefore": "You'll get a reference straight away and can follow every reply from",
+    "ledeLink": "your support cases",
+    "kinds": {
+      "working": {
+        "title": "Something isn't working",
+        "body": "A problem with an order, ticket, refund, payment, or the site itself."
+      },
+      "right": {
+        "title": "Something wasn't right",
+        "body": "A complaint about an organizer, a venue, safety, or how you were treated."
+      }
+    },
+    "urgency": {
+      "low": "Low",
+      "normal": "Normal",
+      "urgent": "Urgent"
+    },
+    "topics": {
+      "orders": "Orders & payments",
+      "tickets": "Tickets & entry",
+      "account": "Account & wallet",
+      "other": "Something else"
+    },
+    "subjectPlaceholder": "e.g. Paid twice for the same order",
+    "detailsPlaceholder": "The more detail, the faster we can help — what you did, what you expected, what happened instead.",
+    "linkNone": "Nothing specific",
+    "addAttachment": "Add a screenshot or file",
+    "replySla": "We usually reply within one working day.",
+    "success": "Sent to support — continue in chat",
+    "error": "Could not reach support",
+    "attachAria": "Attach file",
+    "typing": "{{name}} is typing…",
+    "keepTitle": "Keep this conversation",
+    "keepBody": "You're chatting without signing in, so this chat disappears when you close it. Sign in to keep the history, or turn it into a tracked case you can follow.",
+    "keepSignIn": "Sign in — you'll come right back",
+    "keepCase": "Turn into a tracked case",
+    "quickerTitle": "Quicker answers",
+    "hours": "Support hours: 9:00–01:00 AST, every day. Outside these hours, leave a message — we reply first thing.",
+    "replyPlaceholder": "Reply in chat…",
+    "quick": {
+      "refund": "Where's my refund?",
+      "qr": "My QR code won't scan",
+      "waitlists": "How do waitlists work?",
+      "gift": "Gifting a ticket"
+    },
+    "tagIssue": "Issue",
+    "tagComplaint": "Complaint",
+    "defaultSubject": "Support request"
+  }
+}

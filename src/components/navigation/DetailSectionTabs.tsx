@@ -30,7 +30,7 @@ export function DetailSectionTab({
       role="tab"
       aria-selected={active}
       className={cn(
-        'relative pb-md text-[15px] font-semibold whitespace-nowrap transition-colors duration-micro ease-micro',
+        'relative shrink-0 pb-md text-[15px] font-semibold whitespace-nowrap transition-colors duration-micro ease-micro',
         active ? 'text-ink-brand' : 'text-ink-muted hover:text-ink-secondary',
         className,
       )}
@@ -66,7 +66,10 @@ export function DetailSectionTabs({
     <LayoutGroup id="detail-section-tabs">
       <div
         role="tablist"
-        className={cn('flex gap-[26px] border-b border-border-default', className)}
+        className={cn(
+          'flex gap-[26px] overflow-x-auto border-b border-border-default overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+          className,
+        )}
         {...props}
       >
         {children}

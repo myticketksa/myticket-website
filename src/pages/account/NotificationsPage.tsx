@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowDownIcon,
   CloseIcon,
@@ -9,9 +10,10 @@ import {
   TicketIcon,
 } from '@/components/icons'
 import { FilterChip } from '@/components/data-display'
+import { EmptyState } from '@/components/feedback'
 import { Button } from '@/components/ui'
 import { AccountPageHead, PageSection } from '@/layouts'
-import { NOTIFICATIONS, type NotificationFixture } from '@/pages/_account/fixtures'
+import { type NotificationFixture } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
 import {
   useGetNotificationCategoriesQuery,
@@ -92,17 +94,16 @@ function notificationId(record: Record<string, unknown>): string | number | unde
   return undefined
 }
 
-function mapNotification(record: Record<string, unknown>, index: number): NotificationFixture & {
+function mapNotification(record: Record<string, unknown>): NotificationFixture & {
   id?: string | number
   categoryKey?: string
 } {
-  const fallback = NOTIFICATIONS[index % NOTIFICATIONS.length]
   const categoryId = record.category_id ?? record.categoryId
   return {
     id: notificationId(record),
-    title: String(record.title ?? record.subject ?? fallback.title),
-    body: String(record.body ?? record.message ?? record.content ?? fallback.body),
-    time: String(record.time ?? record.created_at ?? record.sent_at ?? fallback.time),
+    title: String(record.title ?? record.subject ?? 'Notification'),
+    body: String(record.body ?? record.message ?? record.content ?? ''),
+    time: String(record.time ?? record.created_at ?? record.sent_at ?? ''),
     unread: Boolean(record.unread ?? record.is_unread ?? !record.read_at),
     group: mapNotificationGroup(record.group ?? record.period),
     category: mapNotificationCategory(record.category ?? record.type),
@@ -110,16 +111,18 @@ function mapNotification(record: Record<string, unknown>, index: number): Notifi
       categoryId != null
         ? String(categoryId)
         : mapNotificationCategory(record.category ?? record.type),
-    tag: record.tag ? String(record.tag) : fallback.tag,
-    cta: record.cta ? String(record.cta) : record.action ? String(record.action) : fallback.cta,
+    tag: record.tag ? String(record.tag) : undefined,
+    cta: record.cta ? String(record.cta) : record.action ? String(record.action) : undefined,
     icon: mapNotificationIcon(record.icon ?? record.category ?? record.type),
   }
 }
 
 /** Notifications — Figma `207:8824`. Full-bleed list with filter chips. */
 export function NotificationsPage() {
+  const { t } = useTranslation(['account', 'common'])
+  const navigate = useNavigate()
   const [filter, setFilter] = useState('all')
-  const { data: notifications } = useGetNotificationsQuery()
+  const { data: notifications, isLoading } = useGetNotificationsQuery()
   const { data: categories } = useGetNotificationCategoriesQuery()
   const [markAllRead, markAllState] = useMarkAllNotificationsReadMutation()
   const [markRead] = useMarkNotificationReadMutation()
@@ -128,7 +131,7 @@ export function NotificationsPage() {
     if (notifications && notifications.length > 0) {
       return notifications.map(mapNotification)
     }
-    return NOTIFICATIONS.map((item) => ({ ...item, categoryKey: item.category }))
+    return []
   }, [notifications])
 
   const items = useMemo(
@@ -168,9 +171,12 @@ export function NotificationsPage() {
   return (
     <>
       <AccountPageHead
-        eyebrow="Your account"
-        title="Notifications"
-        subtitle={`${unreadCount} unread · ${allItems.length} in your inbox`}
+        eyebrow={t('account:eyebrow')}
+        title={t('account:notifications.title')}
+        subtitle={t('account:notifications.inboxSubtitle', {
+          unread: unreadCount,
+          total: allItems.length,
+        })}
         actions={
           <>
             <Button
@@ -206,6 +212,28 @@ export function NotificationsPage() {
         </div>
 
         <div className="mt-[26px] flex flex-col gap-[30px]">
+          {!isLoading && allItems.length === 0 && (
+            <div className="flex justify-center py-3xl">
+              <EmptyState
+                variant="firstUse"
+                title={t('account:notifications.noneTitle')}
+                body={t('account:notifications.noneBody')}
+                ctaLabel={t('common:actions.browseEvents')}
+                onCtaClick={() => navigate('/events')}
+              />
+            </div>
+          )}
+          {!isLoading && allItems.length > 0 && items.length === 0 && (
+            <div className="flex justify-center py-3xl">
+              <EmptyState
+                variant="filters"
+                title={t('account:notifications.filterEmptyTitle')}
+                body={t('account:notifications.filterEmptyBody')}
+                ctaLabel={t('common:empty.clearFilters')}
+                onCtaClick={() => setFilter('all')}
+              />
+            </div>
+          )}
           {groups.map((group) => {
             const groupItems = items.filter((item) => item.group === group)
             if (groupItems.length === 0) return null
@@ -257,7 +285,7 @@ export function NotificationsPage() {
                         )}
                         <button
                           type="button"
-                          aria-label="Dismiss"
+                          aria-label={t('notifications.dismissAria')}
                           className="flex size-[34px] items-center justify-center text-ink-muted hover:text-ink-primary"
                           onClick={() => {
                             const id = 'id' in item ? item.id : undefined

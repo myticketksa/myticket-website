@@ -1,5 +1,6 @@
 import { Divider } from '@/components/data-display'
 import { cn } from '@/lib/cn'
+import { useLiveRemaining } from '@/lib/countdown/useLiveRemaining'
 
 /**
  * Figma `AuctionCard` — node 207:3235. The resale card behind Home's "Tickets ending
@@ -74,6 +75,7 @@ export function AuctionCard({
   buyNow,
   className,
 }: AuctionCardProps) {
+  const remaining = useLiveRemaining(endsIn)
   return (
     <article
       className={cn(
@@ -94,7 +96,7 @@ export function AuctionCard({
           aria-live="polite"
           className="text-[12px] font-extrabold tabular-nums text-brand-gradient-end"
         >
-          Ends in {endsIn}
+          Ends in {remaining}
         </p>
       </div>
 

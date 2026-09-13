@@ -1,0 +1,17 @@
+{
+  "enterMobileOrEmail": "Enter your mobile number or email",
+  "enterPassword": "Enter your password",
+  "enterFullName": "Enter your full name",
+  "enterValidEmail": "Enter a valid email",
+  "enterEmail": "Enter your email",
+  "enterMobile": "Enter your mobile number",
+  "enterValidSaudiMobile": "Enter a valid Saudi mobile number",
+  "passwordMin": "Use at least 8 characters",
+  "createPassword": "Create a password",
+  "acceptTerms": "Accept the Terms and Privacy Policy to continue",
+  "enterCode": "Enter the code we sent",
+  "enterNewPassword": "Enter a new password",
+  "passwordsMustMatch": "Passwords must match",
+  "confirmPassword": "Confirm your password",
+  "enterOtp": "Enter the one-time code"
+}

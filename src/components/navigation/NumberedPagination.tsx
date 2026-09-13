@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ArrowLeftIcon, ArrowRightIcon } from '@/components/icons'
 import { cn } from '@/lib/cn'
 
@@ -21,12 +22,13 @@ export function NumberedPagination({
   onPageChange,
   className,
 }: NumberedPaginationProps) {
+  const { t } = useTranslation('common')
   const first = pages[0] ?? 1
   const last = pages[pages.length - 1] ?? first
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={t('pagination.aria')}
       className={cn('flex w-full flex-wrap items-center justify-center gap-sm', className)}
     >
       <button
@@ -35,8 +37,8 @@ export function NumberedPagination({
         onClick={() => onPageChange?.(Math.max(first, page - 1))}
         className="inline-flex h-[38px] items-center gap-[6px] rounded-[19px] border-[1.5px] border-border-default bg-surface-default px-[14px] text-[13.5px] font-semibold text-ink-primary transition-colors duration-micro ease-micro hover:border-border-brand hover:text-ink-brand disabled:opacity-40 disabled:hover:border-border-default disabled:hover:text-ink-primary"
       >
-        <ArrowLeftIcon size={14} />
-        Previous
+        <ArrowLeftIcon size={14} className="rtl:rotate-180" />
+        {t('pagination.previous')}
       </button>
 
       {pages.map((n) => (
@@ -62,8 +64,8 @@ export function NumberedPagination({
         onClick={() => onPageChange?.(Math.min(last, page + 1))}
         className="inline-flex h-[38px] items-center gap-[6px] rounded-[19px] border-[1.5px] border-border-default bg-surface-default px-[14px] text-[13.5px] font-semibold text-ink-primary transition-colors duration-micro ease-micro hover:border-border-brand hover:text-ink-brand disabled:opacity-40 disabled:hover:border-border-default disabled:hover:text-ink-primary"
       >
-        Next
-        <ArrowRightIcon size={14} />
+        {t('pagination.next')}
+        <ArrowRightIcon size={14} className="rtl:rotate-180" />
       </button>
     </nav>
   )

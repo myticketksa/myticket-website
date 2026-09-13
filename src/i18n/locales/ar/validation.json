@@ -1,0 +1,17 @@
+{
+  "enterMobileOrEmail": "أدخل رقم جوالك أو بريدك الإلكتروني",
+  "enterPassword": "أدخل كلمة المرور",
+  "enterFullName": "أدخل اسمك الكامل",
+  "enterValidEmail": "أدخل بريداً إلكترونياً صالحاً",
+  "enterEmail": "أدخل بريدك الإلكتروني",
+  "enterMobile": "أدخل رقم جوالك",
+  "enterValidSaudiMobile": "أدخل رقم جوال سعودي صالحاً",
+  "passwordMin": "استخدم 8 أحرف على الأقل",
+  "createPassword": "أنشئ كلمة مرور",
+  "acceptTerms": "وافق على الشروط وسياسة الخصوصية للمتابعة",
+  "enterCode": "أدخل الرمز الذي أرسلناه",
+  "enterNewPassword": "أدخل كلمة مرور جديدة",
+  "passwordsMustMatch": "كلمتا المرور غير متطابقتين",
+  "confirmPassword": "أكّد كلمة المرور",
+  "enterOtp": "أدخل رمز التحقق لمرة واحدة"
+}

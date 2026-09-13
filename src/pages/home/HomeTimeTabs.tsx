@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { LayoutGroup, motion, useReducedMotion } from 'motion/react'
 import { cn } from '@/lib/cn'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 import { easeStandard, motionTokens } from '@/lib/motion'
 import { HOME_EVENT_TABS } from './home-data'
 
@@ -16,6 +18,7 @@ export function HomeTimeTabs({
   value?: (typeof HOME_EVENT_TABS)[number]
   onChange?: (tab: (typeof HOME_EVENT_TABS)[number]) => void
 }) {
+  const { t } = useTranslation('catalog')
   const [internal, setInternal] = useState<(typeof HOME_EVENT_TABS)[number]>('All')
   const active = value ?? internal
   const reduce = useReducedMotion()
@@ -24,7 +27,7 @@ export function HomeTimeTabs({
     <LayoutGroup id="home-time-tabs">
       <div
         role="tablist"
-        aria-label="Event time range"
+        aria-label={t('home.eventTimeRange')}
         className="flex shrink-0 gap-[6px] overflow-x-auto rounded-[24px] border-[1.5px] border-border-default bg-surface-default p-[5px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {HOME_EVENT_TABS.map((tab) => {
@@ -61,7 +64,7 @@ export function HomeTimeTabs({
                   }
                 />
               ) : null}
-              <span className="relative z-10">{tab}</span>
+              <span className="relative z-10">{catalogLabel(t, tab)}</span>
             </button>
           )
         })}

@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useGetEventsQuery } from '@/app/api/eventsApi'
 import { useGetExperiencesQuery } from '@/app/api/experiencesApi'
@@ -23,6 +24,8 @@ import {
   SEARCH_RESULT_IMAGES,
   slugify,
 } from '@/pages/_guest'
+import type { TFunction } from 'i18next'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 
 type SearchResultKind = 'Event' | 'Talent' | 'Experience' | 'Auction'
 
@@ -41,12 +44,38 @@ type SearchResult = {
 }
 
 const TABS = [
-  { label: 'All', kinds: null },
-  { label: 'Events', kinds: ['Event'] as const },
-  { label: 'Talents', kinds: ['Talent'] as const },
-  { label: 'Experiences', kinds: ['Experience'] as const },
-  { label: 'Auctions', kinds: ['Auction'] as const },
+  { label: 'All', kinds: null, labelKey: 'pages.tabAll' },
+  { label: 'Events', kinds: ['Event'] as const, labelKey: 'pages.tabEvents' },
+  { label: 'Talents', kinds: ['Talent'] as const, labelKey: 'pages.tabTalents' },
+  { label: 'Experiences', kinds: ['Experience'] as const, labelKey: 'pages.tabExperiences' },
+  { label: 'Auctions', kinds: ['Auction'] as const, labelKey: 'pages.tabAuctions' },
 ] as const
+
+const KIND_LABEL_KEYS: Record<SearchResultKind, string> = {
+  Event: 'pages.kindEvent',
+  Talent: 'pages.kindTalent',
+  Experience: 'pages.kindExperience',
+  Auction: 'pages.kindAuction',
+}
+
+const CTA_LABEL_KEYS: Record<string, string> = {
+  'View event': 'pages.viewEvent',
+  'View profile': 'pages.viewProfile',
+  'View experience': 'pages.viewExperience',
+  'Place bid': 'pages.placeBid',
+}
+
+const SORT_LABEL_KEYS: Record<string, string> = {
+  'Most relevant': 'results.sortMostRelevant',
+  Soonest: 'results.sortSoonest',
+  Price: 'results.sortPrice',
+}
+
+const FILTER_GROUP_KEYS: Record<string, string> = {
+  When: 'filters.when',
+  'Ticket price': 'filters.ticketPrice',
+  'Good for': 'filters.goodFor',
+}
 
 const SUGGESTIONS = [
   'Riyadh Season Opening Night',
@@ -241,8 +270,14 @@ function buildApiResults(
   return items
 }
 
+function translateCta(t: TFunction, cta: string): string {
+  const key = CTA_LABEL_KEYS[cta]
+  return key ? t(key) : cta
+}
+
 /** Search results — Figma `207:5205`. */
 export function SearchResultsPage() {
+  const { t } = useTranslation(['catalog', 'nav'])
   const baseId = useId()
   const [params] = useSearchParams()
   const query = params.get('q') || 'riyadh season'
@@ -312,8 +347,8 @@ export function SearchResultsPage() {
       <PageSection padTop={26} padBottom={0}>
         <Breadcrumbs
           items={[
-            { label: 'Home', href: '/' },
-            { label: 'Search', href: '/search' },
+            { label: t('nav:main'), href: '/' },
+            { label: t('search.title'), href: '/search' },
             { label: query },
           ]}
         />
@@ -321,9 +356,9 @@ export function SearchResultsPage() {
 
       <PageSection padTop={14} padBottom={0}>
         <FadeUp>
-          <h1 className="text-heading-h2 text-ink-primary">Results for “{query}”</h1>
+          <h1 className="text-heading-h2 text-ink-primary">{t('search.resultsFor', { query })}</h1>
           <p className="mt-[6px] text-[15px] text-ink-secondary">
-            {results.length} matches across events, talents, experiences and auctions.
+            {t('pages.searchMatches', { count: results.length })}
           </p>
           <div className="mt-xl flex flex-wrap gap-[8px]">
             {SUGGESTIONS.map((s) => (
@@ -342,17 +377,17 @@ export function SearchResultsPage() {
             Entity tabs match detail-section metrics (15px / ink-brand / muted), not DS
             `Tab` (14.5px / ink-brand-mid). Count badges are local to this frame.
           */}
-          <DetailSectionTabs className="mt-[18px] gap-0 border-border-default" aria-label="Result types">
-            {tabCounts.map((t) => (
+          <DetailSectionTabs className="mt-[18px] gap-0 border-border-default" aria-label={t('pages.resultTypes')}>
+            {tabCounts.map((tabItem) => (
               <DetailSectionTab
-                key={t.label}
-                active={tab === t.label}
-                onClick={() => setTab(t.label)}
+                key={tabItem.label}
+                active={tab === tabItem.label}
+                onClick={() => setTab(tabItem.label)}
                 className="flex h-[46px] items-center gap-[7px] px-[15px] pb-0"
               >
-                {t.label}
+                {t(tabItem.labelKey)}
                 <span className="rounded-[10px] bg-bg-skeleton px-[7px] py-[2px] text-[12px] font-extrabold text-ink-secondary">
-                  {t.count}
+                  {tabItem.count}
                 </span>
               </DetailSectionTab>
             ))}
@@ -365,22 +400,22 @@ export function SearchResultsPage() {
           filterWidth={244}
           filters={
             <FilterSidebar
-              title="Refine"
-              clearLabel="Reset"
+              title={t('filters.refine')}
+              clearLabel={t('filters.reset')}
               width={244}
               interactive
               onClear={() => setCities([])}
             >
               <div>
                 <p className="pt-[15px] text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-                  City
+                  {t('filters.city')}
                 </p>
                 <div className="mt-[11px] flex flex-col gap-[9px]">
                   {CITY_OPTIONS.map((opt, i) => (
                     <Checkbox
                       key={opt.label}
                       id={`${baseId}-city-${i}`}
-                      label={opt.label}
+                      label={catalogLabel(t, opt.label)}
                       count={opt.count}
                       fullWidth
                       checked={cities.includes(opt.label)}
@@ -422,14 +457,14 @@ export function SearchResultsPage() {
               ).map((group) => (
                 <div key={group.label} title="Not applied yet">
                   <p className="pt-[15px] text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-                    {group.label}
+                    {t(FILTER_GROUP_KEYS[group.label])}
                   </p>
                   <div className="mt-[11px] flex flex-col gap-[9px] opacity-55">
                     {group.options.map((opt, i) => (
                       <Checkbox
                         key={opt.label}
                         id={`${baseId}-${group.label}-${i}`}
-                        label={opt.label}
+                        label={catalogLabel(t, opt.label)}
                         count={'count' in opt ? opt.count : undefined}
                         fullWidth
                         disabled
@@ -442,23 +477,25 @@ export function SearchResultsPage() {
           }
         >
           <ResultsToolbar
-            countLabel={`${filtered.length} result${filtered.length === 1 ? '' : 's'}`}
-            activeFilter={cities.length === 1 ? cities[0] : undefined}
+            countLabel={t('results.countResults', { count: filtered.length })}
+            activeFilter={
+              cities.length === 1 ? catalogLabel(t, cities[0]!) : undefined
+            }
             onClearFilter={
               cities.length === 1 ? () => setCities([]) : undefined
             }
             showViewToggle={false}
             trailing={
-              <div className="flex items-center gap-[8px]">
-                <span className="text-[13px] text-ink-muted">Sort</span>
-                {['Most relevant', 'Soonest', 'Price'].map((s) => (
+              <div className="flex flex-wrap items-center gap-[8px]">
+                <span className="text-[13px] text-ink-muted">{t('results.sort')}</span>
+                {(['Most relevant', 'Soonest', 'Price'] as const).map((s) => (
                   <FilterChip
                     key={s}
                     selected={sort === s}
                     onClick={() => setSort(s)}
                     className="h-[32px] rounded-[16px] px-md text-[13px]"
                   >
-                    {s}
+                    {t(SORT_LABEL_KEYS[s])}
                   </FilterChip>
                 ))}
               </div>
@@ -470,30 +507,30 @@ export function SearchResultsPage() {
               <Link
                 key={result.title}
                 to={result.to}
-                className="flex gap-0 overflow-hidden rounded-[16px] border border-border-default bg-surface-default"
+                className="flex flex-col gap-0 overflow-hidden rounded-[16px] border border-border-default bg-surface-default sm:flex-row"
               >
                 <div
-                  className={`m-[14px] h-[118px] w-[168px] shrink-0 overflow-hidden ${result.mediaRounded}`}
+                  className={`m-[14px] h-[160px] w-[calc(100%-28px)] shrink-0 overflow-hidden sm:h-[118px] sm:w-[168px] ${result.mediaRounded}`}
                 >
                   <img src={result.image} alt="" className="size-full object-cover" />
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col justify-center py-[14px] pr-[14px]">
-                  <div className="flex items-center gap-[8px]">
-                    <StatusBadge tone="neutralOutline">{result.kind}</StatusBadge>
+                <div className="flex min-w-0 flex-1 flex-col justify-center px-[14px] pb-[14px] sm:py-[14px] sm:pe-[14px] sm:ps-0">
+                  <div className="flex flex-wrap items-center gap-[8px]">
+                    <StatusBadge tone="neutralOutline">{t(KIND_LABEL_KEYS[result.kind])}</StatusBadge>
                     {'flag' in result && result.flag && (
                       <span className="text-[12px] font-semibold text-brand-gradient-end">
                         {result.flag}
                       </span>
                     )}
                   </div>
-                  <h3 className="mt-[6px] text-[20px] leading-[1.2] font-extrabold tracking-[-0.35px] text-ink-primary">
+                  <h3 className="mt-[6px] text-[18px] leading-[1.2] font-extrabold tracking-[-0.35px] text-ink-primary sm:text-[20px]">
                     {result.title}
                   </h3>
                   <p className="mt-[4px] text-[13px] text-ink-secondary">{result.meta}</p>
                   <p className="mt-[6px] max-w-[620px] text-[13px] leading-[1.45] text-ink-secondary">
                     {result.blurb}
                   </p>
-                  <div className="mt-[10px] flex items-center justify-between">
+                  <div className="mt-[10px] flex flex-col items-start gap-sm sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-[14px] text-[13px]">
                       <span className="font-semibold text-ink-primary">{result.price}</span>
                       {result.kind !== 'Auction' ? (
@@ -505,8 +542,8 @@ export function SearchResultsPage() {
                         <span className="text-ink-muted">{result.rating}</span>
                       )}
                     </div>
-                    <Button size="sm" variant="secondary" tabIndex={-1}>
-                      {result.cta}
+                    <Button size="sm" variant="secondary" tabIndex={-1} className="w-full sm:w-auto">
+                      {translateCta(t, result.cta)}
                     </Button>
                   </div>
                 </div>
@@ -524,14 +561,14 @@ export function SearchResultsPage() {
                   setCities([])
                 }}
               >
-                Show all results
+                {t('pages.showAllResults')}
               </Button>
             </div>
           )}
 
           <div className="mt-[34px]">
             <p className="text-[14px] font-medium text-ink-secondary">
-              People searching this also looked for
+              {t('pages.alsoLookedFor')}
             </p>
             <div className="mt-md flex flex-wrap gap-[9px]">
               {RELATED.map((label) => (

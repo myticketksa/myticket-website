@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ArrowRightIcon, PlusIcon } from '@/components/icons'
 import { Button, TextInput } from '@/components/ui'
@@ -33,12 +34,7 @@ const FALLBACK_MESSAGES = [
   },
 ] as const
 
-const QUICK_LINKS = [
-  "Where's my refund?",
-  "My QR code won't scan",
-  'How do waitlists work?',
-  'Gifting a ticket',
-] as const
+const QUICK_LINK_IDS = ['refund', 'qr', 'waitlists', 'gift'] as const
 
 type ChatMessage = {
   from: 'you' | 'agent'
@@ -75,6 +71,7 @@ function pickSupportChatId(chats: Record<string, unknown>[]): string | number | 
 
 /** Support chat — Figma `207:12302`. */
 export function SupportChatPage() {
+  const { t } = useTranslation('account')
   const [draft, setDraft] = useState('')
   const { data: chats } = useGetChatsQuery()
   const chatId = useMemo(
@@ -114,15 +111,15 @@ export function SupportChatPage() {
 
   return (
     <>
-      <FunnelHeader label="Live support" backHref="/help" backLabel="Help centre" />
+      <FunnelHeader label={t('support.chatHeader')} backHref="/help" backLabel="Help centre" />
 
       <PageSection padTop={40} padBottom={96}>
         <div className="flex flex-col items-start gap-[28px] lg:flex-row">
-          <div className="flex min-h-[560px] w-full flex-col overflow-hidden rounded-[22px] border border-border-default bg-surface-default lg:max-w-[672px]">
+          <div className="flex min-h-[420px] w-full flex-col overflow-hidden rounded-[22px] border border-border-default bg-surface-default sm:min-h-[560px] lg:max-w-[672px]">
             <div className="flex items-center gap-[14px] border-b border-border-divider px-[24px] py-[18px]">
               <div className="relative flex size-[44px] items-center justify-center rounded-[22px] bg-brand-gradient text-[15px] font-extrabold text-ink-inverse">
                 KH
-                <span className="absolute right-0 bottom-0 size-[12px] rounded-full border-2 border-surface-default bg-state-success" />
+                <span className="absolute end-0 bottom-0 size-[12px] rounded-full border-2 border-surface-default bg-state-success" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[15.5px] font-bold text-ink-primary">Khalid · MyTicket Support</p>
@@ -149,8 +146,8 @@ export function SupportChatPage() {
                   <div
                     className={
                       msg.from === 'you'
-                        ? 'max-w-[90%] rounded-tl-[16px] rounded-tr-[16px] rounded-br-[4px] rounded-bl-[16px] bg-brand-gradient px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-inverse'
-                        : 'max-w-[448px] rounded-tl-[16px] rounded-tr-[16px] rounded-br-[16px] rounded-bl-[4px] border border-border-default bg-surface-default px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-primary'
+                        ? 'max-w-[90%] rounded-ss-[16px] rounded-se-[16px] rounded-ee-[4px] rounded-es-[16px] bg-brand-gradient px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-inverse'
+                        : 'max-w-[448px] rounded-ss-[16px] rounded-se-[16px] rounded-ee-[16px] rounded-es-[4px] border border-border-default bg-surface-default px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-primary'
                     }
                   >
                     {msg.body}
@@ -158,60 +155,61 @@ export function SupportChatPage() {
                   <p className="mt-[5px] text-[11.5px] text-ink-muted">{msg.meta}</p>
                 </div>
               ))}
-              <p className="text-[11.5px] text-ink-muted">Khalid is typing…</p>
+              <p className="text-[11.5px] text-ink-muted">
+                {t('support.typing', { name: 'Khalid' })}
+              </p>
             </div>
 
             <form
               className="flex items-center gap-[10px] border-t border-border-divider px-[24px] py-[16px]"
               onSubmit={(event) => void handleSubmit(event)}
             >
-              <Button variant="icon" size="md" aria-label="Attach file" type="button">
+              <Button variant="icon" size="md" aria-label={t('support.attachAria')} type="button">
                 <PlusIcon size={16} />
               </Button>
               <TextInput
                 className="flex-1 !rounded-[22px]"
-                placeholder="Write a message…"
+                placeholder={t('support.chatPlaceholder')}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
               />
               <Button size="md" type="submit" disabled={sendState.isLoading || !draft.trim()}>
-                Send
+                {t('support.send')}
               </Button>
             </form>
           </div>
 
           <aside className="flex w-full flex-col gap-[14px] lg:w-[340px]">
             <div className="rounded-[20px] border border-border-default bg-surface-default p-[20px]">
-              <p className="text-[15px] font-semibold text-ink-primary">Keep this conversation</p>
+              <p className="text-[15px] font-semibold text-ink-primary">{t('support.keepTitle')}</p>
               <p className="mt-[10px] text-[13px] leading-[1.55] text-ink-secondary">
-                You&apos;re chatting without signing in, so this chat disappears when you close it.
-                Sign in to keep the history, or turn it into a tracked case you can follow.
+                {t('support.keepBody')}
               </p>
               <div className="mt-[14px] flex flex-col gap-[8px]">
                 <Link to="/sign-in">
                   <Button size="md" className="w-full">
-                    Sign in — you&apos;ll come right back
+                    {t('support.keepSignIn')}
                   </Button>
                 </Link>
                 <Link to="/support/new">
                   <Button variant="secondary" size="md" className="w-full">
-                    Turn into a tracked case
+                    {t('support.keepCase')}
                   </Button>
                 </Link>
               </div>
             </div>
 
             <div className="rounded-[20px] border border-border-default bg-surface-default p-[20px]">
-              <p className="text-[15px] font-semibold text-ink-primary">Quicker answers</p>
+              <p className="text-[15px] font-semibold text-ink-primary">{t('support.quickerTitle')}</p>
               <ul className="mt-[12px] flex flex-col gap-[9px]">
-                {QUICK_LINKS.map((label) => (
-                  <li key={label}>
+                {QUICK_LINK_IDS.map((id) => (
+                  <li key={id}>
                     <Link
                       to="/help"
                       className="inline-flex items-center gap-[5px] text-[13.5px] font-semibold text-ink-brand hover:text-ink-brand-mid"
                     >
-                      {label}
-                      <ArrowRightIcon size={14} />
+                      {t(`support.quick.${id}`)}
+                      <ArrowRightIcon size={14} className="rtl:rotate-180" />
                     </Link>
                   </li>
                 ))}
@@ -219,8 +217,7 @@ export function SupportChatPage() {
             </div>
 
             <div className="rounded-[16px] border border-border-default bg-bg-page px-[18px] py-[16px] text-[13px] leading-[1.55] text-ink-secondary">
-              Support hours: 9:00–01:00 AST, every day. Outside these hours, leave a message — we
-              reply first thing.
+              {t('support.hours')}
             </div>
           </aside>
         </div>

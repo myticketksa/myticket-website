@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeftIcon } from '@/components/icons'
 import { Logo } from '@/components/navigation'
 import { PageFade } from '@/components/motion'
@@ -40,49 +41,53 @@ export interface PurchaseHeaderProps {
 }
 
 export function PurchaseHeader({
-  backLabel = 'Back to event',
+  backLabel,
   backHref = '/',
   steps = [],
-  holdLabel = 'Seats held',
+  holdLabel,
   holdTime,
   holdUrgent,
   event,
   showLogo = true,
   className,
 }: PurchaseHeaderProps) {
+  const { t } = useTranslation('checkout')
+  const resolvedBack = backLabel ?? t('purchase.backToEvent')
+  const resolvedHold = holdLabel ?? t('purchase.seatsHeld')
+
   return (
     <header
       className={cn(
-        'flex h-[72px] w-full items-center border-b border-border-default bg-bg-page',
+        'flex min-h-[72px] w-full items-center border-b border-border-default bg-bg-page py-sm lg:h-[72px] lg:py-0',
         className,
       )}
     >
-      <div className="mx-auto flex h-full w-full max-w-[var(--container-page)] items-center gap-[28px] px-page-gutter">
+      <div className="mx-auto flex h-full w-full max-w-[var(--container-page)] flex-wrap items-center gap-x-[16px] gap-y-sm px-page-gutter lg:flex-nowrap lg:gap-[28px]">
         <Link
           to={backHref}
           className="flex shrink-0 items-center gap-[5px] text-[14px] font-semibold text-ink-secondary transition-colors duration-micro ease-micro hover:text-ink-brand"
         >
-          <ArrowLeftIcon size={14} />
-          {backLabel}
+          <ArrowLeftIcon size={14} className="rtl:rotate-180" />
+          <span className="max-sm:sr-only">{resolvedBack}</span>
         </Link>
 
         {event ? (
-          <div className="min-w-0 flex-1">
+          <div className="order-3 min-w-0 basis-full lg:order-none lg:flex-1 lg:basis-auto">
             <p className="truncate text-[16px] font-semibold text-ink-primary">
               {event.title}
             </p>
             <p className="truncate text-[13px] text-ink-secondary">{event.meta}</p>
           </div>
         ) : showLogo ? (
-          <div className="shrink-0">
+          <div className="hidden shrink-0 sm:block">
             <Logo height={34} />
           </div>
         ) : null}
 
         <ol
           className={cn(
-            'flex shrink-0 items-center gap-[28px]',
-            !event && 'min-w-0 flex-1 justify-center',
+            'flex min-w-0 flex-1 items-center justify-center gap-md overflow-x-auto sm:gap-[28px]',
+            event && 'order-4 basis-full lg:order-none lg:basis-auto lg:flex-none',
           )}
         >
           {steps.map((step, index) => {
@@ -90,7 +95,7 @@ export function PurchaseHeader({
               <>
                 <span
                   className={cn(
-                    'flex size-[22px] items-center justify-center rounded-[11px] text-[12px] font-bold',
+                    'flex size-[22px] shrink-0 items-center justify-center rounded-[11px] text-[12px] font-bold',
                     step.state === 'current' && 'bg-identity-gradient text-ink-inverse',
                     step.state === 'done' && 'bg-brand-primary text-ink-inverse',
                     step.state === 'upcoming' && 'bg-border-divider text-ink-muted',
@@ -101,6 +106,7 @@ export function PurchaseHeader({
                 <span
                   className={cn(
                     'text-[14px] font-semibold',
+                    step.state !== 'current' && 'max-sm:hidden',
                     step.state === 'current' && 'text-ink-brand',
                     step.state === 'done' && 'text-ink-primary',
                     step.state === 'upcoming' && 'text-ink-muted',
@@ -113,7 +119,7 @@ export function PurchaseHeader({
 
             if (step.to && !step.disabled) {
               return (
-                <li key={step.label}>
+                <li key={step.label} className="shrink-0">
                   <Link
                     to={step.to}
                     aria-current={step.state === 'current' ? 'step' : undefined}
@@ -130,10 +136,10 @@ export function PurchaseHeader({
                 key={step.label}
                 aria-current={step.state === 'current' ? 'step' : undefined}
                 className={cn(
-                  'flex items-center gap-[9px]',
+                  'flex shrink-0 items-center gap-[9px]',
                   step.disabled && 'cursor-not-allowed opacity-55',
                 )}
-                title={step.disabled ? 'Complete payment to open tickets' : undefined}
+                title={step.disabled ? t('purchase.completePaymentFirst') : undefined}
               >
                 {content}
               </li>
@@ -142,8 +148,8 @@ export function PurchaseHeader({
         </ol>
 
         {holdTime && (
-          <div className="ml-auto flex shrink-0 items-center gap-[10px] rounded-[20px] border border-border-default bg-surface-default px-[14px] py-[7px]">
-            <span className="text-[13px] text-ink-secondary">{holdLabel}</span>
+          <div className="ms-auto flex shrink-0 items-center gap-[10px] rounded-[20px] border border-border-default bg-surface-default px-[10px] py-[7px] sm:px-[14px]">
+            <span className="hidden text-[13px] text-ink-secondary sm:inline">{resolvedHold}</span>
             <Countdown
               urgent={holdUrgent ?? true}
               className="text-[14px] font-bold text-brand-gradient-end"
@@ -207,6 +213,7 @@ function useHoldCountdown(enabled: boolean) {
 }
 
 export function PurchaseLayout({ header }: PurchaseLayoutProps) {
+  const { t } = useTranslation('checkout')
   const { pathname } = useLocation()
   const { slug = EVENT_SLUG } = useParams()
   const hold = readHoldSession()
@@ -223,22 +230,22 @@ export function PurchaseLayout({ header }: PurchaseLayoutProps) {
   const seatsHref = `/events/${eventSlug}/seats`
   const chrome = header ?? (
     <PurchaseHeader
-      backLabel={isCheckout ? 'Back to seats' : 'Back to event'}
+      backLabel={isCheckout ? t('purchase.backToSeats') : t('purchase.backToEvent')}
       backHref={isCheckout ? seatsHref : `/events/${eventSlug}`}
       steps={[
         {
-          label: 'Seats',
+          label: t('purchase.stepSeats'),
           state: isSeats ? 'current' : isCheckout ? 'done' : 'upcoming',
           to: seatsHref,
         },
         {
-          label: 'Payment',
+          label: t('purchase.stepPayment'),
           state: isCheckout ? 'current' : 'upcoming',
           to: hold || isCheckout ? '/checkout' : undefined,
           disabled: !hold && !isCheckout,
         },
         {
-          label: 'Tickets',
+          label: t('purchase.stepTickets'),
           state: 'upcoming',
           to: lastOrderId ? `/order-confirmation?orderId=${lastOrderId}` : undefined,
           disabled: !lastOrderId,

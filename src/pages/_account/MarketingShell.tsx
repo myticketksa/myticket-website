@@ -26,7 +26,7 @@ export function MarketingHero({
         {eyebrow}
       </p>
       <h1
-        className={`mx-auto mt-md text-[48px] leading-[1.03] font-extrabold tracking-[-1.6px] text-ink-primary sm:text-[56px] sm:tracking-[-1.96px] ${
+        className={`mx-auto mt-md text-[34px] leading-[1.03] font-extrabold tracking-[-1.6px] text-ink-primary sm:text-[48px] lg:text-[56px] lg:tracking-[-1.96px] ${
           narrow ? 'max-w-[820px]' : 'max-w-[900px]'
         }`}
       >
@@ -116,9 +116,9 @@ export function MarketingStats({
   return (
     <PageSection padTop={44} padBottom={0}>
       <div className="mx-auto max-w-[1040px]">
-        <div className="grid grid-cols-2 gap-xl rounded-[24px] bg-surface-inverse px-[44px] py-[36px] text-bg-page md:grid-cols-4 md:gap-[32px]">
+        <div className="grid grid-cols-2 gap-xl rounded-[24px] bg-surface-inverse px-xl py-[28px] text-bg-page sm:px-[44px] sm:py-[36px] md:grid-cols-4 md:gap-[32px]">
           {stats.map((stat) => (
-            <div key={stat.label} className="text-left">
+            <div key={stat.label} className="text-start">
               <p className="text-[32px] font-extrabold tracking-[-0.64px]">{stat.value}</p>
               <p className="mt-xs text-[13px] text-bg-page/80">{stat.label}</p>
             </div>
@@ -168,7 +168,7 @@ export function RoleLandingHero({
           <p className="text-[12px] font-bold tracking-[1.08px] text-ink-brand-mid uppercase">
             {eyebrow}
           </p>
-          <h1 className="mt-[14px] text-[44px] leading-[1.02] font-extrabold tracking-[-1.8px] text-ink-primary sm:text-[56px] sm:tracking-[-2.03px]">
+          <h1 className="mt-[14px] text-[34px] leading-[1.02] font-extrabold tracking-[-1.8px] text-ink-primary sm:text-[44px] lg:text-[56px] lg:tracking-[-2.03px]">
             {title}
           </h1>
           <p className="mt-[16px] max-w-[540px] text-[17px] leading-[1.6] text-ink-secondary">
@@ -285,7 +285,7 @@ export function RoleMoneyPanel({
             className="flex flex-col gap-xs sm:flex-row sm:items-start sm:justify-between sm:gap-md"
           >
             <span className="shrink-0">{row.label}</span>
-            <span className="font-bold sm:text-right">{row.value}</span>
+            <span className="font-bold sm:text-end">{row.value}</span>
           </div>
         ))}
       </div>
@@ -368,7 +368,7 @@ export function RoleFaqSection({
               <button
                 type="button"
                 onClick={() => setOpen(isOpen ? -1 : index)}
-                className="flex w-full items-center justify-between gap-md px-[22px] py-[18px] text-left"
+                className="flex w-full items-center justify-between gap-md px-[22px] py-[18px] text-start"
               >
                 <span className="text-[15.5px] font-bold text-ink-primary">{item.question}</span>
                 {isOpen ? (
@@ -410,7 +410,7 @@ export function RoleClosingCta({
 }) {
   return (
     <PageSection padTop={72} padBottom={96}>
-      <div className="flex flex-col items-start justify-between gap-xl rounded-[24px] bg-brand-gradient px-[48px] py-[44px] lg:flex-row lg:items-center">
+      <div className="flex flex-col items-start justify-between gap-xl rounded-[24px] bg-brand-gradient px-xl py-3xl sm:px-[48px] sm:py-[44px] lg:flex-row lg:items-center">
         <div className="min-w-0">
           <p className="text-[28px] leading-[1.1] font-extrabold tracking-[-0.96px] text-ink-inverse sm:text-[32px]">
             {title}

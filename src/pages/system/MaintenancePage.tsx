@@ -13,7 +13,7 @@ export function MaintenancePage() {
         <div className="mt-[28px] flex size-[64px] items-center justify-center rounded-[32px] bg-bg-tint-brand text-ink-brand">
           <WrenchIcon size={24} weight="regular" />
         </div>
-        <h1 className="mt-[20px] text-[44px] leading-[1.03] font-extrabold tracking-[-1.54px] text-ink-primary">
+        <h1 className="mt-[20px] text-[28px] leading-[1.03] font-extrabold tracking-[-1.54px] text-ink-primary sm:text-[36px] lg:text-[44px]">
           Quick soundcheck. Back shortly.
         </h1>
         <p className="mt-[12px] text-[16px] leading-[1.6] text-ink-secondary">

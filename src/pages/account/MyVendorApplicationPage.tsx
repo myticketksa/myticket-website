@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { StatusBadge, type StatusTone } from '@/components/data-display'
 import { Button } from '@/components/ui'
@@ -16,14 +17,9 @@ function statusTone(status: ApplicationStatus): StatusTone {
   return 'brandTint'
 }
 
-function statusLabel(status: ApplicationStatus) {
-  if (status === 'accepted') return 'Accepted'
-  if (status === 'rejected') return 'Rejected'
-  return 'Pending'
-}
-
 /** Guest vendor application status — not a business workspace. */
 export function MyVendorApplicationPage() {
+  const { t } = useTranslation('account')
   const { roleLabel } = useLocale()
   const role = roleLabel('vendor')
   const { data } = useGetMyApplicationQuery()
@@ -32,14 +28,14 @@ export function MyVendorApplicationPage() {
   return (
     <>
       <AccountPageHead
-        eyebrow="Your account"
-        title={`My ${role} application`}
-        subtitle="Track the request you submitted. Acceptance does not change your login — you remain a guest."
+        eyebrow={t('eyebrow')}
+        title={t('applications.title', { role })}
+        subtitle={t('applications.subtitle')}
         className="[&>div]:max-w-[1040px]"
         actions={
           <Link to="/apply/vendor">
             <Button size="lg" variant="secondary">
-              View application form
+              {t('applications.viewForm')}
             </Button>
           </Link>
         }
@@ -49,9 +45,11 @@ export function MyVendorApplicationPage() {
         <div className="flex flex-col gap-xl rounded-[20px] border border-border-default bg-surface-default px-[24px] py-[20px] sm:flex-row sm:items-center sm:gap-[20px]">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-[10px]">
-              <p className="text-[17px] font-bold text-ink-primary">{role} request</p>
+              <p className="text-[17px] font-bold text-ink-primary">
+                {t('applications.requestLabel', { role })}
+              </p>
               <StatusBadge tone={statusTone(application.status)}>
-                {statusLabel(application.status)}
+                {t(`applications.status.${application.status}`)}
               </StatusBadge>
             </div>
             <p className="mt-[4px] text-[13.5px] text-ink-secondary">
@@ -72,7 +70,7 @@ export function MyVendorApplicationPage() {
           <div className="flex w-full shrink-0 flex-col gap-[8px] sm:w-[170px]">
             <Link to="/support/new">
               <Button variant="secondary" size="md" className="h-[40px] w-full rounded-[20px]">
-                Contact support
+                {t('applications.contactSupport')}
               </Button>
             </Link>
           </div>

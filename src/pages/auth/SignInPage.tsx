@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { ArrowLeftIcon } from '@/components/icons'
 import { Divider } from '@/components/data-display'
@@ -16,8 +17,8 @@ import { credentialsSet } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 import {
-  otpVerifySchema,
-  signInSchema,
+  createOtpVerifySchema,
+  createSignInSchema,
   toLoginIdentifier,
   type OtpVerifyValues,
   type SignInValues,
@@ -28,6 +29,8 @@ import {
  * Wired to Auth RTK endpoints (password + OTP).
  */
 export function SignInPage() {
+  const { t } = useTranslation(['auth', 'validation', 'common'])
+  const { t: tv } = useTranslation('validation')
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const [mode, setMode] = useState<'password' | 'otp-request' | 'otp-verify'>('password')
@@ -35,13 +38,22 @@ export function SignInPage() {
   const [requestCode, requestState] = useRequestLoginCodeMutation()
   const [verifyCode, verifyState] = useVerifyLoginCodeMutation()
 
+  const passwordResolver = useMemo(
+    () => yupResolver(createSignInSchema((key) => tv(key))),
+    [tv],
+  )
+  const otpResolver = useMemo(
+    () => yupResolver(createOtpVerifySchema((key) => tv(key))),
+    [tv],
+  )
+
   const passwordForm = useForm<SignInValues>({
-    resolver: yupResolver(signInSchema),
+    resolver: passwordResolver,
     defaultValues: { identifier: '', password: '', keepSignedIn: true },
   })
 
   const otpForm = useForm<OtpVerifyValues>({
-    resolver: yupResolver(otpVerifySchema),
+    resolver: otpResolver,
     defaultValues: { identifier: '', code: '' },
   })
 
@@ -58,26 +70,26 @@ export function SignInPage() {
           persist: values.keepSignedIn !== false,
         }),
       )
-      dispatch(toastPushed('success', 'Signed in'))
+      dispatch(toastPushed('success', t('auth:signIn.success')))
       navigate('/')
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not sign in')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('auth:signIn.error'))))
     }
   }
 
   async function onRequestOtp() {
     const identifier = toLoginIdentifier(passwordForm.getValues('identifier'))
     if (!identifier) {
-      passwordForm.setError('identifier', { message: 'Enter your mobile number or email' })
+      passwordForm.setError('identifier', { message: tv('enterMobileOrEmail') })
       return
     }
     try {
       await requestCode({ identifier }).unwrap()
       otpForm.setValue('identifier', identifier)
       setMode('otp-verify')
-      dispatch(toastPushed('success', 'Code sent — check your messages'))
+      dispatch(toastPushed('success', t('auth:signIn.codeSent')))
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not send code')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('auth:signIn.codeSendError'))))
     }
   }
 
@@ -94,10 +106,10 @@ export function SignInPage() {
           persist: true,
         }),
       )
-      dispatch(toastPushed('success', 'Signed in'))
+      dispatch(toastPushed('success', t('auth:signIn.success')))
       navigate('/')
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Invalid or expired code')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('auth:signIn.otpError'))))
     }
   }
 
@@ -107,21 +119,21 @@ export function SignInPage() {
     <div className="flex w-full flex-col">
       <div className="flex gap-[4px] rounded-[22px] border border-border-default bg-surface-default p-[5px]">
         <span className="flex h-[36px] flex-1 items-center justify-center rounded-[18px] bg-brand-gradient text-[14px] font-semibold text-ink-inverse">
-          Sign in
+          {t('auth:signIn.tab')}
         </span>
         <Link
           to="/register"
           className="flex h-[36px] flex-1 items-center justify-center rounded-[18px] text-[14px] font-semibold text-ink-secondary"
         >
-          Create account
+          {t('auth:signIn.createAccount')}
         </Link>
       </div>
 
-      <h1 className="mt-2xl text-[42px] leading-[1.05] font-extrabold tracking-[-1.47px] text-ink-primary">
-        Welcome back
+      <h1 className="mt-2xl text-[28px] leading-[1.05] font-extrabold tracking-[-1.47px] text-ink-primary sm:text-[36px] lg:text-[42px]">
+        {t('auth:signIn.title')}
       </h1>
       <p className="mt-sm text-[15px] leading-[1.4] text-ink-secondary">
-        Sign in to pick up where you left off.
+        {t('auth:signIn.subtitle')}
       </p>
 
       {mode !== 'otp-verify' ? (
@@ -131,14 +143,14 @@ export function SignInPage() {
         >
           <div className="flex flex-col gap-[14px]">
             <Field
-              label="Mobile number or email"
+              label={t('auth:signIn.identifier')}
               htmlFor="sign-in-identity"
               error={passwordForm.formState.errors.identifier?.message}
             >
               <TextInput
                 id="sign-in-identity"
                 type="text"
-                placeholder="5X XXX XXXX"
+                placeholder={t('auth:signIn.phonePlaceholder')}
                 autoComplete="username"
                 className="h-[50px]"
                 invalid={Boolean(passwordForm.formState.errors.identifier)}
@@ -156,7 +168,7 @@ export function SignInPage() {
 
             {mode === 'password' && (
               <Field
-                label="Password"
+                label={t('auth:signIn.password')}
                 htmlFor="sign-in-password"
                 error={passwordForm.formState.errors.password?.message}
                 labelAction={
@@ -164,7 +176,7 @@ export function SignInPage() {
                     to="/reset-password"
                     className="text-[13px] font-medium text-ink-brand"
                   >
-                    Forgot password?
+                    {t('auth:signIn.forgot')}
                   </Link>
                 }
               >
@@ -188,7 +200,7 @@ export function SignInPage() {
               onCheckedChange={(value) =>
                 passwordForm.setValue('keepSignedIn', value === true)
               }
-              label="Keep me signed in on this device"
+              label={t('auth:signIn.keepSignedIn')}
             />
           )}
 
@@ -200,7 +212,7 @@ export function SignInPage() {
                 loading={busy}
                 className="mt-[22px] h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
               >
-                Sign in
+                {t('auth:signIn.submit')}
               </Button>
               <Button
                 type="button"
@@ -210,7 +222,7 @@ export function SignInPage() {
                 className="mt-md h-[52px] w-full rounded-[26px] border border-border-default text-[16px] font-semibold"
                 onClick={() => void onRequestOtp()}
               >
-                Send me a one-time code instead
+                {t('auth:signIn.sendOtpInstead')}
               </Button>
             </>
           ) : (
@@ -221,14 +233,14 @@ export function SignInPage() {
               className="mt-[22px] h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
               onClick={() => void onRequestOtp()}
             >
-              Send one-time code
+              {t('auth:signIn.sendOtp')}
             </Button>
           )}
         </form>
       ) : (
         <form className="mt-[28px] flex flex-col" onSubmit={otpForm.handleSubmit(onOtpSubmit)}>
           <Field
-            label="One-time code"
+            label={t('auth:signIn.otpLabel')}
             htmlFor="sign-in-otp"
             error={otpForm.formState.errors.code?.message}
           >
@@ -247,7 +259,7 @@ export function SignInPage() {
             loading={busy}
             className="mt-[22px] h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
           >
-            Verify and sign in
+            {t('auth:signIn.verifySubmit')}
           </Button>
           <Button
             type="button"
@@ -256,40 +268,46 @@ export function SignInPage() {
             className="mt-md h-[52px] w-full rounded-[26px] border border-border-default text-[16px] font-semibold"
             onClick={() => setMode('password')}
           >
-            Back to password
+            {t('auth:signIn.backToPassword')}
           </Button>
         </form>
       )}
 
       <div className="mt-[26px] flex items-center gap-[14px]">
         <Divider tone="border" className="flex-1" />
-        <span className="shrink-0 text-[13px] text-ink-muted">or continue with</span>
+        <span className="shrink-0 text-[13px] text-ink-muted">{t('auth:signIn.orContinueWith')}</span>
         <Divider tone="border" className="flex-1" />
       </div>
 
       <div className="mt-[14px] flex gap-[10px]">
-        {(['Apple', 'Google', 'Nafath'] as const).map((provider) => (
+        {(
+          [
+            ['apple', t('auth:providers.apple')],
+            ['google', t('auth:providers.google')],
+            ['nafath', t('auth:providers.nafath')],
+          ] as const
+        ).map(([key, label]) => (
           <Button
-            key={provider}
+            key={key}
             type="button"
             variant="secondary"
             size="md"
             className="h-12 flex-1 rounded-[24px] border border-border-default bg-surface-default font-semibold"
           >
-            {provider}
+            {label}
           </Button>
         ))}
       </div>
 
       <div className="mt-[28px] rounded-[14px] border border-border-default bg-bg-warm px-lg py-[14px]">
         <p className="text-[13px] leading-[1.5] text-ink-body">
-          Looking for business paths?{' '}
+          {t('auth:signIn.businessLead')}{' '}
           <Link to="/become-business" className="text-ink-brand underline-offset-2 hover:underline">
-            Submit a vendor or talent request
+            {t('auth:signIn.vendorTalentLink')}
           </Link>{' '}
-          after sign-in, or{' '}
+          {t('auth:signIn.businessAfter')}{' '}
           <Link to="/for-organizers" className="text-ink-brand underline-offset-2 hover:underline">
-            contact us about organizer partnership
+            {t('auth:signIn.organizerLink')}
           </Link>
           .
         </p>
@@ -303,7 +321,7 @@ export function SignInPage() {
         )}
       >
         <ArrowLeftIcon size={14} />
-        Keep browsing without an account
+        {t('auth:signIn.keepBrowsing')}
       </Link>
     </div>
   )

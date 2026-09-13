@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { ArrowLeftIcon } from '@/components/icons'
 import { Logo } from '@/components/navigation'
@@ -14,8 +15,8 @@ import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 import {
-  forgotPasswordSchema,
-  resetPasswordSchema,
+  createForgotPasswordSchema,
+  createResetPasswordSchema,
   type ForgotPasswordValues,
   type ResetPasswordValues,
 } from '@/lib/validation/authSchemas'
@@ -24,19 +25,30 @@ import {
  * Reset Password — Figma `207:11297`. Wired to forgot + reset password APIs.
  */
 export function ResetPasswordPage() {
+  const { t } = useTranslation(['auth', 'validation', 'common'])
+  const { t: tv } = useTranslation('validation')
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const [step, setStep] = useState<1 | 2>(1)
   const [forgot, forgotState] = useForgotPasswordMutation()
   const [reset, resetState] = useResetPasswordMutation()
 
+  const forgotResolver = useMemo(
+    () => yupResolver(createForgotPasswordSchema((key) => tv(key))),
+    [tv],
+  )
+  const resetResolver = useMemo(
+    () => yupResolver(createResetPasswordSchema((key) => tv(key))),
+    [tv],
+  )
+
   const forgotForm = useForm<ForgotPasswordValues>({
-    resolver: yupResolver(forgotPasswordSchema),
+    resolver: forgotResolver,
     defaultValues: { email: '' },
   })
 
   const resetForm = useForm<ResetPasswordValues>({
-    resolver: yupResolver(resetPasswordSchema),
+    resolver: resetResolver,
     defaultValues: {
       email: '',
       code: '',
@@ -50,19 +62,19 @@ export function ResetPasswordPage() {
       await forgot(values).unwrap()
       resetForm.setValue('email', values.email)
       setStep(2)
-      dispatch(toastPushed('success', 'If that email exists, a code is on its way'))
+      dispatch(toastPushed('success', t('auth:reset.codeSent')))
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not start reset')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('auth:reset.forgotError'))))
     }
   }
 
   async function onReset(values: ResetPasswordValues) {
     try {
       await reset(values).unwrap()
-      dispatch(toastPushed('success', 'Password updated — sign in'))
+      dispatch(toastPushed('success', t('auth:reset.success')))
       navigate('/sign-in')
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not reset password')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('auth:reset.error'))))
     }
   }
 
@@ -79,7 +91,7 @@ export function ResetPasswordPage() {
           className="flex items-center gap-[5px] text-[14px] font-semibold text-ink-secondary"
         >
           <ArrowLeftIcon size={14} />
-          Back to sign in
+          {t('auth:reset.backToSignIn')}
         </Link>
       </header>
 
@@ -99,7 +111,7 @@ export function ResetPasswordPage() {
                   step === 1 ? 'text-ink-primary' : 'text-ink-secondary',
                 )}
               >
-                1 · Request the link
+                {t('auth:reset.step1')}
               </p>
             </div>
             <div className="flex min-w-0 flex-1 flex-col">
@@ -115,18 +127,18 @@ export function ResetPasswordPage() {
                   step === 2 ? 'text-ink-primary' : 'text-ink-disabled',
                 )}
               >
-                2 · New password
+                {t('auth:reset.step2')}
               </p>
             </div>
           </div>
 
           {step === 1 ? (
             <>
-              <h1 className="mt-[22px] text-[34px] leading-[1.05] font-extrabold tracking-[-1.02px] text-ink-primary">
-                Forgot your password? Happens.
+              <h1 className="mt-[22px] text-[28px] leading-[1.05] font-extrabold tracking-[-1.02px] text-ink-primary sm:text-[34px] lg:text-[42px]">
+                {t('auth:reset.forgotTitle')}
               </h1>
               <p className="mt-[10px] text-[15px] leading-[1.55] text-ink-secondary">
-                Tell us your email and we&apos;ll send a code to set a new one.
+                {t('auth:reset.forgotSubtitle')}
               </p>
 
               <form
@@ -137,7 +149,7 @@ export function ResetPasswordPage() {
                 onSubmit={forgotForm.handleSubmit(onForgot)}
               >
                 <Field
-                  label="Email address"
+                  label={t('auth:reset.email')}
                   htmlFor="reset-email"
                   error={forgotForm.formState.errors.email?.message}
                 >
@@ -155,22 +167,21 @@ export function ResetPasswordPage() {
                   loading={busy}
                   className="mt-lg h-[50px] w-full rounded-[25px] text-[15px] font-bold"
                 >
-                  Email me the code
+                  {t('auth:reset.sendCode')}
                 </Button>
 
                 <p className="mt-[14px] text-[12.5px] leading-[1.5] text-ink-muted">
-                  For your privacy we say the same thing whether or not an account exists at that
-                  address.
+                  {t('auth:reset.privacyNote')}
                 </p>
               </form>
             </>
           ) : (
             <>
-              <h1 className="mt-[22px] text-[34px] leading-[1.05] font-extrabold tracking-[-1.02px] text-ink-primary">
-                Set a new password
+              <h1 className="mt-[22px] text-[28px] leading-[1.05] font-extrabold tracking-[-1.02px] text-ink-primary sm:text-[34px] lg:text-[42px]">
+                {t('auth:reset.title')}
               </h1>
               <p className="mt-[10px] text-[15px] leading-[1.55] text-ink-secondary">
-                Enter the code from your email, then choose a new password (at least 8 characters).
+                {t('auth:reset.subtitle')}
               </p>
 
               <form
@@ -182,7 +193,7 @@ export function ResetPasswordPage() {
               >
                 <div className="flex flex-col gap-[14px]">
                   <Field
-                    label="Reset code"
+                    label={t('auth:reset.code')}
                     htmlFor="reset-code"
                     error={resetForm.formState.errors.code?.message}
                   >
@@ -195,7 +206,7 @@ export function ResetPasswordPage() {
                     />
                   </Field>
                   <Field
-                    label="New password"
+                    label={t('auth:reset.password')}
                     htmlFor="reset-new-password"
                     error={resetForm.formState.errors.password?.message}
                   >
@@ -208,7 +219,7 @@ export function ResetPasswordPage() {
                     />
                   </Field>
                   <Field
-                    label="Confirm password"
+                    label={t('auth:reset.confirm')}
                     htmlFor="reset-confirm-password"
                     error={resetForm.formState.errors.password_confirmation?.message}
                   >
@@ -228,11 +239,11 @@ export function ResetPasswordPage() {
                   loading={busy}
                   className="mt-lg h-[50px] w-full rounded-[25px] text-[15px] font-bold"
                 >
-                  Save new password
+                  {t('auth:reset.submit')}
                 </Button>
 
                 <p className="mt-[14px] text-[12.5px] leading-[1.5] text-ink-muted">
-                  After you save, you&apos;ll sign in with the new password on every device.
+                  {t('auth:reset.afterSave')}
                 </p>
               </form>
             </>

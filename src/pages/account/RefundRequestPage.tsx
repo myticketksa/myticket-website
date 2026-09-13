@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { HourglassIcon } from '@/components/icons'
 import { Button, Field, Textarea } from '@/components/ui'
 import { TicketActionHeader } from '@/layouts'
@@ -25,23 +26,23 @@ const STEPS = [
 
 /** Refund request — Figma `207:9879`. */
 export function RefundRequestPage() {
+  const { t } = useTranslation('account')
   const { id = 'winter-nights' } = useParams()
   const ticket = MY_TICKETS.find((item) => item.id === id) ?? MY_TICKETS[0]
 
   return (
     <>
-      <TicketActionHeader label="Request a refund" />
+      <TicketActionHeader label={t('refund.header')} />
       <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-xl px-page-gutter pt-[48px] pb-[96px] lg:flex-row lg:items-start lg:gap-[32px]">
         <div className="min-w-0 flex-1">
-          <h1 className="text-[36px] leading-[1.03] font-extrabold tracking-[-1.26px] text-ink-primary sm:text-[44px] sm:tracking-[-1.54px]">
-            Can&apos;t make it? Get your money back.
+          <h1 className="text-heading-h1 text-ink-primary">
+            {t('refund.title')}
           </h1>
           <p className="mt-[10px] max-w-[560px] text-[16px] leading-normal text-ink-secondary">
-            You&apos;re inside the free cancellation window. The refund goes to your MyTicket
-            wallet, where you can spend it or withdraw it to your bank.
+            {t('refund.subtitle')}
           </p>
 
-          <div className="mt-[30px] flex items-center gap-md rounded-[16px] border border-border-default bg-bg-tint-brand px-[18px] py-[14px]">
+          <div className="mt-[30px] flex flex-col gap-sm rounded-[16px] border border-border-default bg-bg-tint-brand px-[18px] py-[14px] sm:flex-row sm:items-center sm:gap-md">
             <HourglassIcon size={16} weight="bold" className="shrink-0 text-ink-brand-strong" />
             <p className="min-w-0 flex-1 text-[13.5px] text-ink-secondary">
               <span className="font-bold text-ink-brand-strong">
@@ -49,7 +50,9 @@ export function RefundRequestPage() {
               </span>{' '}
               — set by the organizer for this event.
             </p>
-            <p className="shrink-0 text-[15px] font-extrabold text-ink-brand-strong">1d 21:16 left</p>
+            <p className="self-start text-[15px] font-extrabold text-ink-brand-strong sm:shrink-0">
+              1d 21:16 left
+            </p>
           </div>
 
           <div className="mt-lg flex flex-col gap-xl rounded-[20px] border border-border-default bg-surface-default p-[26px]">
@@ -83,8 +86,8 @@ export function RefundRequestPage() {
             <Field
               label={
                 <>
-                  Tell us why{' '}
-                  <span className="font-medium text-ink-muted">— optional, helps the organizer</span>
+                  {t('refund.reasonLabel')}{' '}
+                  <span className="font-medium text-ink-muted">{t('refund.reasonOptional')}</span>
                 </>
               }
               htmlFor="refund-reason"
@@ -93,7 +96,7 @@ export function RefundRequestPage() {
                 id="refund-reason"
                 rows={3}
                 className="min-h-[80px]"
-                placeholder="e.g. Travel plans changed…"
+                placeholder={t('refund.reasonPlaceholder')}
               />
             </Field>
 
@@ -105,12 +108,12 @@ export function RefundRequestPage() {
             </p>
 
             <div className="flex flex-wrap items-center gap-md">
-              <Button size="lg">Request SAR 266.00 back</Button>
+              <Button size="lg">{t('refund.cta', { amount: '266.00' })}</Button>
               <Link
                 to={`/my-tickets/${ticket.id}`}
                 className="inline-flex h-[50px] items-center px-[18px] text-[14px] font-medium text-ink-secondary hover:text-ink-brand"
               >
-                Keep my ticket
+                {t('refund.keepTicket')}
               </Link>
             </div>
           </div>
