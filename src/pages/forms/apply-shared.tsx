@@ -25,12 +25,12 @@ export function AccountDonePanel({
   title?: string
   subtitle: ReactNode
 }) {
+  const { t } = useTranslation('forms')
   const user = useAppSelector(selectAuthUser)
-  const displayName = user?.name?.trim() || 'your account'
+  const displayName = user?.name?.trim() || t('accountDone.fallbackName')
   const firstName = displayName.split(/\s+/)[0] || displayName
   const resolvedInitials = initials ?? (user?.name ? initialsFromName(user.name) : '—')
-  const resolvedTitle =
-    title ?? `This part's already done — you're signed in as ${firstName}.`
+  const resolvedTitle = title ?? t('accountDone.title', { name: firstName })
 
   return (
     <div className="flex gap-[16px] rounded-[16px] border border-state-success-border bg-state-success-tint px-[20px] py-[18px]">

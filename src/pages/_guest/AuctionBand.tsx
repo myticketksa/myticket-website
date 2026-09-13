@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowRightIcon } from '@/components/icons'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
@@ -61,7 +62,7 @@ export function PromoBand({
         )}
       >
         {ctaLabel}
-        <ArrowRightIcon size={15} />
+        <ArrowRightIcon size={15} className="rtl:rotate-180" />
       </Link>
     </div>
   )
@@ -69,12 +70,13 @@ export function PromoBand({
 
 /** Events listing AuctionBand — Figma `207:4788`. */
 export function AuctionBand() {
+  const { t } = useTranslation('catalog')
   return (
     <PageSection padTop={88} padBottom={96}>
       <PromoBand
-        heading="Missed a sold-out show?"
-        body="Fans resell their tickets through the MyTicket auction — verified transfers, money held safely until the ticket is in your name."
-        ctaLabel="Browse the auction"
+        heading={t('pages.auctionBandTitle')}
+        body={t('pages.auctionBandBody')}
+        ctaLabel={t('pages.auctionBandCta')}
         ctaTo="/auctions"
         tone="inverse"
       />

@@ -8,10 +8,22 @@
     "buildingSomething": "Building something?",
     "becomeBusiness": "Become a business",
     "stats": [
-      { "value": "2.1M", "label": "guests with an account" },
-      { "value": "1,400+", "label": "events ticketed this year" },
-      { "value": "13", "label": "regions with live events" },
-      { "value": "5,000+", "label": "talents reviewed" }
+      {
+        "value": "2.1M",
+        "label": "guests with an account"
+      },
+      {
+        "value": "1,400+",
+        "label": "events ticketed this year"
+      },
+      {
+        "value": "13",
+        "label": "regions with live events"
+      },
+      {
+        "value": "5,000+",
+        "label": "talents reviewed"
+      }
     ],
     "cards": [
       {
@@ -30,9 +42,18 @@
         "title": "Where we are",
         "body": "Built in Riyadh, operating across all of Saudi Arabia, in Arabic and English. Prices in Saudi Riyals, support every day from 9:00 to 01:00 AST.",
         "links": [
-          { "label": "Help centre", "href": "/help" },
-          { "label": "Talk to us", "href": "/support/new" },
-          { "label": "Terms & privacy", "href": "/legal" }
+          {
+            "label": "Help centre",
+            "href": "/help"
+          },
+          {
+            "label": "Talk to us",
+            "href": "/support/new"
+          },
+          {
+            "label": "Terms & privacy",
+            "href": "/legal"
+          }
         ]
       }
     ]
@@ -49,12 +70,30 @@
     "emailSupport": "Email support",
     "quickLinks": "Quick links",
     "quickLinkItems": [
-      { "label": "Find my ticket", "href": "/my-tickets" },
-      { "label": "Check a refund", "href": "/my-tickets" },
-      { "label": "Track a business request", "href": "/become-business" },
-      { "label": "Change my notifications", "href": "/settings" },
-      { "label": "How the auction works", "href": "/auctions" },
-      { "label": "Follow my support cases", "href": "/support" }
+      {
+        "label": "Find my ticket",
+        "href": "/my-tickets"
+      },
+      {
+        "label": "Check a refund",
+        "href": "/my-tickets"
+      },
+      {
+        "label": "Track a business request",
+        "href": "/become-business"
+      },
+      {
+        "label": "Change my notifications",
+        "href": "/settings"
+      },
+      {
+        "label": "How the auction works",
+        "href": "/auctions"
+      },
+      {
+        "label": "Follow my support cases",
+        "href": "/support"
+      }
     ],
     "reportTitle": "Report a problem with an event",
     "reportBody": "Cancelled, moved, or not as described? Tell us and we'll take it up with the organizer.",
@@ -323,9 +362,18 @@
     "lede": "Sell tickets to the audience already browsing MyTicket. {{role}} accounts are created after an office contract — not through a self-serve form.",
     "imageryLabel": "Imagery — organizer at a sold-out show",
     "stats": [
-      { "value": "1,400+", "label": "events sold this year" },
-      { "value": "2.1M", "label": "guests buying on MyTicket" },
-      { "value": "Office", "label": "contract then account" }
+      {
+        "value": "1,400+",
+        "label": "events sold this year"
+      },
+      {
+        "value": "2.1M",
+        "label": "guests buying on MyTicket"
+      },
+      {
+        "value": "Office",
+        "label": "contract then account"
+      }
     ],
     "benefits": [
       {
@@ -342,17 +390,44 @@
       }
     ],
     "steps": [
-      { "title": "Talk to us", "body": "Reach partnerships — office visit and contract come first." },
-      { "title": "Sign the agreement", "body": "Terms are set in person with our team." },
-      { "title": "We create your account", "body": "Admin provisions the organizer workspace after the contract." },
-      { "title": "Build your event", "body": "Venue, tickets, seat plan, refund policy — in your workspace." },
-      { "title": "Run the night, get paid", "body": "QR at the gate, sales on your phone, payouts on schedule." }
+      {
+        "title": "Talk to us",
+        "body": "Reach partnerships — office visit and contract come first."
+      },
+      {
+        "title": "Sign the agreement",
+        "body": "Terms are set in person with our team."
+      },
+      {
+        "title": "We create your account",
+        "body": "Admin provisions the organizer workspace after the contract."
+      },
+      {
+        "title": "Build your event",
+        "body": "Venue, tickets, seat plan, refund policy — in your workspace."
+      },
+      {
+        "title": "Run the night, get paid",
+        "body": "QR at the gate, sales on your phone, payouts on schedule."
+      }
     ],
     "moneyRows": [
-      { "label": "Listing an event", "value": "Free" },
-      { "label": "Platform fee", "value": "5% per ticket — paid by the buyer, shown separately" },
-      { "label": "Payouts", "value": "Weekly, to your bank" },
-      { "label": "Refunds", "value": "Your policy, executed by us" }
+      {
+        "label": "Listing an event",
+        "value": "Free"
+      },
+      {
+        "label": "Platform fee",
+        "value": "5% per ticket — paid by the buyer, shown separately"
+      },
+      {
+        "label": "Payouts",
+        "value": "Weekly, to your bank"
+      },
+      {
+        "label": "Refunds",
+        "value": "Your policy, executed by us"
+      }
     ],
     "moneyFootnote": "All ticket money flows through MyTicket — buyers never pay you directly, and every riyal is accounted for in your dashboard.",
     "needItems": [
@@ -389,9 +464,18 @@
     "lede": "Sound, light, catering, security, staging — submit a {{role}} request for our team to review. If accepted, we reach out outside the platform when a match comes up. You stay a guest on MyTicket.",
     "imageryLabel": "Imagery — crew rigging a stage",
     "stats": [
-      { "value": "2–5 days", "label": "typical admin review" },
-      { "value": "Guest", "label": "login stays unchanged" },
-      { "value": "Off-platform", "label": "contact after accept" }
+      {
+        "value": "2–5 days",
+        "label": "typical admin review"
+      },
+      {
+        "value": "Guest",
+        "label": "login stays unchanged"
+      },
+      {
+        "value": "Off-platform",
+        "label": "contact after accept"
+      }
     ],
     "benefits": [
       {
@@ -408,17 +492,41 @@
       }
     ],
     "steps": [
-      { "title": "Submit", "body": "Short form from your guest account — licence and work photos help." },
-      { "title": "Get reviewed", "body": "Credentials checked, decision in 2–5 working days." },
-      { "title": "Track status", "body": "Follow pending / accepted / rejected on your account." },
-      { "title": "We reach out", "body": "If accepted, contact happens outside the platform when needed." },
-      { "title": "Keep being a guest", "body": "Tickets, wallet and reviews never change with this request." }
+      {
+        "title": "Submit",
+        "body": "Short form from your guest account — licence and work photos help."
+      },
+      {
+        "title": "Get reviewed",
+        "body": "Credentials checked, decision in 2–5 working days."
+      },
+      {
+        "title": "Track status",
+        "body": "Follow pending / accepted / rejected on your account."
+      },
+      {
+        "title": "We reach out",
+        "body": "If accepted, contact happens outside the platform when needed."
+      },
+      {
+        "title": "Keep being a guest",
+        "body": "Tickets, wallet and reviews never change with this request."
+      }
     ],
     "decisionHighlight": "decision in 2–5 working days.",
     "moneyRows": [
-      { "label": "Submitting a request", "value": "Free" },
-      { "label": "Separate login role", "value": "None — guest only" },
-      { "label": "In-app booking", "value": "Not available" }
+      {
+        "label": "Submitting a request",
+        "value": "Free"
+      },
+      {
+        "label": "Separate login role",
+        "value": "None — guest only"
+      },
+      {
+        "label": "In-app booking",
+        "value": "Not available"
+      }
     ],
     "moneyFootnote": "MyTicket reviews your request for our own roster. There is no organizer browse-and-book flow or commission on off-platform work.",
     "needItems": [
@@ -455,9 +563,18 @@
     "lede": "Submit a {{role}} request for admin review. Guests can still see a limited public profile (avatar, name, craft, rate) — booking and contact happen outside the platform.",
     "imageryLabel": "Imagery — performer on stage",
     "stats": [
-      { "value": "2–5 days", "label": "typical admin review" },
-      { "value": "Guest", "label": "login stays unchanged" },
-      { "value": "Off-platform", "label": "contact after accept" }
+      {
+        "value": "2–5 days",
+        "label": "typical admin review"
+      },
+      {
+        "value": "Guest",
+        "label": "login stays unchanged"
+      },
+      {
+        "value": "Off-platform",
+        "label": "contact after accept"
+      }
     ],
     "benefits": [
       {
@@ -474,17 +591,41 @@
       }
     ],
     "steps": [
-      { "title": "Submit", "body": "Short form — portfolio is the heart of it." },
-      { "title": "Get reviewed", "body": "ID checked, profile reviewed, decision in 2–5 working days." },
-      { "title": "Track status", "body": "Follow pending / accepted / rejected on your account." },
-      { "title": "We reach out", "body": "If accepted, contact happens outside MyTicket when needed." },
-      { "title": "Keep being a guest", "body": "Tickets, wallet and reviews never change with this request." }
+      {
+        "title": "Submit",
+        "body": "Short form — portfolio is the heart of it."
+      },
+      {
+        "title": "Get reviewed",
+        "body": "ID checked, profile reviewed, decision in 2–5 working days."
+      },
+      {
+        "title": "Track status",
+        "body": "Follow pending / accepted / rejected on your account."
+      },
+      {
+        "title": "We reach out",
+        "body": "If accepted, contact happens outside MyTicket when needed."
+      },
+      {
+        "title": "Keep being a guest",
+        "body": "Tickets, wallet and reviews never change with this request."
+      }
     ],
     "decisionHighlight": "decision in 2–5 working days.",
     "moneyRows": [
-      { "label": "Submitting a request", "value": "Free" },
-      { "label": "Separate login role", "value": "None — guest only" },
-      { "label": "In-app booking", "value": "Not available" }
+      {
+        "label": "Submitting a request",
+        "value": "Free"
+      },
+      {
+        "label": "Separate login role",
+        "value": "None — guest only"
+      },
+      {
+        "label": "In-app booking",
+        "value": "Not available"
+      }
     ],
     "moneyFootnote": "MyTicket reviews your request for our own roster. Fees and contracts after contact are agreed off-platform.",
     "needItems": [
@@ -547,5 +688,13 @@
     "forOrganizersLink": "for organizers",
     "alreadyAccount": "Already have an account?",
     "signIn": "Sign in"
+  },
+  "shell": {
+    "benefitsTitle": "What the role unlocks",
+    "stepsTitle": "Start to finish",
+    "moneyTitle": "The money, plainly",
+    "needsTitle": "What the application needs",
+    "noteLead": "Review comes first.",
+    "faqTitle": "Asked most often"
   }
 }

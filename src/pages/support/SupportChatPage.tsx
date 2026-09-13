@@ -11,28 +11,7 @@ import {
   useSendChatMessageMutation,
 } from '@/app/api/accountApis'
 
-const FALLBACK_MESSAGES = [
-  {
-    from: 'you' as const,
-    body: 'Hi — I bought tickets but never got the confirmation email.',
-    meta: 'You · 21:32',
-  },
-  {
-    from: 'agent' as const,
-    body: 'Happy to help! Can you share the email address you used at checkout? No password — just the address.',
-    meta: 'Khalid · 21:33',
-  },
-  {
-    from: 'you' as const,
-    body: 'sara@email.com',
-    meta: 'You · 21:34',
-  },
-  {
-    from: 'agent' as const,
-    body: "Found it — order MT-2026-84193, 2 × Gold for Winter Nights. The email bounced, but your tickets are safe in your account under My tickets. I've re-sent the confirmation now. Anything else?",
-    meta: 'Khalid · 21:35',
-  },
-] as const
+const FALLBACK_FROM = ['you', 'agent', 'you', 'agent'] as const
 
 const QUICK_LINK_IDS = ['refund', 'qr', 'waitlists', 'gift'] as const
 
@@ -42,19 +21,26 @@ type ChatMessage = {
   meta: string
 }
 
-function mapChatMessage(record: Record<string, unknown>, index: number): ChatMessage {
-  const fallback = FALLBACK_MESSAGES[index % FALLBACK_MESSAGES.length]
+function mapChatMessage(
+  record: Record<string, unknown>,
+  labels: { you: string; agent: string },
+  fallback: ChatMessage,
+): ChatMessage {
   const sender = String(record.sender ?? record.from ?? record.role ?? '').toLowerCase()
   const from: ChatMessage['from'] =
     sender.includes('user') || sender.includes('you') || sender.includes('guest')
       ? 'you'
       : 'agent'
-  const author = String(record.author ?? record.agent_name ?? (from === 'you' ? 'You' : 'Support'))
+  const author = String(
+    record.author ?? record.agent_name ?? (from === 'you' ? labels.you : labels.agent),
+  )
   const time = String(record.time ?? record.created_at ?? '')
   return {
     from,
     body: String(record.body ?? record.message ?? record.content ?? fallback.body),
-    meta: time ? `${author} · ${time}` : `${author} · ${fallback.meta.split('·').pop()?.trim()}`,
+    meta: time
+      ? `${author} · ${time}`
+      : `${author} · ${fallback.meta.split('·').pop()?.trim() ?? ''}`,
   }
 }
 
@@ -87,10 +73,43 @@ export function SupportChatPage() {
     void markRead({ chatIds: [Number(chatId)] })
   }, [chatId, markRead])
 
+  const labels = useMemo(
+    () => ({ you: t('support.you'), agent: t('support.agent') }),
+    [t],
+  )
+
+  const fallbackMessages = useMemo(() => {
+    const rows = t('support.fallback', { returnObjects: true }) as
+      | { body: string; time: string }[]
+      | string
+    if (!Array.isArray(rows)) return [] as ChatMessage[]
+    return rows.map((row, index) => {
+      const from = FALLBACK_FROM[index] ?? 'agent'
+      const author = from === 'you' ? labels.you : 'Khalid'
+      return {
+        from,
+        body: row.body,
+        meta: `${author} · ${row.time}`,
+      } satisfies ChatMessage
+    })
+  }, [labels.you, t])
+
   const messages = useMemo(() => {
-    if (apiMessages && apiMessages.length > 0) return apiMessages.map(mapChatMessage)
-    return [...FALLBACK_MESSAGES]
-  }, [apiMessages])
+    if (apiMessages && apiMessages.length > 0) {
+      return apiMessages.map((record, index) =>
+        mapChatMessage(
+          record,
+          labels,
+          fallbackMessages[index % Math.max(fallbackMessages.length, 1)] ?? {
+            from: 'agent',
+            body: '',
+            meta: labels.agent,
+          },
+        ),
+      )
+    }
+    return fallbackMessages
+  }, [apiMessages, fallbackMessages, labels])
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -111,7 +130,11 @@ export function SupportChatPage() {
 
   return (
     <>
-      <FunnelHeader label={t('support.chatHeader')} backHref="/help" backLabel="Help centre" />
+      <FunnelHeader
+        label={t('support.chatHeader')}
+        backHref="/help"
+        backLabel={t('support.backHelp')}
+      />
 
       <PageSection padTop={40} padBottom={96}>
         <div className="flex flex-col items-start gap-[28px] lg:flex-row">
@@ -122,20 +145,20 @@ export function SupportChatPage() {
                 <span className="absolute end-0 bottom-0 size-[12px] rounded-full border-2 border-surface-default bg-state-success" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[15.5px] font-bold text-ink-primary">Khalid · MyTicket Support</p>
+                <p className="text-[15.5px] font-bold text-ink-primary">{t('support.agentName')}</p>
                 <p className="text-[12.5px] font-semibold text-state-success">
-                  Online — replies in about a minute
+                  {t('support.agentOnline')}
                 </p>
               </div>
               <Button variant="secondary" size="sm">
-                End chat
+                {t('support.endChat')}
               </Button>
             </div>
 
             <div className="flex flex-1 flex-col gap-[16px] overflow-y-auto bg-bg-page p-[24px]">
               <div className="flex justify-center">
                 <span className="rounded-[12px] border border-border-default bg-surface-default px-[12px] py-[5px] text-[11.5px] font-semibold text-ink-muted">
-                  Today · 21:32 — you&apos;re chatting as a guest of MyTicket
+                  {t('support.guestBanner', { time: '21:32' })}
                 </span>
               </div>
               {messages.map((msg) => (

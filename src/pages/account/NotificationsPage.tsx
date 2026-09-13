@@ -22,13 +22,7 @@ import {
   useMarkNotificationReadMutation,
 } from '@/app/api/accountApis'
 
-const FILTER_DEFS = [
-  { id: 'all', label: 'All' },
-  { id: 'tickets', label: 'Tickets & orders' },
-  { id: 'waitlists', label: 'Waitlists' },
-  { id: 'prices', label: 'Prices & auction' },
-  { id: 'following', label: 'Following' },
-] as const
+const FILTER_IDS = ['all', 'tickets', 'waitlists', 'prices', 'following'] as const
 
 function NotificationIcon({ icon }: { icon: NotificationFixture['icon'] }) {
   const common = 'text-ink-brand'
@@ -146,25 +140,30 @@ export function NotificationsPage() {
   const filters = useMemo(() => {
     if (categories && categories.length > 0) {
       return [
-        { id: 'all', label: 'All', count: unreadCount || undefined },
+        {
+          id: 'all',
+          label: t('account:notifications.filters.all'),
+          count: unreadCount || undefined,
+        },
         ...categories.map((category) => {
           const id = String(category.id ?? category.slug ?? category.name_en)
           const label = String(
-            category.name_en ?? category.name ?? category.label ?? 'Category',
+            category.name_ar ?? category.name_en ?? category.name ?? category.label ?? id,
           )
           const count = Number(category.notifications_count ?? 0) || undefined
           return { id, label, count }
         }),
       ]
     }
-    return FILTER_DEFS.map((item) => ({
-      ...item,
+    return FILTER_IDS.map((id) => ({
+      id,
+      label: t(`account:notifications.filters.${id}`),
       count:
-        item.id === 'all'
+        id === 'all'
           ? unreadCount || undefined
-          : allItems.filter((n) => n.category === item.id && n.unread).length || undefined,
+          : allItems.filter((n) => n.category === id && n.unread).length || undefined,
     }))
-  }, [allItems, categories, unreadCount])
+  }, [allItems, categories, unreadCount, t])
 
   const groups = ['TODAY', 'YESTERDAY', 'EARLIER'] as const
 
@@ -185,11 +184,11 @@ export function NotificationsPage() {
               disabled={markAllState.isLoading || unreadCount === 0}
               onClick={() => void markAllRead()}
             >
-              Mark all as read
+              {t('account:notifications.markAllRead')}
             </Button>
             <Link to="/settings">
               <Button variant="secondary" size="md">
-                Preferences
+                {t('account:notifications.preferences')}
               </Button>
             </Link>
           </>
@@ -240,7 +239,7 @@ export function NotificationsPage() {
             return (
               <section key={group}>
                 <p className="text-[12px] font-extrabold tracking-[1.2px] text-ink-muted uppercase">
-                  {group}
+                  {t(`account:notifications.groups.${group}`)}
                 </p>
                 <ul className="mt-md flex flex-col gap-[10px]">
                   {groupItems.map((item) => (

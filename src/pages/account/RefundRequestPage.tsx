@@ -7,21 +7,9 @@ import { MY_TICKETS } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
 
 const STEPS = [
-  {
-    title: 'Request submitted',
-    body: "You'll get a confirmation straight away, and your ticket pauses from resale or gifting.",
-    active: true,
-  },
-  {
-    title: 'MyTicket reviews it',
-    body: "Usually 1–2 working days. We'll notify you either way.",
-    active: false,
-  },
-  {
-    title: 'SAR 266.00 lands in your wallet',
-    body: 'Withdrawable to your bank, or ready for the next show.',
-    active: false,
-  },
+  { titleKey: 'refund.steps.submittedTitle', bodyKey: 'refund.steps.submittedBody', active: true },
+  { titleKey: 'refund.steps.reviewTitle', bodyKey: 'refund.steps.reviewBody', active: false },
+  { titleKey: 'refund.steps.walletTitle', bodyKey: 'refund.steps.walletBody', active: false },
 ] as const
 
 /** Refund request — Figma `207:9879`. */
@@ -46,39 +34,34 @@ export function RefundRequestPage() {
             <HourglassIcon size={16} weight="bold" className="shrink-0 text-ink-brand-strong" />
             <p className="min-w-0 flex-1 text-[13.5px] text-ink-secondary">
               <span className="font-bold text-ink-brand-strong">
-                Refund window closes Mon 5 Oct, 18:30
+                {t('refund.windowCloses', { when: 'Mon 5 Oct, 18:30' })}
               </span>{' '}
-              — set by the organizer for this event.
+              {t('refund.windowByOrganizer')}
             </p>
             <p className="self-start text-[15px] font-extrabold text-ink-brand-strong sm:shrink-0">
-              1d 21:16 left
+              {t('refund.timeLeft', { time: '1d 21:16' })}
             </p>
           </div>
 
           <div className="mt-lg flex flex-col gap-xl rounded-[20px] border border-border-default bg-surface-default p-[26px]">
             <div>
-              <p className="text-[15px] font-bold text-ink-primary">This event&apos;s refund policy</p>
+              <p className="text-[15px] font-bold text-ink-primary">{t('refund.policyTitle')}</p>
               <p className="mt-[10px] text-[14px] leading-[1.6] text-ink-secondary">
-                &ldquo;Full refund of the ticket price until 48 hours before doors (Mon 5 Oct,
-                18:30). No refunds after that point, except if the event is cancelled or
-                rescheduled. The MyTicket platform fee is not refundable.&rdquo; — Nights
-                Entertainment Co., the organizer.
+                {t('refund.policyBody')}
               </p>
             </div>
 
             <div className="rounded-[14px] border border-border-default bg-bg-page px-[18px] py-lg text-[14px]">
               <div className="flex items-center justify-between gap-md">
-                <span className="text-ink-secondary">
-                  Ticket price · Gold · Floor A · Row C · Seat 12
-                </span>
+                <span className="text-ink-secondary">{t('refund.ticketPrice')}</span>
                 <span className="text-ink-primary">SAR 280.00</span>
               </div>
               <div className="mt-[8px] flex items-center justify-between gap-md">
-                <span className="text-ink-secondary">Platform fee — not refundable</span>
+                <span className="text-ink-secondary">{t('refund.platformFee')}</span>
                 <span className="text-ink-primary">− SAR 14.00</span>
               </div>
               <div className="mt-[8px] flex items-center justify-between gap-md border-t border-border-divider pt-[9px] font-bold">
-                <span className="text-ink-primary">Back to your wallet</span>
+                <span className="text-ink-primary">{t('refund.backToWallet')}</span>
                 <span className="text-state-success">SAR 266.00</span>
               </div>
             </div>
@@ -101,10 +84,9 @@ export function RefundRequestPage() {
             </Field>
 
             <p className="text-[13px] leading-[1.55] text-ink-secondary">
-              MyTicket handles the refund, not the organizer. Requests inside the window are usually
-              approved within <span className="font-bold text-ink-primary">1–2 working days</span>,
-              and the money lands in your wallet as withdrawable balance. Your ticket stays valid
-              until the refund is approved.
+              {t('refund.handleNoteBefore')}{' '}
+              <span className="font-bold text-ink-primary">{t('refund.handleNoteEmphasis')}</span>
+              {t('refund.handleNoteAfter')}
             </p>
 
             <div className="flex flex-wrap items-center gap-md">
@@ -130,7 +112,7 @@ export function RefundRequestPage() {
             </div>
             <div className="px-xl py-[18px]">
               <p className="text-[12px] font-bold tracking-[0.96px] text-ink-brand-mid uppercase">
-                Refunding
+                {t('refund.refundingEyebrow')}
               </p>
               <p className="mt-[5px] text-[20px] leading-[1.15] font-extrabold tracking-[-0.4px] text-ink-primary">
                 {ticket.title}
@@ -146,7 +128,7 @@ export function RefundRequestPage() {
                   <dd className="font-bold text-ink-primary">{ticket.orderId}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-md">
-                  <dt className="text-ink-secondary">Paid with</dt>
+                  <dt className="text-ink-secondary">{t('refund.paidWith')}</dt>
                   <dd className="font-bold text-ink-primary">Wallet + Visa ••4417</dd>
                 </div>
               </dl>
@@ -155,11 +137,11 @@ export function RefundRequestPage() {
 
           <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
             <p className="text-[15px] font-semibold text-ink-primary">
-              What happens after you submit
+              {t('refund.whatHappens')}
             </p>
             <ol className="mt-md flex flex-col">
               {STEPS.map((step, index) => (
-                <li key={step.title} className="flex gap-md">
+                <li key={step.titleKey} className="flex gap-md">
                   <div className="flex w-[10px] shrink-0 flex-col items-center pt-[4px]">
                     <span
                       className={cn(
@@ -174,9 +156,11 @@ export function RefundRequestPage() {
                     )}
                   </div>
                   <div className={cn('min-w-0 pb-lg', index === STEPS.length - 1 && 'pb-0')}>
-                    <p className="text-[13.5px] font-bold text-ink-primary">{step.title}</p>
+                    <p className="text-[13.5px] font-bold text-ink-primary">
+                      {t(step.titleKey, { amount: '266.00' })}
+                    </p>
                     <p className="mt-[2px] text-[12.5px] leading-[1.5] text-ink-secondary">
-                      {step.body}
+                      {t(step.bodyKey)}
                     </p>
                   </div>
                 </li>
@@ -186,15 +170,15 @@ export function RefundRequestPage() {
 
           <div className="rounded-[16px] border border-border-default bg-bg-page px-[18px] py-lg">
             <p className="text-[13px] leading-[1.55] text-ink-secondary">
-              <span className="font-bold text-ink-primary">Rather not lose the fee?</span> If the
-              show is in demand, you might get more by{' '}
+              <span className="font-bold text-ink-primary">{t('refund.ratherTitle')}</span>{' '}
+              {t('refund.ratherBefore')}{' '}
               <Link
                 to={`/my-tickets/${ticket.id}/resell`}
                 className="text-ink-brand hover:text-ink-brand-mid"
               >
-                listing it on the resale auction
+                {t('refund.ratherLink')}
               </Link>{' '}
-              — you&apos;d receive 90% of the sale price.
+              {t('refund.ratherAfter')}
             </p>
           </div>
         </aside>

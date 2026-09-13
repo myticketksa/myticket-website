@@ -35,7 +35,27 @@
     "topUpFailed": "Top-up failed",
     "pendingNote": "Cashback clears the day after Winter Nights.",
     "earnedNote": "Cashback and resale, across 6 nights out.",
-    "activity": "Activity"
+    "activity": "Activity",
+    "filters": {
+      "all": "All",
+      "moneyIn": "Money in",
+      "moneyOut": "Money out",
+      "pending": "Pending"
+    },
+    "withdrawTitle": "Withdraw to your bank",
+    "withdrawBody": "Payouts land in 2–3 working days. Minimum SAR 50.",
+    "verifiedAccount": "Verified account",
+    "requestWithdrawal": "Request a withdrawal",
+    "paymentMethods": "Payment methods",
+    "cardDefault": "Default · expires {{date}}",
+    "cardExpires": "Expires {{date}}",
+    "addCard": "Add a card",
+    "cashbackTitle": "How cashback works",
+    "cashbackBody": "Earn on eligible nights. Pending amounts clear the day after the event.",
+    "cashbackGuide": "Read the guide →",
+    "statusCleared": "Cleared",
+    "statusPending": "Pending",
+    "exportCsv": "Export CSV"
   },
   "tickets": {
     "title": "My tickets",
@@ -44,7 +64,39 @@
     "emptyBody": "When you book a night, your QR codes and seat details will show up here.",
     "emptyCta": "Browse events",
     "tabEmptyTitle": "Nothing in this tab",
-    "tabEmptyBody": "Try another tab — your other tickets are still here."
+    "tabEmptyBody": "Try another tab — your other tickets are still here.",
+    "tabUpcoming": "Upcoming",
+    "tabPast": "Past",
+    "tabTransferred": "Transferred",
+    "tabListed": "Listed for resale",
+    "refreshError": "Could not refresh tickets right now.",
+    "updating": "Updating…",
+    "addToWallet": "Add all to Apple Wallet",
+    "sellTicket": "Sell a ticket",
+    "orderLabel": "Order {{id}}",
+    "showQr": "Show QR",
+    "transferGuest": "Transfer to a guest",
+    "listAuction": "List on the auction",
+    "requestRefund": "Request a refund",
+    "cantMakeTitle": "Can't make a night?",
+    "cantMakeBody": "Transfer the ticket to a friend for free, or list it on the auction — MyTicket handles the money and takes 10% from the sale.",
+    "howResale": "How resale works",
+    "paymentPending": "Payment pending",
+    "facts": {
+      "tier": "Tier",
+      "row": "Row",
+      "seats": "Seats",
+      "gate": "Gate"
+    },
+    "status": {
+      "UPCOMING": "Upcoming",
+      "AWAITING SEAT": "Awaiting seat",
+      "PAST": "Past",
+      "TRANSFERRED": "Transferred",
+      "LISTED": "Listed",
+      "CONFIRMED": "Confirmed",
+      "INSTALMENTS": "Instalments"
+    }
   },
   "ticket": {
     "backToTicket": "Back to ticket",
@@ -153,7 +205,31 @@
     "cta": "List it on the auction",
     "keepTicket": "Keep my ticket",
     "success": "Listing submitted",
-    "error": "Could not list ticket"
+    "error": "Could not list ticket",
+    "endsIn12h": "In 12 hours",
+    "endsIn24h": "In 24 hours",
+    "endsIn2d": "In 2 days",
+    "endsLatest": "Mon 5 Oct · latest",
+    "waitlistPeople": "People on the waitlist",
+    "similarSold": "Similar seats sold this week",
+    "activeListings": "Active listings for this event",
+    "youReceive": "You receive",
+    "platformFee": "Platform fee (10%)",
+    "startingAt": "Starting bid",
+    "closeNote": "Listings always close at least 6 hours before doors, so the buyer can plan their night.",
+    "ifSells": "If it sells at your starting bid",
+    "commission": "MyTicket commission · 10%",
+    "youReceiveAtLeast": "You receive at least",
+    "paidNote": "You paid SAR {{paid}} for this ticket. Bids can't climb past your starting price — you keep 90% of wherever it lands.",
+    "rulesTitle": "The rules, plainly",
+    "ruleCancelBefore": "You can cancel the listing any time",
+    "ruleCancelEmphasis": "until the first bid lands",
+    "ruleCancelAfter": "— after that it must run its course.",
+    "ruleWhileListed": "While listed, the ticket can't be used, gifted, or refunded.",
+    "ruleSold": "Sold: it transfers to the buyer and your QR stops working. Unsold: it comes back to you, still valid for the night.",
+    "faceValue": "Face value",
+    "soldOut": "This event sold out",
+    "demandTitle": "Demand right now"
   },
   "refund": {
     "header": "Request a refund",
@@ -165,7 +241,33 @@
     "reasonOptional": "— optional, helps the organizer",
     "success": "Refund request submitted",
     "error": "Could not submit refund",
-    "reasonPlaceholder": "e.g. Travel plans changed…"
+    "reasonPlaceholder": "e.g. Travel plans changed…",
+    "windowCloses": "Refund window closes {{when}}",
+    "steps": {
+      "submittedTitle": "Request submitted",
+      "submittedBody": "You'll get a confirmation straight away, and your ticket pauses from resale or gifting.",
+      "reviewTitle": "MyTicket reviews it",
+      "reviewBody": "Usually 1–2 working days. We'll notify you either way.",
+      "walletTitle": "SAR {{amount}} lands in your wallet",
+      "walletBody": "Withdrawable to your bank, or ready for the next show."
+    },
+    "windowByOrganizer": "— set by the organizer for this event.",
+    "timeLeft": "{{time}} left",
+    "policyTitle": "This event's refund policy",
+    "policyBody": "\"Full refund of the ticket price until 48 hours before doors (Mon 5 Oct, 18:30). No refunds after that point, except if the event is cancelled or rescheduled. The MyTicket platform fee is not refundable.\" — Nights Entertainment Co., the organizer.",
+    "ticketPrice": "Ticket price · Gold · Floor A · Row C · Seat 12",
+    "platformFee": "Platform fee — not refundable",
+    "backToWallet": "Back to your wallet",
+    "handleNoteBefore": "MyTicket handles the refund, not the organizer. Requests inside the window are usually approved within",
+    "handleNoteEmphasis": "1–2 working days",
+    "handleNoteAfter": ", and the money lands in your wallet as withdrawable balance. Your ticket stays valid until the refund is approved.",
+    "refundingEyebrow": "Refunding",
+    "ratherTitle": "Rather not lose the fee?",
+    "ratherBefore": "If the show is in demand, you might get more by",
+    "ratherLink": "listing it on the resale auction",
+    "ratherAfter": "— you'd receive 90% of the sale price.",
+    "whatHappens": "What happens next",
+    "paidWith": "Paid with"
   },
   "saved": {
     "title": "Saved",
@@ -178,7 +280,30 @@
     "waitlistsEmptyBody": "When you join a sold-out waitlist, it will appear in this tab.",
     "followingEmptyTitle": "Not following anyone yet",
     "followingEmptyBody": "Follow an artist or organizer and they will appear in this tab.",
-    "removeAria": "Remove from saved"
+    "removeAria": "Remove from saved",
+    "notificationSettings": "Notification settings",
+    "segments": {
+      "favourites": "Favourites",
+      "waitlists": "Waitlists",
+      "following": "Following"
+    },
+    "filters": {
+      "all": "All",
+      "events": "Events",
+      "experiences": "Experiences",
+      "talents": "Talents"
+    },
+    "kinds": {
+      "Event": "Event",
+      "Experience": "Experience",
+      "Talent": "Talent",
+      "Vendor": "Vendor"
+    },
+    "cta": {
+      "tickets": "Get tickets",
+      "visit": "Book a visit",
+      "profile": "View profile"
+    }
   },
   "notifications": {
     "title": "Notifications",
@@ -189,7 +314,21 @@
     "filterEmptyTitle": "Nothing in this filter",
     "filterEmptyBody": "Try another category — your other alerts are still in the inbox.",
     "inboxSubtitle": "{{unread}} unread · {{total}} in your inbox",
-    "dismissAria": "Dismiss"
+    "dismissAria": "Dismiss",
+    "markAllRead": "Mark all as read",
+    "preferences": "Preferences",
+    "filters": {
+      "all": "All",
+      "tickets": "Tickets & orders",
+      "waitlists": "Waitlists",
+      "prices": "Prices & auction",
+      "following": "Following"
+    },
+    "groups": {
+      "TODAY": "Today",
+      "YESTERDAY": "Yesterday",
+      "EARLIER": "Earlier"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -293,6 +432,34 @@
         "desc": "Downloads and delete",
         "tag": "Manage"
       }
+    },
+    "memberMeta": "{{city}} · Member since {{since}} · {{count}} events attended",
+    "upcoming": "Upcoming",
+    "attended": "Attended",
+    "wallet": "Wallet",
+    "editProfile": "Edit profile",
+    "nextNights": "Your next nights out",
+    "nextNightsMeta": "{{count}} tickets waiting · the nearest one is in {{days}} days",
+    "seeAllTickets": "See all tickets →",
+    "showQr": "Show QR",
+    "manage": "Manage",
+    "auctionActivity": "Auction activity",
+    "seeAll": "See all",
+    "savedForLater": "Saved for later",
+    "becomeBusiness": "Become a business",
+    "seeAllSaved": "See all {{count}} saved →",
+    "settingsTitle": "Account & settings",
+    "settingsSubtitle": "Everything about how you sign in, pay and get notified.",
+    "openSettings": "Open settings →",
+    "becomeBusinessBody": "Vendor or talent request — submit once, track admin review. Organizer partnership is arranged through our office.",
+    "apply": "Apply",
+    "signedInDevice": "Signed in on this device since {{when}} · {{device}}",
+    "manageDevices": "Manage devices",
+    "inDays": "In {{count}} days",
+    "auctionStatuses": {
+      "noBidsYet": "No bids yet",
+      "winning": "Winning",
+      "outbid": "Outbid"
     }
   },
   "aside": {
@@ -349,7 +516,9 @@
     "placeholder": "What stood out — entry, sound, seats, the night itself.",
     "hint": "Tap the stars to start — a score is all that's required, words are up to you. You can change anything for 30 days after posting.",
     "editUnavailable": "Edit not available yet",
-    "viewEvent": "View event"
+    "viewEvent": "View event",
+    "writeIt": "Write it",
+    "yourScore": "Your score"
   },
   "submissions": {
     "title": "Places you've added",
@@ -375,7 +544,8 @@
     "subtitle": "Tickets you're selling and seats you're chasing, in one place. We'll nudge you the second anything changes.",
     "browse": "Browse auctions",
     "selling": "Selling",
-    "bidding": "Bidding"
+    "bidding": "Bidding",
+    "endsIn": "Ends in"
   },
   "support": {
     "casesTitle": "Support cases",
@@ -445,6 +615,31 @@
     },
     "tagIssue": "Issue",
     "tagComplaint": "Complaint",
-    "defaultSubject": "Support request"
+    "defaultSubject": "Support request",
+    "backHelp": "Help centre",
+    "agentName": "Khalid · MyTicket Support",
+    "agentOnline": "Online — replies in about a minute",
+    "endChat": "End chat",
+    "guestBanner": "Today · {{time}} — you're chatting as a guest of MyTicket",
+    "you": "You",
+    "agent": "Support",
+    "fallback": [
+      {
+        "body": "Hi — I bought tickets but never got the confirmation email.",
+        "time": "21:32"
+      },
+      {
+        "body": "Happy to help! Can you share the email address you used at checkout? No password — just the address.",
+        "time": "21:33"
+      },
+      {
+        "body": "sara@email.com",
+        "time": "21:34"
+      },
+      {
+        "body": "Found it — order MT-2026-84193, 2 × Gold for Winter Nights. The email bounced, but your tickets are safe in your account under My tickets. I've re-sent the confirmation now. Anything else?",
+        "time": "21:35"
+      }
+    ]
   }
 }

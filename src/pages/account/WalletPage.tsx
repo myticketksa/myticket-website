@@ -52,19 +52,20 @@ function mapWalletTxn(record: Record<string, unknown>, index: number): WalletTxn
   }
 }
 
-const FILTERS = ['All', 'Money in', 'Money out', 'Pending'] as const
+const FILTER_IDS = ['all', 'moneyIn', 'moneyOut', 'pending'] as const
 
 function WalletAside() {
+  const { t } = useTranslation('account')
   return (
     <div className="flex flex-col gap-[14px]">
       <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
-        <p className="text-[15px] font-semibold text-ink-primary">Withdraw to your bank</p>
+        <p className="text-[15px] font-semibold text-ink-primary">{t('wallet.withdrawTitle')}</p>
         <p className="mt-xs text-[13px] leading-[1.5] text-ink-secondary">
-          Payouts land in 2–3 working days. Minimum SAR 50.
+          {t('wallet.withdrawBody')}
         </p>
         <div className="mt-[14px] rounded-[14px] border border-border-default bg-bg-page p-[14px]">
           <p className="text-[12px] font-bold tracking-[0.06em] text-ink-muted uppercase">
-            Verified account
+            {t('wallet.verifiedAccount')}
           </p>
           <p className="mt-[5px] text-[14px] font-semibold text-ink-primary">
             Al Rajhi Bank · Sara Alharbi
@@ -72,11 +73,11 @@ function WalletAside() {
           <p className="mt-[2px] text-[13px] text-ink-secondary">SA •••• •••• •••• 4821</p>
         </div>
         <Button size="md" className="mt-[13px] w-full">
-          Request a withdrawal
+          {t('wallet.requestWithdrawal')}
         </Button>
       </div>
       <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
-        <p className="text-[15px] font-semibold text-ink-primary">Payment methods</p>
+        <p className="text-[15px] font-semibold text-ink-primary">{t('wallet.paymentMethods')}</p>
         <ul className="mt-md flex flex-col gap-[10px]">
           <li className="flex items-center gap-md rounded-[14px] border border-border-default px-[14px] py-md">
             <span className="rounded-[6px] bg-payment-visa px-[9px] py-[5px] text-[11px] font-bold text-ink-inverse">
@@ -84,7 +85,9 @@ function WalletAside() {
             </span>
             <div className="min-w-0">
               <p className="text-[14px] font-semibold text-ink-primary">Visa •••• 4417</p>
-              <p className="text-[12px] text-ink-secondary">Default · expires 09/28</p>
+              <p className="text-[12px] text-ink-secondary">
+                {t('wallet.cardDefault', { date: '09/28' })}
+              </p>
             </div>
           </li>
           <li className="flex items-center gap-md rounded-[14px] border border-border-default px-[14px] py-md">
@@ -93,21 +96,23 @@ function WalletAside() {
             </span>
             <div className="min-w-0">
               <p className="text-[14px] font-semibold text-ink-primary">mada •••• 9032</p>
-              <p className="text-[12px] text-ink-secondary">Expires 02/29</p>
+              <p className="text-[12px] text-ink-secondary">
+                {t('wallet.cardExpires', { date: '02/29' })}
+              </p>
             </div>
           </li>
         </ul>
         <Button variant="secondary" size="md" className="mt-[13px] h-[40px] w-full rounded-[20px] bg-bg-page">
-          Add a card
+          {t('wallet.addCard')}
         </Button>
       </div>
       <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
-        <p className="text-[15px] font-semibold text-ink-primary">How cashback works</p>
+        <p className="text-[15px] font-semibold text-ink-primary">{t('wallet.cashbackTitle')}</p>
         <p className="mt-sm text-[13px] leading-[1.5] text-ink-secondary">
-          Earn on eligible nights. Pending amounts clear the day after the event.
+          {t('wallet.cashbackBody')}
         </p>
         <Link to="/help" className="mt-lg inline-flex text-[14px] font-semibold text-ink-brand">
-          Read the guide →
+          {t('wallet.cashbackGuide')}
         </Link>
       </div>
     </div>
@@ -266,16 +271,16 @@ export function WalletPage() {
 
           <section className="overflow-hidden rounded-[20px] border border-border-default bg-surface-default">
             <div className="flex flex-wrap items-center justify-between gap-md px-[22px] py-[18px]">
-              <h2 className="text-[17px] font-semibold text-ink-primary">Activity</h2>
+              <h2 className="text-[17px] font-semibold text-ink-primary">{t('wallet.activity')}</h2>
               <div className="flex flex-wrap items-center gap-[7px]">
-                {FILTERS.map((label, index) => (
+                {FILTER_IDS.map((id, index) => (
                   <FilterChip
-                    key={label}
+                    key={id}
                     selected={filter === index}
                     onClick={() => setFilter(index)}
                     className="h-[32px] rounded-[16px] px-md text-[13px] font-semibold"
                   >
-                    {label}
+                    {t(`wallet.filters.${id}`)}
                   </FilterChip>
                 ))}
                 <Button
@@ -283,7 +288,7 @@ export function WalletPage() {
                   size="sm"
                   className="ms-[6px] h-[32px] rounded-[16px] px-md text-[13px] text-ink-secondary"
                 >
-                  Export CSV
+                  {t('wallet.exportCsv')}
                 </Button>
               </div>
             </div>
@@ -329,7 +334,11 @@ export function WalletPage() {
                         txn.tone === 'pending' ? 'text-ink-brand-strong' : 'text-ink-muted'
                       }`}
                     >
-                      {txn.status}
+                      {txn.status === 'Pending' || txn.tone === 'pending'
+                        ? t('wallet.statusPending')
+                        : txn.status === 'Cleared'
+                          ? t('wallet.statusCleared')
+                          : txn.status}
                     </p>
                   </div>
                 </li>

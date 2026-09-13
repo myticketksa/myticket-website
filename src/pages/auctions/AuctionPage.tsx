@@ -70,7 +70,7 @@ export function AuctionPage() {
           title={t('pages.auctionTitle')}
           subtitle={t('pages.auctionSubtitle')}
           actions={
-            <Button size="lg" className="shrink-0" disabled title="Listing opens from My Tickets">
+            <Button size="lg" className="shrink-0" disabled title={t('pages.listFromTickets')}>
               {t('pages.listTicketSale')}
             </Button>
           }
@@ -228,7 +228,7 @@ export function AuctionPage() {
               <Button
                 className="mt-lg h-[46px] w-full rounded-[23px] bg-bg-page text-ink-primary hover:bg-bg-page"
                 disabled
-                title="Listing opens from My Tickets"
+                title={t('pages.listFromTickets')}
               >
                 {t('pages.listTicket')}
               </Button>

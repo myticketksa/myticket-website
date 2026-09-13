@@ -86,7 +86,7 @@ function initialsFromName(name: string): string {
 }
 
 export function ProfilePage() {
-  const { t } = useTranslation('account')
+  const { t } = useTranslation(['account', 'catalog'])
   const user = useAppSelector(selectAuthUser)
   const { signOut, isLoading: logoutLoading } = useSignOut()
   const displayName = user?.name ?? ACCOUNT_USER.name
@@ -111,29 +111,32 @@ export function ProfilePage() {
                 <VerifiedIcon size={20} className="text-state-success" />
               </div>
               <p className="mt-sm text-[14px] text-ink-secondary">
-                {ACCOUNT_USER.city} · Member since {ACCOUNT_USER.memberSince} ·{' '}
-                {ACCOUNT_USER.eventsAttended} events attended
+                {t('profile.memberMeta', {
+                  city: ACCOUNT_USER.city,
+                  since: ACCOUNT_USER.memberSince,
+                  count: ACCOUNT_USER.eventsAttended,
+                })}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-xl">
             <div className="text-center">
               <p className="text-[22px] font-extrabold text-ink-primary">{ACCOUNT_USER.upcoming}</p>
-              <p className="text-[12px] text-ink-muted">Upcoming</p>
+              <p className="text-[12px] text-ink-muted">{t('profile.upcoming')}</p>
             </div>
             <div className="text-center">
               <p className="text-[22px] font-extrabold text-ink-primary">
                 {ACCOUNT_USER.eventsAttended}
               </p>
-              <p className="text-[12px] text-ink-muted">Attended</p>
+              <p className="text-[12px] text-ink-muted">{t('profile.attended')}</p>
             </div>
             <div className="text-center">
               <p className="text-[22px] font-extrabold text-ink-primary">{walletLabel}</p>
-              <p className="text-[12px] text-ink-muted">Wallet</p>
+              <p className="text-[12px] text-ink-muted">{t('profile.wallet')}</p>
             </div>
             <Link to="/settings">
               <Button variant="secondary" size="md">
-                Edit profile
+                {t('profile.editProfile')}
               </Button>
             </Link>
           </div>
@@ -143,17 +146,21 @@ export function ProfilePage() {
       <PageSection padTop={40} padBottom={0}>
         <div className="mb-lg flex flex-wrap items-end justify-between gap-lg">
           <div>
-            <h2 className="text-[24px] font-extrabold text-ink-primary">Your next nights out</h2>
+            <h2 className="text-[24px] font-extrabold text-ink-primary">{t('profile.nextNights')}</h2>
             <p className="mt-xs text-[14px] text-ink-secondary">
-              3 tickets waiting · the nearest one is in 12 days
+              {t('profile.nextNightsMeta', { count: 3, days: 12 })}
             </p>
           </div>
           <Link to="/my-tickets" className="text-[14px] font-semibold text-ink-brand">
-            See all tickets →
+            {t('profile.seeAllTickets')}
           </Link>
         </div>
         <div className="grid gap-lg md:grid-cols-3">
-          {PROFILE_NIGHTS.map((ticket, index) => (
+          {PROFILE_NIGHTS.map((ticket, index) => {
+            const days = Number.parseInt(ticket.countdown.replace(/\D/g, ''), 10)
+            const statusKey = `tickets.status.${ticket.status}`
+            const statusText = t(statusKey)
+            return (
             <article
               key={ticket.id}
               className="overflow-hidden rounded-[20px] border border-border-default bg-surface-default"
@@ -164,32 +171,35 @@ export function ProfilePage() {
                   alt=""
                   className="absolute inset-0 size-full object-cover"
                 />
-                {ticket.countdown && (
-                  <span className="absolute top-md left-md rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold text-bg-page uppercase">
-                    {ticket.countdown}
+                {ticket.countdown && Number.isFinite(days) && (
+                  <span className="absolute top-md start-md rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold text-bg-page uppercase">
+                    {t('profile.inDays', { count: days })}
                   </span>
                 )}
               </div>
               <div className="p-lg">
-                <StatusBadge tone={ticket.statusTone}>{ticket.status}</StatusBadge>
+                <StatusBadge tone={ticket.statusTone}>
+                  {statusText === statusKey ? ticket.status : statusText}
+                </StatusBadge>
                 <p className="mt-md text-[16px] font-bold text-ink-primary">{ticket.title}</p>
                 <p className="mt-xs text-[13px] text-ink-secondary">{ticket.meta}</p>
                 <p className="mt-xs text-[13px] font-medium text-ink-muted">{ticket.seat}</p>
                 <div className="mt-lg flex gap-sm">
                   <Link to={`/my-tickets/${ticket.id}`} className="flex-1">
                     <Button size="sm" className="w-full">
-                      Show QR
+                      {t('profile.showQr')}
                     </Button>
                   </Link>
                   <Link to={`/my-tickets/${ticket.id}`} className="flex-1">
                     <Button variant="secondary" size="sm" className="w-full bg-bg-page">
-                      Manage
+                      {t('profile.manage')}
                     </Button>
                   </Link>
                 </div>
               </div>
             </article>
-          ))}
+            )
+          })}
         </div>
       </PageSection>
 
@@ -198,19 +208,28 @@ export function ProfilePage() {
           <AccountWalletCard />
           <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
             <div className="mb-lg flex items-center justify-between">
-              <p className="text-[18px] font-extrabold text-ink-primary">Auction activity</p>
+              <p className="text-[18px] font-extrabold text-ink-primary">{t('profile.auctionActivity')}</p>
               <Link to="/my-auction-activity" className="text-[13px] font-semibold text-ink-brand">
-                See all
+                {t('profile.seeAll')}
               </Link>
             </div>
             <ul className="flex flex-col gap-lg">
-              {AUCTION_ACTIVITY.map((item) => (
+              {AUCTION_ACTIVITY.slice(0, 3).map((item) => {
+                const statusMap: Record<string, string> = {
+                  'No bids yet': t('profile.auctionStatuses.noBidsYet'),
+                  Winning: t('profile.auctionStatuses.winning'),
+                  Outbid: t('profile.auctionStatuses.outbid'),
+                }
+                return (
                 <li key={item.title}>
-                  <StatusBadge tone="brandTint">{item.status}</StatusBadge>
+                  <StatusBadge tone="brandTint">
+                    {statusMap[item.status] ?? item.status}
+                  </StatusBadge>
                   <p className="mt-sm text-[15px] font-bold text-ink-primary">{item.title}</p>
                   <p className="text-[13px] text-ink-secondary">{item.meta}</p>
                 </li>
-              ))}
+                )
+              })}
             </ul>
           </div>
         </div>
@@ -218,9 +237,9 @@ export function ProfilePage() {
 
       <PageSection padTop={40} padBottom={0}>
         <div className="mb-lg flex flex-wrap items-end justify-between gap-md">
-          <h2 className="text-[24px] font-extrabold text-ink-primary">Saved for later</h2>
+          <h2 className="text-[24px] font-extrabold text-ink-primary">{t('profile.savedForLater')}</h2>
           <Link to="/saved" className="text-[14px] font-semibold text-ink-brand">
-            See all 14 saved →
+            {t('profile.seeAllSaved', { count: 14 })}
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-md md:grid-cols-4">
@@ -236,7 +255,7 @@ export function ProfilePage() {
               <div className="p-md">
                 <p className="text-[14px] font-bold text-ink-primary">{item.title}</p>
                 <p className="text-[12px] text-ink-muted">
-                  {item.kind} · {item.place}
+                  {t(`catalog:pages.kind${item.kind}`)} · {item.place}
                 </p>
               </div>
             </Link>
@@ -247,13 +266,13 @@ export function ProfilePage() {
       <PageSection padTop={40} padBottom={0}>
         <div className="mb-lg flex flex-wrap items-end justify-between gap-md">
           <div>
-            <h2 className="text-[24px] font-extrabold text-ink-primary">Account & settings</h2>
-            <p className="mt-xs text-[14px] text-ink-secondary">
-              Everything about how you sign in, pay and get notified.
-            </p>
+            <h2 className="text-[24px] font-extrabold text-ink-primary">
+              {t('profile.settingsTitle')}
+            </h2>
+            <p className="mt-xs text-[14px] text-ink-secondary">{t('profile.settingsSubtitle')}</p>
           </div>
           <Link to="/settings" className="text-[14px] font-semibold text-ink-brand">
-            Open settings →
+            {t('profile.openSettings')}
           </Link>
         </div>
         <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
@@ -290,15 +309,14 @@ export function ProfilePage() {
               <div className="flex items-start gap-md">
                 <BriefcaseIcon size={15} className="mt-[2px] shrink-0 text-ink-brand" />
                 <div>
-                  <p className="text-[16px] font-bold text-ink-primary">Become a business</p>
+                  <p className="text-[16px] font-bold text-ink-primary">{t('profile.becomeBusiness')}</p>
                   <p className="mt-xs text-[13px] text-ink-secondary">
-                    Vendor or talent request — submit once, track admin review. Organizer partnership
-                    is arranged through our office.
+                    {t('profile.becomeBusinessBody')}
                   </p>
                 </div>
               </div>
               <Button size="sm" className="w-full sm:w-auto">
-                Apply
+                {t('profile.apply')}
               </Button>
             </div>
           </Link>
@@ -308,11 +326,11 @@ export function ProfilePage() {
       <PageSection padTop={32} padBottom={96}>
         <div className="flex flex-wrap items-center justify-between gap-lg rounded-[16px] border border-border-default bg-surface-default px-xl py-lg">
           <p className="text-[13px] text-ink-secondary">
-            Signed in on this device since 12 July · iPhone 15, Riyadh
+            {t('profile.signedInDevice', { when: '12 July', device: 'iPhone 15, Riyadh' })}
           </p>
           <div className="flex gap-md">
             <Button variant="secondary" size="sm">
-              Manage devices
+              {t('profile.manageDevices')}
             </Button>
             <Button
               variant="destructive"

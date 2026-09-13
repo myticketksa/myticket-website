@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Countdown,
   FilterChip,
@@ -25,7 +26,12 @@ type SeatListing = {
   id: string
   seat: string
   meta: string
-  badge: string
+  badgeKey:
+    | 'badgeEndingSoon'
+    | 'badgeHighest'
+    | 'badgeYourListing'
+    | 'badgeOutbid'
+    | 'badgeUnderFace'
   badgeTone: StatusTone
   highestBid: string
   bids: number
@@ -35,16 +41,11 @@ type SeatListing = {
   minBid: string
   yours?: boolean
   kind: 'bid' | 'own'
-  caption?: string
+  captionKey?: 'captionNoBids' | 'captionNoBuyNow'
   seatsTogether?: boolean
 }
 
-const FILTERS: { id: ListingFilter; label: string }[] = [
-  { id: 'all', label: 'All 5 listings' },
-  { id: 'together', label: 'Seats together' },
-  { id: 'buyNow', label: 'Has buy now' },
-  { id: 'mine', label: 'Mine' },
-]
+const FILTER_IDS: ListingFilter[] = ['all', 'together', 'buyNow', 'mine']
 
 /** Seat lots under Winter Nights — Figma `207:11616` listing stack. */
 const WINTER_NIGHTS_LISTINGS: SeatListing[] = [
@@ -52,7 +53,7 @@ const WINTER_NIGHTS_LISTINGS: SeatListing[] = [
     id: 'floor-a-h',
     seat: 'Floor A · Row H · 2 seats together',
     meta: 'Gold · sold by R•••a · face value SAR 560',
-    badge: 'Ending soon',
+    badgeKey: 'badgeEndingSoon',
     badgeTone: 'urgentSolid',
     highestBid: 'SAR 620',
     bids: 12,
@@ -67,7 +68,7 @@ const WINTER_NIGHTS_LISTINGS: SeatListing[] = [
     id: 'floor-b-c',
     seat: 'Floor B · Row C · Seat 14',
     meta: 'Gold · sold by M•••d · face value SAR 280',
-    badge: "You're highest",
+    badgeKey: 'badgeHighest',
     badgeTone: 'successTint',
     highestBid: 'SAR 300',
     bids: 7,
@@ -81,7 +82,7 @@ const WINTER_NIGHTS_LISTINGS: SeatListing[] = [
     id: 'terrace-own',
     seat: 'Terrace · Free standing',
     meta: 'Silver · sold by you · face value SAR 220',
-    badge: 'Your listing',
+    badgeKey: 'badgeYourListing',
     badgeTone: 'brandTint',
     highestBid: 'SAR 240',
     bids: 0,
@@ -90,13 +91,13 @@ const WINTER_NIGHTS_LISTINGS: SeatListing[] = [
     minBid: 'SAR 250',
     yours: true,
     kind: 'own',
-    caption: 'No bids yet — free to cancel',
+    captionKey: 'captionNoBids',
   },
   {
     id: 'floor-a-j',
     seat: 'Floor A · Row J · Seat 3',
     meta: 'Gold · sold by A•••f · face value SAR 280',
-    badge: 'Outbid you',
+    badgeKey: 'badgeOutbid',
     badgeTone: 'dangerTint',
     highestBid: 'SAR 310',
     bids: 9,
@@ -104,13 +105,13 @@ const WINTER_NIGHTS_LISTINGS: SeatListing[] = [
     endsIn: '11:04:51',
     minBid: 'SAR 320',
     kind: 'bid',
-    caption: 'No buy-now price',
+    captionKey: 'captionNoBuyNow',
   },
   {
     id: 'terrace-under',
     seat: 'Terrace · Free standing',
     meta: 'Silver · sold by N•••h · face value SAR 220',
-    badge: 'Under face +10%',
+    badgeKey: 'badgeUnderFace',
     badgeTone: 'neutralOutline',
     highestBid: 'SAR 236',
     bids: 3,
@@ -126,6 +127,7 @@ function breadcrumbLabel(title: string) {
 }
 
 function ListingRow({ listing }: { listing: SeatListing }) {
+  const { t } = useTranslation('catalog')
   const remaining = useLiveRemaining(listing.endsIn)
   return (
     <article
@@ -144,7 +146,7 @@ function ListingRow({ listing }: { listing: SeatListing }) {
               listing.badgeTone === 'neutralOutline' && 'border-transparent',
             )}
           >
-            {listing.badge}
+            {t(`pages.${listing.badgeKey}`)}
           </StatusBadge>
         </div>
         <p className="text-[13px] text-ink-muted">{listing.meta}</p>
@@ -152,22 +154,22 @@ function ListingRow({ listing }: { listing: SeatListing }) {
 
       <div className="grid w-full grid-cols-2 gap-lg sm:grid-cols-3 lg:contents">
         <div className="flex w-full flex-col leading-normal lg:w-[216px] lg:shrink-0">
-          <p className="text-[12px] text-ink-muted">Highest bid</p>
+          <p className="text-[12px] text-ink-muted">{t('pages.highestBid')}</p>
           <PriceDisplay context="amount" className="text-[19px] font-bold">
             {listing.highestBid}
           </PriceDisplay>
-          <p className="text-[12px] text-ink-muted">{listing.bids} bids</p>
+          <p className="text-[12px] text-ink-muted">{t('pages.bids', { count: listing.bids })}</p>
         </div>
 
         <div className="flex w-full flex-col leading-normal lg:w-[216px] lg:shrink-0">
-          <p className="text-[12px] text-ink-muted">Buy now</p>
+          <p className="text-[12px] text-ink-muted">{t('pages.buyNow')}</p>
           <PriceDisplay context="row" className="text-[16px] font-bold text-ink-secondary">
             {listing.buyNow ?? '—'}
           </PriceDisplay>
         </div>
 
         <div className="flex w-full flex-col leading-normal lg:w-[216px] lg:shrink-0">
-          <p className="text-[12px] text-ink-muted">Ends in</p>
+          <p className="text-[12px] text-ink-muted">{t('pages.endsIn').trimEnd()}</p>
           <Countdown
             urgent={listing.urgent}
             className={cn(
@@ -192,12 +194,14 @@ function ListingRow({ listing }: { listing: SeatListing }) {
               variant="destructive"
               className="h-[40px] w-full rounded-[20px] font-bold"
               disabled
-              title="Cancel from My auction activity"
+              title={t('pages.cancelFromActivity')}
             >
-              Cancel listing
+              {t('pages.cancelListing')}
             </Button>
-            {listing.caption && (
-              <p className="text-center text-[12px] text-ink-muted">{listing.caption}</p>
+            {listing.captionKey && (
+              <p className="text-center text-[12px] text-ink-muted">
+                {t(`pages.${listing.captionKey}`)}
+              </p>
             )}
           </>
         ) : (
@@ -205,19 +209,19 @@ function ListingRow({ listing }: { listing: SeatListing }) {
             <Button
               className="h-[40px] w-full rounded-[20px] text-[13.5px] font-bold"
               disabled
-              title="Bidding opens when you sign in"
+              title={t('pages.biddingSignIn')}
             >
-              Bid · min {listing.minBid}
+              {t('pages.bidMin', { amount: listing.minBid })}
             </Button>
             {listing.buyNow ? (
               <Button
                 variant="secondary"
                 size="sm"
                 disabled
-                title="Buy now opens when you sign in"
+                title={t('pages.buyNowSignIn')}
                 className="h-[36px] w-full rounded-[18px] border bg-bg-page text-[13px] disabled:cursor-default disabled:opacity-100"
               >
-                Buy now · {listing.buyNow}
+                {t('pages.buyNowPrice', { amount: listing.buyNow })}
               </Button>
             ) : (
               <Button
@@ -226,7 +230,7 @@ function ListingRow({ listing }: { listing: SeatListing }) {
                 disabled
                 className="h-[36px] w-full rounded-[18px] border bg-bg-page text-[13px] disabled:cursor-default disabled:opacity-100"
               >
-                No buy-now price
+                {t('pages.noBuyNow')}
               </Button>
             )}
           </>
@@ -238,6 +242,7 @@ function ListingRow({ listing }: { listing: SeatListing }) {
 
 /** Auction event detail — Figma `207:11616` (summary card + listing rows). */
 export function AuctionEventPage() {
+  const { t } = useTranslation('catalog')
   const { slug } = useParams()
   const [filter, setFilter] = useState<ListingFilter>('all')
   const [sortMode, setSortMode] = useState<'ending' | 'price-low' | 'price-high' | 'bids'>(
@@ -287,10 +292,10 @@ export function AuctionEventPage() {
   }, [event.category, event.title, filter, isWinterNights, sortMode])
 
   const sortLabels = {
-    ending: 'Ending soonest',
-    'price-low': 'Price — low to high',
-    'price-high': 'Price — high to low',
-    bids: 'Most bids',
+    ending: t('pages.sortEnding'),
+    'price-low': t('pages.sortPriceLow'),
+    'price-high': t('pages.sortPriceHigh'),
+    bids: t('pages.sortMostBids'),
   } as const
 
   const cycleSort = () => {
@@ -299,17 +304,20 @@ export function AuctionEventPage() {
     setSortMode(keys[(idx + 1) % keys.length]!)
   }
 
-  const filterLabels = FILTERS.map((f) =>
-    f.id === 'all' ? { ...f, label: `All ${WINTER_NIGHTS_LISTINGS.length} listings` } : f,
-  )
+  const filterLabel = (id: ListingFilter) => {
+    if (id === 'all') return t('pages.allListings', { count: WINTER_NIGHTS_LISTINGS.length })
+    if (id === 'together') return t('pages.seatsTogether')
+    if (id === 'buyNow') return t('pages.hasBuyNow')
+    return t('pages.mine')
+  }
 
   return (
     <>
       <PageSection padTop={26} padBottom={0}>
         <Breadcrumbs
           items={[
-            { label: 'Home', href: '/' },
-            { label: 'Auction', href: '/auctions' },
+            { label: t('pages.crumbHome'), href: '/' },
+            { label: t('pages.crumbAuction'), href: '/auctions' },
             { label: crumb },
           ]}
         />
@@ -323,8 +331,10 @@ export function AuctionEventPage() {
 
           <div className="flex min-w-0 flex-1 flex-col gap-[6px]">
             <div className="flex flex-wrap items-center gap-[10px]">
-              <StatusBadge tone="terminal">Sold out</StatusBadge>
-              <StatusBadge tone="brandTint">312 on the waitlist</StatusBadge>
+              <StatusBadge tone="terminal">{t('pages.soldOut')}</StatusBadge>
+              <StatusBadge tone="brandTint">
+                {t('pages.waitlistCount', { count: 312 })}
+              </StatusBadge>
             </div>
             <div className="h-[6px] w-px" aria-hidden />
             <h1 className="text-[26px] leading-[1.05] font-extrabold tracking-[-1.02px] text-ink-primary sm:text-[34px]">
@@ -345,8 +355,8 @@ export function AuctionEventPage() {
                   }
                   className="inline-flex items-center gap-[5px] text-ink-secondary hover:text-ink-brand"
                 >
-                  View the event
-                  <ArrowRightIcon size={15} />
+                  {t('pages.viewTheEvent')}
+                  <ArrowRightIcon size={15} className="rtl:rotate-180" />
                 </Link>
               </p>
             </div>
@@ -354,7 +364,7 @@ export function AuctionEventPage() {
 
           <div className="flex w-full shrink-0 flex-col items-start border-t border-border-divider pt-lg md:w-auto md:items-end md:border-t-0 md:border-s md:pt-0 md:ps-3xl">
             <p className="text-[13px] text-ink-muted">
-              {WINTER_NIGHTS_LISTINGS.length} listings · from
+              {t('pages.listingsFrom', { count: WINTER_NIGHTS_LISTINGS.length })}
             </p>
             <div className="h-[2px] w-px" aria-hidden />
             <PriceDisplay
@@ -363,37 +373,35 @@ export function AuctionEventPage() {
             >
               SAR 236
             </PriceDisplay>
-            <p className="text-[12.5px] text-ink-muted">face value SAR 220–560</p>
+            <p className="text-[12.5px] text-ink-muted">
+              {t('pages.faceValueRange', { range: 'SAR 220–560' })}
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-[10px] px-xs pt-lg text-[13px]">
           <InfoIcon size={14} className="shrink-0 text-ink-brand" weight="fill" />
-          <p className="min-w-0 flex-1 text-ink-secondary">
-            Every listing is a real ticket resold by its owner and transferred through
-            MyTicket. Your money is held until the ticket is in your account. MyTicket
-            takes 10% from the seller — buyers pay only the platform fee.
-          </p>
+          <p className="min-w-0 flex-1 text-ink-secondary">{t('pages.escrowNote')}</p>
         </div>
       </PageSection>
 
       <PageSection padTop={22} padBottom={96}>
         <div className="flex flex-col items-stretch gap-lg sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-[10px]">
-            {filterLabels.map((item) => (
+            {FILTER_IDS.map((id) => (
               <FilterChip
-                key={item.id}
-                selected={filter === item.id}
-                onClick={() => setFilter(item.id)}
+                key={id}
+                selected={filter === id}
+                onClick={() => setFilter(id)}
                 className="h-[36px] rounded-[18px] px-[15px] text-[13.5px] font-semibold"
               >
-                {item.label}
+                {filterLabel(id)}
               </FilterChip>
             ))}
           </div>
 
           <div className="flex shrink-0 items-center gap-sm">
-            <span className="text-[13.5px] text-ink-secondary">Sort</span>
+            <span className="text-[13.5px] text-ink-secondary">{t('filters.sort')}</span>
             <button
               type="button"
               onClick={cycleSort}
@@ -414,13 +422,12 @@ export function AuctionEventPage() {
         <div className="flex items-center gap-md px-xs pt-[18px]">
           <span className="size-[10px] shrink-0 rounded-[5px] bg-ink-brand" aria-hidden />
           <p className="min-w-0 flex-1 text-[13px] text-ink-secondary">
-            Orange-bordered rows are yours — your bid on Floor B · Row C leads, and your
-            Terrace listing has no bids yet so it can still be cancelled from{' '}
+            {t('pages.yoursNoteBefore')}{' '}
             <Link
               to="/my-auction-activity"
               className="font-semibold text-ink-brand hover:underline"
             >
-              your auction activity
+              {t('pages.yoursNoteLink')}
             </Link>
             .
           </p>

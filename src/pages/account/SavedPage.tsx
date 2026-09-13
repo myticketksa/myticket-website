@@ -61,10 +61,7 @@ function mapFavorite(record: Record<string, unknown>): SavedItem {
       record.place ?? record.venue ?? record.location ?? nested?.place ?? nested?.venue,
     ),
     price: String(record.price ?? record.price_from ?? nested?.priceFrom ?? ''),
-    cta: String(
-      record.cta ??
-        (kind === 'Experience' ? 'Book a visit' : kind === 'Talent' ? 'View profile' : 'Get tickets'),
-    ),
+    cta: String(record.cta ?? ''),
     href,
     cover: String(
       record.cover ?? record.image ?? record.image_url ?? nested?.cover ?? nested?.image ?? '',
@@ -73,8 +70,8 @@ function mapFavorite(record: Record<string, unknown>): SavedItem {
   }
 }
 
-const SEGMENTS = ['Favourites', 'Waitlists', 'Following'] as const
-const FILTERS = ['All', 'Events', 'Experiences', 'Talents'] as const
+const SEGMENT_IDS = ['favourites', 'waitlists', 'following'] as const
+const FILTER_IDS = ['all', 'events', 'experiences', 'talents'] as const
 
 /** Saved / favourites — Figma `207:8057`. Segments live below the head (not AccountTabBar). */
 export function SavedPage() {
@@ -111,7 +108,7 @@ export function SavedPage() {
         actions={
           <Link to="/settings">
             <Button variant="secondary" size="md">
-              Notification settings
+              {t('account:saved.notificationSettings')}
             </Button>
           </Link>
         }
@@ -120,9 +117,9 @@ export function SavedPage() {
       <PageSection padTop={0} padBottom={96}>
         <div className="pt-[10px]">
           <div className="flex w-full flex-wrap gap-[6px] rounded-[26px] border-[1.5px] border-border-default bg-surface-default p-[5px] sm:inline-flex sm:w-auto">
-            {SEGMENTS.map((label, index) => (
+            {SEGMENT_IDS.map((id, index) => (
               <button
-                key={label}
+                key={id}
                 type="button"
                 onClick={() => setSegment(index)}
                 className={cn(
@@ -132,21 +129,21 @@ export function SavedPage() {
                     : 'text-ink-secondary hover:text-ink-primary',
                 )}
               >
-                {label}
+                {t(`account:saved.segments.${id}`)}
               </button>
             ))}
           </div>
         </div>
 
         <div className="mt-[26px] flex flex-wrap gap-sm">
-          {FILTERS.map((label, index) => (
+          {FILTER_IDS.map((id, index) => (
             <FilterChip
-              key={label}
+              key={id}
               selected={filter === index}
               onClick={() => setFilter(index)}
               className="h-[38px] rounded-[19px] px-lg text-[13px] font-bold"
             >
-              {label}
+              {t(`account:saved.filters.${id}`)}
             </FilterChip>
           ))}
         </div>
@@ -219,7 +216,7 @@ export function SavedPage() {
                   <HeartIcon size={15} />
                 </button>
                 <span className="absolute bottom-[10px] start-[10px] rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold text-ink-inverse">
-                  {item.kind}
+                  {t(`account:saved.kinds.${item.kind}`)}
                 </span>
               </div>
               <div className="flex flex-1 flex-col gap-[7px] px-lg pt-[15px] pb-lg">
@@ -246,8 +243,13 @@ export function SavedPage() {
                     to={item.href}
                     className="inline-flex items-center gap-[5px] text-[13px] font-bold text-ink-brand-mid hover:text-ink-brand"
                   >
-                    {item.cta}
-                    <ArrowRightIcon size={13} />
+                    {item.cta ||
+                      (item.kind === 'Experience'
+                        ? t('account:saved.cta.visit')
+                        : item.kind === 'Talent'
+                          ? t('account:saved.cta.profile')
+                          : t('account:saved.cta.tickets'))}
+                    <ArrowRightIcon size={13} className="rtl:rotate-180" />
                   </Link>
                 </div>
               </div>

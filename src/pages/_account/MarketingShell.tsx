@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ImagePlaceholder } from '@/components/data-display'
 import { CheckIcon, MinusIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
@@ -216,15 +217,17 @@ export function RoleLandingHero({
 }
 
 export function RoleBenefitsSection({
-  title = 'What the role unlocks',
+  title,
   items,
 }: {
   title?: string
   items: RoleBenefit[]
 }) {
+  const { t } = useTranslation('marketing')
+  const heading = title ?? t('shell.benefitsTitle')
   return (
     <PageSection padTop={72} padBottom={0}>
-      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">{title}</h2>
+      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">{heading}</h2>
       <div className="mt-[22px] grid gap-[18px] md:grid-cols-3">
         {items.map((item) => (
           <div
@@ -241,15 +244,17 @@ export function RoleBenefitsSection({
 }
 
 export function RoleStepsSection({
-  title = 'Start to finish',
+  title,
   steps,
 }: {
   title?: string
   steps: RoleStep[]
 }) {
+  const { t } = useTranslation('marketing')
+  const heading = title ?? t('shell.stepsTitle')
   return (
     <PageSection padTop={72} padBottom={0}>
-      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">{title}</h2>
+      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">{heading}</h2>
       <div className="mt-[22px] grid gap-[14px] sm:grid-cols-2 lg:grid-cols-5">
         {steps.map((step, index) => (
           <div
@@ -275,9 +280,10 @@ export function RoleMoneyPanel({
   rows: RoleMoneyRow[]
   footnote: string
 }) {
+  const { t } = useTranslation('marketing')
   return (
     <div className="rounded-[22px] bg-surface-inverse p-[32px] text-bg-page">
-      <h3 className="text-[26px] font-extrabold tracking-[-0.78px]">The money, plainly</h3>
+      <h3 className="text-[26px] font-extrabold tracking-[-0.78px]">{t('shell.moneyTitle')}</h3>
       <div className="mt-[18px] flex flex-col gap-[12px] text-[14.5px] leading-[1.55]">
         {rows.map((row) => (
           <div
@@ -296,17 +302,19 @@ export function RoleMoneyPanel({
 
 export function RoleRequirementsPanel({
   items,
-  noteLead = 'Review comes first.',
+  noteLead,
   noteBody,
 }: {
   items: string[]
   noteLead?: string
   noteBody: string
 }) {
+  const { t } = useTranslation('marketing')
+  const lead = noteLead ?? t('shell.noteLead')
   return (
     <div className="rounded-[22px] border border-border-default bg-surface-default p-[32px]">
       <h3 className="text-[26px] font-extrabold tracking-[-0.78px] text-ink-primary">
-        What the application needs
+        {t('shell.needsTitle')}
       </h3>
       <ul className="mt-[18px] flex flex-col gap-[11px]">
         {items.map((item) => (
@@ -318,7 +326,7 @@ export function RoleRequirementsPanel({
       </ul>
       <div className="mt-[18px] h-px bg-border-divider" />
       <p className="mt-[16px] text-[13.5px] leading-[1.55] text-ink-secondary">
-        <span className="font-bold text-ink-primary">{noteLead}</span> {noteBody}
+        <span className="font-bold text-ink-primary">{lead}</span> {noteBody}
       </p>
     </div>
   )
@@ -346,17 +354,19 @@ export function RoleMoneyAndNeeds({
 }
 
 export function RoleFaqSection({
-  title = 'Asked most often',
+  title,
   items,
 }: {
   title?: string
   items: RoleFaq[]
 }) {
+  const { t } = useTranslation('marketing')
+  const heading = title ?? t('shell.faqTitle')
   const [open, setOpen] = useState(0)
 
   return (
     <PageSection padTop={72} padBottom={0}>
-      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">{title}</h2>
+      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">{heading}</h2>
       <div className="mt-[22px] flex max-w-[860px] flex-col gap-[10px]">
         {items.map((item, index) => {
           const isOpen = open === index

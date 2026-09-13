@@ -76,7 +76,7 @@ export function MyAuctionActivityPage() {
               )}
 
               <div className="min-w-0 xl:w-[174px]">
-                <p className="text-[12px] text-ink-muted">Ends in</p>
+                <p className="text-[12px] text-ink-muted">{t('auctionActivity.endsIn')}</p>
                 <p
                   className={cn(
                     'text-[15px] font-extrabold',

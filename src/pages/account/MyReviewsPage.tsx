@@ -208,7 +208,7 @@ export function MyReviewsPage() {
                           setReviewText('')
                         }}
                       >
-                        {open ? t('common:actions.close') : 'Write it'}
+                        {open ? t('common:actions.close') : t('account:reviews.writeIt')}
                       </Button>
                     </div>
                   </div>
@@ -216,7 +216,7 @@ export function MyReviewsPage() {
                   {open && (
                     <div className="mt-[18px] border-t border-border-divider pt-[18px]">
                       <p className="mb-[10px] text-[13px] font-semibold text-ink-primary">
-                        Your score
+                        {t('account:reviews.yourScore')}
                       </p>
                       <RatingPicker value={rating} onChange={setRating} />
                       <Field

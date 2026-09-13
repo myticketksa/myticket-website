@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Divider } from '@/components/data-display'
 import { cn } from '@/lib/cn'
 import { useLiveRemaining } from '@/lib/countdown/useLiveRemaining'
@@ -75,6 +76,7 @@ export function AuctionCard({
   buyNow,
   className,
 }: AuctionCardProps) {
+  const { t } = useTranslation('catalog')
   const remaining = useLiveRemaining(endsIn)
   return (
     <article
@@ -96,7 +98,8 @@ export function AuctionCard({
           aria-live="polite"
           className="text-[12px] font-extrabold tabular-nums text-brand-gradient-end"
         >
-          Ends in {remaining}
+          {t('pages.endsIn')}
+          {remaining}
         </p>
       </div>
 
@@ -110,14 +113,14 @@ export function AuctionCard({
 
         <div className="mt-md flex w-full items-end justify-between">
           <div className="flex flex-col items-start gap-[2px]">
-            <p className="text-[12px] font-medium text-ink-muted">Highest bid</p>
+            <p className="text-[12px] font-medium text-ink-muted">{t('pages.highestBid')}</p>
             <p className="text-[21px] font-extrabold tabular-nums text-brand-identity-end">
               {highestBid}
             </p>
           </div>
 
           <div className="flex flex-col items-end gap-[2px]">
-            <p className="text-[12px] font-medium text-ink-muted">Buy now</p>
+            <p className="text-[12px] font-medium text-ink-muted">{t('pages.buyNow')}</p>
             <p className="text-[15px] font-bold tabular-nums text-ink-secondary">{buyNow}</p>
           </div>
         </div>

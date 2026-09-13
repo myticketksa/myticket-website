@@ -42,38 +42,65 @@ export function MyTicketsPage() {
 
   const tabCounts = useMemo(
     () => [
-      tickets.filter((t) => t.status === 'UPCOMING' || t.status === 'AWAITING SEAT').length,
-      tickets.filter((t) => t.status === 'PAST').length,
-      tickets.filter((t) => t.status === 'TRANSFERRED').length,
-      tickets.filter((t) => t.status === 'LISTED').length,
+      tickets.filter((item) => item.status === 'UPCOMING' || item.status === 'AWAITING SEAT')
+        .length,
+      tickets.filter((item) => item.status === 'PAST').length,
+      tickets.filter((item) => item.status === 'TRANSFERRED').length,
+      tickets.filter((item) => item.status === 'LISTED').length,
     ],
     [tickets],
   )
 
   const tabs = [
-    { label: 'Upcoming', count: tabCounts[0] },
-    { label: 'Past', count: tabCounts[1] },
-    { label: 'Transferred', count: tabCounts[2] },
-    { label: 'Listed for resale', count: tabCounts[3] },
+    { label: t('account:tickets.tabUpcoming'), count: tabCounts[0] },
+    { label: t('account:tickets.tabPast'), count: tabCounts[1] },
+    { label: t('account:tickets.tabTransferred'), count: tabCounts[2] },
+    { label: t('account:tickets.tabListed'), count: tabCounts[3] },
   ] as const
 
   const visible = tickets.filter((ticket) => matchesTab(ticket.status, tab))
+
+  const subtitle = [
+    t('account:tickets.subtitle'),
+    isError ? t('account:tickets.refreshError') : null,
+    isFetching && !isError ? t('account:tickets.updating') : null,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  function statusLabel(status: string) {
+    const key = `account:tickets.status.${status}` as const
+    const translated = t(key)
+    return translated === key ? status : translated
+  }
+
+  function factLabel(label: string) {
+    const normalized = label.trim().toLowerCase()
+    if (normalized === 'tier') return t('account:tickets.facts.tier')
+    if (normalized === 'row') return t('account:tickets.facts.row')
+    if (normalized === 'seats') return t('account:tickets.facts.seats')
+    if (normalized === 'gate') return t('account:tickets.facts.gate')
+    return label
+  }
+
+  function noteLabel(note: string) {
+    if (note === 'Payment pending') return t('account:tickets.paymentPending')
+    return note
+  }
 
   return (
     <>
       <AccountPageHead
         eyebrow={t('account:eyebrow')}
         title={t('account:tickets.title')}
-        subtitle={`${t('account:tickets.subtitle')}${
-          isError ? ' Could not refresh tickets right now.' : ''
-        }${isFetching && !isError ? ' Updating…' : ''}`}
+        subtitle={subtitle}
         actions={
           <>
             <Button variant="secondary" size="md">
-              Add all to Apple Wallet
+              {t('account:tickets.addToWallet')}
             </Button>
             <Link to="/auctions">
-              <Button size="md">Sell a ticket</Button>
+              <Button size="md">{t('account:tickets.sellTicket')}</Button>
             </Link>
           </>
         }
@@ -126,15 +153,19 @@ export function MyTicketsPage() {
                   <div className="absolute inset-0 bg-bg-tint-brand" />
                 )}
                 {ticket.countdown && (
-                  <span className="absolute top-[12px] left-[12px] rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold tracking-[0.06em] text-bg-page uppercase">
+                  <span className="absolute top-[12px] start-[12px] rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold tracking-[0.06em] text-bg-page uppercase">
                     {ticket.countdown}
                   </span>
                 )}
               </div>
               <div className="flex min-w-0 flex-1 flex-col px-lg py-[18px] sm:px-[22px] sm:py-[20px]">
                 <div className="flex flex-wrap items-center gap-[9px]">
-                  <StatusBadge tone={statusTone(ticket.status)}>{ticket.status}</StatusBadge>
-                  <span className="text-[12px] text-ink-muted">Order {ticket.orderId}</span>
+                  <StatusBadge tone={statusTone(ticket.status)}>
+                    {statusLabel(ticket.status)}
+                  </StatusBadge>
+                  <span className="text-[12px] text-ink-muted">
+                    {t('account:tickets.orderLabel', { id: ticket.orderId })}
+                  </span>
                 </div>
                 <Link
                   to={`/my-tickets/${ticket.id}`}
@@ -147,7 +178,7 @@ export function MyTicketsPage() {
                   {ticket.facts.map((fact) => (
                     <div key={fact.label} className="min-w-0">
                       <p className="text-[11px] font-bold tracking-[0.07em] text-ink-muted uppercase">
-                        {fact.label}
+                        {factLabel(fact.label)}
                       </p>
                       <p className="mt-[3px] text-[15px] font-semibold text-ink-primary">
                         {fact.value}
@@ -158,32 +189,32 @@ export function MyTicketsPage() {
                 <div className="mt-lg flex flex-wrap items-center gap-[9px]">
                   {ticket.actions.includes('qr') && (
                     <Link to={`/my-tickets/${ticket.id}`}>
-                      <Button size="sm">Show QR</Button>
+                      <Button size="sm">{t('account:tickets.showQr')}</Button>
                     </Link>
                   )}
                   {ticket.actions.includes('transfer') && (
                     <Link to={`/my-tickets/${ticket.id}/gift`}>
                       <Button variant="secondary" size="sm" className="bg-bg-page">
-                        Transfer to a guest
+                        {t('account:tickets.transferGuest')}
                       </Button>
                     </Link>
                   )}
                   {ticket.actions.includes('resell') && (
                     <Link to={`/my-tickets/${ticket.id}/resell`}>
                       <Button variant="secondary" size="sm" className="bg-bg-page">
-                        List on the auction
+                        {t('account:tickets.listAuction')}
                       </Button>
                     </Link>
                   )}
                   {ticket.actions.includes('refund') && (
                     <Link to={`/my-tickets/${ticket.id}/refund`}>
                       <Button variant="secondary" size="sm" className="bg-bg-page">
-                        Request a refund
+                        {t('account:tickets.requestRefund')}
                       </Button>
                     </Link>
                   )}
                   {ticket.note && (
-                    <span className="text-[12px] text-ink-muted">{ticket.note}</span>
+                    <span className="text-[12px] text-ink-muted">{noteLabel(ticket.note)}</span>
                   )}
                 </div>
               </div>
@@ -192,15 +223,16 @@ export function MyTicketsPage() {
 
           <div className="flex flex-wrap items-center justify-between gap-lg rounded-[20px] border border-border-default bg-surface-default px-xl py-xl">
             <div className="min-w-0 flex-1">
-              <p className="text-[16px] font-semibold text-ink-primary">Can&apos;t make a night?</p>
+              <p className="text-[16px] font-semibold text-ink-primary">
+                {t('account:tickets.cantMakeTitle')}
+              </p>
               <p className="mt-[3px] text-[14px] text-ink-secondary">
-                Transfer the ticket to a friend for free, or list it on the auction — MyTicket
-                handles the money and takes 10% from the sale.
+                {t('account:tickets.cantMakeBody')}
               </p>
             </div>
             <Link to="/help">
               <Button variant="secondary" size="md" className="bg-bg-page">
-                How resale works
+                {t('account:tickets.howResale')}
               </Button>
             </Link>
           </div>

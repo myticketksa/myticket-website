@@ -44,6 +44,16 @@
       "reviewPortfolio": "Portfolio link",
       "reviewId": "ID on file",
       "noneAdded": "None added"
+    },
+    "categories": {
+      "singer": "Singer",
+      "band": "Band",
+      "dj": "DJ",
+      "comedian": "Comedian",
+      "speaker": "Speaker",
+      "dancer": "Dancer",
+      "host": "Host / MC",
+      "instrumentalist": "Instrumentalist"
     }
   },
   "vendor": {
@@ -93,6 +103,20 @@
       "reviewCr": "CR number",
       "filesSelected_one": "{{count}} file selected",
       "filesSelected_other": "{{count}} files selected"
+    },
+    "serviceFallbacks": {
+      "sound": "Sound",
+      "lighting": "Lighting",
+      "staging": "Staging",
+      "catering": "Catering",
+      "security": "Security",
+      "av": "AV / LED",
+      "decor": "Decor",
+      "transport": "Transport"
+    },
+    "defaults": {
+      "generalServices": "General services",
+      "vendorServices": "Vendor services"
     }
   },
   "organizer": {
@@ -197,6 +221,8 @@
     "provided": "Provided"
   },
   "accountDone": {
-    "subtitle": "Your guest account stays a guest. Tickets, wallet and reviews stay untouched — this form is a request only."
+    "subtitle": "Your guest account stays a guest. Tickets, wallet and reviews stay untouched — this form is a request only.",
+    "title": "This part's already done — you're signed in as {{name}}.",
+    "fallbackName": "your account"
   }
 }

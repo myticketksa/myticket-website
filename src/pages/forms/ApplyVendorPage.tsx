@@ -30,16 +30,16 @@ import { apiErrorMessage } from '@/lib/api/unwrap'
 
 const STEP_KEYS = ['account', 'business', 'services', 'credentials', 'review'] as const
 
-const FALLBACK_SERVICES: IdLabelOption[] = [
-  { value: 'Sound', label: 'Sound' },
-  { value: 'Lighting', label: 'Lighting' },
-  { value: 'Staging', label: 'Staging' },
-  { value: 'Catering', label: 'Catering' },
-  { value: 'Security', label: 'Security' },
-  { value: 'AV / LED', label: 'AV / LED' },
-  { value: 'Decor', label: 'Decor' },
-  { value: 'Transport', label: 'Transport' },
-]
+const FALLBACK_SERVICE_DEFS = [
+  { value: 'Sound', key: 'sound' },
+  { value: 'Lighting', key: 'lighting' },
+  { value: 'Staging', key: 'staging' },
+  { value: 'Catering', key: 'catering' },
+  { value: 'Security', key: 'security' },
+  { value: 'AV / LED', key: 'av' },
+  { value: 'Decor', key: 'decor' },
+  { value: 'Transport', key: 'transport' },
+] as const
 
 const FALLBACK_CITIES: IdLabelOption[] = [
   { value: '1', label: 'Riyadh' },
@@ -118,10 +118,13 @@ export function ApplyVendorPage() {
     setRestoredNote(true)
   }, [])
 
-  const serviceOptions = useMemo(
-    () => mapApiIdLabelOptions(apiServices, FALLBACK_SERVICES),
-    [apiServices],
-  )
+  const serviceOptions = useMemo(() => {
+    const fallback = FALLBACK_SERVICE_DEFS.map((item) => ({
+      value: item.value,
+      label: t(`forms:vendor.serviceFallbacks.${item.key}`),
+    }))
+    return mapApiIdLabelOptions(apiServices, fallback)
+  }, [apiServices, t])
 
   const cityOptions = useMemo(
     () => mapApiIdLabelOptions(apiCities, FALLBACK_CITIES),
@@ -155,10 +158,10 @@ export function ApplyVendorPage() {
     const serviceName =
       serviceLabels[0] ??
       draft.services[0] ??
-      'General services'
+      t('forms:vendor.defaults.generalServices')
     const serviceDescription =
       draft.story.trim() ||
-      (serviceLabels.length ? serviceLabels.join(', ') : 'Vendor services')
+      (serviceLabels.length ? serviceLabels.join(', ') : t('forms:vendor.defaults.vendorServices'))
 
     const body = new FormData()
     body.append('business[tradeName]', draft.businessName.trim())

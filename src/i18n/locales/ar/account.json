@@ -35,7 +35,27 @@
     "topUpFailed": "فشل الشحن",
     "pendingNote": "يُصفّى الكاش باك في اليوم التالي لـ Winter Nights.",
     "earnedNote": "كاش باك وإعادة بيع عبر ٦ ليالٍ.",
-    "activity": "النشاط"
+    "activity": "النشاط",
+    "filters": {
+      "all": "الكل",
+      "moneyIn": "وارد",
+      "moneyOut": "صادر",
+      "pending": "معلّق"
+    },
+    "withdrawTitle": "سحب إلى حسابك البنكي",
+    "withdrawBody": "تصل المدفوعات خلال ٢–٣ أيام عمل. الحد الأدنى ٥٠ ر.س.",
+    "verifiedAccount": "حساب موثّق",
+    "requestWithdrawal": "طلب سحب",
+    "paymentMethods": "طرق الدفع",
+    "cardDefault": "افتراضي · ينتهي {{date}}",
+    "cardExpires": "ينتهي {{date}}",
+    "addCard": "إضافة بطاقة",
+    "cashbackTitle": "كيف يعمل الكاش باك",
+    "cashbackBody": "اكسب في الليالي المؤهلة. المبالغ المعلّقة تُصفّى في اليوم التالي للفعالية.",
+    "cashbackGuide": "اقرأ الدليل ←",
+    "statusCleared": "مصفّى",
+    "statusPending": "معلّق",
+    "exportCsv": "تصدير CSV"
   },
   "tickets": {
     "title": "تذاكري",
@@ -44,7 +64,39 @@
     "emptyBody": "عند الحجز ستظهر رموز QR وتفاصيل المقاعد هنا.",
     "emptyCta": "تصفح الفعاليات",
     "tabEmptyTitle": "لا شيء في هذا التبويب",
-    "tabEmptyBody": "جرّب تبويباً آخر — تذاكرك الأخرى ما زالت هنا."
+    "tabEmptyBody": "جرّب تبويباً آخر — تذاكرك الأخرى ما زالت هنا.",
+    "tabUpcoming": "القادمة",
+    "tabPast": "السابقة",
+    "tabTransferred": "منقولة",
+    "tabListed": "معروضة للبيع",
+    "refreshError": "تعذّر تحديث التذاكر الآن.",
+    "updating": "جارٍ التحديث…",
+    "addToWallet": "إضافة الكل إلى Apple Wallet",
+    "sellTicket": "بيع تذكرة",
+    "orderLabel": "طلب {{id}}",
+    "showQr": "عرض QR",
+    "transferGuest": "نقل إلى ضيف",
+    "listAuction": "عرض في المزاد",
+    "requestRefund": "طلب استرداد",
+    "cantMakeTitle": "لا تستطيع الحضور؟",
+    "cantMakeBody": "انقل التذكرة لصديق مجاناً، أو اعرضها في المزاد — MyTicket يتولى المال ويأخذ ١٠٪ من البيع.",
+    "howResale": "كيف يعمل إعادة البيع",
+    "paymentPending": "الدفع معلّق",
+    "facts": {
+      "tier": "الفئة",
+      "row": "الصف",
+      "seats": "المقاعد",
+      "gate": "البوابة"
+    },
+    "status": {
+      "UPCOMING": "قادمة",
+      "AWAITING SEAT": "بانتظار المقعد",
+      "PAST": "سابقة",
+      "TRANSFERRED": "منقولة",
+      "LISTED": "معروضة",
+      "CONFIRMED": "مؤكد",
+      "INSTALMENTS": "أقساط"
+    }
   },
   "ticket": {
     "backToTicket": "العودة إلى التذكرة",
@@ -153,7 +205,31 @@
     "cta": "اعرضه في المزاد",
     "keepTicket": "أبقِ تذكرتي",
     "success": "تم إرسال العرض",
-    "error": "تعذّر عرض التذكرة"
+    "error": "تعذّر عرض التذكرة",
+    "endsIn12h": "خلال ١٢ ساعة",
+    "endsIn24h": "خلال ٢٤ ساعة",
+    "endsIn2d": "خلال يومين",
+    "endsLatest": "الإثنين ٥ أكتوبر · الأحدث",
+    "waitlistPeople": "أشخاص في قائمة الانتظار",
+    "similarSold": "مقاعد مشابهة بيعت هذا الأسبوع",
+    "activeListings": "عروض نشطة لهذه الفعالية",
+    "youReceive": "تستلم",
+    "platformFee": "رسوم المنصة (١٠٪)",
+    "startingAt": "المزايدة الابتدائية",
+    "closeNote": "تُغلق العروض دائماً قبل ٦ ساعات على الأقل من فتح الأبواب، ليتمكن المشتري من التخطيط.",
+    "ifSells": "إذا بيعت عند مزايدتك الابتدائية",
+    "commission": "عمولة MyTicket · ١٠٪",
+    "youReceiveAtLeast": "تستلم على الأقل",
+    "paidNote": "دفعت {{paid}} ر.س لهذه التذكرة. لا تتجاوز المزايدات سعرك الابتدائي — تحتفظ بـ ٩٠٪ أينما وصلت.",
+    "rulesTitle": "القواعد بوضوح",
+    "ruleCancelBefore": "يمكنك إلغاء العرض في أي وقت",
+    "ruleCancelEmphasis": "حتى تصل أول مزايدة",
+    "ruleCancelAfter": "— بعد ذلك يجب أن يستمر.",
+    "ruleWhileListed": "أثناء العرض لا يمكن استخدام التذكرة أو إهدائها أو استردادها.",
+    "ruleSold": "إذا بيعت: تنتقل للمشتري ويتوقف رمز QR. إذا لم تُبع: تعود إليك وهي صالحة لليلة.",
+    "faceValue": "القيمة الاسمية",
+    "soldOut": "هذه الفعالية نفدت",
+    "demandTitle": "الطلب الآن"
   },
   "refund": {
     "header": "طلب استرداد",
@@ -165,7 +241,33 @@
     "reasonOptional": "— اختياري، يساعد المنظم",
     "success": "تم إرسال طلب الاسترداد",
     "error": "تعذّر إرسال طلب الاسترداد",
-    "reasonPlaceholder": "مثال: تغيّرت خطط السفر…"
+    "reasonPlaceholder": "مثال: تغيّرت خطط السفر…",
+    "windowCloses": "تغلق نافذة الاسترداد {{when}}",
+    "steps": {
+      "submittedTitle": "تم إرسال الطلب",
+      "submittedBody": "ستصلك تأكيد فوراً، وتتوقف تذكرتك عن إعادة البيع أو الإهداء.",
+      "reviewTitle": "مراجعة MyTicket",
+      "reviewBody": "عادةً ١–٢ يوم عمل. سنُبلغك بأي حال.",
+      "walletTitle": "يصل {{amount}} ر.س إلى محفظتك",
+      "walletBody": "قابل للسحب إلى بنكك، أو جاهز للعرض التالي."
+    },
+    "windowByOrganizer": "— حددها المنظم لهذه الفعالية.",
+    "timeLeft": "متبقٍ {{time}}",
+    "policyTitle": "سياسة الاسترداد لهذه الفعالية",
+    "policyBody": "«استرداد كامل لسعر التذكرة حتى ٤٨ ساعة قبل فتح الأبواب (الإثنين ٥ أكتوبر، ١٨:٣٠). لا استرداد بعد ذلك إلا إذا أُلغيت الفعالية أو أُعيد جدولتها. رسوم منصة MyTicket غير قابلة للاسترداد.» — Nights Entertainment Co.، المنظم.",
+    "ticketPrice": "سعر التذكرة · ذهبي · الطابق أ · الصف ج · المقعد ١٢",
+    "platformFee": "رسوم المنصة — غير قابلة للاسترداد",
+    "backToWallet": "العودة إلى محفظتك",
+    "handleNoteBefore": "MyTicket يتولى الاسترداد وليس المنظم. الطلبات داخل النافذة تُوافق عادة خلال",
+    "handleNoteEmphasis": "١–٢ يوم عمل",
+    "handleNoteAfter": "، ويصل المال إلى محفظتك كرصيد قابل للسحب. تبقى تذكرتك صالحة حتى الموافقة على الاسترداد.",
+    "refundingEyebrow": "جارٍ الاسترداد",
+    "ratherTitle": "لا تريد خسارة الرسوم؟",
+    "ratherBefore": "إذا كان العرض مطلوباً، قد تحصل على أكثر عبر",
+    "ratherLink": "عرضه في مزاد إعادة البيع",
+    "ratherAfter": "— تستلم ٩٠٪ من سعر البيع.",
+    "whatHappens": "ماذا يحدث بعد ذلك",
+    "paidWith": "دُفع بـ"
   },
   "saved": {
     "title": "المحفوظات",
@@ -178,7 +280,30 @@
     "waitlistsEmptyBody": "عند الانضمام لقائمة انتظار لفعالية نافدة ستظهر في هذا التبويب.",
     "followingEmptyTitle": "لا تتابع أحداً بعد",
     "followingEmptyBody": "تابع فناناً أو منظماً وسيظهر في هذا التبويب.",
-    "removeAria": "إزالة من المحفوظات"
+    "removeAria": "إزالة من المحفوظات",
+    "notificationSettings": "إعدادات الإشعارات",
+    "segments": {
+      "favourites": "المفضلة",
+      "waitlists": "قوائم الانتظار",
+      "following": "المتابَعون"
+    },
+    "filters": {
+      "all": "الكل",
+      "events": "فعاليات",
+      "experiences": "تجارب",
+      "talents": "مواهِب"
+    },
+    "kinds": {
+      "Event": "فعالية",
+      "Experience": "تجربة",
+      "Talent": "موهبة",
+      "Vendor": "بائع"
+    },
+    "cta": {
+      "tickets": "احصل على تذاكر",
+      "visit": "احجز زيارة",
+      "profile": "عرض الملف"
+    }
   },
   "notifications": {
     "title": "الإشعارات",
@@ -189,7 +314,21 @@
     "filterEmptyTitle": "لا شيء في هذا التصفية",
     "filterEmptyBody": "جرّب فئة أخرى — تنبيهاتك الأخرى ما زالت في صندوق الوارد.",
     "inboxSubtitle": "{{unread}} غير مقروء · {{total}} في صندوق الوارد",
-    "dismissAria": "تجاهل"
+    "dismissAria": "تجاهل",
+    "markAllRead": "تعليم تعليم الكل كمقروء",
+    "preferences": "التفضيلات",
+    "filters": {
+      "all": "الكل",
+      "tickets": "التذاكر والطلبات",
+      "waitlists": "قوائم الانتظار",
+      "prices": "الأسعار والمزاد",
+      "following": "المتابَعون"
+    },
+    "groups": {
+      "TODAY": "اليوم",
+      "YESTERDAY": "أمس",
+      "EARLIER": "أقدم"
+    }
   },
   "settings": {
     "title": "الإعدادات",
@@ -293,6 +432,34 @@
         "desc": "التنزيلات والحذف",
         "tag": "إدارة"
       }
+    },
+    "memberMeta": "{{city}} · عضو منذ {{since}} · حضر {{count}} فعالية",
+    "upcoming": "القادمة",
+    "attended": "حضرها",
+    "wallet": "المحفظة",
+    "editProfile": "تعديل الملف",
+    "nextNights": "لياليك القادمة",
+    "nextNightsMeta": "{{count}} تذاكر بانتظارك · أقربها خلال {{days}} يوماً",
+    "seeAllTickets": "عرض كل التذاكر ←",
+    "showQr": "عرض QR",
+    "manage": "إدارة",
+    "auctionActivity": "نشاط المزاد",
+    "seeAll": "عرض الكل",
+    "savedForLater": "محفوظ للاحقاً",
+    "becomeBusiness": "كن شريكاً تجارياً",
+    "seeAllSaved": "عرض كل {{count}} محفوظ ←",
+    "settingsTitle": "الحساب والإعدادات",
+    "settingsSubtitle": "كل ما يتعلق بتسجيل الدخول والدفع والإشعارات.",
+    "openSettings": "فتح الإعدادات ←",
+    "becomeBusinessBody": "طلب بائع أو موهبة — أرسل مرة واحدة وتابع مراجعة الإدارة. شراكة المنظم تُرتب عبر مكتبنا.",
+    "apply": "قدّم",
+    "signedInDevice": "مسجّل الدخول على هذا الجهاز منذ {{when}} · {{device}}",
+    "manageDevices": "إدارة الأجهزة",
+    "inDays": "خلال {{count}} أيام",
+    "auctionStatuses": {
+      "noBidsYet": "لا مزايدات بعد",
+      "winning": "رابح",
+      "outbid": "تم تجاوزك"
     }
   },
   "aside": {
@@ -349,7 +516,9 @@
     "placeholder": "ما الذي برز — الدخول، الصوت، المقاعد، الليلة نفسها.",
     "hint": "اضغط على النجوم للبدء — الدرجة مطلوبة فقط، والكلمات اختيارية. يمكنك التعديل خلال ٣٠ يوماً بعد النشر.",
     "editUnavailable": "التعديل غير متاح بعد",
-    "viewEvent": "عرض الفعالية"
+    "viewEvent": "عرض الفعالية",
+    "writeIt": "اكتبها",
+    "yourScore": "تقييمك"
   },
   "submissions": {
     "title": "الأماكن التي أضفتها",
@@ -375,7 +544,8 @@
     "subtitle": "التذاكر التي تبيعها والمقاعد التي تطاردها في مكان واحد. ننبّهك فور أي تغيير.",
     "browse": "تصفح المزادات",
     "selling": "بيع",
-    "bidding": "مزايدة"
+    "bidding": "مزايدة",
+    "endsIn": "ينتهي خلال"
   },
   "support": {
     "casesTitle": "حالات الدعم",
@@ -445,6 +615,31 @@
     },
     "tagIssue": "مشكلة",
     "tagComplaint": "شكوى",
-    "defaultSubject": "طلب دعم"
+    "defaultSubject": "طلب دعم",
+    "backHelp": "مركز المساعدة",
+    "agentName": "خالد · دعم MyTicket",
+    "agentOnline": "متصل — يرد خلال دقيقة تقريباً",
+    "endChat": "إنهاء المحادثة",
+    "guestBanner": "اليوم · {{time}} — تتحدث كضيف في MyTicket",
+    "you": "أنت",
+    "agent": "الدعم",
+    "fallback": [
+      {
+        "body": "مرحباً — اشتريت تذاكر ولم يصلني بريد التأكيد.",
+        "time": "21:32"
+      },
+      {
+        "body": "يسعدني المساعدة! هل تشارك بريدك المستخدم عند الدفع؟ بدون كلمة المرور — العنوان فقط.",
+        "time": "21:33"
+      },
+      {
+        "body": "sara@email.com",
+        "time": "21:34"
+      },
+      {
+        "body": "وجدتها — الطلب MT-2026-84193، ٢ × ذهب لـ Winter Nights. ارتد البريد، لكن تذاكرك بأمان في حسابك تحت تذاكري. أعدت إرسال التأكيد الآن. أي شيء آخر؟",
+        "time": "21:35"
+      }
+    ]
   }
 }

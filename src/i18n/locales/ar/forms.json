@@ -44,6 +44,16 @@
       "reviewPortfolio": "رابط المعرض",
       "reviewId": "الهوية في الملف",
       "noneAdded": "لم يُضف شيء"
+    },
+    "categories": {
+      "singer": "مغني",
+      "band": "فرقة",
+      "dj": "دي جي",
+      "comedian": "كوميدي",
+      "speaker": "متحدث",
+      "dancer": "راقص",
+      "host": "مقدم / MC",
+      "instrumentalist": "عازف"
     }
   },
   "vendor": {
@@ -93,6 +103,20 @@
       "reviewCr": "رقم السجل",
       "filesSelected_one": "تم اختيار ملف {{count}}",
       "filesSelected_other": "تم اختيار {{count}} ملفات"
+    },
+    "serviceFallbacks": {
+      "sound": "صوت",
+      "lighting": "إضاءة",
+      "staging": "خشبة",
+      "catering": "تموين",
+      "security": "أمن",
+      "av": "صوت وصورة / LED",
+      "decor": "ديكور",
+      "transport": "نقل"
+    },
+    "defaults": {
+      "generalServices": "خدمات عامة",
+      "vendorServices": "خدمات البائع"
     }
   },
   "organizer": {
@@ -197,6 +221,8 @@
     "provided": "مُقدَّم"
   },
   "accountDone": {
-    "subtitle": "يبقى حساب الضيف ضيفاً. التذاكر والمحفظة والمراجعات دون تغيير — هذا النموذج طلب فقط."
+    "subtitle": "يبقى حساب الضيف ضيفاً. التذاكر والمحفظة والمراجعات دون تغيير — هذا النموذج طلب فقط.",
+    "title": "هذا الجزء منتهٍ — أنت مسجّل الدخول باسم {{name}}.",
+    "fallbackName": "حسابك"
   }
 }

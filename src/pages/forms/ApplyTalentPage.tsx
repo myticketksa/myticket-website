@@ -30,16 +30,16 @@ import { apiErrorMessage } from '@/lib/api/unwrap'
 
 const STEP_KEYS = ['account', 'performer', 'portfolio', 'categories', 'review'] as const
 
-const FALLBACK_CATEGORIES: IdLabelOption[] = [
-  { value: '1', label: 'Singer' },
-  { value: '2', label: 'Band' },
-  { value: '3', label: 'DJ' },
-  { value: '4', label: 'Comedian' },
-  { value: '5', label: 'Speaker' },
-  { value: '6', label: 'Dancer' },
-  { value: '7', label: 'Host / MC' },
-  { value: '8', label: 'Instrumentalist' },
-]
+const FALLBACK_CATEGORY_DEFS = [
+  { value: '1', key: 'singer' },
+  { value: '2', key: 'band' },
+  { value: '3', key: 'dj' },
+  { value: '4', key: 'comedian' },
+  { value: '5', key: 'speaker' },
+  { value: '6', key: 'dancer' },
+  { value: '7', key: 'host' },
+  { value: '8', key: 'instrumentalist' },
+] as const
 
 const FALLBACK_CITIES: IdLabelOption[] = [
   { value: '1', label: 'Riyadh' },
@@ -111,10 +111,13 @@ export function ApplyTalentPage() {
     setRestoredNote(true)
   }, [])
 
-  const categoryOptions = useMemo(
-    () => mapApiIdLabelOptions(apiCategories, FALLBACK_CATEGORIES),
-    [apiCategories],
-  )
+  const categoryOptions = useMemo(() => {
+    const fallback = FALLBACK_CATEGORY_DEFS.map((item) => ({
+      value: item.value,
+      label: t(`forms:talent.categories.${item.key}`),
+    }))
+    return mapApiIdLabelOptions(apiCategories, fallback)
+  }, [apiCategories, t])
 
   const cityOptions = useMemo(
     () => mapApiIdLabelOptions(apiCities, FALLBACK_CITIES),
