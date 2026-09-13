@@ -9,48 +9,13 @@ import { cn } from '@/lib/cn'
 import { useGetOrderDetailsQuery } from '@/app/api/ordersApi'
 import { useAppSelector } from '@/app/hooks'
 import { selectAuthUser } from '@/features/auth/authSlice'
-
-const TICKETS = [
-  {
-    id: 'MT-84193-1',
-    seat: 'Floor A · Row H · Seat 12',
-    gate: 'Scan at Gate 3',
-  },
-  {
-    id: 'MT-84193-2',
-    seat: 'Floor A · Row H · Seat 13',
-    gate: 'Scan at Gate 3',
-  },
-] as const
+import { mapOrderConfirmation } from '@/lib/api/mappers/orders'
 
 const NEXT_STEPS = [
   'Your tickets live in My tickets — offline QR codes work even without signal.',
   'Share a ticket with a friend and they get their own QR the moment they accept.',
   "We'll remind you an hour before doors with the gate and bag-policy notes.",
 ] as const
-
-function formatMoney(value: unknown, fallback: string) {
-  if (value == null || value === '' || value === '—') return fallback
-  const raw = String(value)
-  if (/sar/i.test(raw)) return raw
-  const num = Number(value)
-  if (!Number.isFinite(num)) return raw
-  return `SAR ${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
-function readSessionHold() {
-  try {
-    return JSON.parse(sessionStorage.getItem('myticket.mockHold') || 'null') as {
-      seats?: { id?: string; label: string; category?: string; price: number }[]
-      subtotal?: number
-      serviceFee?: number
-      vat?: number
-      total?: number
-    } | null
-  } catch {
-    return null
-  }
-}
 
 /** Dense QR-like matrix — Figma `207:8498` draws a seeded ~105px module grid (no lib in deps). */
 function TicketQr({ seed }: { seed: number }) {
@@ -74,11 +39,9 @@ function TicketQr({ seed }: { seed: number }) {
       inFinder(0, size - 7)
     if (finder !== null) return finder
 
-    // Timing patterns
     if (y === 6 && x >= 8 && x <= size - 9) return x % 2 === 0
     if (x === 6 && y >= 8 && y <= size - 9) return y % 2 === 0
 
-    // Alignment pattern near bottom-right of data area
     const ax = size - 9
     const ay = size - 9
     if (x >= ax - 2 && x <= ax + 2 && y >= ay - 2 && y <= ay + 2) {
@@ -89,7 +52,6 @@ function TicketQr({ seed }: { seed: number }) {
       return false
     }
 
-    // Quiet-ish separator around finders stays mostly off
     if (
       (x === 7 && y < 8) ||
       (y === 7 && x < 8) ||
@@ -132,32 +94,9 @@ function resolveOrderId(searchParams: URLSearchParams) {
   )
 }
 
-function mapOrderTickets(
-  order: Record<string, unknown>,
-  holdSeats?: { id?: string; label: string; category?: string }[],
-) {
-  const items = order.tickets ?? order.items ?? order.lines
-  if (Array.isArray(items) && items.length > 0) {
-    return (items as Record<string, unknown>[]).map((ticket, index) => ({
-      id: String(ticket.id ?? ticket.ticket_number ?? `MT-${index + 1}`),
-      seat: String(
-        ticket.seat ?? ticket.seats ?? ticket.tier ?? holdSeats?.[index]?.label ?? '—',
-      ),
-      gate: String(ticket.gate ?? ticket.entry ?? 'Scan at gate'),
-    }))
-  }
-  if (holdSeats && holdSeats.length > 0) {
-    return holdSeats.map((seat, index) => ({
-      id: String(seat.id ?? `MT-HOLD-${index + 1}`),
-      seat: seat.label,
-      gate: 'Scan at gate',
-    }))
-  }
-  return [...TICKETS]
-}
-
 /**
  * Order Confirmation — Figma `207:8462`. Uses `MainLayout` (SiteHeader + SiteFooter).
+ * Data from `GET /tickets/orders/:id` (My tickets order details).
  */
 export function OrderConfirmationPage() {
   const navigate = useNavigate()
@@ -167,75 +106,45 @@ export function OrderConfirmationPage() {
   const { data: order, isFetching, isError } = useGetOrderDetailsQuery(orderId, {
     skip: !orderId,
   })
-  const hold = useMemo(() => readSessionHold(), [])
 
   const view = useMemo(() => {
-    const hasOrder = Boolean(order && Object.keys(order).length > 0)
-    const tickets = hasOrder
-      ? mapOrderTickets(order!, hold?.seats)
-      : mapOrderTickets({}, hold?.seats)
-
-    const fallbackSubtotal = hold?.subtotal ?? 485
-    const fallbackFee = hold?.serviceFee ?? 28
-    const fallbackVat = hold?.vat ?? 75
-    const fallbackTotal = hold?.total ?? fallbackSubtotal + fallbackFee + fallbackVat
-
-    if (!hasOrder) {
+    if (order && Object.keys(order).length > 0) {
       return {
-        email: user?.email ?? 'sara@email.com',
-        ticketCount: tickets.length,
-        reference: orderId || 'MT-2026-84193',
-        placedAt: new Date().toLocaleString(),
-        eventTitle: 'Winter Nights: Live at King Abdullah Park',
-        eventMeta: 'Thu 8 Oct 2026 · 20:00 · King Abdullah Park, Riyadh',
-        tierLabel: hold?.seats?.[0]?.category?.toUpperCase() ?? 'GOLD · SEATED',
-        holder: user?.name ?? 'Sara Alghamdi',
-        tickets,
-        subtotal: formatMoney(fallbackSubtotal, 'SAR 485.00'),
-        serviceFee: formatMoney(fallbackFee, 'SAR 28.00'),
-        vat: formatMoney(fallbackVat, 'SAR 75.00'),
-        total: formatMoney(fallbackTotal, 'SAR 588.00'),
-        walletPaid: 'SAR 0.00',
-        cardPaid: formatMoney(fallbackTotal, 'SAR 588.00'),
-        cashback: 'SAR 0.00',
-        apiNote: isError
-          ? 'Showing your local checkout summary while order details are unreachable.'
-          : isFetching
-            ? 'Loading order details…'
-            : orderId
-              ? null
-              : 'Showing a preview — complete checkout to get a live order reference.',
+        ...mapOrderConfirmation(order, {
+          orderId,
+          email: user?.email,
+          holder: user?.name,
+        }),
+        apiNote: null as string | null,
       }
     }
 
     return {
-      email: String(order!.email ?? order!.customer_email ?? user?.email ?? 'sara@email.com'),
-      ticketCount: Number(order!.quantity ?? tickets.length) || tickets.length,
-      reference: String(order!.reference ?? order!.order_number ?? order!.id ?? orderId),
-      placedAt: String(order!.created_at ?? order!.placed_at ?? new Date().toLocaleString()),
-      eventTitle: String(order!.event_title ?? order!.title ?? order!.name ?? 'Your event'),
-      eventMeta: String(order!.event_meta ?? order!.meta ?? order!.venue ?? '—'),
-      tierLabel: String(
-        order!.tier_label ?? order!.tier ?? hold?.seats?.[0]?.category ?? 'TICKET',
-      ),
-      holder: String(order!.holder ?? order!.customer_name ?? user?.name ?? 'Ticket holder'),
-      tickets,
-      subtotal: formatMoney(
-        order!.subtotal ?? order!.items_total ?? hold?.subtotal,
-        'SAR 485.00',
-      ),
-      serviceFee: formatMoney(
-        order!.service_fee ?? order!.fees ?? hold?.serviceFee,
-        'SAR 28.00',
-      ),
-      vat: formatMoney(order!.vat ?? order!.tax ?? hold?.vat, 'SAR 75.00'),
-      total: formatMoney(order!.total ?? order!.amount ?? hold?.total, 'SAR 588.00'),
-      walletPaid: formatMoney(order!.wallet_paid ?? order!.wallet_amount, 'SAR 0.00'),
-      cardPaid: formatMoney(order!.card_paid ?? order!.card_amount ?? order!.total, '—'),
-      cashback: formatMoney(order!.cashback ?? order!.cashback_earned, 'SAR 0.00'),
-      apiNote: null as string | null,
+      email: user?.email ?? '—',
+      ticketCount: 0,
+      reference: orderId || '—',
+      placedAt: '—',
+      eventTitle: isFetching ? 'Loading…' : 'Order details unavailable',
+      eventMeta: '—',
+      tierLabel: 'TICKET',
+      holder: user?.name ?? 'Ticket holder',
+      tickets: [] as { id: string; seat: string; gate: string }[],
+      subtotal: 'SAR 0.00',
+      serviceFee: 'SAR 0.00',
+      vat: 'SAR 0.00',
+      total: 'SAR 0.00',
+      walletPaid: 'SAR 0.00',
+      cardPaid: 'SAR 0.00',
+      cashback: 'SAR 0.00',
+      apiNote: isError
+        ? 'Could not load this order. Open My tickets and try again.'
+        : isFetching
+          ? 'Loading order details…'
+          : orderId
+            ? 'Order not found.'
+            : 'Complete checkout to see your tickets here.',
     }
-  }, [hold, isError, isFetching, order, orderId, user?.email, user?.name])
+  }, [isError, isFetching, order, orderId, user?.email, user?.name])
 
   return (
     <PageSection padTop={52} padBottom={96}>

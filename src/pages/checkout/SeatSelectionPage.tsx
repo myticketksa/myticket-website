@@ -20,9 +20,11 @@ import {
 import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { parsePureNumericIds } from '@/lib/api/formPayload'
-import { resolveEventId } from '@/lib/api/mappers/events'
+import { firstTicketTypeId } from '@/lib/api/locale'
+import { resolveEventFromList, resolveEventId } from '@/lib/api/mappers/events'
 import { mapApiSeatsToRows, type SeatMapStatus } from '@/lib/api/mappers/seats'
 import { apiErrorMessage } from '@/lib/api/unwrap'
+import { writeHoldSession } from '@/lib/purchase/holdSession'
 
 type SeatStatus = SeatMapStatus | 'selected'
 type Zone = 'all' | 'vip' | 'gold' | 'silver' | 'bronze'
@@ -337,8 +339,10 @@ export function SeatSelectionPage() {
     setSelected(INITIAL_SELECTED)
   }, [usingLiveMap])
 
+  // Release only when the tab is closed / unloaded — not on React Strict Mode remounts
+  // or when continuing to checkout (those unmounts used to wipe a valid holdId).
   useEffect(() => {
-    return () => {
+    const releaseOnUnload = () => {
       if (continuingRef.current) return
       try {
         const mock = JSON.parse(sessionStorage.getItem('myticket.mockHold') || 'null') as {
@@ -354,6 +358,8 @@ export function SeatSelectionPage() {
         /* ignore */
       }
     }
+    window.addEventListener('pagehide', releaseOnUnload)
+    return () => window.removeEventListener('pagehide', releaseOnUnload)
   }, [releaseHold, resolvedEventId])
 
   const subtotal = selected.reduce((sum, seat) => sum + seat.price, 0)
@@ -362,61 +368,75 @@ export function SeatSelectionPage() {
   const total = subtotal + serviceFee + vat
 
   /**
-   * Soft hold: call API only when seat ids are pure numeric + ticketId is known.
-   * Fixture labels like `C11` stay local mock so checkout still works offline.
+   * Seated checkout requires a real API soft-hold (`holdId` + numeric `seatIds`).
+   * Fixture labels like `C11` cannot create an order on the live API.
    */
   async function continueToCheckout() {
+    if (selected.length === 0) return
+
     if (resolvedEventId) sessionStorage.setItem('myticket.eventId', resolvedEventId)
     else if (slug) sessionStorage.setItem('myticket.eventId', slug)
 
+    const eventRecord = resolveEventFromList(apiEvents, slug ?? '')
     const storedTicketId = sessionStorage.getItem('myticket.ticketId')
     const ticketId =
-      storedTicketId && /^\d+$/.test(storedTicketId) ? Number(storedTicketId) : undefined
+      (storedTicketId && /^\d+$/.test(storedTicketId) ? Number(storedTicketId) : undefined) ??
+      firstTicketTypeId(eventRecord)
     const numericSeatIds = parsePureNumericIds(selected.map((seat) => seat.id))
 
-    let holdId: string | number | undefined
-    let heldSeatIds: Array<string | number> = selected.map((seat) => seat.id)
-
-    if (resolvedEventId && ticketId && numericSeatIds.length === selected.length) {
-      setHolding(true)
-      try {
-        const held = await holdSeats({
-          eventId: resolvedEventId,
-          seatIds: numericSeatIds,
-          ticketId,
-        }).unwrap()
-        holdId = held.holdId ?? held.hold_id ?? held.id
-        heldSeatIds = numericSeatIds
-      } catch (error) {
-        dispatch(
-          toastPushed(
-            'neutral',
-            apiErrorMessage(error, 'Seat hold unavailable — continuing with local hold'),
-          ),
-        )
-      } finally {
-        setHolding(false)
-      }
+    if (!usingLiveMap || numericSeatIds.length !== selected.length) {
+      dispatch(
+        toastPushed(
+          'error',
+          'Live seat inventory is required for this event. Pick seats from the map once seats load.',
+        ),
+      )
+      return
     }
 
-    continuingRef.current = true
-    sessionStorage.setItem(
-      'myticket.mockHold',
-      JSON.stringify({
-        seatIds: heldSeatIds,
+    if (!resolvedEventId || !ticketId) {
+      dispatch(
+        toastPushed(
+          'error',
+          'Ticket type is missing for this event. Open the event page again, then return to seats.',
+        ),
+      )
+      return
+    }
+
+    setHolding(true)
+    try {
+      const held = await holdSeats({
+        eventId: resolvedEventId,
+        seatIds: numericSeatIds,
+        ticketId,
+      }).unwrap()
+      const holdId = held.holdId ?? held.hold_id ?? held.id
+      if (holdId == null || String(holdId).trim() === '') {
+        throw new Error('Hold id missing from seat hold response')
+      }
+
+      continuingRef.current = true
+      writeHoldSession({
+        seatIds: numericSeatIds,
         seats: selected,
         ticketId,
-        holdId,
-        eventId: resolvedEventId ?? slug,
+        holdId: String(holdId),
+        eventId: resolvedEventId,
         total,
         subtotal,
         serviceFee,
         vat,
         heldAt: Date.now(),
-      }),
-    )
-    if (ticketId) sessionStorage.setItem('myticket.ticketId', String(ticketId))
-    navigate('/checkout')
+        slug: slug ?? undefined,
+      })
+      sessionStorage.setItem('myticket.ticketId', String(ticketId))
+      navigate('/checkout')
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not hold these seats')))
+    } finally {
+      setHolding(false)
+    }
   }
 
   function toggleSeat(id: string, row: string, number: number, status: SeatStatus) {

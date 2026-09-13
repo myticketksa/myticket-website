@@ -12,40 +12,21 @@ import { selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { parsePureNumericIds } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
+import {
+  clearHoldSession,
+  hasValidApiHold,
+  readHoldSession,
+  type HeldSeatSnapshot,
+} from '@/lib/purchase/holdSession'
 
 type PaymentMethod = 'card' | 'apple' | 'tabby' | 'tamara' | 'wallet' | 'sadad'
 
-type HeldSeat = {
-  id?: string
-  label: string
-  category?: string
-  meta?: string
-  price: number
-  row?: string
-}
+type HeldSeat = HeldSeatSnapshot
 
 const FALLBACK_SEATS: HeldSeat[] = [
   { row: 'C', label: 'Row C, seat 11', meta: 'Gold · Floor Block A', price: 520 },
   { row: 'C', label: 'Row C, seat 12', meta: 'Gold · Floor Block A', price: 520 },
 ]
-
-function readHold() {
-  try {
-    return JSON.parse(sessionStorage.getItem('myticket.mockHold') || 'null') as {
-      seatIds?: unknown[]
-      seats?: HeldSeat[]
-      holdId?: string
-      ticketId?: number | string
-      eventId?: string
-      total?: number
-      subtotal?: number
-      serviceFee?: number
-      vat?: number
-    } | null
-  } catch {
-    return null
-  }
-}
 
 const ASSURANCES = [
   'Tickets are issued by the organizer and verified by MyTicket.',
@@ -89,32 +70,58 @@ export function CheckoutPage() {
   const [assignGuests, setAssignGuests] = useState(false)
   const [acceptRefund, setAcceptRefund] = useState(true)
 
-  const hold = useMemo(() => readHold(), [])
+  const hold = useMemo(() => readHoldSession(), [])
   const seats = useMemo(() => {
     if (hold?.seats && hold.seats.length > 0) return hold.seats
     return FALLBACK_SEATS
   }, [hold])
+  const selectedCount = Math.max(1, seats.length)
   const subtotal =
     hold?.subtotal ?? seats.reduce((sum, seat) => sum + Number(seat.price || 0), 0)
   const serviceFee = hold?.serviceFee ?? Math.round(subtotal * 0.05)
   const vat = hold?.vat ?? Math.round((subtotal + serviceFee) * 0.15)
   const total = hold?.total ?? subtotal + serviceFee + vat
 
+  // Do not release on unmount — Strict Mode remounts were clearing holdId before pay.
+  // Only release when the tab is actually closed / navigated away from the site.
   useEffect(() => {
-    return () => {
+    if (!hasValidApiHold(hold)) {
+      const slug = hold?.slug || sessionStorage.getItem('myticket.eventSlug')
+      dispatch(
+        toastPushed(
+          'error',
+          'Your seat hold is missing or expired. Select seats again to continue.',
+        ),
+      )
+      navigate(slug ? `/events/${slug}/seats` : '/', { replace: true })
+      return
+    }
+
+    const releaseOnUnload = () => {
       if (paidRef.current) return
-      const current = readHold()
+      const current = readHoldSession()
       if (current?.holdId && current.eventId) {
         void releaseHold({ eventId: current.eventId, holdId: String(current.holdId) })
-        sessionStorage.removeItem('myticket.mockHold')
+        clearHoldSession()
       }
     }
-  }, [releaseHold])
+    window.addEventListener('pagehide', releaseOnUnload)
+    return () => window.removeEventListener('pagehide', releaseOnUnload)
+  }, [dispatch, hold, navigate, releaseHold])
   const [sendReminders, setSendReminders] = useState(true)
   const [marketing, setMarketing] = useState(false)
   const [promoCode, setPromoCode] = useState('')
   const [promoApplied, setPromoApplied] = useState(false)
-  const [guestNames, setGuestNames] = useState(['', ''])
+  const [guestNames, setGuestNames] = useState<string[]>(() =>
+    Array.from({ length: selectedCount }, () => ''),
+  )
+
+  useEffect(() => {
+    setGuestNames((current) => {
+      if (current.length === selectedCount) return current
+      return Array.from({ length: selectedCount }, (_, index) => current[index] ?? '')
+    })
+  }, [selectedCount])
 
   const payLabels: Record<PaymentMethod, string> = {
     card: 'Pay now',
@@ -127,69 +134,80 @@ export function CheckoutPage() {
   const payLabel = payLabels[method]
   const paying = payState.isLoading || createState.isLoading
 
+  function buildBeneficiaries(count: number) {
+    const buyerName = user?.name?.trim() || 'Ticket holder'
+    return Array.from({ length: count }, (_, index) => {
+      const assigned = guestNames[index]?.trim()
+      return {
+        quantity_id: index + 1,
+        // API requires one beneficiary per ticket. When guests aren't assigned,
+        // every seat is named for the buyer.
+        name: assignGuests ? assigned || `${buyerName} (${index + 1})` : buyerName,
+      }
+    })
+  }
+
   async function ensureOrderId(): Promise<number | null> {
     const existing = Number(sessionStorage.getItem('myticket.pendingOrderId') || '')
     if (existing) return existing
 
+    const mock = readHoldSession()
     const eventId =
+      mock?.eventId ||
       sessionStorage.getItem('myticket.eventId') ||
       sessionStorage.getItem('myticket.checkoutEventId')
-    if (!eventId) return null
-
-    let selectedCount = 2
-    let seatIds: number[] = []
-    let holdId: string | undefined
-    let ticketId: number | undefined
-
-    try {
-      const mock = JSON.parse(sessionStorage.getItem('myticket.mockHold') || 'null') as {
-        seatIds?: unknown[]
-        holdId?: string
-        ticketId?: number | string
-        total?: number
-      } | null
-      selectedCount = Math.max(1, mock?.seatIds?.length ?? 2)
-      // Only forward API numeric seat ids — never parse fixture labels like "C11".
-      seatIds = parsePureNumericIds(mock?.seatIds)
-      if (mock?.holdId) holdId = String(mock.holdId)
-      if (mock?.ticketId != null && /^\d+$/.test(String(mock.ticketId))) {
-        ticketId = Number(mock.ticketId)
-      }
-    } catch {
-      selectedCount = 2
+    if (!eventId) {
+      dispatch(toastPushed('error', 'Event is missing — open seats from the event page again'))
+      return null
     }
 
+    if (!hasValidApiHold(mock)) {
+      const seatsPath = mock?.slug ? `/events/${mock.slug}/seats` : '/'
+      dispatch(
+        toastPushed(
+          'error',
+          'Seat hold expired or incomplete. Select seats again before paying.',
+        ),
+      )
+      navigate(seatsPath, { replace: true })
+      return null
+    }
+
+    const seatIds = parsePureNumericIds(mock!.seatIds)
+    const holdId = String(mock!.holdId)
+    const count = Math.max(1, seatIds.length)
+
+    let ticketId: number | undefined
+    if (mock?.ticketId != null && /^\d+$/.test(String(mock.ticketId))) {
+      ticketId = Number(mock.ticketId)
+    }
     const storedTicketId = sessionStorage.getItem('myticket.ticketId')
     if (!ticketId && storedTicketId && /^\d+$/.test(storedTicketId)) {
       ticketId = Number(storedTicketId)
     }
-
-    const body: {
-      items?: { ticketId: number; quantity: number }[]
-      beneficiaries?: { quantity_id: number; name: string }[]
-      seatIds?: number[]
-      holdId?: string
-      ticketId?: number
-      quantity?: number
-    } = {
-      quantity: selectedCount,
+    if (!ticketId) {
+      dispatch(toastPushed('error', 'Ticket type is missing for this order'))
+      return null
     }
-
-    if (ticketId) {
-      body.ticketId = ticketId
-      body.items = [{ ticketId, quantity: selectedCount }]
-    }
-    if (seatIds.length > 0) body.seatIds = seatIds
-    if (holdId) body.holdId = holdId
 
     if (assignGuests) {
-      const beneficiaries = guestNames
-        .map((name, index) => ({
-          quantity_id: index + 1,
-          name: name.trim() || user?.name || `Guest ${index + 1}`,
-        }))
-        .slice(0, selectedCount)
-      if (beneficiaries.length > 0) body.beneficiaries = beneficiaries
+      const missing = guestNames
+        .slice(0, count)
+        .findIndex((name) => !name.trim())
+      if (missing >= 0) {
+        dispatch(toastPushed('error', `Enter a name for guest ${missing + 1}`))
+        return null
+      }
+    }
+
+    const body = {
+      quantity: count,
+      ticketId,
+      items: [{ ticketId, quantity: count }],
+      // Seated events require both fields — never omit them.
+      seatIds,
+      holdId,
+      beneficiaries: buildBeneficiaries(count),
     }
 
     const created = await createOrder({
@@ -237,7 +255,7 @@ export function CheckoutPage() {
         }).unwrap()
         sessionStorage.setItem('myticket.lastOrderId', String(pendingOrderId))
         sessionStorage.removeItem('myticket.pendingOrderId')
-        sessionStorage.removeItem('myticket.mockHold')
+        clearHoldSession()
         paidRef.current = true
         dispatch(toastPushed('success', 'Payment submitted'))
         navigate(`/order-confirmation?orderId=${pendingOrderId}`)
