@@ -40,7 +40,7 @@ export function Checkbox({
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator asChild forceMount={false}>
+      <CheckboxPrimitive.Indicator asChild>
         <motion.span
           className="flex items-center justify-center text-ink-inverse"
           initial={reduce ? false : { opacity: 0, scale: 0.6 }}
