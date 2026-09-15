@@ -156,7 +156,7 @@ export function RegisterPage() {
             </Field>
 
             <Field
-              label={t('auth:register.phone')}
+              label={t('auth:register.phoneOptional')}
               htmlFor="register-phone"
               error={form.formState.errors.phone?.message}
             >
@@ -253,44 +253,11 @@ export function RegisterPage() {
         </form>
       )}
 
-      <div className="mt-[26px] flex items-center gap-[14px]">
-        <Divider tone="border" className="flex-1" />
-        <span className="shrink-0 text-[13px] text-ink-muted">
-          {t('auth:register.orContinueWith')}
-        </span>
-        <Divider tone="border" className="flex-1" />
-      </div>
-
-      <div className="mt-[14px] flex gap-[10px]">
-        {(
-          [
-            ['apple', t('auth:providers.apple')],
-            ['google', t('auth:providers.google')],
-            ['nafath', t('auth:providers.nafath')],
-          ] as const
-        ).map(([key, label]) => (
-          <Button
-            key={key}
-            type="button"
-            variant="secondary"
-            size="md"
-            className="h-12 flex-1 rounded-[24px] border border-border-default bg-surface-default font-semibold"
-            onClick={(event) => event.preventDefault()}
-          >
-            {label}
-          </Button>
-        ))}
-      </div>
-
       <div className="mt-[28px] rounded-[14px] border border-border-default bg-bg-warm px-lg py-[14px]">
         <p className={cn('text-[13px] leading-[1.5] text-ink-body')}>
           {t('auth:register.businessLead')}{' '}
           <Link to="/become-business" className="text-ink-brand underline-offset-2 hover:underline">
             {t('auth:register.vendorTalentLink')}
-          </Link>{' '}
-          {t('auth:register.businessAfter')}{' '}
-          <Link to="/for-organizers" className="text-ink-brand underline-offset-2 hover:underline">
-            {t('auth:register.organizerLink')}
           </Link>
           .
         </p>

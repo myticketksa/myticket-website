@@ -12,7 +12,7 @@ import { mapOrderToMyTicket } from '@/lib/api/mappers/orders'
 
 function statusTone(status: TicketStatus | string) {
   const value = String(status).toUpperCase()
-  if (value.includes('AWAIT') || value.includes('UPCOMING') || value.includes('LISTED')) {
+  if (value.includes('AWAIT') || value.includes('UPCOMING')) {
     return 'brandTint' as const
   }
   return 'inactive' as const
@@ -22,7 +22,6 @@ function matchesTab(status: string, tab: number) {
   if (tab === 0) return status === 'UPCOMING' || status === 'AWAITING SEAT'
   if (tab === 1) return status === 'PAST'
   if (tab === 2) return status === 'TRANSFERRED'
-  if (tab === 3) return status === 'LISTED'
   return true
 }
 
@@ -46,7 +45,6 @@ export function MyTicketsPage() {
         .length,
       tickets.filter((item) => item.status === 'PAST').length,
       tickets.filter((item) => item.status === 'TRANSFERRED').length,
-      tickets.filter((item) => item.status === 'LISTED').length,
     ],
     [tickets],
   )
@@ -55,7 +53,6 @@ export function MyTicketsPage() {
     { label: t('account:tickets.tabUpcoming'), count: tabCounts[0] },
     { label: t('account:tickets.tabPast'), count: tabCounts[1] },
     { label: t('account:tickets.tabTransferred'), count: tabCounts[2] },
-    { label: t('account:tickets.tabListed'), count: tabCounts[3] },
   ] as const
 
   const visible = tickets.filter((ticket) => matchesTab(ticket.status, tab))
@@ -95,14 +92,9 @@ export function MyTicketsPage() {
         title={t('account:tickets.title')}
         subtitle={subtitle}
         actions={
-          <>
-            <Button variant="secondary" size="md">
-              {t('account:tickets.addToWallet')}
-            </Button>
-            <Link to="/auctions">
-              <Button size="md">{t('account:tickets.sellTicket')}</Button>
-            </Link>
-          </>
+          <Button variant="secondary" size="md">
+            {t('account:tickets.addToWallet')}
+          </Button>
         }
         tabs={tabs.map((item, index) => ({
           ...item,
@@ -199,13 +191,6 @@ export function MyTicketsPage() {
                       </Button>
                     </Link>
                   )}
-                  {ticket.actions.includes('resell') && (
-                    <Link to={`/my-tickets/${ticket.id}/resell`}>
-                      <Button variant="secondary" size="sm" className="bg-bg-page">
-                        {t('account:tickets.listAuction')}
-                      </Button>
-                    </Link>
-                  )}
                   {ticket.actions.includes('refund') && (
                     <Link to={`/my-tickets/${ticket.id}/refund`}>
                       <Button variant="secondary" size="sm" className="bg-bg-page">
@@ -220,22 +205,6 @@ export function MyTicketsPage() {
               </div>
             </article>
           ))}
-
-          <div className="flex flex-wrap items-center justify-between gap-lg rounded-[20px] border border-border-default bg-surface-default px-xl py-xl">
-            <div className="min-w-0 flex-1">
-              <p className="text-[16px] font-semibold text-ink-primary">
-                {t('account:tickets.cantMakeTitle')}
-              </p>
-              <p className="mt-[3px] text-[14px] text-ink-secondary">
-                {t('account:tickets.cantMakeBody')}
-              </p>
-            </div>
-            <Link to="/help">
-              <Button variant="secondary" size="md" className="bg-bg-page">
-                {t('account:tickets.howResale')}
-              </Button>
-            </Link>
-          </div>
         </div>
       </AccountSplit>
     </>

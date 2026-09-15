@@ -124,13 +124,14 @@ export function BecomeBusinessPage() {
               <CheckIcon size={17} weight="bold" className="mt-[2px] shrink-0 text-ink-brand" />
               <span>
                 <span className="font-bold text-ink-primary">
-                  {t('becomeBusiness.organizingTitle')}
+                  {t('becomeBusiness.vendorTalentTitle', {
+                    defaultValue: 'Vendor or talent?',
+                  })}
                 </span>{' '}
-                {t('becomeBusiness.organizingBody')}{' '}
-                <Link to="/for-organizers" className="font-semibold text-ink-brand">
-                  {t('becomeBusiness.forOrganizersLink')}
-                </Link>
-                .
+                {t('becomeBusiness.vendorTalentBody', {
+                  defaultValue:
+                    'Submit a short request from your guest account. We review and follow up outside the app.',
+                })}
               </span>
             </p>
           </div>

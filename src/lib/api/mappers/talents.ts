@@ -14,6 +14,10 @@ export type MappedTalent = TalentDirectoryCardProps &
   Pick<TalentCardProps, 'reviews' | 'city' | 'nextLabel' | 'nextEvent'> & {
     id?: string
     slug: string
+    biography?: string
+    isFollowing?: boolean
+    /** When false, show “Myticket Discovery” badge. When true, hide discovery badge. */
+    ownDiscovery?: boolean
   }
 
 /** Map flexible talent API rows into card props; keep fixtures usable as fallback. */
@@ -63,12 +67,22 @@ export function mapApiTalentToCard(talent: ApiRecord): MappedTalent {
     pickLocalized(talent, ['image', 'profile_photo', 'profilePhoto', 'photo', 'avatar', 'thumbnail']) ||
     undefined
 
-  const verified =
-    talent.verified === true ||
-    talent.is_verified === true ||
+  const biography =
+    pickLocalized(performer, ['biography', 'bio']) ||
+    pickLocalized(talent, ['biography', 'bio']) ||
+    undefined
+
+  const ownDiscovery =
+    typeof talent.ownDiscovery === 'boolean'
+      ? talent.ownDiscovery
+      : typeof talent.own_discovery === 'boolean'
+        ? (talent.own_discovery as boolean)
+        : undefined
+
+  const isFollowing =
     talent.isFollowing === true ||
-    pickLocalized(talent, ['verified']) === 'true' ||
-    pickLocalized(talent, ['verified']) === '1'
+    talent.is_following === true ||
+    talent.following === true
 
   return {
     id: talent.id != null ? String(talent.id) : undefined,
@@ -79,8 +93,12 @@ export function mapApiTalentToCard(talent: ApiRecord): MappedTalent {
     rating,
     reviews,
     city,
-    verified: verified || undefined,
     image,
+    biography,
+    isFollowing,
+    ownDiscovery,
+    /** Discovery badge replaces verified — only when ownDiscovery is explicitly false. */
+    verified: ownDiscovery === false,
   }
 }
 

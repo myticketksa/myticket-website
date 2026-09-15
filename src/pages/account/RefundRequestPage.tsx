@@ -168,19 +168,6 @@ export function RefundRequestPage() {
             </ol>
           </div>
 
-          <div className="rounded-[16px] border border-border-default bg-bg-page px-[18px] py-lg">
-            <p className="text-[13px] leading-[1.55] text-ink-secondary">
-              <span className="font-bold text-ink-primary">{t('refund.ratherTitle')}</span>{' '}
-              {t('refund.ratherBefore')}{' '}
-              <Link
-                to={`/my-tickets/${ticket.id}/resell`}
-                className="text-ink-brand hover:text-ink-brand-mid"
-              >
-                {t('refund.ratherLink')}
-              </Link>{' '}
-              {t('refund.ratherAfter')}
-            </p>
-          </div>
         </aside>
       </div>
     </>

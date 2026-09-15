@@ -61,6 +61,8 @@ export {
   Chat as ChatIcon,
   EnvelopeSimple as MailIcon,
   Phone as PhoneIcon,
+  PaperPlaneTilt as PaperPlaneIcon,
+  Star as StarOutlineIcon,
   Globe as GlobeIcon,
   GlobeHemisphereEast as GlobeEastIcon,
   Gear as SettingsIcon,

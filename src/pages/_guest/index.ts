@@ -19,11 +19,8 @@ export {
   EXPERIENCE_DETAIL_MAP,
   EXPERIENCE_DETAIL_NEARBY,
 } from './experiences-media'
-export {
-  AUCTION_EVENT_COVER,
-  AUCTION_LISTING_IMAGES,
-} from './auctions-media'
 export { SEARCH_RESULT_IMAGES } from './search-media'
+export { AUCTION_EVENT_COVER } from './auctions-media'
 export {
   CatalogPageHead,
   CatalogSaveAlertActions,
@@ -39,11 +36,10 @@ export {
 export { ResultsToolbar, type ResultsToolbarProps } from './ResultsToolbar'
 export { CatalogPager, type CatalogPagerProps } from './CatalogPager'
 export { CatalogBody, type CatalogBodyProps } from './CatalogBody'
-export { AuctionBand, PromoBand, type PromoBandProps } from './AuctionBand'
+export { PromoBand, type PromoBandProps } from './PromoBand'
 export { DetailGallery, type DetailGalleryProps } from './DetailGallery'
 export {
   StickyCtaCard,
-  StickyCtaResaleCard,
   StickyCtaAssurances,
   type StickyCtaCardProps,
   type StickyCtaTotalLine,

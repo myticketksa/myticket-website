@@ -110,7 +110,7 @@
     "tabbySchedule": "4 payments of SAR {{amount}} · next due {{date}}",
     "downloadInvoice": "Download invoice (VAT)",
     "refundPolicy": "Refund policy",
-    "refundPolicyBefore": "Free cancellation until {{date}}. After that, transfer the seat or",
+    "refundPolicyBefore": "Free cancellation until {{date}}. After that, you can",
     "refundPolicyLink": "list it for resale",
     "appPromoTitle": "Get the app before the night",
     "appPromoBody": "Your QR codes work offline, and you'll get a nudge when doors open.",
@@ -133,7 +133,7 @@
     "scanAtGate": "Scan at Gate {{gate}}",
     "worksOffline": "Works offline in the app",
     "entryRules": "Entry rules",
-    "rulesSetBy": "Set by the organizer, {{name}}.",
+    "rulesSetBy": "Set by the event host, {{name}}.",
     "backToBrowsing": "Back to browsing",
     "cancelUnavailable": "Order is not available to cancel",
     "cancelSuccess": "Order cancelled",
@@ -238,7 +238,7 @@
     "cta": "Request SAR {{amount}} back",
     "keepTicket": "Keep my ticket",
     "reasonLabel": "Tell us why",
-    "reasonOptional": "— optional, helps the organizer",
+    "reasonOptional": "— optional, helps with the request",
     "success": "Refund request submitted",
     "error": "Could not submit refund",
     "reasonPlaceholder": "e.g. Travel plans changed…",
@@ -251,14 +251,14 @@
       "walletTitle": "SAR {{amount}} lands in your wallet",
       "walletBody": "Withdrawable to your bank, or ready for the next show."
     },
-    "windowByOrganizer": "— set by the organizer for this event.",
+    "windowByOrganizer": "— set for this event.",
     "timeLeft": "{{time}} left",
     "policyTitle": "This event's refund policy",
-    "policyBody": "\"Full refund of the ticket price until 48 hours before doors (Mon 5 Oct, 18:30). No refunds after that point, except if the event is cancelled or rescheduled. The MyTicket platform fee is not refundable.\" — Nights Entertainment Co., the organizer.",
+    "policyBody": "\"Full refund of the ticket price until 48 hours before doors (Mon 5 Oct, 18:30). No refunds after that point, except if the event is cancelled or rescheduled. The MyTicket platform fee is not refundable.\" — Nights Entertainment Co.",
     "ticketPrice": "Ticket price · Gold · Floor A · Row C · Seat 12",
     "platformFee": "Platform fee — not refundable",
     "backToWallet": "Back to your wallet",
-    "handleNoteBefore": "MyTicket handles the refund, not the organizer. Requests inside the window are usually approved within",
+    "handleNoteBefore": "MyTicket handles the refund. Requests inside the window are usually approved within",
     "handleNoteEmphasis": "1–2 working days",
     "handleNoteAfter": ", and the money lands in your wallet as withdrawable balance. Your ticket stays valid until the refund is approved.",
     "refundingEyebrow": "Refunding",
@@ -279,7 +279,7 @@
     "waitlistsEmptyTitle": "No waitlists yet",
     "waitlistsEmptyBody": "When you join a sold-out waitlist, it will appear in this tab.",
     "followingEmptyTitle": "Not following anyone yet",
-    "followingEmptyBody": "Follow an artist or organizer and they will appear in this tab.",
+    "followingEmptyBody": "Follow a talent and they will appear in this tab.",
     "removeAria": "Remove from saved",
     "notificationSettings": "Notification settings",
     "segments": {
@@ -577,7 +577,7 @@
       },
       "right": {
         "title": "Something wasn't right",
-        "body": "A complaint about an organizer, a venue, safety, or how you were treated."
+        "body": "A complaint about a venue, safety, or how you were treated."
       }
     },
     "urgency": {

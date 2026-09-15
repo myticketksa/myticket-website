@@ -6,7 +6,11 @@ export type ValidationMessage = (key: string) => string
 
 export function createSignInSchema(t: ValidationMessage) {
   return yup.object({
-    identifier: yup.string().trim().required(t('enterMobileOrEmail')),
+    identifier: yup
+      .string()
+      .trim()
+      .email(t('enterValidEmail'))
+      .required(t('enterEmail')),
     password: yup.string().required(t('enterPassword')),
     keepSignedIn: yup.boolean().default(true),
   })
@@ -25,9 +29,11 @@ export function createRegisterSchema(t: ValidationMessage) {
     phone: yup
       .string()
       .trim()
-      .required(t('enterMobile'))
+      .optional()
+      .default('')
       .test('phone', t('enterValidSaudiMobile'), (value) => {
-        const digits = normalizeSaudiPhone(value ?? '')
+        if (!value || value.trim() === '') return true
+        const digits = normalizeSaudiPhone(value)
         return /^9665\d{8}$/.test(digits)
       }),
     password: yup.string().min(8, t('passwordMin')).required(t('createPassword')),
@@ -89,10 +95,11 @@ export function splitIdentity(identity: string): { email?: string; phone?: strin
 }
 
 export function toRegisterPayload(values: RegisterValues) {
+  const phone = values.phone?.trim() ? normalizeSaudiPhone(values.phone) : ''
   return {
     name: values.name.trim(),
     email: values.email.trim(),
-    phone: normalizeSaudiPhone(values.phone),
+    phone,
     password: values.password,
   }
 }

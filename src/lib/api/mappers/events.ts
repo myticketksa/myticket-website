@@ -16,6 +16,7 @@ export function mapApiEventToCard(event: ApiRecord): EventCardProps & {
   id?: string
   slug: string
   ticketTypeId?: number
+  isFree?: boolean
 } {
   const title =
     pickLocalized(event, ['title', 'name', 'name_en'], '') ||
@@ -86,6 +87,7 @@ export function mapApiEventToCard(event: ApiRecord): EventCardProps & {
     rating,
     attendance,
     price,
+    isFree: event.isFree === true || event.is_free === true || Number(priceRaw) === 0,
     category: category || undefined,
     flag: flag || undefined,
     image,

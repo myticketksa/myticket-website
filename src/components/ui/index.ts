@@ -18,3 +18,13 @@ export {
   CharacterCounter,
   type FieldProps,
 } from './Field'
+export {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  useCarousel,
+  type CarouselApi,
+  type CarouselProps,
+} from './Carousel'

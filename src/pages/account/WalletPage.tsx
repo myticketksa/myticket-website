@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import { ArrowDownIcon, ArrowUpIcon, ClockIcon } from '@/components/icons'
 import { FilterChip } from '@/components/data-display'
 import { Button, Field, TextInput } from '@/components/ui'
@@ -54,72 +53,7 @@ function mapWalletTxn(record: Record<string, unknown>, index: number): WalletTxn
 
 const FILTER_IDS = ['all', 'moneyIn', 'moneyOut', 'pending'] as const
 
-function WalletAside() {
-  const { t } = useTranslation('account')
-  return (
-    <div className="flex flex-col gap-[14px]">
-      <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
-        <p className="text-[15px] font-semibold text-ink-primary">{t('wallet.withdrawTitle')}</p>
-        <p className="mt-xs text-[13px] leading-[1.5] text-ink-secondary">
-          {t('wallet.withdrawBody')}
-        </p>
-        <div className="mt-[14px] rounded-[14px] border border-border-default bg-bg-page p-[14px]">
-          <p className="text-[12px] font-bold tracking-[0.06em] text-ink-muted uppercase">
-            {t('wallet.verifiedAccount')}
-          </p>
-          <p className="mt-[5px] text-[14px] font-semibold text-ink-primary">
-            Al Rajhi Bank · Sara Alharbi
-          </p>
-          <p className="mt-[2px] text-[13px] text-ink-secondary">SA •••• •••• •••• 4821</p>
-        </div>
-        <Button size="md" className="mt-[13px] w-full">
-          {t('wallet.requestWithdrawal')}
-        </Button>
-      </div>
-      <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
-        <p className="text-[15px] font-semibold text-ink-primary">{t('wallet.paymentMethods')}</p>
-        <ul className="mt-md flex flex-col gap-[10px]">
-          <li className="flex items-center gap-md rounded-[14px] border border-border-default px-[14px] py-md">
-            <span className="rounded-[6px] bg-payment-visa px-[9px] py-[5px] text-[11px] font-bold text-ink-inverse">
-              VISA
-            </span>
-            <div className="min-w-0">
-              <p className="text-[14px] font-semibold text-ink-primary">Visa •••• 4417</p>
-              <p className="text-[12px] text-ink-secondary">
-                {t('wallet.cardDefault', { date: '09/28' })}
-              </p>
-            </div>
-          </li>
-          <li className="flex items-center gap-md rounded-[14px] border border-border-default px-[14px] py-md">
-            <span className="rounded-[6px] bg-brand-identity-end px-[9px] py-[5px] text-[11px] font-bold text-ink-inverse">
-              mada
-            </span>
-            <div className="min-w-0">
-              <p className="text-[14px] font-semibold text-ink-primary">mada •••• 9032</p>
-              <p className="text-[12px] text-ink-secondary">
-                {t('wallet.cardExpires', { date: '02/29' })}
-              </p>
-            </div>
-          </li>
-        </ul>
-        <Button variant="secondary" size="md" className="mt-[13px] h-[40px] w-full rounded-[20px] bg-bg-page">
-          {t('wallet.addCard')}
-        </Button>
-      </div>
-      <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
-        <p className="text-[15px] font-semibold text-ink-primary">{t('wallet.cashbackTitle')}</p>
-        <p className="mt-sm text-[13px] leading-[1.5] text-ink-secondary">
-          {t('wallet.cashbackBody')}
-        </p>
-        <Link to="/help" className="mt-lg inline-flex text-[14px] font-semibold text-ink-brand">
-          {t('wallet.cashbackGuide')}
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-/** Wallet — Figma `207:11086`. Top-up body matches Postman `{ amount, paymentMethod }`. */
+/** Wallet — available balance + top-up, pending/earned tiles, activity list. */
 export function WalletPage() {
   const { t } = useTranslation('account')
   const [filter, setFilter] = useState(0)
@@ -176,7 +110,7 @@ export function WalletPage() {
         title={t('wallet.title')}
         subtitle={t('wallet.subtitle')}
       />
-      <AccountSplit aside={<WalletAside />}>
+      <AccountSplit>
         <div className="flex flex-col gap-[22px]">
           <div className="grid gap-lg md:grid-cols-[1.4fr_1fr_1fr]">
             <div className="rounded-[20px] bg-surface-inverse p-3xl text-bg-page">
@@ -186,7 +120,7 @@ export function WalletPage() {
               <p className="mt-[10px] text-[36px] leading-none font-extrabold tracking-[-1.56px] sm:text-[44px] lg:text-[52px]">
                 {balances.available}
               </p>
-              <div className="mt-[18px] flex flex-wrap gap-[9px]">
+              <div className="mt-[18px]">
                 <Button
                   size="md"
                   className="h-[42px] rounded-[21px] bg-bg-page px-[18px] text-ink-primary hover:bg-bg-page hover:text-ink-brand"
@@ -194,13 +128,6 @@ export function WalletPage() {
                   disabled={topUpState.isLoading}
                 >
                   {t('wallet.addFunds')}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  className="h-[42px] rounded-[21px] border-bg-page/32 bg-transparent px-[18px] text-bg-page hover:border-bg-page hover:text-bg-page"
-                >
-                  {t('wallet.withdraw')}
                 </Button>
               </div>
               {showTopUp && (
@@ -283,13 +210,6 @@ export function WalletPage() {
                     {t(`wallet.filters.${id}`)}
                   </FilterChip>
                 ))}
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="ms-[6px] h-[32px] rounded-[16px] px-md text-[13px] text-ink-secondary"
-                >
-                  {t('wallet.exportCsv')}
-                </Button>
               </div>
             </div>
             <div className="h-px bg-border-divider" />

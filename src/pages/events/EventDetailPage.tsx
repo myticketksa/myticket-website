@@ -31,7 +31,6 @@ import { firstTicketTypeId, localizedString } from '@/lib/api/locale'
 import {
   CATALOG_EVENTS,
   DetailGallery,
-  DetailOrganizerBand,
   EVENT_DETAIL,
   EVENT_DETAIL_GALLERY,
   EVENT_DETAIL_VENUE_MAP,
@@ -39,7 +38,6 @@ import {
   slugify,
   StickyCtaAssurances,
   StickyCtaCard,
-  StickyCtaResaleCard,
 } from '@/pages/_guest'
 
 /**
@@ -452,19 +450,6 @@ export function EventDetailPage() {
                   ))}
                 </div>
               </div>
-
-              {/* Organizer — in-frame on Figma between Venue and Reviews; no tab. */}
-              <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">Organizer</h2>
-              <div className="mt-[18px]">
-                <DetailOrganizerBand
-                  name={EVENT_DETAIL.organizer.name}
-                  eventsLabel={EVENT_DETAIL.organizer.eventsLabel}
-                  rating={EVENT_DETAIL.organizer.rating}
-                  sinceLabel={EVENT_DETAIL.organizer.sinceLabel}
-                  bio={EVENT_DETAIL.organizer.bio}
-                  avatar={EVENT_DETAIL.organizer.avatar}
-                />
-              </div>
             </section>
 
             <section
@@ -545,17 +530,7 @@ export function EventDetailPage() {
               if (resolvedId) sessionStorage.setItem('myticket.eventId', String(resolvedId))
             }}
             footerNote={EVENT_DETAIL.footerNote}
-            aside={
-              <>
-                <StickyCtaResaleCard
-                  title={EVENT_DETAIL.resale.title}
-                  ends={EVENT_DETAIL.resale.ends}
-                  body={EVENT_DETAIL.resale.body}
-                  cta={EVENT_DETAIL.resale.cta}
-                />
-                <StickyCtaAssurances items={EVENT_DETAIL.assurances} />
-              </>
-            }
+            aside={<StickyCtaAssurances items={EVENT_DETAIL.assurances} />}
           />
         </div>
       </PageSection>

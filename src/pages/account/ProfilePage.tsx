@@ -21,7 +21,6 @@ import { PageSection } from '@/layouts'
 import { PROFILE_TICKET_COVERS } from '@/pages/_account/account-media'
 import {
   ACCOUNT_USER,
-  AUCTION_ACTIVITY,
   PROFILE_NIGHTS,
   SAVED_ITEMS,
 } from '@/pages/_account/fixtures'
@@ -204,35 +203,7 @@ export function ProfilePage() {
       </PageSection>
 
       <PageSection padTop={40} padBottom={0}>
-        <div className="grid gap-lg lg:grid-cols-2">
-          <AccountWalletCard />
-          <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
-            <div className="mb-lg flex items-center justify-between">
-              <p className="text-[18px] font-extrabold text-ink-primary">{t('profile.auctionActivity')}</p>
-              <Link to="/my-auction-activity" className="text-[13px] font-semibold text-ink-brand">
-                {t('profile.seeAll')}
-              </Link>
-            </div>
-            <ul className="flex flex-col gap-lg">
-              {AUCTION_ACTIVITY.slice(0, 3).map((item) => {
-                const statusMap: Record<string, string> = {
-                  'No bids yet': t('profile.auctionStatuses.noBidsYet'),
-                  Winning: t('profile.auctionStatuses.winning'),
-                  Outbid: t('profile.auctionStatuses.outbid'),
-                }
-                return (
-                <li key={item.title}>
-                  <StatusBadge tone="brandTint">
-                    {statusMap[item.status] ?? item.status}
-                  </StatusBadge>
-                  <p className="mt-sm text-[15px] font-bold text-ink-primary">{item.title}</p>
-                  <p className="text-[13px] text-ink-secondary">{item.meta}</p>
-                </li>
-                )
-              })}
-            </ul>
-          </div>
-        </div>
+        <AccountWalletCard />
       </PageSection>
 
       <PageSection padTop={40} padBottom={0}>

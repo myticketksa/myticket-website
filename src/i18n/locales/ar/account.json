@@ -110,7 +110,7 @@
     "tabbySchedule": "٤ دفعات بقيمة {{amount}} ر.س · الاستحقاق التالي {{date}}",
     "downloadInvoice": "تنزيل الفاتورة (ضريبة القيمة المضافة)",
     "refundPolicy": "سياسة الاسترداد",
-    "refundPolicyBefore": "إلغاء مجاني حتى {{date}}. بعد ذلك انقل المقعد أو",
+    "refundPolicyBefore": "إلغاء مجاني حتى {{date}}. بعد ذلك يمكنك",
     "refundPolicyLink": "اعرضه للبيع",
     "appPromoTitle": "حمّل التطبيق قبل الليلة",
     "appPromoBody": "رموز QR تعمل دون اتصال، وسننبّهك عند فتح الأبواب.",

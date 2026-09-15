@@ -2,15 +2,15 @@ import { useGetAdvertisementsQuery } from '@/app/api/accountApis'
 import { useGetEventCategoriesQuery, useGetEventsQuery } from '@/app/api/eventsApi'
 import { useGetExperiencesQuery } from '@/app/api/experiencesApi'
 import { useGetTalentsQuery } from '@/app/api/talentsApi'
+import { HomeAdsSection } from '@/components/ads'
 import { HomeHero } from './HomeHero'
 import {
-  HomeAuctions,
-  HomeBusinessStrip,
   HomeCategories,
   HomeCta,
   HomeEvents,
   HomeExperiences,
   HomeFeatured,
+  HomeFreeEvents,
   HomeTalents,
 } from './HomeSections'
 
@@ -28,14 +28,14 @@ export function HomePage() {
   return (
     <>
       <HomeHero apiEvents={apiEvents} />
+      <HomeAdsSection ads={apiAds} />
       <HomeTalents apiTalents={apiTalents} />
       <HomeCategories apiCategories={apiCategories} />
       <HomeEvents apiEvents={apiEvents} />
+      <HomeFreeEvents apiEvents={apiEvents} />
       <HomeFeatured apiAds={apiAds} apiEvents={apiEvents} />
-      <HomeAuctions />
       <HomeExperiences apiExperiences={apiExperiences} />
       <HomeCta />
-      <HomeBusinessStrip />
     </>
   )
 }

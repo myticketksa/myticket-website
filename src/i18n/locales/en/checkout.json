@@ -27,7 +27,7 @@
     "holdFailed": "Could not hold these seats",
     "pricesTitle": "Seat prices in this hall",
     "pricesNote": "Prices are per seat and vary by row — front rows cost more than the same tier further back.",
-    "accessibleNote": "Need accessible seating? Choose an accessible bay on the map or message the organizer after checkout — companion seats are held at the same price.",
+    "accessibleNote": "Need accessible seating? Choose an accessible bay on the map or contact support after checkout — companion seats are held at the same price.",
     "rowSeat": "Row {{row}}, seat {{number}}",
     "removeSeat": "Remove {{label}}",
     "subtotal": "Seats subtotal",
@@ -149,7 +149,7 @@
       "month3": "IN 3 MONTHS"
     },
     "assurances": {
-      "issued": "Tickets are issued by the organizer and verified by MyTicket.",
+      "issued": "Tickets are issued for the event and verified by MyTicket.",
       "held": "Your money is held safely until the event has taken place.",
       "resell": "Can't make it? Resell through the MyTicket auction in two taps."
     }
@@ -182,7 +182,7 @@
     "loadingNote": "Loading order details…",
     "notFound": "Order not found.",
     "completeCheckout": "Complete checkout to see your tickets here.",
-    "refundNote": "Full refund until 72 hours before doors. After that, list unused tickets on the",
+    "refundNote": "Full refund until 72 hours before doors.",
     "resaleAuction": "resale auction",
     "nextSteps": {
       "offline": "Your tickets live in My tickets — offline QR codes work even without signal.",

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Dialog as DialogPrimitive } from 'radix-ui'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { Avatar, CountBadge } from '@/components/data-display'
+import { Avatar, CountBadge, FlagSaudiArabia, FlagUnitedStates } from '@/components/data-display'
 import { BellIcon, CloseIcon, HeartGlyphIcon, MenuIcon, PowerIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
 import { mobileNavToggled, selectMobileNavOpen } from '@/features/ui/uiSlice'
@@ -20,7 +20,7 @@ import { SearchPill } from './SearchPill'
  * Desktop (`lg+`) matches the Figma 1400 band layout. Below `lg`, nav collapses into an
  * accessible drawer driven by `ui.mobileNavOpen` — the desktop row is otherwise unchanged.
  */
-export type NavId = 'Events' | 'Talents' | 'Experiences'
+export type NavId = 'Events' | 'Talents' | 'Experiences' | 'Vendors'
 
 export interface HeaderNavLink {
   /** Stable id for active matching (English). Display text comes from `label`. */
@@ -35,7 +35,7 @@ export interface SiteHeaderProps {
   /**
    * Nav item id to mark. `active` is a listing page on its own item;
    * `section` is a detail page marking its parent. Omit on pages with no active item.
-   * Callers (e.g. MainLayout) pass English ids: `Events` | `Talents` | `Experiences`.
+   * Callers (e.g. MainLayout) pass English ids: `Events` | `Talents` | `Experiences` | `Vendors`.
    */
   activeItem?: NavId | string
   activeItemState?: 'active' | 'section'
@@ -54,6 +54,7 @@ const DEFAULT_NAV: { id: NavId; href: string }[] = [
   { id: 'Events', href: '/events' },
   { id: 'Talents', href: '/talents' },
   { id: 'Experiences', href: '/experiences' },
+  { id: 'Vendors', href: '/apply/vendor' },
 ]
 
 function navItemActive(item: HeaderNavLink, activeItem?: string) {
@@ -62,27 +63,22 @@ function navItemActive(item: HeaderNavLink, activeItem?: string) {
 }
 
 /**
- * h36, padding `0 13`, 1.5px border, pill radius, 13px/700 Cairo. Not the DS
- * `LanguagePill`, which is h32 / 12 / 12px. Toggles en ↔ ar and document dir.
+ * Header language switcher - shows flag icon (Saudi Arabia for Arabic, US for English).
  */
 function HeaderLanguagePill({ className }: { className?: string }) {
-  const { t } = useTranslation('common')
   const { locale, toggleLocale } = useLocale()
-  const nextLabel = locale === 'en' ? t('language.arabic') : t('language.english')
 
   return (
     <button
       type="button"
-      lang={locale === 'en' ? 'ar' : 'en'}
-      dir="auto"
       onClick={toggleLocale}
-      aria-label={locale === 'en' ? t('language.switchToArabic') : t('language.switchToEnglish')}
+      aria-label="Toggle language"
       className={cn(
-        'font-arabic inline-flex h-[36px] shrink-0 items-center justify-center rounded-pill border-[1.5px] border-border-default bg-surface-default px-[13px] text-[13px] font-bold whitespace-nowrap text-ink-secondary transition-[color,border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:text-ink-primary',
+        'shrink-0 transition-opacity duration-micro ease-micro hover:opacity-80',
         className,
       )}
     >
-      {nextLabel}
+      {locale === 'en' ? <FlagUnitedStates size={20} /> : <FlagSaudiArabia size={20} />}
     </button>
   )
 }

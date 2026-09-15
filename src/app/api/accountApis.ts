@@ -86,12 +86,30 @@ export const accountApis = baseApi.injectEndpoints({
         id: number
         rating: number
         name: string
-        review?: string
         comment?: string
+        review?: string
       }
     >({
-      query: (body) => ({ url: '/reviews', method: 'POST', body }),
-      invalidatesTags: ['Review'],
+      query: ({ review: _legacyReview, ...body }) => ({
+        url: '/reviews',
+        method: 'POST',
+        // Prefer `comment` for guest submissions; omit public `review` unless explicitly set.
+        body: {
+          type: body.type,
+          id: body.id,
+          rating: body.rating,
+          name: body.name,
+          ...(body.comment ? { comment: body.comment } : {}),
+          ...(_legacyReview ? { review: _legacyReview } : {}),
+        },
+      }),
+      invalidatesTags: (_r, _e, body) => [
+        'Review',
+        { type: 'Review', id: `${body.type}-${body.id}` },
+        ...(body.type === 'talent'
+          ? ([{ type: 'Talent', id: String(body.id) }] as const)
+          : []),
+      ],
     }),
     sendGiftTicket: build.mutation<
       ApiRecord,

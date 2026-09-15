@@ -521,7 +521,7 @@ export const EVENT_DETAIL = {
     cta: 'View 12 listings',
   },
   assurances: [
-    'Tickets are issued by the organizer and verified by MyTicket.',
+    'Tickets are issued for the event and verified by MyTicket.',
     'Payment is held securely and released after the event.',
     'Your QR code works offline in the MyTicket app.',
   ],

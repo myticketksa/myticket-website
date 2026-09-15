@@ -11,7 +11,7 @@ import { useHeaderAccount } from '@/lib/auth/accountChip'
  * SiteHeader + Outlet + SiteFooter. Sections inside the outlet are full-bleed and use
  * `PageSection` for the 1320 band. Active nav is derived from the path's first segment.
  *
- * Pages with no active item (Home, Event Details, Search, Auction) leave the header
+ * Pages with no active item (Home, Event Details, Search) leave the header
  * unmarked; detail pages under a listing section use `section` state on the parent item.
  */
 const LISTING_ACTIVE: Record<string, string> = {
@@ -34,14 +34,16 @@ function resolveNav(pathname: string): {
   const root = segments[0]
   if (!root) return {}
 
-  // Auction and search have no active item.
-  if (root === 'auctions' || root === 'search') return {}
+  if (root === 'search') return {}
+  // Vendors nav opens the apply funnel — mark active on that path.
+  if (pathname.startsWith('/apply/vendor')) {
+    return { activeItem: 'Vendors', activeItemState: 'active' }
+  }
 
   if (root in LISTING_ACTIVE) {
     if (segments.length === 1) {
       return { activeItem: LISTING_ACTIVE[root], activeItemState: 'active' }
     }
-    // Detail under a listing section.
     if (root in DETAIL_SECTION) {
       return { activeItem: DETAIL_SECTION[root], activeItemState: 'section' }
     }

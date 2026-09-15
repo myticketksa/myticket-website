@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { useGetExperienceCategoriesQuery, useGetExperiencesQuery } from '@/app/api/experiencesApi'
 import { ExperienceCard } from '@/components/cards'
 import { FilterChip } from '@/components/data-display'
@@ -9,7 +10,10 @@ import { Breadcrumbs } from '@/components/navigation'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { mapCategoryLabels } from '@/lib/api/mappers/categories'
-import { mapApiExperienceToCard } from '@/lib/api/mappers/experiences'
+import {
+  mapApiExperienceToCard,
+  type MappedExperience,
+} from '@/lib/api/mappers/experiences'
 import { catalogLabel } from '@/lib/i18n/catalogLabels'
 import {
   CATALOG_EXPERIENCES,
@@ -31,9 +35,54 @@ const CATEGORIES = [
   'Music',
 ] as const
 
-/** Experiences directory — Figma `207:6795`. Experiences API with fixture fallback. */
+function ExperienceTypeSection({
+  heading,
+  lede,
+  items,
+}: {
+  heading: string
+  lede: string
+  items: MappedExperience[]
+}) {
+  if (items.length === 0) return null
+  return (
+    <PageSection padTop={36} padBottom={0}>
+      <FadeUp>
+        <div className="mb-[22px]">
+          <h2 className="text-heading-h2-section text-ink-primary">{heading}</h2>
+          <p className="mt-[6px] text-[15px] text-ink-secondary">{lede}</p>
+        </div>
+      </FadeUp>
+      <StaggerGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {items.map((exp) => (
+          <LinkedCard
+            key={exp.slug ?? exp.title}
+            to={`/experiences/${exp.slug ?? slugify(exp.title)}`}
+          >
+            <ExperienceCard
+              context="catalog"
+              title={exp.title}
+              location={exp.location}
+              eyebrow={exp.meta}
+              rating={exp.rating}
+              guests={exp.guests}
+              price={exp.price}
+              flag={exp.flag}
+              image={exp.image}
+            />
+          </LinkedCard>
+        ))}
+      </StaggerGroup>
+    </PageSection>
+  )
+}
+
+/** Experiences directory — attractions then activities (API `type`). */
 export function ExperiencesPage() {
   const { t } = useTranslation(['catalog', 'nav', 'common'])
+  const [searchParams] = useSearchParams()
+  const typeFilter = searchParams.get('type')
+
   const whereOptions = useMemo(
     () => ['Anywhere in Saudi Arabia', ...CITY_FACETS.slice(0, 5).map((c) => c.label)] as const,
     [],
@@ -58,11 +107,19 @@ export function ExperiencesPage() {
     if (apiExperiences && apiExperiences.length > 0) {
       return apiExperiences.map(mapApiExperienceToCard)
     }
-    return CATALOG_EXPERIENCES.map((exp) => ({ ...exp, slug: slugify(exp.title) }))
+    return CATALOG_EXPERIENCES.map((exp) => ({
+      ...exp,
+      slug: slugify(exp.title),
+      experienceType: 'attraction',
+    })) as MappedExperience[]
   }, [apiExperiences])
 
   const filtered = useMemo(() => {
     return catalog.filter((exp) => {
+      if (typeFilter === 'attraction' || typeFilter === 'activity') {
+        const expType = exp.experienceType ?? 'attraction'
+        if (expType !== typeFilter) return false
+      }
       if (category !== 'All experiences') {
         const needle = category.toLowerCase().split(' ')[0]!
         if (!exp.meta.toLowerCase().includes(needle)) return false
@@ -73,9 +130,13 @@ export function ExperiencesPage() {
       }
       return true
     })
-  }, [catalog, category, where])
+  }, [catalog, category, typeFilter, where])
 
-  const shown = filtered
+  const attractions = filtered.filter(
+    (exp) => (exp.experienceType ?? 'attraction') === 'attraction',
+  )
+  const activities = filtered.filter((exp) => exp.experienceType === 'activity')
+
   const subtitleParts = [
     t('pages.experiencesSubtitle'),
     isError ? t('pages.apiPreview') : null,
@@ -122,7 +183,10 @@ export function ExperiencesPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDownIcon size={12} className="pointer-events-none absolute right-sm bottom-[6px] text-ink-primary" />
+              <ChevronDownIcon
+                size={12}
+                className="pointer-events-none absolute right-sm bottom-[6px] text-ink-primary"
+              />
             </div>
           </label>
           <div className="mx-[2px] hidden h-[34px] w-px bg-border-divider sm:block" />
@@ -183,28 +247,25 @@ export function ExperiencesPage() {
         </div>
       </PageSection>
 
-      <PageSection padTop={18} padBottom={0}>
-        <StaggerGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {shown.slice(0, 8).map((exp) => (
-            <LinkedCard
-              key={exp.slug ?? exp.title}
-              to={`/experiences/${exp.slug ?? slugify(exp.title)}`}
-            >
-              <ExperienceCard
-                context="catalog"
-                title={exp.title}
-                location={exp.location}
-                eyebrow={exp.meta}
-                rating={exp.rating}
-                guests={exp.guests}
-                price={exp.price}
-                flag={exp.flag}
-                image={exp.image}
-              />
-            </LinkedCard>
-          ))}
-        </StaggerGroup>
-      </PageSection>
+      {typeFilter !== 'activity' ? (
+        <ExperienceTypeSection
+          heading={t('home.attractionsHeading', { defaultValue: 'Attractions' })}
+          lede={t('home.attractionsLede', {
+            defaultValue: 'Landmarks and destinations open year-round.',
+          })}
+          items={attractions}
+        />
+      ) : null}
+
+      {typeFilter !== 'attraction' ? (
+        <ExperienceTypeSection
+          heading={t('home.activitiesHeading', { defaultValue: 'Activities' })}
+          lede={t('home.activitiesLede', {
+            defaultValue: 'Workshops, tours and hands-on experiences.',
+          })}
+          items={activities}
+        />
+      ) : null}
 
       <PageSection padTop={88} padBottom={96}>
         <PromoBand

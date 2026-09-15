@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { ApiRecord as EventApiRecord } from '@/app/api/eventsApi'
 import type { ApiRecord as ExperienceApiRecord } from '@/app/api/experiencesApi'
 import type { ApiRecord as TalentApiRecord } from '@/app/api/talentsApi'
 import {
-  AuctionCard,
   EventCard,
   ExperienceCard,
   FeaturedPanelCard,
@@ -13,12 +12,19 @@ import {
 } from '@/components/cards'
 import { CategoryChip } from '@/components/data-display'
 import { ArrowRightIcon } from '@/components/icons'
-import { FadeUp, StaggerGroup } from '@/components/motion'
-import { Button } from '@/components/ui'
+import { FadeUp } from '@/components/motion'
+import {
+  Button,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { mapCategoryLabel } from '@/lib/api/mappers/categories'
 import { mapApiEventToCard } from '@/lib/api/mappers/events'
-import { mapApiExperienceToCard } from '@/lib/api/mappers/experiences'
+import { mapApiExperienceToCard, type MappedExperience } from '@/lib/api/mappers/experiences'
 import { mapApiTalentToCard } from '@/lib/api/mappers/talents'
 import { useEventFavorites } from '@/lib/favorites/useEventFavorites'
 import { catalogLabel } from '@/lib/i18n/catalogLabels'
@@ -26,14 +32,11 @@ import { slugify } from '@/pages/_guest'
 import ctaBand from '@/assets/home/cta-band.jpg'
 import driftBlob from '@/assets/home/drift-blob.svg'
 import {
-  HOME_AUCTIONS,
   HOME_CATEGORIES,
   HOME_EVENTS,
-  HOME_EVENT_TABS,
   HOME_EXPERIENCES,
   HOME_FEATURED_PANELS,
   HOME_TALENTS,
-  type HomeEventWindow,
 } from './home-data'
 import {
   HOME_EVENT_IMAGES,
@@ -42,7 +45,6 @@ import {
   HOME_TALENT_IMAGES,
 } from './home-media'
 import { HomeSectionHeader } from './HomeSectionHeader'
-import { HomeTimeTabs } from './HomeTimeTabs'
 
 /** Limited public talent strip — avatar, name, discipline, rating only. */
 export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) {
@@ -65,26 +67,33 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
           link={{ label: t('home.browseAllTalents'), to: '/talents' }}
         />
       </FadeUp>
-      <StaggerGroup className="mt-[26px] grid grid-cols-2 gap-[12px] sm:gap-[18px] md:grid-cols-3 lg:grid-cols-5">
-        {talents.map((talent, i) => (
-          <Link
-            key={talent.slug}
-            to={`/talents/${talent.slug}`}
-            className="min-w-0"
-          >
-            <TalentCard
-              name={talent.name}
-              discipline={talent.discipline}
-              rating={talent.rating}
-              reviews={'reviews' in talent ? talent.reviews : ''}
-              city={'city' in talent ? talent.city : ''}
-              verified={talent.verified}
-              image={'image' in talent && talent.image ? talent.image : HOME_TALENT_IMAGES[i]}
-              limited
-            />
-          </Link>
-        ))}
-      </StaggerGroup>
+      <div className="relative mt-[26px]">
+        <Carousel opts={{ align: 'start', loop: talents.length > 3 }}>
+          <CarouselContent>
+            {talents.map((talent, i) => (
+              <CarouselItem
+                key={talent.slug}
+                className="basis-[70%] sm:basis-1/2 md:basis-1/3 lg:basis-1/5"
+              >
+                <Link to={`/talents/${talent.slug}`} className="block min-w-0">
+                  <TalentCard
+                    name={talent.name}
+                    discipline={talent.discipline}
+                    rating={talent.rating}
+                    reviews={'reviews' in talent ? talent.reviews : ''}
+                    city={'city' in talent ? talent.city : ''}
+                    verified={talent.verified}
+                    image={'image' in talent && talent.image ? talent.image : HOME_TALENT_IMAGES[i]}
+                    limited
+                  />
+                </Link>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden sm:inline-flex" />
+          <CarouselNext className="hidden sm:inline-flex" />
+        </Carousel>
+      </div>
     </PageSection>
   )
 }
@@ -135,37 +144,21 @@ export function HomeCategories({ apiCategories }: { apiCategories?: EventApiReco
   )
 }
 
-function matchesEventWindow(
-  window: HomeEventWindow,
-  tab: (typeof HOME_EVENT_TABS)[number],
-) {
-  if (tab === 'All') return true
-  if (tab === 'Today') return window === 'today'
-  if (tab === 'This weekend') return window === 'weekend'
-  if (tab === 'This week') return window === 'week' || window === 'weekend' || window === 'today'
-  if (tab === 'This month') return true
-  return true
-}
-
-/** Figma `207:4459` — pad-top 60, time tabs + 2×4 EventCard Home. */
+/** Figma `207:4459` — upcoming events carousel (no time tabs). */
 export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
   const { t } = useTranslation('catalog')
-  const [tab, setTab] = useState<(typeof HOME_EVENT_TABS)[number]>('All')
   const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
 
   const events = useMemo(() => {
     if (apiEvents && apiEvents.length > 0) {
       return apiEvents.map(mapApiEventToCard).slice(0, HOME_EVENTS.length)
     }
-    return HOME_EVENTS.map((e) => ({ ...e, slug: slugify(e.title) }))
+    return HOME_EVENTS.map((e) => ({
+      ...e,
+      slug: slugify(e.title),
+      isFree: e.price === 'Free',
+    }))
   }, [apiEvents])
-
-  const filtered = useMemo(() => {
-    if (apiEvents && apiEvents.length > 0) return events
-    return events.filter((event) =>
-      'window' in event ? matchesEventWindow(event.window, tab) : true,
-    )
-  }, [apiEvents, events, tab])
 
   return (
     <PageSection padTop={60} padBottom={0}>
@@ -173,39 +166,122 @@ export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
         <HomeSectionHeader
           overline={t('home.onSaleNow')}
           heading={t('home.eventsHeading')}
-          lede={t('home.eventsCountMoment', { count: filtered.length })}
-          trailing={<HomeTimeTabs value={tab} onChange={setTab} />}
+          lede={t('home.eventsCountMoment', { count: events.length })}
         />
       </FadeUp>
-      <StaggerGroup className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {filtered.map((event, i) => (
-          <Link
-            key={event.slug}
-            to={`/events/${event.slug}`}
-            className="min-w-0"
-          >
-            <EventCard
-              context="home"
-              date={event.date}
-              title={event.title}
-              venue={event.venue}
-              rating={event.rating}
-              attendance={event.attendance}
-              price={event.price}
-              category={'category' in event ? event.category : undefined}
-              flag={'flag' in event ? event.flag : undefined}
-              image={'image' in event && event.image ? event.image : HOME_EVENT_IMAGES[i]}
-              favourited={'id' in event ? isFavourite(event.id) : false}
-              onToggleFavourite={
-                'id' in event && canFavourite(event.id)
-                  ? () => void toggleFavourite(event.id)
-                  : undefined
-              }
-            />
-          </Link>
-        ))}
-      </StaggerGroup>
+      <EventCarousel
+        events={events}
+        isFavourite={isFavourite}
+        toggleFavourite={toggleFavourite}
+        canFavourite={canFavourite}
+      />
     </PageSection>
+  )
+}
+
+/** Free events rail — directly under upcoming; hidden when empty. */
+export function HomeFreeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
+  const { t } = useTranslation('catalog')
+  const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
+
+  const freeEvents = useMemo(() => {
+    if (apiEvents && apiEvents.length > 0) {
+      return apiEvents
+        .map(mapApiEventToCard)
+        .filter((event) => event.isFree)
+        .slice(0, 8)
+    }
+    return HOME_EVENTS.filter((e) => e.price === 'Free').map((e) => ({
+      ...e,
+      slug: slugify(e.title),
+      isFree: true as const,
+    }))
+  }, [apiEvents])
+
+  if (freeEvents.length === 0) return null
+
+  return (
+    <PageSection padTop={60} padBottom={0}>
+      <FadeUp>
+        <HomeSectionHeader
+          overline={t('home.freeEventsOverline')}
+          heading={t('home.freeEventsHeading')}
+          lede={t('home.freeEventsLede', { count: freeEvents.length })}
+          link={{ label: t('home.seeAllFreeEvents'), to: '/events?free=1' }}
+        />
+      </FadeUp>
+      <EventCarousel
+        events={freeEvents}
+        isFavourite={isFavourite}
+        toggleFavourite={toggleFavourite}
+        canFavourite={canFavourite}
+      />
+    </PageSection>
+  )
+}
+
+type CarouselEvent = ReturnType<typeof mapApiEventToCard> | {
+  slug: string
+  date: string
+  title: string
+  venue: string
+  rating: string
+  attendance: string
+  price: string
+  category?: string
+  flag?: string
+  image?: string
+  id?: string
+  isFree?: boolean
+}
+
+function EventCarousel({
+  events,
+  isFavourite,
+  toggleFavourite,
+  canFavourite,
+}: {
+  events: CarouselEvent[]
+  isFavourite: (id: unknown) => boolean
+  toggleFavourite: (id: unknown) => void | Promise<boolean | void>
+  canFavourite: (id: unknown) => boolean
+}) {
+  return (
+    <div className="relative mt-[22px]">
+      <Carousel opts={{ align: 'start', loop: events.length > 3 }}>
+        <CarouselContent>
+          {events.map((event, i) => (
+            <CarouselItem
+              key={event.slug}
+              className="basis-[85%] sm:basis-1/2 lg:basis-1/4"
+            >
+              <Link to={`/events/${event.slug}`} className="block min-w-0">
+                <EventCard
+                  context="home"
+                  date={event.date}
+                  title={event.title}
+                  venue={event.venue}
+                  rating={event.rating}
+                  attendance={event.attendance}
+                  price={event.price}
+                  category={'category' in event ? event.category : undefined}
+                  flag={'flag' in event ? event.flag : undefined}
+                  image={'image' in event && event.image ? event.image : HOME_EVENT_IMAGES[i]}
+                  favourited={'id' in event && event.id ? isFavourite(event.id) : false}
+                  onToggleFavourite={
+                    'id' in event && event.id && canFavourite(event.id)
+                      ? () => void toggleFavourite(event.id!)
+                      : undefined
+                  }
+                />
+              </Link>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="hidden sm:inline-flex" />
+        <CarouselNext className="hidden sm:inline-flex" />
+      </Carousel>
+    </div>
   )
 }
 
@@ -293,19 +369,27 @@ export function HomeFeatured({
           </Link>
         </div>
 
-        <div className="relative grid grid-cols-1 gap-5 md:grid-cols-3">
-          {panels.map((panel) => (
-            <Link key={panel.title} to={panel.href} className="min-w-0">
-              <FeaturedPanelCard
-                date={panel.date}
-                title={panel.title}
-                venue={panel.venue}
-                price={panel.price}
-                meta={panel.meta}
-                image={panel.image}
-              />
-            </Link>
-          ))}
+        <div className="relative">
+          <Carousel opts={{ align: 'start', loop: panels.length > 2 }}>
+            <CarouselContent>
+              {panels.map((panel) => (
+                <CarouselItem key={panel.title} className="basis-[90%] sm:basis-1/2 md:basis-1/3">
+                  <Link to={panel.href} className="block min-w-0">
+                    <FeaturedPanelCard
+                      date={panel.date}
+                      title={panel.title}
+                      venue={panel.venue}
+                      price={panel.price}
+                      meta={panel.meta}
+                      image={panel.image}
+                    />
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden sm:inline-flex" />
+            <CarouselNext className="hidden sm:inline-flex" />
+          </Carousel>
         </div>
       </div>
       </FadeUp>
@@ -313,77 +397,115 @@ export function HomeFeatured({
   )
 }
 
-/** Figma `207:4505` — pad-top 88, 4× AuctionCard. */
-export function HomeAuctions() {
+/** Home experience rails — attractions first, then activities (API `type`). */
+export function HomeExperiences({ apiExperiences }: { apiExperiences?: ExperienceApiRecord[] }) {
   const { t } = useTranslation('catalog')
+
+  const mapped = useMemo((): MappedExperience[] => {
+    if (apiExperiences && apiExperiences.length > 0) {
+      return apiExperiences.map(mapApiExperienceToCard)
+    }
+    return HOME_EXPERIENCES.map((e) => ({
+      title: e.title,
+      location: e.location,
+      category: e.category,
+      summary: e.summary,
+      rating: e.rating,
+      reviews: e.reviews,
+      slug: slugify(e.title),
+      meta: e.category,
+      place: e.location,
+      tags: [],
+      experienceType: 'attraction',
+    }))
+  }, [apiExperiences])
+
+  const attractions = useMemo(
+    () => mapped.filter((item) => (item.experienceType ?? 'attraction') === 'attraction'),
+    [mapped],
+  )
+  const activities = useMemo(
+    () => mapped.filter((item) => item.experienceType === 'activity'),
+    [mapped],
+  )
+
   return (
-    <PageSection padTop={88} padBottom={0}>
-      <FadeUp>
-        <HomeSectionHeader
-          overline={t('home.auctionsOverline')}
-          heading={t('home.auctionsHeading')}
-          lede={t('home.auctionsLede')}
-          ledeMaxWidth={560}
-          link={{ label: t('home.allAuctionListings'), to: '/auctions' }}
-        />
-      </FadeUp>
-      <StaggerGroup className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {HOME_AUCTIONS.map((auction) => (
-          <Link
-            key={auction.title}
-            to={`/auctions/${slugify(auction.title)}`}
-            className="min-w-0"
-          >
-            <AuctionCard {...auction} className="h-[214px]" />
-          </Link>
-        ))}
-      </StaggerGroup>
-    </PageSection>
+    <>
+      {attractions.length > 0 ? (
+        <PageSection padTop={88} padBottom={0}>
+          <FadeUp>
+            <HomeSectionHeader
+              overline={t('home.attractionsOverline', { defaultValue: 'Worth the trip' })}
+              heading={t('home.attractionsHeading', { defaultValue: 'Attractions' })}
+              lede={t('home.attractionsLede', {
+                defaultValue: 'Landmarks and destinations open year-round.',
+              })}
+              ledeMaxWidth={null}
+              link={{
+                label: t('home.browseAllAttractions', { defaultValue: 'Browse attractions' }),
+                to: '/experiences?type=attraction',
+              }}
+            />
+          </FadeUp>
+          <ExperienceCarousel items={attractions} />
+        </PageSection>
+      ) : null}
+
+      {activities.length > 0 ? (
+        <PageSection padTop={88} padBottom={0}>
+          <FadeUp>
+            <HomeSectionHeader
+              overline={t('home.activitiesOverline', { defaultValue: 'Do something' })}
+              heading={t('home.activitiesHeading', { defaultValue: 'Activities' })}
+              lede={t('home.activitiesLede', {
+                defaultValue: 'Workshops, tours and hands-on experiences.',
+              })}
+              ledeMaxWidth={null}
+              link={{
+                label: t('home.browseAllActivities', { defaultValue: 'Browse activities' }),
+                to: '/experiences?type=activity',
+              }}
+            />
+          </FadeUp>
+          <ExperienceCarousel items={activities} />
+        </PageSection>
+      ) : null}
+    </>
   )
 }
 
-/** Figma `207:4522` — pad-top 88, 4× ExperienceCard Home. */
-export function HomeExperiences({ apiExperiences }: { apiExperiences?: ExperienceApiRecord[] }) {
-  const { t } = useTranslation('catalog')
-  const experiences = useMemo(() => {
-    if (apiExperiences && apiExperiences.length > 0) {
-      return apiExperiences.map(mapApiExperienceToCard).slice(0, HOME_EXPERIENCES.length)
-    }
-    return HOME_EXPERIENCES.map((e) => ({ ...e, slug: slugify(e.title) }))
-  }, [apiExperiences])
-
+function ExperienceCarousel({ items }: { items: MappedExperience[] }) {
   return (
-    <PageSection padTop={88} padBottom={0}>
-      <FadeUp>
-        <HomeSectionHeader
-          overline={t('home.experiencesOverline')}
-          heading={t('home.experiencesHeading')}
-          lede={t('home.experiencesLede')}
-          ledeMaxWidth={null}
-          link={{ label: t('home.browseAllExperiences'), to: '/experiences' }}
-        />
-      </FadeUp>
-      <StaggerGroup className="mt-[22px] grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {experiences.map((experience, i) => (
-          <Link
-            key={experience.slug}
-            to={`/experiences/${experience.slug}`}
-            className="min-w-0"
-          >
-            <ExperienceCard
-              context="home"
-              title={experience.title}
-              location={experience.location}
-              category={'category' in experience ? experience.category : undefined}
-              summary={'summary' in experience ? experience.summary : undefined}
-              rating={experience.rating}
-              reviews={'reviews' in experience ? experience.reviews : undefined}
-              image={'image' in experience && experience.image ? experience.image : HOME_EXPERIENCE_IMAGES[i]}
-            />
-          </Link>
-        ))}
-      </StaggerGroup>
-    </PageSection>
+    <div className="relative mt-[22px]">
+      <Carousel opts={{ align: 'start', loop: items.length > 3 }}>
+        <CarouselContent>
+          {items.map((experience, i) => (
+            <CarouselItem
+              key={experience.slug ?? experience.id ?? i}
+              className="basis-[85%] sm:basis-1/2 lg:basis-1/4"
+            >
+              <Link
+                to={`/experiences/${experience.slug ?? experience.id}`}
+                className="block min-w-0"
+              >
+                <ExperienceCard
+                  context="home"
+                  title={experience.title}
+                  location={experience.location}
+                  category={experience.category}
+                  summary={experience.summary}
+                  rating={experience.rating}
+                  reviews={experience.reviews}
+                  image={experience.image ?? HOME_EXPERIENCE_IMAGES[i % HOME_EXPERIENCE_IMAGES.length]}
+                />
+              </Link>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="hidden sm:inline-flex" />
+        <CarouselNext className="hidden sm:inline-flex" />
+      </Carousel>
+    </div>
   )
 }
 
@@ -449,29 +571,6 @@ export function HomeCta() {
           </div>
         </div>
       </FadeUp>
-    </PageSection>
-  )
-}
-
-/** Guest business strip — partnerships + Vendor/Talent submit forms (no marketplace). */
-export function HomeBusinessStrip() {
-  const { t } = useTranslation('catalog')
-  return (
-    <PageSection padTop={72} padBottom={96}>
-      <div className="flex flex-col items-start gap-lg overflow-hidden rounded-[16px] border border-border-default bg-surface-default px-2xl py-lg sm:flex-row sm:items-center">
-        <p className="min-w-0 flex-1 text-[14px] leading-normal text-ink-muted">
-          <span className="font-bold text-ink-primary">{t('home.businessLead')}</span>
-          <span className="text-ink-secondary">
-            {' '}
-            {t('home.businessBody')}
-          </span>
-        </p>
-        <div className="flex shrink-0 flex-wrap gap-lg text-[13.5px] font-bold text-brand-identity-end">
-          <Link to="/for-organizers">{t('home.forOrganizers')}</Link>
-          <Link to="/for-talents">{t('home.forTalents')}</Link>
-          <Link to="/for-vendors">{t('home.forVendors')}</Link>
-        </div>
-      </div>
     </PageSection>
   )
 }

@@ -32,7 +32,6 @@ import {
 } from '@/components/data-display'
 import { BellIcon, HeartIcon } from '@/components/icons'
 import {
-  AuctionCard,
   EventCard,
   ExperienceCard,
   FeaturedHeroCard,
@@ -338,16 +337,6 @@ export function ProbeRoute() {
           category="Concerts"
           flag="Nearly sold out"
         />
-        <div className="flex flex-col gap-6">
-          <AuctionCard
-            listings="12 listings"
-            endsIn="Ends in 02:41:18"
-            title="Front row · Winter Nights"
-            meta="Row A · Seats 12–13"
-            highestBid="SAR 1,240"
-            buyNow="SAR 1,800"
-          />
-        </div>
       </div>
 
       <h2 className="text-heading-h2 mt-14 text-ink-primary">Section header</h2>

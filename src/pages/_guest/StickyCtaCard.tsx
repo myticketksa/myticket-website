@@ -159,7 +159,7 @@ export function StickyCtaCard({
                         {tier.soldOutRail.note}
                       </p>
                       <Link
-                        to={tier.soldOutRail.to ?? '/auctions'}
+                        to={tier.soldOutRail.to ?? '/events'}
                         className="flex shrink-0 items-center gap-[5px] text-[13px] font-semibold text-ink-brand"
                       >
                         {tier.soldOutRail.cta}
@@ -235,36 +235,6 @@ export function StickyCtaCard({
       </div>
 
       {aside}
-    </div>
-  )
-}
-
-export function StickyCtaResaleCard({
-  title,
-  ends,
-  body,
-  cta,
-  to = '/auctions',
-}: {
-  title: string
-  ends: string
-  body: string
-  cta: string
-  to?: string
-}) {
-  return (
-    <div className="flex w-full flex-col rounded-[18px] border border-border-default bg-surface-default p-[18px]">
-      <div className="flex w-full items-center justify-between">
-        <p className="text-[15px] font-semibold text-ink-primary">{title}</p>
-        <p className="text-[12px] font-semibold text-brand-gradient-end">{ends}</p>
-      </div>
-      <p className="mt-row-gap text-[13px] leading-[1.5] text-ink-secondary">{body}</p>
-      <Link
-        to={to}
-        className="mt-[14px] flex h-[42px] w-full items-center justify-center rounded-[21px] border border-border-default bg-surface-default text-[14px] font-semibold text-ink-primary"
-      >
-        {cta}
-      </Link>
     </div>
   )
 }

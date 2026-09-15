@@ -5,7 +5,6 @@ import { Breadcrumbs } from '@/components/navigation'
 import {
   BellRingingIcon,
   CreditCardIcon,
-  GlobeEastIcon,
   LockIcon,
   PowerIcon,
   ShieldIcon,
@@ -52,11 +51,6 @@ const NAV_STRUCTURE: {
         id: 'security',
         icon: <LockIcon size={14} />,
         tag: 'twoFaOn',
-        undrawn: true,
-      },
-      {
-        id: 'language',
-        icon: <GlobeEastIcon size={14} />,
         undrawn: true,
       },
     ],

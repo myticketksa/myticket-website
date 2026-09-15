@@ -96,7 +96,7 @@
       }
     ],
     "reportTitle": "Report a problem with an event",
-    "reportBody": "Cancelled, moved, or not as described? Tell us and we'll take it up with the organizer.",
+    "reportBody": "Cancelled, moved, or not as described? Tell us and we'll look into it.",
     "reportCta": "Report an issue",
     "topics": {
       "tickets": {
@@ -117,7 +117,7 @@
           },
           {
             "q": "The name on my ticket is wrong",
-            "a": "Transfer the seat to the right guest, or contact support before doors if the organizer requires ID matching."
+            "a": "Transfer the seat to the right guest, or contact support before doors if the event requires ID matching."
           },
           {
             "q": "What time should I arrive?",
@@ -213,14 +213,14 @@
       },
       "business": {
         "title": "Business requests",
-        "blurb": "Vendor and talent requests, and how organizer partnership works.",
+        "blurb": "Vendor and talent requests, and how partnership works.",
         "faqs": [
           {
             "q": "How do I become a vendor or talent?",
             "a": "Sign in as a guest, open Become a business, and submit a request. Our team reviews it in 2–5 working days. Acceptance does not change your login — we contact you outside the platform if needed."
           },
           {
-            "q": "How do I become an organizer?",
+            "q": "How do I become a business partner?",
             "a": "Organizer accounts are created after an office contract. Contact partnerships from the help or support flow — there is no self-serve apply form."
           }
         ]
@@ -253,11 +253,11 @@
           },
           {
             "title": "2 · Tickets & purchases",
-            "body": "A ticket is a licence to attend, issued by the event's organizer and delivered by MyTicket as a unique QR code. The price you see at checkout is the price you pay: ticket price plus the MyTicket platform fee, always shown separately. Purchase limits per event exist to keep tickets with real fans and are enforced at checkout."
+            "body": "A ticket is a licence to attend, issued for the event and delivered by MyTicket as a unique QR code. The price you see at checkout is the price you pay: ticket price plus the MyTicket platform fee, always shown separately. Purchase limits per event exist to keep tickets with real fans and are enforced at checkout."
           },
           {
             "title": "3 · Refunds & cancellations",
-            "body": "Each organizer sets the refund policy for their own event — it's shown on the event page, at checkout, and on your ticket. Within that policy, MyTicket executes the refund and returns the money to your wallet. If an event is cancelled, the ticket price is refunded automatically regardless of policy. Platform fees are refundable only when an event is cancelled."
+            "body": "Each event has its own refund policy — it's shown on the event page, at checkout, and on your ticket. Within that policy, MyTicket executes the refund and returns the money to your wallet. If an event is cancelled, the ticket price is refunded automatically regardless of policy. Platform fees are refundable only when an event is cancelled."
           },
           {
             "title": "4 · Resale & gifting",
@@ -265,7 +265,7 @@
           },
           {
             "title": "5 · Business applications",
-            "body": "Vendors and talents may submit a request from a guest account for MyTicket to review. That does not create a separate login role. Organizer accounts are created only after an office agreement. Guests do not browse organizer or vendor directories to book services inside the product."
+            "body": "Vendors and talents may submit a request from a guest account for MyTicket to review. That does not create a separate login role. Business partnership accounts are created only after an office agreement. Guests do not browse vendor directories to book services inside the product."
           },
           {
             "title": "6 · Wallet & money",
@@ -294,7 +294,7 @@
           },
           {
             "title": "3 · Who we share with",
-            "body": "Payment processors, SMS/email providers and organizers (limited to what they need for your booking) receive only what is required. Legal requests are handled under Saudi law."
+            "body": "Payment processors, SMS/email providers and event partners (limited to what they need for your booking) receive only what is required. Legal requests are handled under Saudi law."
           },
           {
             "title": "4 · Your choices",

@@ -36,6 +36,8 @@ export type MappedExperience = ExperienceCardProps & {
   meta: string
   place: string
   tags: string[]
+  /** API `type`: attraction | activity (and any future values). */
+  experienceType?: string
   about?: string
   includes?: string[]
   photos?: string[]
@@ -146,11 +148,18 @@ export function mapApiExperienceToCard(exp: ApiRecord): MappedExperience {
         location
 
   const category =
-    pickLocalized(exp, ['category', 'category_name', 'type']) ||
+    pickLocalized(exp, ['category', 'category_name']) ||
     localizedString(nestedValue(exp, ['category', 'name']))
 
+  const experienceType = pickLocalized(exp, ['type']) || undefined
+
   const duration = pickLocalized(exp, ['duration', 'duration_label', 'type_label'])
-  const meta = pickLocalized(exp, ['meta']) || (category && duration ? `${category} · ${duration}` : category)
+  const meta =
+    pickLocalized(exp, ['meta']) ||
+    (category && duration
+      ? `${category} · ${duration}`
+      : category || experienceType || '') ||
+    ''
 
   const ratingVal = formatRating(exp.rating ?? exp.average_rating)
   const reviewCount = pickLocalized(exp, ['raters', 'reviews_count', 'review_count'])
@@ -204,7 +213,8 @@ export function mapApiExperienceToCard(exp: ApiRecord): MappedExperience {
     price,
     flag: flag || undefined,
     tags: tags.length > 0 ? tags : includeTags,
-    category: category || undefined,
+    category: category || experienceType || undefined,
+    experienceType,
     summary,
     about: summary,
     includes: includes.length > 0 ? includes : undefined,

@@ -128,7 +128,6 @@ export function CheckoutPage() {
   const assurances = [
     t('checkout.assurances.issued'),
     t('checkout.assurances.held'),
-    t('checkout.assurances.resell'),
   ] as const
   const tabbySchedule = [
     t('checkout.tabbySchedule.today'),

@@ -27,7 +27,7 @@ import {
 import type { TFunction } from 'i18next'
 import { catalogLabel } from '@/lib/i18n/catalogLabels'
 
-type SearchResultKind = 'Event' | 'Talent' | 'Experience' | 'Auction'
+type SearchResultKind = 'Event' | 'Talent' | 'Experience'
 
 type SearchResult = {
   kind: SearchResultKind
@@ -48,21 +48,18 @@ const TABS = [
   { label: 'Events', kinds: ['Event'] as const, labelKey: 'pages.tabEvents' },
   { label: 'Talents', kinds: ['Talent'] as const, labelKey: 'pages.tabTalents' },
   { label: 'Experiences', kinds: ['Experience'] as const, labelKey: 'pages.tabExperiences' },
-  { label: 'Auctions', kinds: ['Auction'] as const, labelKey: 'pages.tabAuctions' },
 ] as const
 
 const KIND_LABEL_KEYS: Record<SearchResultKind, string> = {
   Event: 'pages.kindEvent',
   Talent: 'pages.kindTalent',
   Experience: 'pages.kindExperience',
-  Auction: 'pages.kindAuction',
 }
 
 const CTA_LABEL_KEYS: Record<string, string> = {
   'View event': 'pages.viewEvent',
   'View profile': 'pages.viewProfile',
   'View experience': 'pages.viewExperience',
-  'Place bid': 'pages.placeBid',
 }
 
 const SORT_LABEL_KEYS: Record<string, string> = {
@@ -122,19 +119,6 @@ const RESULTS = [
     mediaRounded: 'rounded-[12px]',
   },
   {
-    kind: 'Auction',
-    flag: 'Ends soon',
-    title: 'Al-Hilal vs Al-Nassr — Saudi Pro League',
-    meta: 'Fri 9 Oct · Kingdom Arena',
-    blurb: 'Verified resale listing with seats together in the west stand.',
-    price: 'Bid SAR 410',
-    rating: '14 bids',
-    cta: 'Place bid',
-    to: `/auctions/${slugify('Al-Hilal vs Al-Nassr')}`,
-    image: SEARCH_RESULT_IMAGES[3],
-    mediaRounded: 'rounded-[12px]',
-  },
-  {
     kind: 'Experience',
     title: 'Edge of the World hike and picnic',
     meta: 'Riyadh Region · Half day',
@@ -168,10 +152,6 @@ function parsePrice(price: string): number {
   const n = Number.parseFloat(price.replace(/[^\d.]/g, ''))
   return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY
 }
-
-const AUCTION_RESULTS: SearchResult[] = RESULTS.filter((r) => r.kind === 'Auction').map((r) => ({
-  ...r,
-}))
 
 function matchesQuery(haystack: string, query: string): boolean {
   return haystack.toLowerCase().includes(query.toLowerCase())
@@ -307,7 +287,7 @@ export function SearchResultsPage() {
     }
 
     const apiItems = buildApiResults(query, apiEvents, apiTalents, apiExperiences)
-    return [...apiItems, ...AUCTION_RESULTS]
+    return apiItems
   }, [apiEvents, apiTalents, apiExperiences, eventsError, talentsError, experiencesError, query])
 
   const activeTab = TABS.find((t) => t.label === tab) ?? TABS[0]
@@ -533,14 +513,10 @@ export function SearchResultsPage() {
                   <div className="mt-[10px] flex flex-col items-start gap-sm sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-[14px] text-[13px]">
                       <span className="font-semibold text-ink-primary">{result.price}</span>
-                      {result.kind !== 'Auction' ? (
-                        <span className="flex items-center gap-[5px] text-ink-primary">
-                          <StarFillIcon size={13} />
-                          {result.rating}
-                        </span>
-                      ) : (
-                        <span className="text-ink-muted">{result.rating}</span>
-                      )}
+                      <span className="flex items-center gap-[5px] text-ink-primary">
+                        <StarFillIcon size={13} />
+                        {result.rating}
+                      </span>
                     </div>
                     <Button size="sm" variant="secondary" tabIndex={-1} className="w-full sm:w-auto">
                       {translateCta(t, result.cta)}

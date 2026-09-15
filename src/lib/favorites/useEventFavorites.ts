@@ -48,7 +48,7 @@ export function useEventFavorites() {
   async function toggleFavourite(eventId: unknown) {
     if (!isNumericId(eventId)) return false
     if (!isAuthenticated) {
-      navigate('/sign-in')
+      navigate(`/sign-in?next=${encodeURIComponent(window.location.pathname + window.location.search)}`)
       return false
     }
     const id = String(eventId)

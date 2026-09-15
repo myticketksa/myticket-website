@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import { ArrowRightIcon } from '@/components/icons'
-import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
 
 export interface PromoBandProps {
@@ -9,7 +7,6 @@ export interface PromoBandProps {
   body: string
   ctaLabel: string
   ctaTo: string
-  /** Inverse dark band (Events auction) vs warm surface band (Talents/Vendors). */
   tone?: 'inverse' | 'surface'
   className?: string
 }
@@ -65,21 +62,5 @@ export function PromoBand({
         <ArrowRightIcon size={15} className="rtl:rotate-180" />
       </Link>
     </div>
-  )
-}
-
-/** Events listing AuctionBand — Figma `207:4788`. */
-export function AuctionBand() {
-  const { t } = useTranslation('catalog')
-  return (
-    <PageSection padTop={88} padBottom={96}>
-      <PromoBand
-        heading={t('pages.auctionBandTitle')}
-        body={t('pages.auctionBandBody')}
-        ctaLabel={t('pages.auctionBandCta')}
-        ctaTo="/auctions"
-        tone="inverse"
-      />
-    </PageSection>
   )
 }

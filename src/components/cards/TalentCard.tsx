@@ -1,27 +1,13 @@
 import { Divider, ImagePlaceholder } from '@/components/data-display'
-import { StarFillIcon, VerifiedIcon } from '@/components/icons'
+import { StarFillIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 
 /**
  * Figma `TalentCard` Context=Home — node 207:3115.
  *
- * Radius 20 (not the 16 the Catalog variant uses), 1px `--border-default`, media a
- * fixed 208 tall. Drawn 250 wide, but width is the grid's to decide, so it is not
- * fixed here.
- *
- * The top-left pill is **not** `OverlayBadge`: radius 12 against 10, `5px` vertical
- * padding against 4, 11px against 12, and an opaque white fill rather than 92%. Close
- * enough to look like a mistake, different enough that substituting the atom would be
- * visibly wrong, so it is drawn locally.
- *
- * The star is Phosphor at fill weight and takes the row's own colour — `--ink-primary`
- * here, `--ink-muted` on the Catalog variant, `--bg-page` on Directory's dark pill —
- * so it inherits rather than setting a colour.
- *
- * `APPEARING NEXT` is 11px/700 with 0.66 tracking. That is a fourth uppercase
- * micro-label, distinct from `Label/Overline`, `Label/Table` and `Label/Group`, and it
- * is a raw text node rather than a named style, so it stays a literal.
+ * Discovery badge replaces the old verified icon when API `ownDiscovery === false`
+ * (passed through as `verified` for call-site compatibility).
  */
 export interface TalentCardProps {
   name: string
@@ -35,6 +21,9 @@ export interface TalentCardProps {
   nextLabel?: string
   /** Headline under the APPEARING NEXT rule. */
   nextEvent?: string
+  /**
+   * When true, shows “Myticket Discovery” on the media (API `ownDiscovery === false`).
+   */
   verified?: boolean
   /** Public guest browse: avatar/media, name, discipline, rating only. */
   limited?: boolean
@@ -50,11 +39,13 @@ export function TalentCard({
   city,
   nextLabel,
   nextEvent,
-  verified = true,
+  verified = false,
   limited = false,
   image,
   className,
 }: TalentCardProps) {
+  const showDiscovery = verified
+
   return (
     <article
       className={cn(
@@ -76,7 +67,13 @@ export function TalentCard({
           <ImagePlaceholder ratio="fill" caption="Event imagery 16:10" />
         )}
 
-        {!limited && nextLabel && (
+        {showDiscovery && (
+          <p className="absolute top-[10px] start-[10px] rounded-[12px] bg-surface-default px-[10px] py-[5px] text-[10px] font-bold tracking-[0.02em] text-ink-brand">
+            Myticket Discovery
+          </p>
+        )}
+
+        {!limited && !showDiscovery && nextLabel && (
           <p className="absolute top-[10px] start-[10px] rounded-[12px] bg-surface-default px-[10px] py-[5px] text-[11px] font-bold text-ink-primary">
             {nextLabel}
           </p>
@@ -84,10 +81,7 @@ export function TalentCard({
       </div>
 
       <div className="flex flex-col px-lg pt-[15px] pb-[17px]">
-        <div className="flex items-center gap-[6px]">
-          <h3 className="text-[16px] font-bold text-ink-primary">{name}</h3>
-          {verified && <VerifiedIcon size={16} className="shrink-0" />}
-        </div>
+        <h3 className="text-[16px] font-bold text-ink-primary">{name}</h3>
 
         <p className="mt-[3px] text-[13px] font-medium text-ink-secondary">{discipline}</p>
 
@@ -120,29 +114,6 @@ export function TalentCard({
 
 /**
  * Figma `TalentCard/Directory` — node 207:3139. Its own component, not a variant.
- *
- * This is the card the live Talents page uses, and Figma flags it as the resolution
- * of a conflict it had left open: the DS-doc Catalog variant (1:1 media, status badge,
- * 16px name) and the real page disagreed, and Directory is the real page. The Catalog
- * variant is documentation-only and is deliberately not built.
- *
- * Media is a **flat `--bg-skeleton`**, not the placeholder gradient — the only card
- * whose empty media has no caption.
- *
- * Radius is 16, and Home's is 20. Neither is `--radius-card` (18), so both are
- * literals: the token exists but no talent card uses it.
- *
- * Both overlay pills are local, not `OverlayBadge`: radius 13, `5px` vertical padding,
- * 11–12px type, and translucent fills of `--bg-page` at 94% and `--ink-primary` at 72%.
- *
- * The `·grow` node before the CTA row is a flex spacer, so the buttons sit on the
- * bottom edge and a row of cards with different text lengths keeps its CTAs aligned.
- *
- * **Two divergences, both recorded rather than silently smoothed.** The CTAs are drawn
- * h40/radius20, which matches no button size in the system (M is 42/21, the state-card
- * CTA is 36/18), so `Button` is overridden to 40. And Follow is drawn with a 1px
- * border where the DS secondary button is 1.5px; `Button` keeps 1.5px, since forking
- * the button over a half pixel costs more than it buys.
  */
 export interface TalentDirectoryCardProps {
   name: string
@@ -151,16 +122,14 @@ export interface TalentDirectoryCardProps {
   meta: string
   rating: string
   nextShow?: {
-    /** e.g. "Thu 8 Oct · Riyadh Season Opening Night". */
     headline: string
-    /** e.g. "Boulevard Arena · from SAR 180". */
     detail: string
   }
+  /** When true, shows “Myticket Discovery” (API ownDiscovery === false). */
   verified?: boolean
   image?: string
   onGetTickets?: () => void
   onFollow?: () => void
-  /** Public guest browse: name, discipline, rating only — no hire CTAs. */
   limited?: boolean
   className?: string
 }
@@ -171,13 +140,15 @@ export function TalentDirectoryCard({
   meta,
   rating,
   nextShow,
-  verified = true,
+  verified = false,
   image,
   onGetTickets,
   onFollow,
   limited = false,
   className,
 }: TalentDirectoryCardProps) {
+  const showDiscovery = verified
+
   return (
     <article
       className={cn(
@@ -188,9 +159,9 @@ export function TalentDirectoryCard({
       <div className="relative h-[214px] w-full overflow-hidden bg-bg-skeleton">
         {image && <img src={image} alt="" className="size-full object-cover" />}
 
-        {verified && (
-          <p className="absolute top-md start-md rounded-[13px] bg-bg-page/94 px-[10px] py-[5px] text-[11px] font-bold tracking-[0.44px] text-ink-brand uppercase">
-            Verified
+        {showDiscovery && (
+          <p className="absolute top-md start-md rounded-[13px] bg-bg-page/94 px-[10px] py-[5px] text-[10px] font-bold tracking-[0.02em] text-ink-brand">
+            Myticket Discovery
           </p>
         )}
 

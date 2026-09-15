@@ -6,7 +6,6 @@ import { Breadcrumbs } from '@/components/navigation'
 import { PageSection } from '@/layouts'
 import { NumberedPagination } from '@/components/navigation'
 import {
-  AuctionBand,
   CatalogBody,
   CatalogPageHead,
   CatalogSaveAlertActions,
@@ -233,8 +232,6 @@ export function EventsPage() {
           </div>
         </CatalogBody>
       </PageSection>
-
-      <AuctionBand />
     </>
   )
 }

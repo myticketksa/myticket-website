@@ -249,10 +249,7 @@ export function TicketPage() {
               <p className="text-[17px] font-semibold text-ink-primary">{t('ticket.refundPolicy')}</p>
               <p className="mt-md text-[14px] leading-[1.55] text-ink-secondary">
                 {t('ticket.refundPolicyBefore', { date: '5 October 2026' })}{' '}
-                <Link to={`/my-tickets/${ticket.id}/resell`} className="font-semibold text-ink-brand">
-                  {t('ticket.refundPolicyLink')}
-                </Link>
-                .
+                {t('ticket.transferGuest').toLowerCase()}.
               </p>
             </div>
 
@@ -388,15 +385,6 @@ export function TicketPage() {
                         className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
                       >
                         {t('ticket.requestRefund')}
-                      </Button>
-                    </Link>
-                    <Link to={`/my-tickets/${ticket.id}/resell`}>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
-                      >
-                        {t('ticket.listResale')}
                       </Button>
                     </Link>
                   </div>

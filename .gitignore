@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Local tooling / secrets (never commit tokens)
+.kilo/kilo.jsonc
+.kilo/*.jsonc
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

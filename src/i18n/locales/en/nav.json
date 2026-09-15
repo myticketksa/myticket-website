@@ -1,50 +1,104 @@
-{
-  "menu": "Menu",
-  "openMenu": "Open menu",
-  "closeMenu": "Close menu",
-  "home": "MyTicket home",
-  "main": "Main",
-  "events": "Events",
-  "talents": "Talents",
-  "experiences": "Experiences",
-  "auctions": "Auctions",
-  "myTickets": "My tickets",
-  "notifications": "Notifications",
-  "profile": "Profile",
-  "profileNamed": "Profile, {{name}}",
-  "searchPlaceholder": "Search events, talents…",
-  "footer": {
-    "platform": "Platform",
-    "account": "Account",
-    "support": "Support",
-    "business": "Business",
-    "auction": "Auction",
-    "blurb": "The Saudi platform for live experiences — find events, book tickets, and follow the artists you love.",
-    "iosApp": "iOS app",
-    "androidApp": "Android app",
-    "forVendors": "For {{role}}",
-    "forOrganizers": "For {{role}}",
-    "forTalents": "For {{role}}",
-    "becomeTalent": "Become a {{role}}",
-    "becomeVendor": "Become a {{role}}",
-    "businessPaths": "Business paths",
-    "favouritesWaitlists": "Favourites & waitlists",
-    "myReviews": "My reviews",
-    "mySubmissions": "My submissions",
-    "aboutMyTicket": "About MyTicket",
-    "helpCentre": "Help centre",
-    "contactUs": "Contact us",
-    "terms": "Terms of service",
-    "privacy": "Privacy policy",
-    "cookies": "Cookie policy",
-    "about": "About",
-    "help": "Help",
-    "legal": "Legal",
-    "becomeBusiness": "Become a business",
-    "wallet": "Wallet",
-    "settings": "Settings",
-    "saved": "Saved",
-    "copyright": "© {{year}} MyTicket. All prices in Saudi Riyals (SAR).",
-    "madeInKsa": "Riyadh, Kingdom of Saudi Arabia"
-  }
-}
+{
+
+  "menu": "Menu",
+
+  "openMenu": "Open menu",
+
+  "closeMenu": "Close menu",
+
+  "home": "MyTicket home",
+
+  "main": "Main",
+
+  "events": "Events",
+
+  "talents": "Talents",
+
+  "experiences": "Experiences",
+
+  "vendors": "Vendors",
+
+  "auctions": "Auctions",
+
+  "myTickets": "My tickets",
+
+  "notifications": "Notifications",
+
+  "profile": "Profile",
+
+  "profileNamed": "Profile, {{name}}",
+
+  "searchPlaceholder": "Search events, talents…",
+
+  "footer": {
+
+    "platform": "Platform",
+
+    "account": "Account",
+
+    "support": "Support",
+
+    "business": "Business",
+
+    "auction": "Auction",
+
+    "blurb": "The Saudi platform for live experiences — find events, book tickets, and follow the talents you love.",
+
+    "iosApp": "iOS app",
+
+    "androidApp": "Android app",
+
+    "forVendors": "For {{role}}",
+
+    "forOrganizers": "For {{role}}",
+
+    "forTalents": "For {{role}}",
+
+    "becomeTalent": "Become a {{role}}",
+
+    "becomeVendor": "Become a {{role}}",
+
+    "businessPaths": "Business paths",
+
+    "favouritesWaitlists": "Favourites & waitlists",
+
+    "myReviews": "My reviews",
+
+    "mySubmissions": "My submissions",
+
+    "aboutMyTicket": "About MyTicket",
+
+    "helpCentre": "Help centre",
+
+    "contactUs": "Contact us",
+
+    "terms": "Terms of service",
+
+    "privacy": "Privacy policy",
+
+    "cookies": "Cookie policy",
+
+    "about": "About",
+
+    "help": "Help",
+
+    "legal": "Legal",
+
+    "becomeBusiness": "Become a business",
+
+    "wallet": "Wallet",
+
+    "settings": "Settings",
+
+    "saved": "Saved",
+
+    "copyright": "© {{year}} MyTicket. All prices in Saudi Riyals (SAR).",
+
+    "madeInKsa": "Riyadh, Kingdom of Saudi Arabia",
+
+    "social": "Follow us"
+
+  }
+
+}
+

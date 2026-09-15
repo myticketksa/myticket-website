@@ -303,11 +303,7 @@ export function OrderConfirmationPage() {
           </div>
 
           <p className="text-[12px] leading-[1.55] text-ink-muted">
-            {t('confirmation.refundNote')}{' '}
-            <Link to="/auctions" className="font-semibold text-ink-brand">
-              {t('confirmation.resaleAuction')}
-            </Link>
-            .
+            {t('confirmation.refundNote')}
           </p>
         </aside>
       </div>
