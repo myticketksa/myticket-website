@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { credentialsCleared } from '@/features/auth/authSlice'
 import { readStoredLocale } from '@/i18n/config'
+import { addBreadcrumb, reportErrorAsync } from '@/lib/errorLogging'
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000',
@@ -24,6 +25,14 @@ function isUnauthorized(error: FetchBaseQueryError | undefined): boolean {
   return false
 }
 
+function requestMeta(args: string | FetchArgs): { method: string; url: string } {
+  if (typeof args === 'string') return { method: 'GET', url: args }
+  return {
+    method: String(args.method ?? 'GET').toUpperCase(),
+    url: typeof args.url === 'string' ? args.url : '',
+  }
+}
+
 const AUTH_REDIRECT = '/sign-in'
 
 const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
@@ -31,13 +40,45 @@ const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQuery
   api,
   extraOptions,
 ) => {
+  const started = performance.now()
+  const meta = requestMeta(args)
   const result = await rawBaseQuery(args, api, extraOptions)
-  if (result.error && isUnauthorized(result.error)) {
-    api.dispatch(credentialsCleared())
-    if (typeof window !== 'undefined' && window.location.pathname !== AUTH_REDIRECT) {
-      window.location.assign(AUTH_REDIRECT)
+  const durationMs = Math.round(performance.now() - started)
+
+  addBreadcrumb({
+    category: 'http',
+    message: `${meta.method} ${meta.url}`,
+    level: result.error ? 'error' : 'info',
+  })
+
+  if (result.error) {
+    if (isUnauthorized(result.error)) {
+      api.dispatch(credentialsCleared())
+      if (typeof window !== 'undefined' && window.location.pathname !== AUTH_REDIRECT) {
+        window.location.assign(AUTH_REDIRECT)
+      }
+    } else {
+      reportErrorAsync(result.error, {
+        handled: true,
+        level: 'error',
+        name: 'ApiError',
+        transaction: `${meta.method} ${meta.url}`,
+        request: {
+          method: meta.method,
+          durationMs,
+        },
+        tags: {
+          component: 'api',
+          endpoint: meta.url.slice(0, 120),
+        },
+        extra: {
+          status: result.error.status,
+          durationMs,
+        },
+      })
     }
   }
+
   return result
 }
 

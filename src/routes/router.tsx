@@ -8,6 +8,7 @@ import {
 } from '@/layouts'
 import { SiteDocumentMeta } from '@/components/navigation'
 import { ProbeRoute } from './ProbeRoute'
+import { RouteErrorPage } from './RouteErrorPage'
 import {
   HomePage,
   EventsPage,
@@ -70,6 +71,8 @@ function RootDocument() {
 export const router = createBrowserRouter([
   {
     element: <RootDocument />,
+    /** Covers the entire route tree — render / navigation failures report to StackLogger. */
+    errorElement: <RouteErrorPage />,
     children: [
       {
         path: '/probe',

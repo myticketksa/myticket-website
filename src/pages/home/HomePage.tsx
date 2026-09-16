@@ -28,6 +28,7 @@ export function HomePage() {
 
   return (
     <>
+    {x.y}
       <HomeHero apiEvents={apiEvents} />
       <HomeAdsSection ads={apiAds} />
       <HomeTalents apiTalents={apiTalents} />
