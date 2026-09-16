@@ -78,17 +78,17 @@ export function mapGiftTicketToMyTicket(gift: ApiRecord): MyTicketCard & {
   const event =
     asRecord(gift.event) ??
     asRecord(order?.event) ??
-    asRecord(gift.ticket)?.event
+    asRecord(asRecord(gift.ticket)?.event)
 
   const title =
-    (event && pickLocalized(event, ['title', 'name'])) ||
+    (event ? pickLocalized(event, ['title', 'name']) : '') ||
     localizedString(gift.event_title ?? gift.title ?? gift.name, `Gift ${giftTicketId || '—'}`)
 
   const when = event
     ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
     : formatApiDate(gift.startTime ?? gift.starts_at ?? gift.date)
   const place =
-    (event && pickLocalized(event, ['place', 'venue', 'location'])) ||
+    (event ? pickLocalized(event, ['place', 'venue', 'location']) : '') ||
     localizedString(gift.venue ?? gift.place ?? order?.venue)
   const meta = [when, place].filter(Boolean).join(' · ') || '—'
 
@@ -110,9 +110,10 @@ export function mapGiftTicketToMyTicket(gift: ApiRecord): MyTicketCard & {
       : localizedString(gift.quantity, '—')
 
   const claimable = isClaimableGift(gift)
+  const resolvedTitle = title || `Gift ${giftTicketId || '—'}`
 
   return {
-    id: giftTicketId ? `gift-${giftTicketId}` : title,
+    id: giftTicketId ? `gift-${giftTicketId}` : resolvedTitle,
     giftTicketId,
     source: 'gift',
     claimable,
@@ -123,7 +124,7 @@ export function mapGiftTicketToMyTicket(gift: ApiRecord): MyTicketCard & {
         order?.id ??
         giftTicketId,
     ),
-    title,
+    title: resolvedTitle,
     meta,
     status: 'TRANSFERRED',
     facts: [

@@ -247,7 +247,7 @@ export function EventDetailPage() {
   )
   const isFreeEvent = Boolean(
     detailCard?.isFree ??
-      listCard?.isFree ??
+      (listCard && 'isFree' in listCard ? listCard.isFree : undefined) ??
       (eventSource?.isFree === true || eventSource?.is_free === true),
   )
   const apiTicketTypes = useMemo(

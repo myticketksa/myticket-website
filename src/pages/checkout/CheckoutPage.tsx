@@ -69,13 +69,15 @@ export function CheckoutPage() {
 
   const hold = useMemo(() => readHoldSession(), [])
   const isFreeSeating = hold?.seatingType === 'free'
-  const seats = useMemo(() => {
+  const seats = useMemo((): HeldSeatSnapshot[] => {
     if (hold?.seats && hold.seats.length > 0) return hold.seats
     if (isFreeSeating) {
       const qty = Math.max(1, Number(hold?.quantity ?? 1))
       return Array.from({ length: qty }, (_, index) => ({
         label: `General admission ${index + 1}`,
         meta: 'Free seating',
+        row: 'GA',
+        category: 'Free seating',
         price: Number(hold?.subtotal ? hold.subtotal / qty : 0),
       }))
     }
