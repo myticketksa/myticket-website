@@ -1,8 +1,15 @@
 import { SITE_ORIGIN } from '@/lib/site'
 import { getBreadcrumbs } from './breadcrumbs'
+import { safeConsoleWarn } from './consoleSafe'
 import { buildFingerprint } from './fingerprint'
 import { sanitizeForLogging, sanitizeMessage } from './sanitize'
-import type { ReportErrorContext, StackLoggerEvent, StackLoggerUser } from './types'
+import {
+  normalizeErrorLevel,
+  STACK_LOGGER_LEVELS,
+  type ReportErrorContext,
+  type StackLoggerEvent,
+  type StackLoggerUser,
+} from './types'
 
 const INGEST_URL =
   import.meta.env.VITE_STACKLOGGER_INGEST_URL ||
@@ -11,6 +18,9 @@ const INGEST_URL =
 const REQUEST_TIMEOUT_MS = 2500
 const MAX_ATTEMPTS = 3
 const RETRY_BASE_MS = 200
+
+/** Registered StackLogger levels — all are eligible for ingest. */
+export const REGISTERED_STACK_LEVELS = STACK_LOGGER_LEVELS
 
 type UserProvider = () => StackLoggerUser | undefined | null
 
@@ -68,6 +78,13 @@ function normalizeError(input: unknown): { name: string; message: string; stack:
   if (typeof input === 'string') {
     return { name: 'Error', message: sanitizeMessage(input), stack: '' }
   }
+  if (Array.isArray(input)) {
+    return {
+      name: 'Error',
+      message: sanitizeMessage(input.map(String).join(' ')),
+      stack: '',
+    }
+  }
   if (input && typeof input === 'object') {
     const record = input as Record<string, unknown>
     const message = sanitizeMessage(
@@ -92,13 +109,16 @@ function shouldDedupe(fingerprint: string): boolean {
 
 function buildEvent(error: unknown, context: ReportErrorContext = {}): StackLoggerEvent {
   const normalized = normalizeError(error)
+  const level = normalizeErrorLevel(context.level, 'error')
   const href = typeof window !== 'undefined' ? window.location.href : ''
   const host =
-    typeof window !== 'undefined' ? window.location.host : configuredOrigin().replace(/^https?:\/\//, '')
+    typeof window !== 'undefined'
+      ? window.location.host
+      : configuredOrigin().replace(/^https?:\/\//, '')
   const url = context.url || href
   const fingerprint =
     context.fingerprint ||
-    buildFingerprint(normalized.name, normalized.message, normalized.stack)
+    buildFingerprint(normalized.name, normalized.message, normalized.stack, level)
 
   const user = sanitizeForLogging({
     ...(userProvider?.() ?? {}),
@@ -115,14 +135,16 @@ function buildEvent(error: unknown, context: ReportErrorContext = {}): StackLogg
   const tags = sanitizeForLogging({
     component: 'web',
     region: String(import.meta.env.VITE_APP_REGION || 'sa'),
-    ...(context.tags ?? {}),
+    level,
+    ...context.tags,
   })
 
   const extra = sanitizeForLogging({
     serverName: host || 'browser',
     retryCount: 0,
     durationMs: context.request?.durationMs ?? 0,
-    ...(context.extra ?? {}),
+    registeredLevels: [...STACK_LOGGER_LEVELS],
+    ...context.extra,
   })
 
   const breadcrumbs = sanitizeForLogging([
@@ -140,6 +162,10 @@ function buildEvent(error: unknown, context: ReportErrorContext = {}): StackLogg
       region: String(import.meta.env.VITE_APP_REGION || 'sa'),
       instance: host || 'browser',
     },
+    logging: {
+      levels: [...STACK_LOGGER_LEVELS],
+      activeLevel: level,
+    },
     ...(context.contexts ?? {}),
   })
 
@@ -150,7 +176,7 @@ function buildEvent(error: unknown, context: ReportErrorContext = {}): StackLogg
     framework: 'react',
     language: 'typescript',
     runtime: 'browser',
-    level: context.level ?? 'error',
+    level,
     name: context.name || normalized.name,
     fingerprint,
     handled: context.handled ?? true,
@@ -183,7 +209,11 @@ async function postWithRetry(payload: StackLoggerEvent): Promise<boolean> {
   const apiKey = readApiKey()
   if (!apiKey) {
     if (import.meta.env.DEV) {
-      console.warn('[StackLogger] VITE_STACKLOGGER_KEY is not set — event not sent', payload.name)
+      safeConsoleWarn(
+        '[StackLogger] VITE_STACKLOGGER_KEY is not set — event not sent',
+        payload.level,
+        payload.name,
+      )
     }
     return false
   }
@@ -236,10 +266,9 @@ async function postWithRetry(payload: StackLoggerEvent): Promise<boolean> {
       window.clearTimeout(timer)
 
       if (response.ok || response.status === 204) return true
-      // Don't retry client auth/config mistakes.
       if (response.status === 401 || response.status === 403 || response.status === 413) {
         if (import.meta.env.DEV) {
-          console.warn('[StackLogger] ingest rejected', response.status)
+          safeConsoleWarn('[StackLogger] ingest rejected', response.status, payload.level)
         }
         return false
       }
@@ -255,13 +284,13 @@ async function postWithRetry(payload: StackLoggerEvent): Promise<boolean> {
   }
 
   if (import.meta.env.DEV && lastError) {
-    console.warn('[StackLogger] ingest failed after retries', lastError)
+    safeConsoleWarn('[StackLogger] ingest failed after retries', lastError)
   }
   return false
 }
 
 /**
- * Report a handled or uncaught error to StackLogger.
+ * Report a handled or uncaught event to StackLogger at any registered level.
  * Safe to call from UI, API clients, and global handlers.
  */
 export async function reportError(
@@ -276,7 +305,7 @@ export async function reportError(
     return await postWithRetry(event)
   } catch (loggingError) {
     if (import.meta.env.DEV) {
-      console.warn('[StackLogger] reportError failed', loggingError)
+      safeConsoleWarn('[StackLogger] reportError failed', loggingError)
     }
     return false
   }

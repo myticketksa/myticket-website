@@ -1,6 +1,37 @@
 /** StackLogger ingest payload — matches the StackLogger error event schema. */
 
-export type ErrorLevel = 'fatal' | 'error' | 'warning' | 'info' | 'debug'
+/** All levels StackLogger accepts — every one is registered and reportable. */
+export const STACK_LOGGER_LEVELS = [
+  'debug',
+  'info',
+  'warning',
+  'error',
+  'fatal',
+] as const
+
+export type ErrorLevel = (typeof STACK_LOGGER_LEVELS)[number]
+
+export function isErrorLevel(value: unknown): value is ErrorLevel {
+  return (
+    typeof value === 'string' &&
+    (STACK_LOGGER_LEVELS as readonly string[]).includes(value)
+  )
+}
+
+/** Normalize aliases (`warn` → `warning`, `critical` → `fatal`, etc.). */
+export function normalizeErrorLevel(
+  value: unknown,
+  fallback: ErrorLevel = 'error',
+): ErrorLevel {
+  if (typeof value !== 'string') return fallback
+  const raw = value.trim().toLowerCase()
+  if (isErrorLevel(raw)) return raw
+  if (raw === 'warn' || raw === 'warning') return 'warning'
+  if (raw === 'critical' || raw === 'panic' || raw === 'fatal') return 'fatal'
+  if (raw === 'trace' || raw === 'verbose') return 'debug'
+  if (raw === 'log' || raw === 'notice') return 'info'
+  return fallback
+}
 
 export type StackLoggerBreadcrumb = {
   category: string
@@ -49,7 +80,7 @@ export type StackLoggerEvent = {
   client: string
 }
 
-/** Optional context passed to `reportError(error, context)`. */
+/** Optional context passed to `reportError` / `reportLog`. */
 export type ReportErrorContext = {
   handled?: boolean
   level?: ErrorLevel
