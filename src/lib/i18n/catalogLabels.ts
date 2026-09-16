@@ -12,6 +12,8 @@ const LABEL_KEYS: Record<string, string> = {
   'Next 3 months': 'filters.next3Months',
   Any: 'filters.any',
   'Free entry only': 'filters.freeEntryOnly',
+  'Free seating': 'filters.freeSeating',
+  'Assigned seating': 'filters.assignedSeating',
   'Free cancellation': 'filters.freeCancellation',
   'Family friendly': 'filters.familyFriendly',
   'Accessible seating': 'filters.accessibleSeating',

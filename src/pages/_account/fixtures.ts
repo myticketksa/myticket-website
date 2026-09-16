@@ -92,8 +92,8 @@ export const MY_TICKETS: TicketFixture[] = [
 ]
 
 export const ACCOUNT_NAV_LINKS = [
-  { id: 'favourites', href: '/saved' },
-  { id: 'waitlists', href: '/saved' },
+  { id: 'favourites', href: '/favorites' },
+  { id: 'waitlists', href: '/favorites' },
   { id: 'reviews', href: '/my-reviews' },
   { id: 'vendor', href: '/my-vendor-application' },
   { id: 'talent', href: '/my-talent-application' },

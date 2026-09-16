@@ -7,17 +7,7 @@ import {
 } from '@/app/api/accountApis'
 import { useAppSelector } from '@/app/hooks'
 import { selectIsAuthenticated } from '@/features/auth/authSlice'
-
-function favoriteEventId(record: Record<string, unknown>): string | undefined {
-  const nested =
-    record.event && typeof record.event === 'object'
-      ? (record.event as Record<string, unknown>)
-      : record.favoritable && typeof record.favoritable === 'object'
-        ? (record.favoritable as Record<string, unknown>)
-        : undefined
-  const raw = record.event_id ?? record.eventId ?? record.favoritable_id ?? nested?.id
-  return raw == null ? undefined : String(raw)
-}
+import { favoriteItemId, favoriteRecordType } from '@/lib/favorites/mapFavoriteRecord'
 
 function isNumericId(value: unknown): value is string | number {
   return value != null && /^\d+$/.test(String(value))
@@ -34,7 +24,8 @@ export function useEventFavorites() {
   const savedIds = useMemo(() => {
     const ids = new Set<string>()
     for (const record of favorites ?? []) {
-      const id = favoriteEventId(record)
+      if (favoriteRecordType(record) !== 'event') continue
+      const id = favoriteItemId(record)
       if (id) ids.add(id)
     }
     return ids

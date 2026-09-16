@@ -19,11 +19,12 @@ import {
  * Catalog APIs with fixture fallback in section components.
  */
 export function HomePage() {
-  const { data: apiEvents } = useGetEventsQuery()
+  const { data: eventsResult } = useGetEventsQuery()
+  const apiEvents = eventsResult?.items
+  const { data: apiAds } = useGetAdvertisementsQuery()
   const { data: apiTalents } = useGetTalentsQuery()
   const { data: apiExperiences } = useGetExperiencesQuery()
   const { data: apiCategories } = useGetEventCategoriesQuery()
-  const { data: apiAds } = useGetAdvertisementsQuery()
 
   return (
     <>

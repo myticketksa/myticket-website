@@ -33,8 +33,12 @@ export interface StickyCtaCardProps {
   primaryLabel?: string
   /** Route for the primary CTA (e.g. event seats). Uses navigate when set. */
   primaryTo?: string
-  /** Called just before navigating to `primaryTo` (e.g. persist ticketId). */
-  onPrimaryClick?: () => void
+  /** Called on primary click; if it returns false, navigation is skipped. */
+  onPrimaryClick?: () => void | boolean | Promise<void | boolean>
+  /** When true, tier qty steppers are interactive (free seating). */
+  qtyInteractive?: boolean
+  onSelectTier?: (name: string) => void
+  onChangeQty?: (name: string, qty: number) => void
   /** Omit / pass null to hide the secondary button (Events ticket rail). */
   secondaryLabel?: string | null
   /** Route for the secondary CTA. Without it, the secondary button looks disabled. */
@@ -44,6 +48,8 @@ export interface StickyCtaCardProps {
   aside?: ReactNode
   children?: ReactNode
   className?: string
+  /** Disable the primary button (e.g. while claiming). */
+  primaryDisabled?: boolean
 }
 
 /** Sticky booking card for detail asides — Events ticket rail Figma `207:5022`. */
@@ -57,18 +63,23 @@ export function StickyCtaCard({
   primaryLabel,
   primaryTo,
   onPrimaryClick,
+  qtyInteractive = false,
+  onSelectTier,
+  onChangeQty,
   secondaryLabel = null,
   secondaryTo,
   footerNote,
   aside,
   children,
   className,
+  primaryDisabled = false,
 }: StickyCtaCardProps) {
   const navigate = useNavigate()
   const { t } = useTranslation('catalog')
   const resolvedFromLabel = fromLabel ?? t('stickyCta.fromLabel')
   const resolvedPrimaryLabel = primaryLabel ?? t('stickyCta.chooseSeats')
   const maxPerOrder = t('stickyCta.maxPerOrder')
+  const canPrimary = Boolean(primaryTo || onPrimaryClick) && !primaryDisabled
 
   return (
     <div
@@ -93,11 +104,29 @@ export function StickyCtaCard({
             {tiers.map((tier) => (
               <div
                 key={tier.name}
+                role={qtyInteractive ? 'button' : undefined}
+                tabIndex={qtyInteractive ? 0 : undefined}
+                onClick={
+                  qtyInteractive
+                    ? () => onSelectTier?.(tier.name)
+                    : undefined
+                }
+                onKeyDown={
+                  qtyInteractive
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          onSelectTier?.(tier.name)
+                        }
+                      }
+                    : undefined
+                }
                 className={cn(
                   'flex flex-col gap-sm rounded-[14px] border p-[14px]',
                   tier.selected
                     ? 'border-brand-primary bg-bg-tint-brand'
                     : 'border-border-default bg-surface-default',
+                  qtyInteractive && 'cursor-pointer',
                 )}
               >
                 <div className="flex items-start justify-between gap-md">
@@ -127,14 +156,29 @@ export function StickyCtaCard({
                     {tier.maxLabel ?? maxPerOrder}
                   </p>
                   <div
-                    className="flex items-center gap-row-gap opacity-55"
-                    title={t('stickyCta.qtyOnMapTitle')}
+                    className={cn(
+                      'flex items-center gap-row-gap',
+                      !qtyInteractive && 'opacity-55',
+                    )}
+                    title={
+                      qtyInteractive ? undefined : t('stickyCta.qtyOnMapTitle')
+                    }
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <button
                       type="button"
                       aria-label={t('stickyCta.decreaseQty')}
-                      disabled
-                      className="flex size-[30px] cursor-not-allowed items-center justify-center rounded-[15px] border border-border-default bg-surface-default text-ink-disabled"
+                      disabled={!qtyInteractive || (tier.qty ?? 0) <= 0}
+                      onClick={() =>
+                        qtyInteractive &&
+                        onChangeQty?.(tier.name, Math.max(0, (tier.qty ?? 0) - 1))
+                      }
+                      className={cn(
+                        'flex size-[30px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default',
+                        qtyInteractive
+                          ? 'text-ink-primary hover:border-border-brand'
+                          : 'cursor-not-allowed text-ink-disabled',
+                      )}
                     >
                       <MinusIcon size={16} />
                     </button>
@@ -144,8 +188,17 @@ export function StickyCtaCard({
                     <button
                       type="button"
                       aria-label={t('stickyCta.increaseQty')}
-                      disabled
-                      className="flex size-[30px] cursor-not-allowed items-center justify-center rounded-[15px] border border-border-default bg-surface-default text-[16px] text-ink-disabled"
+                      disabled={!qtyInteractive || (tier.qty ?? 0) >= 6}
+                      onClick={() =>
+                        qtyInteractive &&
+                        onChangeQty?.(tier.name, Math.min(6, (tier.qty ?? 0) + 1))
+                      }
+                      className={cn(
+                        'flex size-[30px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default text-[16px]',
+                        qtyInteractive
+                          ? 'text-ink-primary hover:border-border-brand'
+                          : 'cursor-not-allowed text-ink-disabled',
+                      )}
                     >
                       <PlusIcon size={16} />
                     </button>
@@ -200,13 +253,16 @@ export function StickyCtaCard({
           <Button
             size="lg"
             className="h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
-            disabled={!primaryTo}
-            title={primaryTo ? undefined : t('stickyCta.actionUnavailable')}
+            disabled={!canPrimary}
+            title={canPrimary ? undefined : t('stickyCta.actionUnavailable')}
             onClick={
-              primaryTo
+              canPrimary
                 ? () => {
-                    onPrimaryClick?.()
-                    navigate(primaryTo)
+                    void (async () => {
+                      const result = await onPrimaryClick?.()
+                      if (result === false) return
+                      if (primaryTo) navigate(primaryTo)
+                    })()
                   }
                 : undefined
             }

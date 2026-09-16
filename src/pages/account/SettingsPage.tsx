@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Breadcrumbs } from '@/components/navigation'
 import {
   BellRingingIcon,
+  HeartIcon,
   PowerIcon,
   UserIcon,
   WalletIcon,
@@ -14,9 +15,14 @@ import { Button, Field, TextInput } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { ACCOUNT_USER } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
-import { useDeleteAccountMutation } from '@/app/api/accountApis'
+import { useDeleteAccountMutation, useUpdateGuestProfileMutation } from '@/app/api/accountApis'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { credentialsCleared, selectAuthUser } from '@/features/auth/authSlice'
+import {
+  credentialsCleared,
+  normalizeAuthUser,
+  selectAuthUser,
+  userUpdated,
+} from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { useSignOut } from '@/lib/auth/useSignOut'
 import { normalizeSaudiPhone } from '@/lib/api/formPayload'
@@ -26,6 +32,8 @@ type ProfileFormValues = {
   name: string
   email: string
   phone: string
+  currentPassword: string
+  password: string
 }
 
 function phoneForInput(raw: string): string {
@@ -42,6 +50,8 @@ function profileFromUser(
     name: user?.name?.trim() ?? ACCOUNT_USER.name,
     email: user?.email?.trim() ?? ACCOUNT_USER.email,
     phone: phoneForInput(user?.phone?.trim() ?? ACCOUNT_USER.mobile),
+    currentPassword: '',
+    password: '',
   }
 }
 
@@ -67,7 +77,14 @@ const NAV_STRUCTURE: {
 }[] = [
   {
     group: 'account',
-    items: [{ id: 'personal', icon: <UserIcon size={14} /> }],
+    items: [
+      { id: 'personal', icon: <UserIcon size={14} /> },
+      {
+        id: 'favorites',
+        icon: <HeartIcon size={14} />,
+        href: '/favorites',
+      },
+    ],
   },
   {
     group: 'money',
@@ -165,6 +182,7 @@ export function SettingsPage() {
   const user = useAppSelector(selectAuthUser)
   const { signOut, isLoading: logoutLoading } = useSignOut()
   const [deleteAccount, deleteState] = useDeleteAccountMutation()
+  const [updateGuest, updateState] = useUpdateGuestProfileMutation()
   const [deletePassword, setDeletePassword] = useState('')
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [profile, setProfile] = useState<ProfileFormValues>(() => profileFromUser(user))
@@ -173,7 +191,11 @@ export function SettingsPage() {
 
   useEffect(() => {
     const next = profileFromUser(user)
-    setProfile(next)
+    setProfile((prev) => ({
+      ...next,
+      currentPassword: prev.currentPassword,
+      password: prev.password,
+    }))
     setSavedProfile(next)
   }, [user?.name, user?.email, user?.phone])
 
@@ -202,14 +224,18 @@ export function SettingsPage() {
   }
 
   function handleDiscardProfile() {
-    setProfile(savedProfile)
+    setProfile({
+      ...savedProfile,
+      currentPassword: '',
+      password: '',
+    })
     setPhotoUrl((current) => {
       if (current) URL.revokeObjectURL(current)
       return null
     })
   }
 
-  function handleSaveProfile() {
+  async function handleSaveProfile() {
     if (!profile.name.trim()) {
       dispatch(toastPushed('error', t('settings.validation.name')))
       return
@@ -218,12 +244,67 @@ export function SettingsPage() {
       dispatch(toastPushed('error', t('settings.validation.email')))
       return
     }
-    setSavedProfile({
+    if (!profile.currentPassword.trim()) {
+      dispatch(toastPushed('error', t('settings.validation.currentPassword')))
+      return
+    }
+
+    const phone = profile.phone.trim() ? normalizeSaudiPhone(profile.phone) : ''
+    const body: {
+      name: string
+      email: string
+      phone: string
+      current_password: string
+      password?: string
+    } = {
       name: profile.name.trim(),
       email: profile.email.trim(),
-      phone: profile.phone.trim() ? normalizeSaudiPhone(profile.phone) : '',
-    })
-    dispatch(toastPushed('success', t('settings.saveSuccess')))
+      phone,
+      current_password: profile.currentPassword.trim(),
+    }
+    if (profile.password.trim()) {
+      body.password = profile.password.trim()
+    }
+
+    try {
+      const response = await updateGuest(body).unwrap()
+      const nestedUser =
+        response.user && typeof response.user === 'object'
+          ? (response.user as Record<string, unknown>)
+          : response
+      const nextUser =
+        normalizeAuthUser(nestedUser) ??
+        normalizeAuthUser({
+          ...(user ?? {}),
+          id: user?.id ?? 0,
+          name: body.name,
+          email: body.email,
+          phone: body.phone,
+          role: user?.role ?? 'guest',
+        })
+
+      if (nextUser) {
+        dispatch(userUpdated(nextUser))
+      }
+
+      const clearedPasswords = { currentPassword: '', password: '' }
+      setSavedProfile({
+        name: nextUser?.name ?? body.name,
+        email: nextUser?.email ?? body.email,
+        phone: phoneForInput(nextUser?.phone ?? body.phone),
+        ...clearedPasswords,
+      })
+      setProfile((prev) => ({
+        ...prev,
+        name: nextUser?.name ?? body.name,
+        email: nextUser?.email ?? body.email,
+        phone: phoneForInput(nextUser?.phone ?? body.phone),
+        ...clearedPasswords,
+      }))
+      dispatch(toastPushed('success', t('settings.saveSuccess')))
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, t('settings.saveError'))))
+    }
   }
 
   const nav = NAV_STRUCTURE.map((group) => ({
@@ -403,6 +484,30 @@ export function SettingsPage() {
                     }
                   />
                 </Field>
+                <Field
+                  label={t('settings.currentPassword')}
+                  htmlFor="profile-current-password"
+                >
+                  <TextInput
+                    id="profile-current-password"
+                    type="password"
+                    value={profile.currentPassword}
+                    onChange={(event) => patchProfile({ currentPassword: event.target.value })}
+                    autoComplete="current-password"
+                    className="h-[46px]"
+                  />
+                </Field>
+                <Field label={t('settings.newPassword')} htmlFor="profile-new-password">
+                  <TextInput
+                    id="profile-new-password"
+                    type="password"
+                    value={profile.password}
+                    onChange={(event) => patchProfile({ password: event.target.value })}
+                    placeholder={t('settings.newPasswordPlaceholder')}
+                    autoComplete="new-password"
+                    className="h-[46px]"
+                  />
+                </Field>
               </div>
             </section>
 
@@ -419,7 +524,11 @@ export function SettingsPage() {
                 >
                   {t('settings.discard')}
                 </Button>
-                <Button size="md" onClick={handleSaveProfile}>
+                <Button
+                  size="md"
+                  loading={updateState.isLoading}
+                  onClick={() => void handleSaveProfile()}
+                >
                   {t('settings.saveChanges')}
                 </Button>
               </div>

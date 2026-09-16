@@ -3,16 +3,18 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Button, Field, TextInput } from '@/components/ui'
 import { FunnelHeader, PageSection } from '@/layouts'
-import { useClaimGiftTicketMutation } from '@/app/api/accountApis'
+import {
+  useClaimGiftTicketMutation,
+  useGetGiftTicketDetailsQuery,
+} from '@/app/api/accountApis'
 import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
+import { localizedString } from '@/lib/api/locale'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
 /**
- * Claim a gifted ticket — Postman `POST /gift-tickets/{giftTicketId}`
- * with `{ claim_token }`.
- *
- * Typical link: `/gift/claim/:giftTicketId?token=…`
+ * Claim a gifted ticket — `GET /gift-tickets/{id}` + `POST /gift-tickets/{id}`.
+ * Typical link: `/gift/claim/:giftTicketId`
  */
 export function ClaimGiftPage() {
   const { t } = useTranslation(['account', 'common'])
@@ -22,25 +24,36 @@ export function ClaimGiftPage() {
   const dispatch = useAppDispatch()
   const [claimGift, claimState] = useClaimGiftTicketMutation()
 
-  const initialToken = useMemo(() => params.get('token') ?? params.get('claim_token') ?? '', [params])
+  const initialToken = useMemo(
+    () => params.get('token') ?? params.get('claim_token') ?? '',
+    [params],
+  )
   const [token, setToken] = useState(initialToken)
+
+  const resolvedGiftId = giftTicketId || token.trim()
+  const { data: giftDetail, isError: giftMissing } = useGetGiftTicketDetailsQuery(
+    resolvedGiftId,
+    { skip: !resolvedGiftId },
+  )
+
+  const giftLabel = useMemo(() => {
+    if (!giftDetail || Object.keys(giftDetail).length === 0) return resolvedGiftId
+    return (
+      localizedString(giftDetail.id ?? giftDetail.giftTicketId) ||
+      resolvedGiftId
+    )
+  }, [giftDetail, resolvedGiftId])
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!giftTicketId) {
+    const id = resolvedGiftId
+    if (!id) {
       dispatch(toastPushed('error', t('account:claim.missingRef')))
-      return
-    }
-    if (!token.trim()) {
-      dispatch(toastPushed('error', t('account:claim.missingToken')))
       return
     }
 
     try {
-      await claimGift({
-        giftTicketId,
-        claim_token: token.trim(),
-      }).unwrap()
+      await claimGift({ giftTicketId: id }).unwrap()
       dispatch(toastPushed('success', t('account:claim.success')))
       navigate('/my-tickets')
     } catch (error) {
@@ -69,7 +82,12 @@ export function ClaimGiftPage() {
             onSubmit={(event) => void handleSubmit(event)}
           >
             <Field label={t('account:claim.giftRef')} htmlFor="gift-id">
-              <TextInput id="gift-id" value={giftTicketId} readOnly className="bg-bg-page" />
+              <TextInput
+                id="gift-id"
+                value={giftLabel}
+                readOnly
+                className="bg-bg-page"
+              />
             </Field>
             <Field label={t('account:claim.token')} htmlFor="claim-token">
               <TextInput
@@ -77,10 +95,17 @@ export function ClaimGiftPage() {
                 value={token}
                 onChange={(event) => setToken(event.target.value)}
                 placeholder={t('account:claim.tokenPlaceholder')}
-                required
               />
             </Field>
-            <Button type="submit" size="lg" loading={claimState.isLoading}>
+            {giftMissing ? (
+              <p className="text-[13px] text-state-danger">{t('account:claim.error')}</p>
+            ) : null}
+            <Button
+              type="submit"
+              size="lg"
+              loading={claimState.isLoading}
+              disabled={!resolvedGiftId}
+            >
               {t('account:claim.cta')}
             </Button>
             <p className="text-[13px] text-ink-muted">

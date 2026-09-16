@@ -1,7 +1,17 @@
 import { baseApi } from './baseApi'
-import { asList, unwrapData } from '@/lib/api/unwrap'
+import { asList, extractPagination, type ApiPagination, unwrapData } from '@/lib/api/unwrap'
 
 export type ApiRecord = Record<string, unknown>
+
+export type EventsListResult = {
+  items: ApiRecord[]
+  pagination: ApiPagination
+}
+
+export type GetEventsParams = {
+  search?: string
+  page?: number
+}
 
 export const eventsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -10,16 +20,26 @@ export const eventsApi = baseApi.injectEndpoints({
       transformResponse: (response: unknown) => asList<ApiRecord>(response),
       providesTags: ['Event'],
     }),
-    getEvents: build.query<ApiRecord[], void | { search?: string }>({
-      query: (params) => ({
-        url: '/tickets/events',
-        params: params?.search ? { search: params.search } : undefined,
+    getEvents: build.query<EventsListResult, void | GetEventsParams>({
+      query: (params) => {
+        const search = params && 'search' in params ? params.search : undefined
+        const page = params && 'page' in params ? params.page : undefined
+        return {
+          url: '/tickets/events',
+          params: {
+            ...(search ? { search } : {}),
+            ...(page && page > 1 ? { page } : page === 1 ? { page: 1 } : {}),
+          },
+        }
+      },
+      transformResponse: (response: unknown): EventsListResult => ({
+        items: asList<ApiRecord>(response),
+        pagination: extractPagination(response),
       }),
-      transformResponse: (response: unknown) => asList<ApiRecord>(response),
       providesTags: (result) =>
         result
           ? [
-              ...result.map((event) => ({
+              ...result.items.map((event) => ({
                 type: 'Event' as const,
                 id: String(event.id ?? event.slug ?? ''),
               })),

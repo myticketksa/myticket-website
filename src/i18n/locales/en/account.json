@@ -305,6 +305,35 @@
       "profile": "View profile"
     }
   },
+  "favorites": {
+    "title": "Favorites",
+    "subtitle": "Everything you've hearted — events, experiences, and talents.",
+    "emptyTitle": "Nothing favorited yet",
+    "emptyBody": "Tap the heart on an event, experience, or talent to keep it here.",
+    "filterEmptyTitle": "No favorites in this filter",
+    "filterEmptyBody": "Try another type — your other hearts are still here.",
+    "removeAria": "Remove from favorites",
+    "removed": "Removed from favorites",
+    "removeError": "Could not remove favorite",
+    "notificationSettings": "Notification settings",
+    "filters": {
+      "all": "All",
+      "events": "Events",
+      "experiences": "Experiences",
+      "talents": "Talents"
+    },
+    "kinds": {
+      "Event": "Event",
+      "Experience": "Experience",
+      "Talent": "Talent",
+      "Vendor": "Vendor"
+    },
+    "cta": {
+      "tickets": "Get tickets",
+      "visit": "Book a visit",
+      "profile": "View profile"
+    }
+  },
   "notifications": {
     "title": "Notifications",
     "emptyTitle": "You’re all caught up",
@@ -349,6 +378,7 @@
       "language": "Language & region",
       "payments": "Payment methods",
       "wallet": "Wallet & payouts",
+      "favorites": "Favorites",
       "notifications": "Notifications",
       "privacy": "Privacy & data"
     },
@@ -388,9 +418,14 @@
     "deleteSuccess": "Account deleted",
     "deleteError": "Could not delete account",
     "saveSuccess": "Changes saved",
+    "saveError": "Could not save profile",
+    "currentPassword": "Current password",
+    "newPassword": "New password (optional)",
+    "newPasswordPlaceholder": "Leave blank to keep your password",
     "validation": {
       "name": "Enter your full name",
-      "email": "Enter your email"
+      "email": "Enter your email",
+      "currentPassword": "Enter your current password to save changes"
     }
   },
   "profile": {

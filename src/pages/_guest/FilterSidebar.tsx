@@ -33,6 +33,8 @@ export type FilterSidebarState = {
   other: string[]
   /** Inclusive max ticket price in SAR; default 1500. */
   maxPrice: number
+  /** Empty = any; values are `free` | `assigned`. */
+  seatingTypes: Array<'free' | 'assigned'>
 }
 
 export interface FilterSidebarProps {
@@ -56,6 +58,10 @@ export interface FilterSidebarProps {
 const FREE_ENTRY = 'Free entry only'
 const PRICE_MIN = 50
 const PRICE_MAX = 1500
+const SEATING_OPTIONS = [
+  { id: 'free' as const, label: 'Free seating' },
+  { id: 'assigned' as const, label: 'Assigned seating' },
+]
 
 function FilterGroupLabel({ children }: { children: ReactNode }) {
   return (
@@ -84,16 +90,23 @@ export function FilterSidebar({
   const [rating, setRating] = useState('Any')
   const [cities, setCities] = useState<string[]>([])
   const [other, setOther] = useState<string[]>([])
+  const [seatingTypes, setSeatingTypes] = useState<Array<'free' | 'assigned'>>([])
   const [maxPrice, setMaxPrice] = useState(PRICE_MAX)
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
 
   useEffect(() => {
-    onChangeRef.current?.({ when, cities, rating, other, maxPrice })
-  }, [when, cities, rating, other, maxPrice])
+    onChangeRef.current?.({ when, cities, rating, other, maxPrice, seatingTypes })
+  }, [when, cities, rating, other, maxPrice, seatingTypes])
 
   const toggle = (list: string[], value: string, set: (next: string[]) => void) => {
     set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value])
+  }
+
+  const toggleSeating = (value: 'free' | 'assigned') => {
+    setSeatingTypes((current) =>
+      current.includes(value) ? current.filter((v) => v !== value) : [...current, value],
+    )
   }
 
   const clear = () => {
@@ -101,6 +114,7 @@ export function FilterSidebar({
     setRating('Any')
     setCities([])
     setOther([])
+    setSeatingTypes([])
     setMaxPrice(PRICE_MAX)
     onClear?.()
   }
@@ -263,6 +277,25 @@ export function FilterSidebar({
                     interactive && toggle(other, FREE_ENTRY, setOther)
                   }
                 />
+              </div>
+            </div>
+
+            <div className="h-px w-full bg-border-divider" />
+
+            <div className="flex w-full flex-col">
+              <FilterGroupLabel>{t('filters.seating')}</FilterGroupLabel>
+              <div className="mt-md flex flex-col gap-[9px]">
+                {SEATING_OPTIONS.map((opt, i) => (
+                  <Checkbox
+                    key={opt.id}
+                    id={`${baseId}-seating-${i}`}
+                    label={catalogLabel(t, opt.label)}
+                    fullWidth
+                    disabled={!interactive}
+                    checked={seatingTypes.includes(opt.id)}
+                    onCheckedChange={() => interactive && toggleSeating(opt.id)}
+                  />
+                ))}
               </div>
             </div>
 

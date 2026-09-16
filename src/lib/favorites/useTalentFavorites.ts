@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useGetFavoritesQuery } from '@/app/api/accountApis'
 import {
   useFavoriteTalentMutation,
   useUnfavoriteTalentMutation,
 } from '@/app/api/talentsApi'
 import { useAppSelector } from '@/app/hooks'
 import { selectIsAuthenticated } from '@/features/auth/authSlice'
+import { favoriteItemId, favoriteRecordType } from '@/lib/favorites/mapFavoriteRecord'
 
 const STORAGE_KEY = 'myticket.talent_favorites'
 
-function readIds(): Set<string> {
+export function readTalentFavoriteIds(): Set<string> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return new Set()
@@ -21,7 +23,7 @@ function readIds(): Set<string> {
   }
 }
 
-function writeIds(ids: Set<string>) {
+export function writeTalentFavoriteIds(ids: Set<string>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]))
 }
 
@@ -29,18 +31,34 @@ function isNumericId(value: unknown): value is string | number {
   return value != null && /^\d+$/.test(String(value))
 }
 
-/** Talent favourite toggle — API + localStorage mirror (detail payload has no isFavorited). */
+/** Talent favourite toggle — API list + localStorage mirror. */
 export function useTalentFavorites() {
   const navigate = useNavigate()
   const location = useLocation()
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
+  const { data: favorites } = useGetFavoritesQuery(undefined, { skip: !isAuthenticated })
   const [favoriteTalent] = useFavoriteTalentMutation()
   const [unfavoriteTalent] = useUnfavoriteTalentMutation()
-  const [savedIds, setSavedIds] = useState<Set<string>>(() => readIds())
+  const [localIds, setLocalIds] = useState<Set<string>>(() => readTalentFavoriteIds())
+
+  const apiIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const record of favorites ?? []) {
+      if (favoriteRecordType(record) !== 'talent') continue
+      const id = favoriteItemId(record)
+      if (id) ids.add(id)
+    }
+    return ids
+  }, [favorites])
 
   useEffect(() => {
-    setSavedIds(readIds())
-  }, [])
+    if (apiIds.size === 0 && !favorites) return
+    const merged = new Set([...readTalentFavoriteIds(), ...apiIds])
+    writeTalentFavoriteIds(merged)
+    setLocalIds(merged)
+  }, [apiIds, favorites])
+
+  const savedIds = useMemo(() => new Set([...localIds, ...apiIds]), [localIds, apiIds])
 
   const isFavourite = useCallback(
     (talentId: unknown) => {
@@ -70,7 +88,6 @@ export function useTalentFavorites() {
           next.add(id)
         }
       } catch (error) {
-        // If local state is out of sync with the server, flip the other way once.
         try {
           if (removing) {
             await favoriteTalent(id).unwrap()
@@ -84,8 +101,8 @@ export function useTalentFavorites() {
         }
       }
 
-      writeIds(next)
-      setSavedIds(next)
+      writeTalentFavoriteIds(next)
+      setLocalIds(next)
       return true
     },
     [

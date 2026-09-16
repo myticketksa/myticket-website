@@ -203,7 +203,7 @@ export function ProfilePage() {
       <PageSection padTop={40} padBottom={0}>
         <div className="mb-lg flex flex-wrap items-end justify-between gap-md">
           <h2 className="text-[24px] font-extrabold text-ink-primary">{t('profile.savedForLater')}</h2>
-          <Link to="/saved" className="text-[14px] font-semibold text-ink-brand">
+          <Link to="/favorites" className="text-[14px] font-semibold text-ink-brand">
             {t('profile.seeAllSaved', { count: 14 })}
           </Link>
         </div>

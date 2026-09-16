@@ -120,6 +120,7 @@ export const FIGMA_SCREENS = {
   '/settings': '207:10247',
   '/my-tickets': '207:9469',
   '/my-tickets/:id': '207:9024',
+  '/favorites': '207:8057',
   '/saved': '207:8057',
   '/notifications': '207:8824',
   '/wallet': '207:11086',

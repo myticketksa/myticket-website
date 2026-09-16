@@ -117,24 +117,48 @@ export const accountApis = baseApi.injectEndpoints({
     >({
       query: (body) => ({ url: '/gift-tickets', method: 'POST', body }),
       transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
-      invalidatesTags: ['Ticket', 'Order'],
+      invalidatesTags: [
+        'Ticket',
+        'Order',
+        { type: 'Ticket', id: 'GIFTS' },
+      ],
     }),
-    claimGiftTicket: build.mutation<
-      ApiRecord,
-      { giftTicketId: string | number; claim_token: string }
-    >({
-      query: ({ giftTicketId, claim_token }) => ({
+    /** Recipient claims a gift — `POST /gift-tickets/{giftTicketId}` (no body). */
+    claimGiftTicket: build.mutation<ApiRecord, { giftTicketId: string | number }>({
+      query: ({ giftTicketId }) => ({
         url: `/gift-tickets/${giftTicketId}`,
         method: 'POST',
-        body: { claim_token },
       }),
       transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
-      invalidatesTags: ['Ticket', 'Order'],
+      invalidatesTags: [
+        'Ticket',
+        'Order',
+        { type: 'Ticket', id: 'GIFTS' },
+      ],
     }),
+    /** Sender + recipient list — `GET /gift-tickets`. */
     getGiftTickets: build.query<ApiRecord[], void>({
       query: () => '/gift-tickets',
       transformResponse: (response: unknown) => asList<ApiRecord>(response),
-      providesTags: ['Ticket'],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map((gift) => ({
+                type: 'Ticket' as const,
+                id: `gift-${String(gift.id ?? gift.giftTicketId ?? '')}`,
+              })),
+              { type: 'Ticket', id: 'GIFTS' },
+            ]
+          : [{ type: 'Ticket', id: 'GIFTS' }],
+    }),
+    /** Recipient gift detail — `GET /gift-tickets/{giftTicketId}`. */
+    getGiftTicketDetails: build.query<ApiRecord, string | number>({
+      query: (giftTicketId) => `/gift-tickets/${giftTicketId}`,
+      transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
+      providesTags: (_r, _e, id) => [
+        { type: 'Ticket', id: `gift-${String(id)}` },
+        { type: 'Ticket', id: 'GIFTS' },
+      ],
     }),
     getChats: build.query<ApiRecord[], void>({
       query: () => '/chats',
@@ -165,6 +189,23 @@ export const accountApis = baseApi.injectEndpoints({
     deleteAccount: build.mutation<unknown, { password: string }>({
       query: (body) => ({ url: '/account-deletion', method: 'DELETE', body }),
     }),
+    updateGuestProfile: build.mutation<
+      ApiRecord,
+      {
+        name: string
+        email: string
+        phone: string
+        current_password: string
+        password?: string
+      }
+    >({
+      query: (body) => ({
+        url: '/guest',
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
+    }),
   }),
 })
 
@@ -189,10 +230,12 @@ export const {
   useSendGiftTicketMutation,
   useClaimGiftTicketMutation,
   useGetGiftTicketsQuery,
+  useGetGiftTicketDetailsQuery,
   useGetChatsQuery,
   useSendChatMessageMutation,
   useGetChatMessagesQuery,
   useMarkChatsReadMutation,
   useGetAdvertisementsQuery,
   useDeleteAccountMutation,
+  useUpdateGuestProfileMutation,
 } = accountApis

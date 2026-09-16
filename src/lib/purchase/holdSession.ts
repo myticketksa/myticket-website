@@ -26,6 +26,9 @@ export type HoldSession = {
   vat?: number
   heldAt?: number
   slug?: string
+  /** Free seating skips the seat map — quantity-only checkout. */
+  seatingType?: 'free' | 'assigned'
+  quantity?: number
 }
 
 export function readHoldSession(): HoldSession | null {
@@ -69,6 +72,48 @@ export function numericHoldSeatIds(session: HoldSession | null | undefined): num
 }
 
 export function hasValidApiHold(session: HoldSession | null | undefined): boolean {
-  if (!session?.holdId) return false
+  if (!session) return false
+  if (session.seatingType === 'free') {
+    const qty = Number(session.quantity ?? session.seats?.length ?? 0)
+    return Boolean(session.eventId && session.ticketId != null && qty > 0)
+  }
+  if (!session.holdId) return false
   return numericHoldSeatIds(session).length > 0
+}
+
+/** Persist a free-seating (no seat map) checkout session. */
+export function writeFreeSeatingSession(input: {
+  eventId: string
+  ticketId: number | string
+  quantity: number
+  unitPrice: number
+  slug?: string
+  label?: string
+}) {
+  const quantity = Math.max(1, Math.floor(input.quantity))
+  const unitPrice = Math.max(0, Number(input.unitPrice) || 0)
+  const subtotal = unitPrice * quantity
+  const serviceFee = Math.round(subtotal * 0.05)
+  const vat = Math.round((subtotal + serviceFee) * 0.15)
+  const seats: HeldSeatSnapshot[] = Array.from({ length: quantity }, (_, index) => ({
+    label: input.label
+      ? `${input.label} × ${index + 1}`
+      : `General admission ${index + 1}`,
+    meta: 'Free seating',
+    price: unitPrice,
+  }))
+
+  writeHoldSession({
+    seatingType: 'free',
+    eventId: input.eventId,
+    ticketId: input.ticketId,
+    quantity,
+    seats,
+    seatIds: [],
+    subtotal,
+    serviceFee,
+    vat,
+    total: subtotal + serviceFee + vat,
+    slug: input.slug,
+  })
 }

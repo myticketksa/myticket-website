@@ -34,11 +34,11 @@ export const talentsApi = baseApi.injectEndpoints({
     }),
     favoriteTalent: build.mutation<unknown, string | number>({
       query: (id) => ({ url: `/talents/${id}/favorite`, method: 'POST', body: {} }),
-      invalidatesTags: (_r, _e, id) => [{ type: 'Talent', id: String(id) }],
+      invalidatesTags: (_r, _e, id) => [{ type: 'Talent', id: String(id) }, 'Favorite'],
     }),
     unfavoriteTalent: build.mutation<unknown, string | number>({
       query: (id) => ({ url: `/talents/${id}/favorite`, method: 'DELETE' }),
-      invalidatesTags: (_r, _e, id) => [{ type: 'Talent', id: String(id) }],
+      invalidatesTags: (_r, _e, id) => [{ type: 'Talent', id: String(id) }, 'Favorite'],
     }),
     requestTalent: build.mutation<
       unknown,

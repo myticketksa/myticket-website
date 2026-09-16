@@ -265,7 +265,8 @@ export function SearchResultsPage() {
   const [sort, setSort] = useState('Most relevant')
   const [cities, setCities] = useState<string[]>(['Riyadh'])
 
-  const { data: apiEvents, isError: eventsError } = useGetEventsQuery({ search: query })
+  const { data: eventsResult, isError: eventsError } = useGetEventsQuery({ search: query })
+  const apiEvents = eventsResult?.items
   const { data: apiTalents, isError: talentsError } = useGetTalentsQuery()
   const { data: apiExperiences, isError: experiencesError } = useGetExperiencesQuery()
 

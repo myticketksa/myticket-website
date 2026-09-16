@@ -7,7 +7,9 @@ import { Button } from '@/components/ui'
 import { AccountPageHead, AccountSplit } from '@/layouts'
 import { DefaultAccountAside } from '@/pages/_account/AccountAside'
 import { type TicketStatus } from '@/pages/_account/fixtures'
+import { useGetGiftTicketsQuery } from '@/app/api/accountApis'
 import { useGetOrdersQuery } from '@/app/api/ordersApi'
+import { mapGiftTicketToMyTicket } from '@/lib/api/mappers/gifts'
 import { mapOrderToMyTicket } from '@/lib/api/mappers/orders'
 
 function statusTone(status: TicketStatus | string) {
@@ -25,19 +27,40 @@ function matchesTab(status: string, tab: number) {
   return true
 }
 
+function ticketHref(ticket: {
+  id: string
+  orderId?: string
+  source?: string
+  giftTicketId?: string
+  claimable?: boolean
+}) {
+  if (ticket.source === 'gift' && ticket.giftTicketId) {
+    if (ticket.claimable) return `/gift/claim/${ticket.giftTicketId}`
+    if (ticket.orderId && /^\d+$/.test(ticket.orderId)) {
+      return `/my-tickets/${ticket.orderId}`
+    }
+    return `/gift/claim/${ticket.giftTicketId}`
+  }
+  return `/my-tickets/${ticket.id}`
+}
+
 /**
- * My tickets — Figma `207:9469`. Live `GET /tickets/orders` into the existing card layout.
+ * My tickets — Figma `207:9469`. Live `GET /tickets/orders` + `GET /gift-tickets`
+ * into the existing card layout (Transferred tab includes gifts).
  */
 export function MyTicketsPage() {
   const { t } = useTranslation(['account', 'common'])
   const navigate = useNavigate()
   const [tab, setTab] = useState(0)
   const { data: orders, isError, isFetching, isLoading } = useGetOrdersQuery()
+  const { data: gifts, isFetching: giftsFetching } = useGetGiftTicketsQuery()
 
   const tickets = useMemo(() => {
-    if (orders && orders.length > 0) return orders.map(mapOrderToMyTicket)
-    return []
-  }, [orders])
+    const fromOrders = orders && orders.length > 0 ? orders.map(mapOrderToMyTicket) : []
+    const fromGifts =
+      gifts && gifts.length > 0 ? gifts.map(mapGiftTicketToMyTicket) : []
+    return [...fromOrders, ...fromGifts]
+  }, [orders, gifts])
 
   const tabCounts = useMemo(
     () => [
@@ -60,7 +83,7 @@ export function MyTicketsPage() {
   const subtitle = [
     t('account:tickets.subtitle'),
     isError ? t('account:tickets.refreshError') : null,
-    isFetching && !isError ? t('account:tickets.updating') : null,
+    (isFetching || giftsFetching) && !isError ? t('account:tickets.updating') : null,
   ]
     .filter(Boolean)
     .join(' ')
@@ -129,82 +152,91 @@ export function MyTicketsPage() {
             </div>
           )}
 
-          {visible.map((ticket) => (
-            <article
-              key={ticket.id}
-              className="flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
-            >
-              <div className="relative h-[160px] w-full shrink-0 sm:h-auto sm:w-[148px] sm:self-stretch md:w-[196px]">
-                {ticket.cover ? (
-                  <img
-                    src={ticket.cover}
-                    alt=""
-                    className="absolute inset-0 size-full object-cover"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-bg-tint-brand" />
-                )}
-                {ticket.countdown && (
-                  <span className="absolute top-[12px] start-[12px] rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold tracking-[0.06em] text-bg-page uppercase">
-                    {ticket.countdown}
-                  </span>
-                )}
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col px-lg py-[18px] sm:px-[22px] sm:py-[20px]">
-                <div className="flex flex-wrap items-center gap-[9px]">
-                  <StatusBadge tone={statusTone(ticket.status)}>
-                    {statusLabel(ticket.status)}
-                  </StatusBadge>
-                  <span className="text-[12px] text-ink-muted">
-                    {t('account:tickets.orderLabel', { id: ticket.orderId })}
-                  </span>
-                </div>
-                <Link
-                  to={`/my-tickets/${ticket.id}`}
-                  className="mt-[10px] text-[20px] leading-[1.08] font-extrabold tracking-[-0.81px] text-ink-primary hover:text-ink-brand sm:text-[24px] lg:text-[27px]"
-                >
-                  {ticket.title}
-                </Link>
-                <p className="mt-[5px] text-[14px] text-ink-secondary">{ticket.meta}</p>
-                <div className="mt-lg grid grid-cols-2 gap-lg border-y border-border-divider py-[14px] sm:grid-cols-4">
-                  {ticket.facts.map((fact) => (
-                    <div key={fact.label} className="min-w-0">
-                      <p className="text-[11px] font-bold tracking-[0.07em] text-ink-muted uppercase">
-                        {factLabel(fact.label)}
-                      </p>
-                      <p className="mt-[3px] text-[15px] font-semibold text-ink-primary">
-                        {fact.value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-lg flex flex-wrap items-center gap-[9px]">
-                  {ticket.actions.includes('qr') && (
-                    <Link to={`/my-tickets/${ticket.id}`}>
-                      <Button size="sm">{t('account:tickets.showQr')}</Button>
-                    </Link>
+          {visible.map((ticket) => {
+            const href = ticketHref(ticket)
+            const claimable = 'claimable' in ticket && Boolean(ticket.claimable)
+            return (
+              <article
+                key={ticket.id}
+                className="flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
+              >
+                <div className="relative h-[160px] w-full shrink-0 sm:h-auto sm:w-[148px] sm:self-stretch md:w-[196px]">
+                  {ticket.cover ? (
+                    <img
+                      src={ticket.cover}
+                      alt=""
+                      className="absolute inset-0 size-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-bg-tint-brand" />
                   )}
-                  {ticket.actions.includes('transfer') && (
-                    <Link to={`/my-tickets/${ticket.id}/gift`}>
-                      <Button variant="secondary" size="sm" className="bg-bg-page">
-                        {t('account:tickets.transferGuest')}
-                      </Button>
-                    </Link>
-                  )}
-                  {ticket.actions.includes('refund') && (
-                    <Link to={`/my-tickets/${ticket.id}/refund`}>
-                      <Button variant="secondary" size="sm" className="bg-bg-page">
-                        {t('account:tickets.requestRefund')}
-                      </Button>
-                    </Link>
-                  )}
-                  {ticket.note && (
-                    <span className="text-[12px] text-ink-muted">{noteLabel(ticket.note)}</span>
+                  {ticket.countdown && (
+                    <span className="absolute top-[12px] start-[12px] rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold tracking-[0.06em] text-bg-page uppercase">
+                      {ticket.countdown}
+                    </span>
                   )}
                 </div>
-              </div>
-            </article>
-          ))}
+                <div className="flex min-w-0 flex-1 flex-col px-lg py-[18px] sm:px-[22px] sm:py-[20px]">
+                  <div className="flex flex-wrap items-center gap-[9px]">
+                    <StatusBadge tone={statusTone(ticket.status)}>
+                      {statusLabel(ticket.status)}
+                    </StatusBadge>
+                    <span className="text-[12px] text-ink-muted">
+                      {t('account:tickets.orderLabel', { id: ticket.orderId })}
+                    </span>
+                  </div>
+                  <Link
+                    to={href}
+                    className="mt-[10px] text-[20px] leading-[1.08] font-extrabold tracking-[-0.81px] text-ink-primary hover:text-ink-brand sm:text-[24px] lg:text-[27px]"
+                  >
+                    {ticket.title}
+                  </Link>
+                  <p className="mt-[5px] text-[14px] text-ink-secondary">{ticket.meta}</p>
+                  <div className="mt-lg grid grid-cols-2 gap-lg border-y border-border-divider py-[14px] sm:grid-cols-4">
+                    {ticket.facts.map((fact) => (
+                      <div key={fact.label} className="min-w-0">
+                        <p className="text-[11px] font-bold tracking-[0.07em] text-ink-muted uppercase">
+                          {factLabel(fact.label)}
+                        </p>
+                        <p className="mt-[3px] text-[15px] font-semibold text-ink-primary">
+                          {fact.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-lg flex flex-wrap items-center gap-[9px]">
+                    {claimable ? (
+                      <Link to={href}>
+                        <Button size="sm">{t('account:claim.cta')}</Button>
+                      </Link>
+                    ) : null}
+                    {ticket.actions.includes('qr') && (
+                      <Link to={href}>
+                        <Button size="sm">{t('account:tickets.showQr')}</Button>
+                      </Link>
+                    )}
+                    {ticket.actions.includes('transfer') && (
+                      <Link to={`/my-tickets/${ticket.id}/gift`}>
+                        <Button variant="secondary" size="sm" className="bg-bg-page">
+                          {t('account:tickets.transferGuest')}
+                        </Button>
+                      </Link>
+                    )}
+                    {ticket.actions.includes('refund') && (
+                      <Link to={`/my-tickets/${ticket.id}/refund`}>
+                        <Button variant="secondary" size="sm" className="bg-bg-page">
+                          {t('account:tickets.requestRefund')}
+                        </Button>
+                      </Link>
+                    )}
+                    {ticket.note && (
+                      <span className="text-[12px] text-ink-muted">{noteLabel(ticket.note)}</span>
+                    )}
+                  </div>
+                </div>
+              </article>
+            )
+          })}
         </div>
       </AccountSplit>
     </>

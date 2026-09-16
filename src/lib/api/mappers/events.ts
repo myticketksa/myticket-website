@@ -11,12 +11,47 @@ import {
 
 type ApiRecord = Record<string, unknown>
 
+export type EventSeatingType = 'free' | 'assigned'
+
+export function resolveSeatingType(event: ApiRecord | undefined): EventSeatingType {
+  const raw = String(event?.seatingType ?? event?.seating_type ?? 'assigned').toLowerCase()
+  return raw === 'free' ? 'free' : 'assigned'
+}
+
+export function listTicketTypes(event: ApiRecord | undefined): Array<{
+  id: number
+  name: string
+  price: number
+  detail?: string
+}> {
+  if (!event) return []
+  const types = event.ticketTypes ?? event.ticket_types ?? event.tickets
+  if (!Array.isArray(types)) return []
+  return types.flatMap((row) => {
+    if (!row || typeof row !== 'object') return []
+    const record = row as ApiRecord
+    const idRaw = record.id ?? record.ticket_id ?? record.ticketId
+    if (idRaw == null || !/^\d+$/.test(String(idRaw))) return []
+    const price = Number(record.price ?? record.amount ?? 0)
+    return [
+      {
+        id: Number(idRaw),
+        name: localizedString(record.name ?? record.title, `Ticket ${idRaw}`),
+        price: Number.isFinite(price) ? price : 0,
+        detail: localizedString(record.description ?? record.detail ?? record.zone),
+      },
+    ]
+  })
+}
+
 /** Map flexible event API rows into EventCard props; keep fixtures usable as fallback. */
 export function mapApiEventToCard(event: ApiRecord): EventCardProps & {
   id?: string
   slug: string
   ticketTypeId?: number
   isFree?: boolean
+  seatingType?: EventSeatingType
+  startTime?: string
 } {
   const title =
     pickLocalized(event, ['title', 'name', 'name_en'], '') ||
@@ -77,6 +112,13 @@ export function mapApiEventToCard(event: ApiRecord): EventCardProps & {
       : pickLocalized(event, ['flag', 'badge', 'status_label']) || undefined
 
   const ticketTypeId = firstTicketTypeId(event)
+  const startRaw = event.startTime ?? event.starts_at ?? event.start_at ?? event.datetime
+  const startTime =
+    typeof startRaw === 'string' && startRaw.trim()
+      ? startRaw
+      : startRaw instanceof Date
+        ? startRaw.toISOString()
+        : undefined
 
   return {
     id: event.id != null ? String(event.id) : undefined,
@@ -88,6 +130,8 @@ export function mapApiEventToCard(event: ApiRecord): EventCardProps & {
     attendance,
     price,
     isFree: event.isFree === true || event.is_free === true || Number(priceRaw) === 0,
+    seatingType: resolveSeatingType(event),
+    startTime,
     category: category || undefined,
     flag: flag || undefined,
     image,

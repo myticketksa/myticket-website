@@ -23,10 +23,16 @@ import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { parsePureNumericIds } from '@/lib/api/formPayload'
 import { firstTicketTypeId } from '@/lib/api/locale'
-import { resolveEventFromList, resolveEventId } from '@/lib/api/mappers/events'
+import {
+  listTicketTypes,
+  mapApiEventToCard,
+  resolveEventFromList,
+  resolveEventId,
+  resolveSeatingType,
+} from '@/lib/api/mappers/events'
 import { mapApiSeatsToRows, type SeatMapStatus } from '@/lib/api/mappers/seats'
 import { apiErrorMessage } from '@/lib/api/unwrap'
-import { writeHoldSession } from '@/lib/purchase/holdSession'
+import { writeFreeSeatingSession, writeHoldSession } from '@/lib/purchase/holdSession'
 
 type SeatStatus = SeatMapStatus | 'selected'
 type Zone = 'all' | 'vip' | 'gold' | 'silver' | 'bronze'
@@ -288,13 +294,49 @@ export function SeatSelectionPage() {
   const selectedIds = useMemo(() => new Set(selected.map((seat) => seat.id)), [selected])
   const continuingRef = useRef(false)
 
-  const { data: apiEvents, isLoading: eventsLoading } = useGetEventsQuery()
+  const { data: eventsResult, isLoading: eventsLoading } = useGetEventsQuery()
+  const apiEvents = eventsResult?.items
   const [holdSeats] = useHoldSeatsMutation()
   const [releaseHold] = useReleaseHoldMutation()
   const resolvedEventId = useMemo(
     () => resolveEventId(apiEvents, slug ?? '') ?? (/^\d+$/.test(slug ?? '') ? slug : undefined),
     [apiEvents, slug],
   )
+
+  // Free seating never uses the seat map — bounce to checkout or event detail.
+  useEffect(() => {
+    const event = resolveEventFromList(apiEvents, slug ?? '')
+    if (!event || !slug) return
+    if (resolveSeatingType(event) !== 'free') return
+
+    const mapped = mapApiEventToCard(event)
+    if (mapped.isFree) {
+      navigate(`/events/${slug}`, { replace: true })
+      return
+    }
+
+    const ticket = listTicketTypes(event)[0]
+    const ticketId = ticket?.id ?? mapped.ticketTypeId
+    const eventId = resolvedEventId ?? (mapped.id ? String(mapped.id) : undefined)
+    if (!eventId || !ticketId) {
+      navigate(`/events/${slug}`, { replace: true })
+      return
+    }
+
+    writeFreeSeatingSession({
+      eventId,
+      ticketId,
+      quantity: 1,
+      unitPrice: ticket?.price ?? 0,
+      slug,
+      label: ticket?.name,
+    })
+    sessionStorage.setItem('myticket.ticketId', String(ticketId))
+    sessionStorage.setItem('myticket.eventId', eventId)
+    sessionStorage.setItem('myticket.eventSlug', slug)
+    navigate('/checkout', { replace: true })
+  }, [apiEvents, navigate, resolvedEventId, slug])
+
   const {
     data: apiSeats,
     isLoading: seatsLoading,

@@ -102,10 +102,18 @@ const authSlice = createSlice({
       localStorage.removeItem(TOKEN_KEY)
       localStorage.removeItem(USER_KEY)
     },
+    userUpdated(state, action: PayloadAction<AuthUser | Record<string, unknown>>) {
+      const user = normalizeAuthUser(action.payload)
+      if (!user) return
+      state.user = user
+      if (state.token) {
+        localStorage.setItem(USER_KEY, JSON.stringify(user))
+      }
+    },
   },
 })
 
-export const { credentialsSet, credentialsCleared } = authSlice.actions
+export const { credentialsSet, credentialsCleared, userUpdated } = authSlice.actions
 export default authSlice.reducer
 
 export function selectAuthToken(state: { auth: AuthState }) {

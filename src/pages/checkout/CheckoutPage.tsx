@@ -68,10 +68,19 @@ export function CheckoutPage() {
   const [acceptRefund, setAcceptRefund] = useState(true)
 
   const hold = useMemo(() => readHoldSession(), [])
+  const isFreeSeating = hold?.seatingType === 'free'
   const seats = useMemo(() => {
     if (hold?.seats && hold.seats.length > 0) return hold.seats
+    if (isFreeSeating) {
+      const qty = Math.max(1, Number(hold?.quantity ?? 1))
+      return Array.from({ length: qty }, (_, index) => ({
+        label: `General admission ${index + 1}`,
+        meta: 'Free seating',
+        price: Number(hold?.subtotal ? hold.subtotal / qty : 0),
+      }))
+    }
     return FALLBACK_SEATS
-  }, [hold])
+  }, [hold, isFreeSeating])
   const selectedCount = Math.max(1, seats.length)
   const subtotal =
     hold?.subtotal ?? seats.reduce((sum, seat) => sum + Number(seat.price || 0), 0)
@@ -85,9 +94,19 @@ export function CheckoutPage() {
     if (!hasValidApiHold(hold)) {
       const slug = hold?.slug || sessionStorage.getItem('myticket.eventSlug')
       dispatch(toastPushed('error', t('checkout.holdExpired')))
-      navigate(slug ? `/events/${slug}/seats` : '/', { replace: true })
+      const fallback =
+        hold?.seatingType === 'free'
+          ? slug
+            ? `/events/${slug}`
+            : '/'
+          : slug
+            ? `/events/${slug}/seats`
+            : '/'
+      navigate(fallback, { replace: true })
       return
     }
+
+    if (hold?.seatingType === 'free') return
 
     const releaseOnUnload = () => {
       if (paidRef.current) return
@@ -164,15 +183,25 @@ export function CheckoutPage() {
     }
 
     if (!hasValidApiHold(mock)) {
-      const seatsPath = mock?.slug ? `/events/${mock.slug}/seats` : '/'
+      const seatsPath =
+        mock?.seatingType === 'free'
+          ? mock?.slug
+            ? `/events/${mock.slug}`
+            : '/'
+          : mock?.slug
+            ? `/events/${mock.slug}/seats`
+            : '/'
       dispatch(toastPushed('error', t('checkout.holdIncomplete')))
       navigate(seatsPath, { replace: true })
       return null
     }
 
-    const seatIds = parsePureNumericIds(mock!.seatIds)
-    const holdId = String(mock!.holdId)
-    const count = Math.max(1, seatIds.length)
+    const freeSeating = mock!.seatingType === 'free'
+    const seatIds = freeSeating ? [] : parsePureNumericIds(mock!.seatIds)
+    const holdId = freeSeating ? undefined : String(mock!.holdId)
+    const count = freeSeating
+      ? Math.max(1, Number(mock!.quantity ?? mock!.seats?.length ?? 1))
+      : Math.max(1, seatIds.length)
 
     let ticketId: number | undefined
     if (mock?.ticketId != null && /^\d+$/.test(String(mock.ticketId))) {
@@ -197,15 +226,22 @@ export function CheckoutPage() {
       }
     }
 
-    const body = {
-      quantity: count,
-      ticketId,
-      items: [{ ticketId, quantity: count }],
-      // Seated events require both fields — never omit them.
-      seatIds,
-      holdId,
-      beneficiaries: buildBeneficiaries(count),
-    }
+    const body = freeSeating
+      ? {
+          quantity: count,
+          ticketId,
+          items: [{ ticketId, quantity: count }],
+          beneficiaries: buildBeneficiaries(count),
+        }
+      : {
+          quantity: count,
+          ticketId,
+          items: [{ ticketId, quantity: count }],
+          // Seated events require both fields — never omit them.
+          seatIds,
+          holdId,
+          beneficiaries: buildBeneficiaries(count),
+        }
 
     const created = await createOrder({
       eventId,

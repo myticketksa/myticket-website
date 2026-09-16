@@ -305,6 +305,35 @@
       "profile": "عرض الملف"
     }
   },
+  "favorites": {
+    "title": "المفضلة",
+    "subtitle": "كل ما أعجبك — فعاليات وتجارب ومواهب.",
+    "emptyTitle": "لا مفضلات بعد",
+    "emptyBody": "اضغط القلب على فعالية أو تجربة أو موهبة لإبقائها هنا.",
+    "filterEmptyTitle": "لا مفضلات في هذا التصفية",
+    "filterEmptyBody": "جرّب نوعاً آخر — قلوبك الأخرى ما زالت هنا.",
+    "removeAria": "إزالة من المفضلة",
+    "removed": "تمت الإزالة من المفضلة",
+    "removeError": "تعذّر إزالة المفضلة",
+    "notificationSettings": "إعدادات الإشعارات",
+    "filters": {
+      "all": "الكل",
+      "events": "فعاليات",
+      "experiences": "تجارب",
+      "talents": "مواهِب"
+    },
+    "kinds": {
+      "Event": "فعالية",
+      "Experience": "تجربة",
+      "Talent": "موهبة",
+      "Vendor": "بائع"
+    },
+    "cta": {
+      "tickets": "احصل على تذاكر",
+      "visit": "احجز زيارة",
+      "profile": "عرض الملف"
+    }
+  },
   "notifications": {
     "title": "الإشعارات",
     "emptyTitle": "أنت على اطلاع",
@@ -349,6 +378,7 @@
       "language": "اللغة والمنطقة",
       "payments": "طرق الدفع",
       "wallet": "المحفظة والمدفوعات",
+      "favorites": "المفضلة",
       "notifications": "الإشعارات",
       "privacy": "الخصوصية والبيانات"
     },
@@ -388,9 +418,14 @@
     "deleteSuccess": "تم حذف الحساب",
     "deleteError": "تعذّر حذف الحساب",
     "saveSuccess": "تم حفظ التغييرات",
+    "saveError": "تعذّر حفظ الملف الشخصي",
+    "currentPassword": "كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة (اختياري)",
+    "newPasswordPlaceholder": "اتركها فارغة للإبقاء على كلمة المرور",
     "validation": {
       "name": "أدخل اسمك الكامل",
-      "email": "أدخل بريدك الإلكتروني"
+      "email": "أدخل بريدك الإلكتروني",
+      "currentPassword": "أدخل كلمة المرور الحالية لحفظ التغييرات"
     }
   },
   "profile": {

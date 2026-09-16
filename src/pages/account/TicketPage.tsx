@@ -146,7 +146,8 @@ export function TicketPage() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { data: orders } = useGetOrdersQuery()
-  const { data: apiEvents } = useGetEventsQuery()
+  const { data: eventsResult } = useGetEventsQuery()
+  const apiEvents = eventsResult?.items
   const [cancelOrder, cancelState] = useCancelOrderMutation()
 
   const factLabels = useMemo(
