@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  ChipMultiSelect,
   Field,
   FileDropButton,
   Select,
@@ -14,32 +13,17 @@ import {
   AccountDonePanel,
   ReviewSummary,
   ReviewTerms,
-  joinOrDash,
 } from '@/pages/forms/apply-shared'
 import { useLocale } from '@/i18n/locale'
-import {
-  useApplyVendorMutation,
-  useGetCitiesQuery,
-  useGetOfferedServicesQuery,
-} from '@/app/api/accountApis'
-import { useAppDispatch } from '@/app/hooks'
+import { useApplyVendorMutation, useGetCitiesQuery } from '@/app/api/accountApis'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { mapApiIdLabelOptions, type IdLabelOption } from '@/lib/api/formPayload'
 import { clearDraft, loadDraft, saveDraft } from '@/lib/forms/draftStorage'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
 const STEP_KEYS = ['account', 'business', 'services', 'credentials', 'review'] as const
-
-const FALLBACK_SERVICE_DEFS = [
-  { value: 'Sound', key: 'sound' },
-  { value: 'Lighting', key: 'lighting' },
-  { value: 'Staging', key: 'staging' },
-  { value: 'Catering', key: 'catering' },
-  { value: 'Security', key: 'security' },
-  { value: 'AV / LED', key: 'av' },
-  { value: 'Decor', key: 'decor' },
-  { value: 'Transport', key: 'transport' },
-] as const
 
 const FALLBACK_CITIES: IdLabelOption[] = [
   { value: '1', label: 'Riyadh' },
@@ -49,36 +33,19 @@ const FALLBACK_CITIES: IdLabelOption[] = [
 ]
 
 type VendorDraft = {
+  email: string
+  phone: string
   businessName: string
   cityId: string
   address: string
-  story: string
-  /** service[name] is free text in Postman — store selected service labels/names. */
-  services: string[]
-  coverage: string[]
-  contactName: string
   crNumber: string
-  /** Postman `business[logo]` */
+  serviceName: string
+  serviceDescription: string
+  /** `business[logo]` — required */
   logo?: File
-  /** Postman `business[personalPhoto]` — reused for work photos first file */
+  /** `business[personalPhoto]` — optional */
   personalPhoto?: File
-  workPhotos: File[]
   terms: boolean
-}
-
-const EMPTY_DRAFT: VendorDraft = {
-  businessName: '',
-  cityId: '1',
-  address: '',
-  story: '',
-  services: [],
-  coverage: [],
-  contactName: '',
-  crNumber: '',
-  logo: undefined,
-  personalPhoto: undefined,
-  workPhotos: [],
-  terms: false,
 }
 
 /** Apply vendor — FormData keys match Postman `POST /applications/vendor`. */
@@ -88,11 +55,23 @@ export function ApplyVendorPage() {
   const vendor = roleLabel('vendor')
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
+  const user = useAppSelector(selectAuthUser)
   const [applyVendor, applyState] = useApplyVendorMutation()
   const { data: apiCities } = useGetCitiesQuery()
-  const { data: apiServices } = useGetOfferedServicesQuery()
   const [step, setStep] = useState(0)
-  const [draft, setDraft] = useState<VendorDraft>(EMPTY_DRAFT)
+  const [draft, setDraft] = useState<VendorDraft>(() => ({
+    email: user?.email ?? '',
+    phone: user?.phone ?? '',
+    businessName: '',
+    cityId: '1',
+    address: '',
+    crNumber: '',
+    serviceName: '',
+    serviceDescription: '',
+    logo: undefined,
+    personalPhoto: undefined,
+    terms: false,
+  }))
   const [draftSaved, setDraftSaved] = useState(false)
   const [restoredNote, setRestoredNote] = useState(false)
 
@@ -105,26 +84,17 @@ export function ApplyVendorPage() {
     const stored = loadDraft<Record<string, unknown>>('vendor')
     if (!stored) return
     setStep(Math.min(stored.step, STEP_KEYS.length - 1))
-    setDraft({
-      ...EMPTY_DRAFT,
+    setDraft((prev) => ({
+      ...prev,
       ...(stored.draft as Partial<VendorDraft>),
+      email: String(stored.draft.email ?? prev.email ?? user?.email ?? ''),
+      phone: String(stored.draft.phone ?? prev.phone ?? user?.phone ?? ''),
       logo: undefined,
       personalPhoto: undefined,
-      workPhotos: [],
-      services: Array.isArray(stored.draft.services) ? (stored.draft.services as string[]) : [],
-      coverage: Array.isArray(stored.draft.coverage) ? (stored.draft.coverage as string[]) : [],
       terms: Boolean(stored.draft.terms),
-    })
-    setRestoredNote(true)
-  }, [])
-
-  const serviceOptions = useMemo(() => {
-    const fallback = FALLBACK_SERVICE_DEFS.map((item) => ({
-      value: item.value,
-      label: t(`forms:vendor.serviceFallbacks.${item.key}`),
     }))
-    return mapApiIdLabelOptions(apiServices, fallback)
-  }, [apiServices, t])
+    setRestoredNote(true)
+  }, [user?.email, user?.phone])
 
   const cityOptions = useMemo(
     () => mapApiIdLabelOptions(apiCities, FALLBACK_CITIES),
@@ -134,9 +104,6 @@ export function ApplyVendorPage() {
   const lastStep = STEP_KEYS.length - 1
   const cityLabel =
     cityOptions.find((city) => city.value === draft.cityId)?.label ?? draft.cityId
-  const serviceLabels = draft.services.map(
-    (value) => serviceOptions.find((option) => option.value === value)?.label ?? value,
-  )
 
   function patch(partial: Partial<VendorDraft>) {
     setDraft((prev) => ({ ...prev, ...partial }))
@@ -149,47 +116,86 @@ export function ApplyVendorPage() {
     navigate('/')
   }
 
+  function validateStep(current: number): string | null {
+    if (current === 0) {
+      if (!draft.email.trim()) return t('forms:vendor.validation.email')
+      if (!draft.phone.trim()) return t('forms:vendor.validation.phone')
+      return null
+    }
+    if (current === 1) {
+      if (!draft.businessName.trim()) return t('forms:vendor.validation.businessName')
+      if (!draft.cityId) return t('forms:vendor.validation.city')
+      if (!draft.address.trim()) return t('forms:vendor.validation.address')
+      return null
+    }
+    if (current === 2) {
+      if (!draft.serviceName.trim()) return t('forms:vendor.validation.serviceName')
+      if (!draft.serviceDescription.trim()) {
+        return t('forms:vendor.validation.serviceDescription')
+      }
+      return null
+    }
+    if (current === 3) {
+      if (!draft.crNumber.trim()) return t('forms:vendor.validation.cr')
+      if (!draft.logo) return t('forms:vendor.validation.logo')
+      return null
+    }
+    if (current === lastStep) {
+      if (!draft.terms) return t('forms:vendor.validation.terms')
+      return null
+    }
+    return null
+  }
+
   async function handleContinue() {
+    const error = validateStep(step)
+    if (error) {
+      dispatch(toastPushed('error', error))
+      return
+    }
+
     if (step < lastStep) {
       setStep((prev) => prev + 1)
       return
     }
 
-    const serviceName =
-      serviceLabels[0] ??
-      draft.services[0] ??
-      t('forms:vendor.defaults.generalServices')
-    const serviceDescription =
-      draft.story.trim() ||
-      (serviceLabels.length ? serviceLabels.join(', ') : t('forms:vendor.defaults.vendorServices'))
-
     const body = new FormData()
     body.append('business[tradeName]', draft.businessName.trim())
-    body.append('business[CRnumber]', draft.crNumber.trim() || 'pending')
+    body.append('business[CRnumber]', draft.crNumber.trim())
     body.append('business[primaryCity]', draft.cityId)
-    body.append(
-      'business[address]',
-      draft.address.trim() || draft.story.trim().slice(0, 120) || 'Saudi Arabia',
-    )
-    body.append('service[name]', serviceName)
-    body.append('service[description]', serviceDescription)
+    body.append('business[address]', draft.address.trim())
+    body.append('service[name]', draft.serviceName.trim())
+    body.append('service[description]', draft.serviceDescription.trim())
     if (draft.logo) body.append('business[logo]', draft.logo)
     if (draft.personalPhoto) body.append('business[personalPhoto]', draft.personalPhoto)
-    else if (draft.workPhotos[0]) body.append('business[personalPhoto]', draft.workPhotos[0])
+    body.append('contacts[email]', draft.email.trim())
+    body.append('contacts[phone]', draft.phone.trim())
 
     try {
       await applyVendor(body).unwrap()
       clearDraft('vendor')
       dispatch(toastPushed('success', t('forms:vendor.success')))
       navigate('/application-submitted?role=vendor')
-    } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, t('forms:vendor.error'))))
+    } catch (err) {
+      dispatch(toastPushed('error', apiErrorMessage(err, t('forms:vendor.error'))))
     }
   }
 
   function handleClear() {
     clearDraft('vendor')
-    setDraft(EMPTY_DRAFT)
+    setDraft({
+      email: user?.email ?? '',
+      phone: user?.phone ?? '',
+      businessName: '',
+      cityId: '1',
+      address: '',
+      crNumber: '',
+      serviceName: '',
+      serviceDescription: '',
+      logo: undefined,
+      personalPhoto: undefined,
+      terms: false,
+    })
     setStep(0)
     setDraftSaved(false)
     setRestoredNote(false)
@@ -229,7 +235,31 @@ export function ApplyVendorPage() {
       onClear={handleClear}
       onSaveExit={handleSaveExit}
     >
-      {step === 0 && <AccountDonePanel subtitle={t('forms:accountDone.subtitle')} />}
+      {step === 0 && (
+        <div className="flex flex-col gap-xl">
+          <AccountDonePanel subtitle={t('forms:accountDone.subtitle')} />
+          <Field label={t('forms:vendor.fields.email')} htmlFor="vendor-email">
+            <TextInput
+              id="vendor-email"
+              type="email"
+              value={draft.email}
+              onChange={(event) => patch({ email: event.target.value })}
+              placeholder={t('forms:vendor.fields.emailPlaceholder')}
+              autoComplete="email"
+            />
+          </Field>
+          <Field label={t('forms:vendor.fields.phone')} htmlFor="vendor-phone">
+            <TextInput
+              id="vendor-phone"
+              type="tel"
+              value={draft.phone}
+              onChange={(event) => patch({ phone: event.target.value })}
+              placeholder={t('forms:vendor.fields.phonePlaceholder')}
+              autoComplete="tel"
+            />
+          </Field>
+        </div>
+      )}
 
       {step === 1 && (
         <div className="flex flex-col gap-xl">
@@ -262,40 +292,29 @@ export function ApplyVendorPage() {
               placeholder={t('forms:vendor.fields.addressPlaceholder')}
             />
           </Field>
-          <Field label={t('forms:vendor.fields.story')} htmlFor="vendor-story">
-            <Textarea
-              id="vendor-story"
-              rows={4}
-              value={draft.story}
-              onChange={(event) => patch({ story: event.target.value })}
-              placeholder={t('forms:vendor.fields.storyPlaceholder')}
-            />
-          </Field>
         </div>
       )}
 
       {step === 2 && (
         <div className="flex flex-col gap-xl">
-          <ChipMultiSelect
-            label={t('forms:vendor.fields.services')}
-            hint={t('forms:vendor.fields.servicesHint')}
-            options={serviceOptions}
-            value={draft.services}
-            onChange={(services) => patch({ services })}
-          />
-          <ChipMultiSelect
-            label={t('forms:vendor.fields.coverage')}
-            hint={t('forms:vendor.fields.coverageHint')}
-            options={cityOptions}
-            value={draft.coverage}
-            onChange={(coverage) => patch({ coverage })}
-          />
-          <Field label={t('forms:vendor.fields.contact')} htmlFor="vendor-contact">
+          <Field label={t('forms:vendor.fields.serviceName')} htmlFor="vendor-service-name">
             <TextInput
-              id="vendor-contact"
-              value={draft.contactName}
-              onChange={(event) => patch({ contactName: event.target.value })}
-              placeholder={t('forms:vendor.fields.contactPlaceholder')}
+              id="vendor-service-name"
+              value={draft.serviceName}
+              onChange={(event) => patch({ serviceName: event.target.value })}
+              placeholder={t('forms:vendor.fields.serviceNamePlaceholder')}
+            />
+          </Field>
+          <Field
+            label={t('forms:vendor.fields.serviceDescription')}
+            htmlFor="vendor-service-description"
+          >
+            <Textarea
+              id="vendor-service-description"
+              rows={4}
+              value={draft.serviceDescription}
+              onChange={(event) => patch({ serviceDescription: event.target.value })}
+              placeholder={t('forms:vendor.fields.serviceDescriptionPlaceholder')}
             />
           </Field>
         </div>
@@ -313,37 +332,26 @@ export function ApplyVendorPage() {
           </Field>
           <div>
             <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
-              {t('forms:vendor.fields.licenceTitle')}
+              {t('forms:vendor.fields.logoTitle')}
             </p>
             <FileDropButton
-              label={t('forms:vendor.fields.licenceUpload')}
-              hint={t('forms:vendor.fields.licenceHint')}
-              accept="image/*,.pdf"
+              label={t('forms:vendor.fields.logoUpload')}
+              hint={t('forms:vendor.fields.logoHint')}
+              accept="image/png,image/jpeg,image/webp,image/*"
               fileName={draft.logo?.name}
               onFiles={(files) => patch({ logo: files[0] })}
             />
           </div>
           <div>
             <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
-              {t('forms:vendor.fields.workTitle')}
+              {t('forms:vendor.fields.personalPhotoTitle')}
             </p>
             <FileDropButton
-              label={t('forms:vendor.fields.workUpload')}
-              hint={t('forms:vendor.fields.workHint')}
-              icon="plus"
-              accept="image/*"
-              multiple
-              fileName={
-                draft.workPhotos.length
-                  ? t('forms:vendor.fields.filesSelected', { count: draft.workPhotos.length })
-                  : draft.personalPhoto?.name
-              }
-              onFiles={(files) =>
-                patch({
-                  workPhotos: files,
-                  personalPhoto: files[0] ?? draft.personalPhoto,
-                })
-              }
+              label={t('forms:vendor.fields.personalPhotoUpload')}
+              hint={t('forms:vendor.fields.personalPhotoHint')}
+              accept="image/png,image/jpeg,image/webp,image/*"
+              fileName={draft.personalPhoto?.name}
+              onFiles={(files) => patch({ personalPhoto: files[0] })}
             />
           </div>
         </div>
@@ -354,29 +362,39 @@ export function ApplyVendorPage() {
           <ReviewSummary
             rows={[
               {
+                label: t('forms:vendor.fields.reviewEmail'),
+                value: draft.email.trim() || t('forms:review.notSet'),
+              },
+              {
+                label: t('forms:vendor.fields.reviewPhone'),
+                value: draft.phone.trim() || t('forms:review.notSet'),
+              },
+              {
                 label: t('forms:vendor.fields.reviewBusiness'),
                 value: draft.businessName.trim() || t('forms:review.notSet'),
               },
               { label: t('forms:vendor.fields.reviewCity'), value: cityLabel },
               {
-                label: t('forms:vendor.fields.reviewServices'),
-                value: joinOrDash(serviceLabels),
+                label: t('forms:vendor.fields.reviewAddress'),
+                value: draft.address.trim() || t('forms:review.notSet'),
               },
               {
-                label: t('forms:vendor.fields.reviewCoverage'),
-                value: joinOrDash(
-                  draft.coverage.map(
-                    (id) => cityOptions.find((city) => city.value === id)?.label ?? id,
-                  ),
-                ),
-              },
-              {
-                label: t('forms:vendor.fields.reviewContact'),
-                value: draft.contactName.trim() || t('forms:review.notSet'),
+                label: t('forms:vendor.fields.reviewService'),
+                value: draft.serviceName.trim() || t('forms:review.notSet'),
               },
               {
                 label: t('forms:vendor.fields.reviewCr'),
                 value: draft.crNumber.trim() || t('forms:review.notSet'),
+              },
+              {
+                label: t('forms:vendor.fields.reviewLogo'),
+                value: draft.logo ? t('forms:review.provided') : t('forms:review.notSet'),
+              },
+              {
+                label: t('forms:vendor.fields.reviewPersonalPhoto'),
+                value: draft.personalPhoto
+                  ? t('forms:review.provided')
+                  : t('forms:review.optionalSkip'),
               },
             ]}
           />

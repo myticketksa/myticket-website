@@ -4,13 +4,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Breadcrumbs } from '@/components/navigation'
 import {
   BellRingingIcon,
-  CreditCardIcon,
-  LockIcon,
   PowerIcon,
-  ShieldIcon,
   UserIcon,
   WalletIcon,
 } from '@/components/icons'
+import { Divider } from '@/components/data-display'
 import { Avatar } from '@/components/data-display'
 import { Button, Field, TextInput } from '@/components/ui'
 import { PageSection } from '@/layouts'
@@ -21,7 +19,31 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { credentialsCleared, selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { useSignOut } from '@/lib/auth/useSignOut'
+import { normalizeSaudiPhone } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
+
+type ProfileFormValues = {
+  name: string
+  email: string
+  phone: string
+}
+
+function phoneForInput(raw: string): string {
+  const digits = raw.replace(/\D/g, '')
+  if (digits.startsWith('966')) return digits.slice(3)
+  if (digits.startsWith('0')) return digits.slice(1)
+  return digits
+}
+
+function profileFromUser(
+  user: { name?: string; email?: string; phone?: string } | null | undefined,
+): ProfileFormValues {
+  return {
+    name: user?.name?.trim() ?? ACCOUNT_USER.name,
+    email: user?.email?.trim() ?? ACCOUNT_USER.email,
+    phone: phoneForInput(user?.phone?.trim() ?? ACCOUNT_USER.mobile),
+  }
+}
 
 type NavItem = {
   id: string
@@ -37,7 +59,7 @@ type NavItem = {
   undrawn?: boolean
 }
 
-type NavGroupId = 'account' | 'money' | 'communication' | 'privacy'
+type NavGroupId = 'account' | 'money' | 'communication'
 
 const NAV_STRUCTURE: {
   group: NavGroupId
@@ -45,25 +67,11 @@ const NAV_STRUCTURE: {
 }[] = [
   {
     group: 'account',
-    items: [
-      { id: 'personal', icon: <UserIcon size={14} /> },
-      {
-        id: 'security',
-        icon: <LockIcon size={14} />,
-        tag: 'twoFaOn',
-        undrawn: true,
-      },
-    ],
+    items: [{ id: 'personal', icon: <UserIcon size={14} /> }],
   },
   {
     group: 'money',
     items: [
-      {
-        id: 'payments',
-        icon: <CreditCardIcon size={14} />,
-        tag: '3',
-        undrawn: true,
-      },
       {
         id: 'wallet',
         icon: <WalletIcon size={14} />,
@@ -82,53 +90,7 @@ const NAV_STRUCTURE: {
       },
     ],
   },
-  {
-    group: 'privacy',
-    items: [
-      {
-        id: 'privacy',
-        icon: <ShieldIcon size={14} />,
-        undrawn: true,
-      },
-    ],
-  },
 ]
-
-function ContactRow({
-  value,
-  hint,
-  badge,
-  badgeTone = 'success',
-  action,
-}: {
-  value: string
-  hint: string
-  badge: string
-  badgeTone?: 'success' | 'warning'
-  action: string
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-lg rounded-[14px] border border-border-default bg-bg-page px-[17px] py-[15px]">
-      <div className="min-w-0 flex-1">
-        <p className="text-[15px] font-semibold text-ink-primary">{value}</p>
-        <p className="mt-[3px] text-[13px] text-ink-secondary">{hint}</p>
-      </div>
-      <span
-        className={cn(
-          'rounded-[11px] px-[10px] py-[4px] text-[12px] font-bold',
-          badgeTone === 'success'
-            ? 'bg-state-success-tint text-state-success'
-            : 'bg-bg-tint-brand text-ink-brand-strong',
-        )}
-      >
-        {badge}
-      </span>
-      <Button variant="secondary" size="sm">
-        {action}
-      </Button>
-    </div>
-  )
-}
 
 function NavRow({
   item,
@@ -197,7 +159,7 @@ function initialsFromName(name: string): string {
 }
 
 export function SettingsPage() {
-  const { t } = useTranslation('account')
+  const { t } = useTranslation(['account', 'auth'])
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const user = useAppSelector(selectAuthUser)
@@ -205,7 +167,15 @@ export function SettingsPage() {
   const [deleteAccount, deleteState] = useDeleteAccountMutation()
   const [deletePassword, setDeletePassword] = useState('')
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  const [profile, setProfile] = useState<ProfileFormValues>(() => profileFromUser(user))
+  const [savedProfile, setSavedProfile] = useState<ProfileFormValues>(() => profileFromUser(user))
   const photoInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const next = profileFromUser(user)
+    setProfile(next)
+    setSavedProfile(next)
+  }, [user?.name, user?.email, user?.phone])
 
   useEffect(() => {
     return () => {
@@ -225,10 +195,36 @@ export function SettingsPage() {
     })
   }
 
-  const displayName = user?.name ?? ACCOUNT_USER.name
-  const displayEmail = user?.email ?? ACCOUNT_USER.email
-  const displayPhone = user?.phone ?? ACCOUNT_USER.mobile
   const initials = user?.name ? initialsFromName(user.name) : ACCOUNT_USER.initials
+
+  function patchProfile(partial: Partial<ProfileFormValues>) {
+    setProfile((prev) => ({ ...prev, ...partial }))
+  }
+
+  function handleDiscardProfile() {
+    setProfile(savedProfile)
+    setPhotoUrl((current) => {
+      if (current) URL.revokeObjectURL(current)
+      return null
+    })
+  }
+
+  function handleSaveProfile() {
+    if (!profile.name.trim()) {
+      dispatch(toastPushed('error', t('settings.validation.name')))
+      return
+    }
+    if (!profile.email.trim()) {
+      dispatch(toastPushed('error', t('settings.validation.email')))
+      return
+    }
+    setSavedProfile({
+      name: profile.name.trim(),
+      email: profile.email.trim(),
+      phone: profile.phone.trim() ? normalizeSaudiPhone(profile.phone) : '',
+    })
+    dispatch(toastPushed('success', t('settings.saveSuccess')))
+  }
 
   const nav = NAV_STRUCTURE.map((group) => ({
     group: t(`settings.groups.${group.group}`),
@@ -236,7 +232,6 @@ export function SettingsPage() {
       const label =
         item.id === 'personal' ? t('settings.personal') : t(`settings.nav.${item.id}`)
       let tag = item.tag
-      if (item.tag === 'twoFaOn') tag = t('settings.tags.twoFaOn')
       if (item.tag === 'notificationsOn') tag = t('settings.tags.notificationsOn', { count: 4 })
       return { ...item, label, tag }
     }),
@@ -365,79 +360,49 @@ export function SettingsPage() {
 
               <div className="my-[22px] h-px bg-border-divider" />
 
-              <div className="grid gap-lg sm:grid-cols-2">
-                <Field label={t('settings.fullName')} htmlFor="full-name">
-                  <TextInput id="full-name" defaultValue={displayName} className="h-[46px]" />
-                </Field>
-                <Field label={t('settings.displayName')} htmlFor="display-name">
+              <div className="flex flex-col gap-lg">
+                <Field label={t('auth:register.name')} htmlFor="profile-name">
                   <TextInput
-                    id="display-name"
-                    defaultValue={displayName.split(' ')[0] ?? ACCOUNT_USER.displayName}
+                    id="profile-name"
+                    type="text"
+                    value={profile.name}
+                    onChange={(event) => patchProfile({ name: event.target.value })}
+                    placeholder={t('auth:register.namePlaceholder')}
+                    autoComplete="name"
                     className="h-[46px]"
                   />
                 </Field>
-                <Field label={t('settings.dateOfBirth')} htmlFor="dob">
+                <Field label={t('auth:register.email')} htmlFor="profile-email">
                   <TextInput
-                    id="dob"
-                    defaultValue={ACCOUNT_USER.dateOfBirth}
+                    id="profile-email"
+                    type="email"
+                    value={profile.email}
+                    onChange={(event) => patchProfile({ email: event.target.value })}
+                    placeholder={t('auth:register.emailPlaceholder')}
+                    autoComplete="email"
                     className="h-[46px]"
-                    trailing={
-                      <span className="shrink-0 text-[12px] text-ink-muted">
-                        {t('settings.ageLimits')}
-                      </span>
+                  />
+                </Field>
+                <Field label={t('auth:register.phoneOptional')} htmlFor="profile-phone">
+                  <TextInput
+                    id="profile-phone"
+                    type="tel"
+                    inputMode="tel"
+                    value={profile.phone}
+                    onChange={(event) => patchProfile({ phone: event.target.value })}
+                    placeholder={t('auth:register.phonePlaceholder')}
+                    autoComplete="tel"
+                    className="h-[46px]"
+                    leading={
+                      <>
+                        <span className="shrink-0 text-[14px] font-medium text-ink-secondary">
+                          +966
+                        </span>
+                        <Divider orientation="vertical" tone="border" className="h-5" />
+                      </>
                     }
                   />
                 </Field>
-                <Field label={t('settings.city')} htmlFor="city">
-                  <TextInput id="city" defaultValue={ACCOUNT_USER.city} className="h-[46px]" />
-                </Field>
-                <Field label={t('settings.nationalId')} htmlFor="nid">
-                  <TextInput
-                    id="nid"
-                    defaultValue={ACCOUNT_USER.nationalId}
-                    readOnly
-                    className="h-[46px] bg-bg-page"
-                    trailing={
-                      <span className="shrink-0 text-[12px] text-ink-muted">
-                        {t('settings.verified')}
-                      </span>
-                    }
-                  />
-                </Field>
-                <Field label={t('settings.memberSince')} htmlFor="member">
-                  <TextInput
-                    id="member"
-                    defaultValue={ACCOUNT_USER.memberSince}
-                    readOnly
-                    className="h-[46px] bg-bg-page text-ink-secondary"
-                  />
-                </Field>
-              </div>
-            </section>
-
-            <section className="rounded-[20px] border border-border-default bg-surface-default p-[26px]">
-              <h2 className="text-[19px] font-semibold text-ink-primary">{t('settings.emailPhone')}</h2>
-              <p className="mt-xs text-[14px] text-ink-secondary">{t('settings.emailPhoneHint')}</p>
-              <div className="mt-xl flex flex-col gap-md">
-                <ContactRow
-                  value={displayEmail}
-                  hint={t('settings.hintEmail')}
-                  badge={t('settings.verified')}
-                  action={t('settings.change')}
-                />
-                <ContactRow
-                  value={displayPhone}
-                  hint={t('settings.hintPhone')}
-                  badge={t('settings.verified')}
-                  action={t('settings.change')}
-                />
-                <ContactRow
-                  value="sara.work@example.com"
-                  hint={t('settings.hintBackup')}
-                  badge={t('settings.unconfirmed')}
-                  badgeTone="warning"
-                  action={t('settings.resend')}
-                />
               </div>
             </section>
 
@@ -446,10 +411,17 @@ export function SettingsPage() {
                 {t('settings.lastSaved', { date: '22 July 2026' })}
               </p>
               <div className="flex gap-[9px]">
-                <Button variant="secondary" size="md" className="bg-bg-page">
+                <Button
+                  variant="secondary"
+                  size="md"
+                  className="bg-bg-page"
+                  onClick={handleDiscardProfile}
+                >
                   {t('settings.discard')}
                 </Button>
-                <Button size="md">{t('settings.saveChanges')}</Button>
+                <Button size="md" onClick={handleSaveProfile}>
+                  {t('settings.saveChanges')}
+                </Button>
               </div>
             </div>
 

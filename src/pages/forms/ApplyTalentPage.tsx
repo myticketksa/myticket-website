@@ -22,7 +22,8 @@ import {
   useGetCitiesQuery,
   useGetPerformanceCategoriesQuery,
 } from '@/app/api/accountApis'
-import { useAppDispatch } from '@/app/hooks'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { mapApiIdLabelOptions, type IdLabelOption } from '@/lib/api/formPayload'
 import { clearDraft, loadDraft, saveDraft } from '@/lib/forms/draftStorage'
@@ -49,29 +50,18 @@ const FALLBACK_CITIES: IdLabelOption[] = [
 ]
 
 type TalentDraft = {
+  email: string
+  phone: string
   stageName: string
   cityId: string
   bio: string
-  portfolioLink: string
-  /** Postman `categories[performanceCategories][]` expects numeric ids. */
-  categoryIds: string[]
-  idNumber: string
-  /** Postman `performer[profilePhoto]` — ID photo doubles as profile when set. */
+  /** `performer[profilePhoto]` */
   profilePhoto?: File
+  /** `portfolio[media][]` — min 1 */
   portfolioMedia: File[]
+  /** `categories[performanceCategories][]` — min 1 */
+  categoryIds: string[]
   terms: boolean
-}
-
-const EMPTY_DRAFT: TalentDraft = {
-  stageName: '',
-  cityId: '1',
-  bio: '',
-  portfolioLink: '',
-  categoryIds: [],
-  idNumber: '',
-  profilePhoto: undefined,
-  portfolioMedia: [],
-  terms: false,
 }
 
 /** Apply talent — FormData keys match Postman `POST /applications/talent`. */
@@ -81,11 +71,22 @@ export function ApplyTalentPage() {
   const talent = roleLabel('talent')
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
+  const user = useAppSelector(selectAuthUser)
   const [applyTalent, applyState] = useApplyTalentMutation()
   const { data: apiCities } = useGetCitiesQuery()
   const { data: apiCategories } = useGetPerformanceCategoriesQuery()
   const [step, setStep] = useState(0)
-  const [draft, setDraft] = useState<TalentDraft>(EMPTY_DRAFT)
+  const [draft, setDraft] = useState<TalentDraft>(() => ({
+    email: user?.email ?? '',
+    phone: user?.phone ?? '',
+    stageName: '',
+    cityId: '1',
+    bio: '',
+    profilePhoto: undefined,
+    portfolioMedia: [],
+    categoryIds: [],
+    terms: false,
+  }))
   const [draftSaved, setDraftSaved] = useState(false)
   const [restoredNote, setRestoredNote] = useState(false)
 
@@ -98,18 +99,20 @@ export function ApplyTalentPage() {
     const stored = loadDraft<Record<string, unknown>>('talent')
     if (!stored) return
     setStep(Math.min(stored.step, STEP_KEYS.length - 1))
-    setDraft({
-      ...EMPTY_DRAFT,
+    setDraft((prev) => ({
+      ...prev,
       ...(stored.draft as Partial<TalentDraft>),
+      email: String(stored.draft.email ?? prev.email ?? user?.email ?? ''),
+      phone: String(stored.draft.phone ?? prev.phone ?? user?.phone ?? ''),
       profilePhoto: undefined,
       portfolioMedia: [],
       categoryIds: Array.isArray(stored.draft.categoryIds)
         ? (stored.draft.categoryIds as string[])
         : [],
       terms: Boolean(stored.draft.terms),
-    })
+    }))
     setRestoredNote(true)
-  }, [])
+  }, [user?.email, user?.phone])
 
   const categoryOptions = useMemo(() => {
     const fallback = FALLBACK_CATEGORY_DEFS.map((item) => ({
@@ -142,7 +145,41 @@ export function ApplyTalentPage() {
     navigate('/')
   }
 
+  function validateStep(current: number): string | null {
+    if (current === 0) {
+      if (!draft.email.trim()) return t('forms:talent.validation.email')
+      if (!draft.phone.trim()) return t('forms:talent.validation.phone')
+      return null
+    }
+    if (current === 1) {
+      if (!draft.stageName.trim()) return t('forms:talent.validation.stageName')
+      if (!draft.cityId) return t('forms:talent.validation.city')
+      if (!draft.bio.trim()) return t('forms:talent.validation.bio')
+      if (!draft.profilePhoto) return t('forms:talent.validation.profilePhoto')
+      return null
+    }
+    if (current === 2) {
+      if (draft.portfolioMedia.length < 1) return t('forms:talent.validation.portfolio')
+      return null
+    }
+    if (current === 3) {
+      if (draft.categoryIds.length < 1) return t('forms:talent.validation.categories')
+      return null
+    }
+    if (current === lastStep) {
+      if (!draft.terms) return t('forms:talent.validation.terms')
+      return null
+    }
+    return null
+  }
+
   async function handleContinue() {
+    const error = validateStep(step)
+    if (error) {
+      dispatch(toastPushed('error', error))
+      return
+    }
+
     if (step < lastStep) {
       setStep((prev) => prev + 1)
       return
@@ -159,20 +196,32 @@ export function ApplyTalentPage() {
     for (const categoryId of draft.categoryIds) {
       body.append('categories[performanceCategories][]', categoryId)
     }
+    body.append('contacts[email]', draft.email.trim())
+    body.append('contacts[phone]', draft.phone.trim())
 
     try {
       await applyTalent(body).unwrap()
       clearDraft('talent')
       dispatch(toastPushed('success', t('forms:talent.success')))
       navigate('/application-submitted?role=talent')
-    } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, t('forms:talent.error'))))
+    } catch (err) {
+      dispatch(toastPushed('error', apiErrorMessage(err, t('forms:talent.error'))))
     }
   }
 
   function handleClear() {
     clearDraft('talent')
-    setDraft(EMPTY_DRAFT)
+    setDraft({
+      email: user?.email ?? '',
+      phone: user?.phone ?? '',
+      stageName: '',
+      cityId: '1',
+      bio: '',
+      profilePhoto: undefined,
+      portfolioMedia: [],
+      categoryIds: [],
+      terms: false,
+    })
     setStep(0)
     setDraftSaved(false)
     setRestoredNote(false)
@@ -212,7 +261,31 @@ export function ApplyTalentPage() {
       onClear={handleClear}
       onSaveExit={handleSaveExit}
     >
-      {step === 0 && <AccountDonePanel subtitle={t('forms:accountDone.subtitle')} />}
+      {step === 0 && (
+        <div className="flex flex-col gap-xl">
+          <AccountDonePanel subtitle={t('forms:accountDone.subtitle')} />
+          <Field label={t('forms:talent.fields.email')} htmlFor="talent-email">
+            <TextInput
+              id="talent-email"
+              type="email"
+              value={draft.email}
+              onChange={(event) => patch({ email: event.target.value })}
+              placeholder={t('forms:talent.fields.emailPlaceholder')}
+              autoComplete="email"
+            />
+          </Field>
+          <Field label={t('forms:talent.fields.phone')} htmlFor="talent-phone">
+            <TextInput
+              id="talent-phone"
+              type="tel"
+              value={draft.phone}
+              onChange={(event) => patch({ phone: event.target.value })}
+              placeholder={t('forms:talent.fields.phonePlaceholder')}
+              autoComplete="tel"
+            />
+          </Field>
+        </div>
+      )}
 
       {step === 1 && (
         <div className="flex flex-col gap-xl">
@@ -246,6 +319,18 @@ export function ApplyTalentPage() {
               placeholder={t('forms:talent.fields.bioPlaceholder')}
             />
           </Field>
+          <div>
+            <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
+              {t('forms:talent.fields.profilePhotoTitle')}
+            </p>
+            <FileDropButton
+              label={t('forms:talent.fields.profilePhotoUpload')}
+              hint={t('forms:talent.fields.profilePhotoHint')}
+              accept="image/*"
+              fileName={draft.profilePhoto?.name}
+              onFiles={(files) => patch({ profilePhoto: files[0] })}
+            />
+          </div>
         </div>
       )}
 
@@ -273,14 +358,6 @@ export function ApplyTalentPage() {
               onFiles={(files) => patch({ portfolioMedia: files })}
             />
           </div>
-          <Field label={t('forms:talent.fields.portfolioLink')} htmlFor="talent-link">
-            <TextInput
-              id="talent-link"
-              value={draft.portfolioLink}
-              onChange={(event) => patch({ portfolioLink: event.target.value })}
-              placeholder={t('forms:talent.fields.portfolioLinkPlaceholder')}
-            />
-          </Field>
         </div>
       )}
 
@@ -293,26 +370,6 @@ export function ApplyTalentPage() {
             value={draft.categoryIds}
             onChange={(categoryIds) => patch({ categoryIds })}
           />
-          <Field label={t('forms:talent.fields.idNumber')} htmlFor="talent-id">
-            <TextInput
-              id="talent-id"
-              value={draft.idNumber}
-              onChange={(event) => patch({ idNumber: event.target.value })}
-              placeholder={t('forms:talent.fields.idPlaceholder')}
-            />
-          </Field>
-          <div>
-            <p className="mb-[7px] text-[13px] font-semibold text-ink-primary">
-              {t('forms:talent.fields.idPhotoTitle')}
-            </p>
-            <FileDropButton
-              label={t('forms:talent.fields.idUpload')}
-              hint={t('forms:talent.fields.idPhotoHint')}
-              accept="image/*,.pdf"
-              fileName={draft.profilePhoto?.name}
-              onFiles={(files) => patch({ profilePhoto: files[0] })}
-            />
-          </div>
         </div>
       )}
 
@@ -321,21 +378,35 @@ export function ApplyTalentPage() {
           <ReviewSummary
             rows={[
               {
+                label: t('forms:talent.fields.reviewEmail'),
+                value: draft.email.trim() || t('forms:review.notSet'),
+              },
+              {
+                label: t('forms:talent.fields.reviewPhone'),
+                value: draft.phone.trim() || t('forms:review.notSet'),
+              },
+              {
                 label: t('forms:talent.fields.reviewStage'),
                 value: draft.stageName.trim() || t('forms:review.notSet'),
               },
               { label: t('forms:talent.fields.reviewCity'), value: cityLabel },
               {
-                label: t('forms:talent.fields.reviewCategories'),
-                value: joinOrDash(categoryLabels),
+                label: t('forms:talent.fields.reviewProfilePhoto'),
+                value: draft.profilePhoto
+                  ? t('forms:review.provided')
+                  : t('forms:review.notSet'),
               },
               {
                 label: t('forms:talent.fields.reviewPortfolio'),
-                value: draft.portfolioLink.trim() || t('forms:talent.fields.noneAdded'),
+                value: draft.portfolioMedia.length
+                  ? t('forms:talent.fields.filesSelected', {
+                      count: draft.portfolioMedia.length,
+                    })
+                  : t('forms:talent.fields.noneAdded'),
               },
               {
-                label: t('forms:talent.fields.reviewId'),
-                value: draft.idNumber.trim() ? t('forms:review.provided') : t('forms:review.notSet'),
+                label: t('forms:talent.fields.reviewCategories'),
+                value: joinOrDash(categoryLabels),
               },
             ]}
           />

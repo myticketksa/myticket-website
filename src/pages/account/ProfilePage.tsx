@@ -6,7 +6,6 @@ import {
   ArrowRightIcon,
   BellRingingIcon,
   BriefcaseIcon,
-  CreditCardIcon,
   GlobeEastIcon,
   LockIcon,
   MailIcon,
@@ -37,11 +36,6 @@ const SETTINGS_TILE_KEYS = [
     key: 'email',
     href: '/settings',
     icon: MailIcon,
-  },
-  {
-    key: 'payment',
-    href: '/settings',
-    icon: CreditCardIcon,
   },
   {
     key: 'wallet',

@@ -386,7 +386,12 @@
     "photoTooLarge": "Uploaded files are too large. Please choose a file under 4 MB.",
     "deleteNeedPassword": "Enter your password to delete this account",
     "deleteSuccess": "Account deleted",
-    "deleteError": "Could not delete account"
+    "deleteError": "Could not delete account",
+    "saveSuccess": "Changes saved",
+    "validation": {
+      "name": "Enter your full name",
+      "email": "Enter your email"
+    }
   },
   "profile": {
     "title": "Profile",
