@@ -457,6 +457,11 @@
         "desc": "Push, email, SMS",
         "tag": "6 on"
       },
+      "favorites": {
+        "title": "Favorites",
+        "desc": "Saved events and talents",
+        "tag": "Saved"
+      },
       "security": {
         "title": "Security & sign-in",
         "desc": "Password and 2FA",

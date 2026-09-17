@@ -136,5 +136,6 @@ export function mapGiftTicketToMyTicket(gift: ApiRecord): MyTicketCard & {
     note: giftStatusNote(gift),
     cover,
     actions: claimable ? [] : ['qr'],
+    paid: !claimable,
   }
 }

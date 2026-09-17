@@ -1,29 +1,24 @@
-import { Link } from 'react-router-dom'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
+import { useGetFavoritesQuery } from '@/app/api/accountApis'
 import { useAppSelector } from '@/app/hooks'
 import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
 import {
   ArrowRightIcon,
   BellRingingIcon,
   BriefcaseIcon,
-  GlobeEastIcon,
-  LockIcon,
-  MailIcon,
-  ShieldIcon,
+  HeartIcon,
   UserIcon,
-  VerifiedIcon,
   WalletIcon,
 } from '@/components/icons'
 import { Avatar, StatusBadge } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { PROFILE_TICKET_COVERS } from '@/pages/_account/account-media'
-import {
-  ACCOUNT_USER,
-  PROFILE_NIGHTS,
-  SAVED_ITEMS,
-} from '@/pages/_account/fixtures'
+import { ACCOUNT_USER, PROFILE_NIGHTS } from '@/pages/_account/fixtures'
 import { AccountWalletCard } from '@/pages/_account/AccountAside'
+import { mapFavoriteRecord } from '@/lib/favorites/mapFavoriteRecord'
 import { useSignOut } from '@/lib/auth/useSignOut'
 
 const SETTINGS_TILE_KEYS = [
@@ -33,34 +28,19 @@ const SETTINGS_TILE_KEYS = [
     icon: UserIcon,
   },
   {
-    key: 'email',
-    href: '/settings',
-    icon: MailIcon,
-  },
-  {
     key: 'wallet',
     href: '/wallet',
     icon: WalletIcon,
   },
   {
+    key: 'favorites',
+    href: '/favorites',
+    icon: HeartIcon,
+  },
+  {
     key: 'notifications',
     href: '/notifications',
     icon: BellRingingIcon,
-  },
-  {
-    key: 'security',
-    href: '/settings',
-    icon: LockIcon,
-  },
-  {
-    key: 'language',
-    href: '/settings',
-    icon: GlobeEastIcon,
-  },
-  {
-    key: 'privacy',
-    href: '/settings',
-    icon: ShieldIcon,
   },
 ] as const
 
@@ -82,9 +62,19 @@ export function ProfilePage() {
   const { t } = useTranslation(['account', 'catalog'])
   const user = useAppSelector(selectAuthUser)
   const { signOut, isLoading: logoutLoading } = useSignOut()
+  const { data: favorites } = useGetFavoritesQuery()
   const displayName = user?.name ?? ACCOUNT_USER.name
   const initials = user?.name ? initialsFromName(user.name) : ACCOUNT_USER.initials
   const walletLabel = formatAuthWalletBalance(user?.walletBalance, ACCOUNT_USER.wallet)
+
+  const savedItems = useMemo(() => {
+    if (!favorites?.length) return []
+    return favorites
+      .map((row) => mapFavoriteRecord(row))
+      .filter((row): row is NonNullable<typeof row> => row != null)
+      .slice(0, 4)
+  }, [favorites])
+  const savedCount = favorites?.length ?? savedItems.length
 
   return (
     <>
@@ -101,7 +91,6 @@ export function ProfilePage() {
                 <h1 className="text-[32px] font-extrabold tracking-[-0.8px] text-ink-primary">
                   {displayName}
                 </h1>
-                <VerifiedIcon size={20} className="text-state-success" />
               </div>
               <p className="mt-sm text-[14px] text-ink-secondary">
                 {t('profile.memberMeta', {
@@ -154,43 +143,43 @@ export function ProfilePage() {
             const statusKey = `tickets.status.${ticket.status}`
             const statusText = t(statusKey)
             return (
-            <article
-              key={ticket.id}
-              className="overflow-hidden rounded-[20px] border border-border-default bg-surface-default"
-            >
-              <div className="relative h-[140px]">
-                <img
-                  src={PROFILE_TICKET_COVERS[index] ?? PROFILE_TICKET_COVERS[0]}
-                  alt=""
-                  className="absolute inset-0 size-full object-cover"
-                />
-                {ticket.countdown && Number.isFinite(days) && (
-                  <span className="absolute top-md start-md rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold text-bg-page uppercase">
-                    {t('profile.inDays', { count: days })}
-                  </span>
-                )}
-              </div>
-              <div className="p-lg">
-                <StatusBadge tone={ticket.statusTone}>
-                  {statusText === statusKey ? ticket.status : statusText}
-                </StatusBadge>
-                <p className="mt-md text-[16px] font-bold text-ink-primary">{ticket.title}</p>
-                <p className="mt-xs text-[13px] text-ink-secondary">{ticket.meta}</p>
-                <p className="mt-xs text-[13px] font-medium text-ink-muted">{ticket.seat}</p>
-                <div className="mt-lg flex gap-sm">
-                  <Link to={`/my-tickets/${ticket.id}`} className="flex-1">
-                    <Button size="sm" className="w-full">
-                      {t('profile.showQr')}
-                    </Button>
-                  </Link>
-                  <Link to={`/my-tickets/${ticket.id}`} className="flex-1">
-                    <Button variant="secondary" size="sm" className="w-full bg-bg-page">
-                      {t('profile.manage')}
-                    </Button>
-                  </Link>
+              <article
+                key={ticket.id}
+                className="overflow-hidden rounded-[20px] border border-border-default bg-surface-default"
+              >
+                <div className="relative h-[140px]">
+                  <img
+                    src={PROFILE_TICKET_COVERS[index] ?? PROFILE_TICKET_COVERS[0]}
+                    alt=""
+                    className="absolute inset-0 size-full object-cover"
+                  />
+                  {ticket.countdown && Number.isFinite(days) && (
+                    <span className="absolute top-md start-md rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold text-bg-page uppercase">
+                      {t('profile.inDays', { count: days })}
+                    </span>
+                  )}
                 </div>
-              </div>
-            </article>
+                <div className="p-lg">
+                  <StatusBadge tone={ticket.statusTone}>
+                    {statusText === statusKey ? ticket.status : statusText}
+                  </StatusBadge>
+                  <p className="mt-md text-[16px] font-bold text-ink-primary">{ticket.title}</p>
+                  <p className="mt-xs text-[13px] text-ink-secondary">{ticket.meta}</p>
+                  <p className="mt-xs text-[13px] font-medium text-ink-muted">{ticket.seat}</p>
+                  <div className="mt-lg flex gap-sm">
+                    <Link to={`/my-tickets/${ticket.id}`} className="flex-1">
+                      <Button size="sm" className="w-full">
+                        {t('profile.showQr')}
+                      </Button>
+                    </Link>
+                    <Link to={`/my-tickets/${ticket.id}`} className="flex-1">
+                      <Button variant="secondary" size="sm" className="w-full bg-bg-page">
+                        {t('profile.manage')}
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </article>
             )
           })}
         </div>
@@ -204,28 +193,43 @@ export function ProfilePage() {
         <div className="mb-lg flex flex-wrap items-end justify-between gap-md">
           <h2 className="text-[24px] font-extrabold text-ink-primary">{t('profile.savedForLater')}</h2>
           <Link to="/favorites" className="text-[14px] font-semibold text-ink-brand">
-            {t('profile.seeAllSaved', { count: 14 })}
+            {t('profile.seeAllSaved', { count: savedCount })}
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-md md:grid-cols-4">
-          {SAVED_ITEMS.slice(0, 4).map((item) => (
-            <Link
-              key={item.title}
-              to={item.href}
-              className="overflow-hidden rounded-[16px] border border-border-default bg-surface-default hover:border-border-brand"
-            >
-              <div className="relative aspect-[4/3]">
-                <img src={item.cover} alt="" className="absolute inset-0 size-full object-cover" />
-              </div>
-              <div className="p-md">
-                <p className="text-[14px] font-bold text-ink-primary">{item.title}</p>
-                <p className="text-[12px] text-ink-muted">
-                  {t(`catalog:pages.kind${item.kind}`)} · {item.place}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        {savedItems.length === 0 ? (
+          <p className="rounded-[16px] border border-border-default bg-surface-default px-xl py-lg text-[14px] text-ink-secondary">
+            {t('favorites.emptyTitle')}
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-md md:grid-cols-4">
+            {savedItems.map((item) => (
+              <Link
+                key={`${item.source}-${item.itemId}`}
+                to={item.href}
+                className="overflow-hidden rounded-[16px] border border-border-default bg-surface-default hover:border-border-brand"
+              >
+                <div className="relative aspect-[4/3]">
+                  {item.cover ? (
+                    <img
+                      src={item.cover}
+                      alt=""
+                      className="absolute inset-0 size-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-bg-tint-brand" />
+                  )}
+                </div>
+                <div className="p-md">
+                  <p className="text-[14px] font-bold text-ink-primary">{item.title}</p>
+                  <p className="text-[12px] text-ink-muted">
+                    {t(`catalog:pages.kind${item.kind}`)}
+                    {item.place ? ` · ${item.place}` : ''}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </PageSection>
 
       <PageSection padTop={40} padBottom={0}>
@@ -260,7 +264,11 @@ export function ProfilePage() {
                 <p className="mt-sm text-[13px] text-ink-secondary">{desc}</p>
                 <div className="mt-lg">
                   <StatusBadge tone="successTint">
-                    {tile.href === '/wallet' ? walletLabel : tag}
+                    {tile.href === '/wallet'
+                      ? walletLabel
+                      : tile.key === 'favorites'
+                        ? String(savedCount)
+                        : tag}
                   </StatusBadge>
                 </div>
               </Link>
@@ -274,7 +282,9 @@ export function ProfilePage() {
               <div className="flex items-start gap-md">
                 <BriefcaseIcon size={15} className="mt-[2px] shrink-0 text-ink-brand" />
                 <div>
-                  <p className="text-[16px] font-bold text-ink-primary">{t('profile.becomeBusiness')}</p>
+                  <p className="text-[16px] font-bold text-ink-primary">
+                    {t('profile.becomeBusiness')}
+                  </p>
                   <p className="mt-xs text-[13px] text-ink-secondary">
                     {t('profile.becomeBusinessBody')}
                   </p>
@@ -289,23 +299,15 @@ export function ProfilePage() {
       </PageSection>
 
       <PageSection padTop={32} padBottom={96}>
-        <div className="flex flex-wrap items-center justify-between gap-lg rounded-[16px] border border-border-default bg-surface-default px-xl py-lg">
-          <p className="text-[13px] text-ink-secondary">
-            {t('profile.signedInDevice', { when: '12 July', device: 'iPhone 15, Riyadh' })}
-          </p>
-          <div className="flex gap-md">
-            <Button variant="secondary" size="sm">
-              {t('profile.manageDevices')}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              loading={logoutLoading}
-              onClick={() => void signOut()}
-            >
-              {t('profile.signOut')}
-            </Button>
-          </div>
+        <div className="flex flex-wrap items-center justify-end gap-lg rounded-[16px] border border-border-default bg-surface-default px-xl py-lg">
+          <Button
+            variant="destructive"
+            size="sm"
+            loading={logoutLoading}
+            onClick={() => void signOut()}
+          >
+            {t('profile.signOut')}
+          </Button>
         </div>
       </PageSection>
     </>

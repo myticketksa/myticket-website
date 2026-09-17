@@ -189,6 +189,21 @@ export type MyTicketCard = {
   note?: string
   cover: string
   actions: Array<'qr' | 'transfer' | 'resell' | 'refund'>
+  /** True when paymentStatus is succeeded / paid / completed. */
+  paid: boolean
+  paymentStatus?: string
+}
+
+/** Paid enough to use QR / gift / refund / resell. */
+export function isOrderPaid(order: ApiRecord | undefined): boolean {
+  if (!order) return false
+  const payment = localizedString(order.paymentStatus ?? order.payment_status).toLowerCase()
+  return (
+    payment === 'succeeded' ||
+    payment === 'paid' ||
+    payment === 'completed' ||
+    payment.includes('success')
+  )
 }
 
 function countdownFromStart(startTime: unknown): string | undefined {
@@ -277,8 +292,9 @@ export function mapOrderToMyTicket(order: ApiRecord): MyTicketCard {
   const { tier, row, seats } = seatFacts(order)
   const status = resolveTicketStatus(order)
   const payment = localizedString(order.paymentStatus ?? order.payment_status).toLowerCase()
+  const paid = isOrderPaid(order)
 
-  const actions: MyTicketCard['actions'] =
+  const baseActions: MyTicketCard['actions'] =
     status === 'PAST'
       ? ['qr']
       : status === 'TRANSFERRED'
@@ -303,13 +319,139 @@ export function mapOrderToMyTicket(order: ApiRecord): MyTicketCard {
       { label: 'GATE', value: localizedString(order.gate ?? order.entry, '—') },
     ],
     note:
-      payment === 'pending'
+      !paid || payment === 'pending'
         ? 'Payment pending'
         : order.note
           ? String(order.note)
           : undefined,
     cover,
-    actions,
+    actions: baseActions,
+    paid,
+    paymentStatus: payment || undefined,
+  }
+}
+
+export type OrderTicketSeatView = {
+  id: string
+  ticketTypeLabel: string
+  scanStatus: string
+  gate: string
+  block: string
+  row: string
+  seat: string
+}
+
+export type OrderDetailView = {
+  id: string
+  orderId: string
+  title: string
+  meta: string
+  cover: string
+  quantity: number
+  paid: boolean
+  paymentStatus: string
+  paymentLabel: string
+  purchasedAt: string
+  pricePaid: string
+  platformFee: string
+  seatingType: 'free' | 'assigned'
+  tickets: OrderTicketSeatView[]
+  organizerName: string
+}
+
+function seatField(seat: unknown, key: string): string {
+  const record = asRecord(seat)
+  if (!record) return ''
+  return localizedString(record[key] ?? record[`${key}_name`])
+}
+
+/**
+ * Map `GET /tickets/orders/:id` into the ticket detail page view model.
+ * Free seating (`seat: null`) keeps the field grid with em dashes / GA — stable layout.
+ */
+export function mapOrderToDetailView(
+  order: ApiRecord,
+  opts: { holderName?: string } = {},
+): OrderDetailView {
+  const event = asRecord(order.event)
+  const ticketType = asRecord(order.ticketType ?? order.ticket_type)
+  const id = String(order.id ?? order.order_id ?? '')
+  const title =
+    (event && pickLocalized(event, ['title', 'name'])) ||
+    localizedString(order.event_title ?? order.title, `Order ${id || '—'}`)
+  const when = event
+    ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
+    : formatApiDate(order.created_at)
+  const place =
+    (event && pickLocalized(event, ['place', 'venue', 'location'])) ||
+    localizedString(order.venue ?? order.place)
+  const seatingRaw = String(event?.seatingType ?? event?.seating_type ?? 'assigned').toLowerCase()
+  const seatingType = seatingRaw === 'free' ? 'free' : 'assigned'
+  const paid = isOrderPaid(order)
+  const payment = localizedString(order.paymentStatus ?? order.payment_status, 'pending')
+  const tierName = localizedString(ticketType?.name, 'Ticket')
+
+  const rawTickets = Array.isArray(order.tickets) ? order.tickets : []
+  const tickets: OrderTicketSeatView[] =
+    rawTickets.length > 0
+      ? rawTickets.map((item, index) => {
+          const ticket = asRecord(item) ?? {}
+          const seat = ticket.seat
+          const hasSeat = seat != null && typeof seat === 'object'
+          return {
+            id: String(ticket.id ?? `${id}-${index + 1}`),
+            ticketTypeLabel: localizedString(ticket.ticketType ?? ticket.ticket_type, tierName),
+            scanStatus: localizedString(ticket.scanStatus ?? ticket.scan_status, payment),
+            gate: hasSeat ? seatField(seat, 'gate') || '—' : '—',
+            block: hasSeat
+              ? seatField(seat, 'block') || seatField(seat, 'section') || '—'
+              : seatingType === 'free'
+                ? 'General'
+                : '—',
+            row: hasSeat ? seatField(seat, 'row') || '—' : '—',
+            seat: hasSeat
+              ? seatField(seat, 'number') ||
+                seatField(seat, 'seat_number') ||
+                formatSeatLabel(seat, '—')
+              : seatingType === 'free'
+                ? 'GA'
+                : '—',
+          }
+        })
+      : [
+          {
+            id: id || '1',
+            ticketTypeLabel: tierName,
+            scanStatus: payment,
+            gate: '—',
+            block: seatingType === 'free' ? 'General' : '—',
+            row: '—',
+            seat: seatingType === 'free' ? 'GA' : '—',
+          },
+        ]
+
+  const feeRaw = order.service_fee ?? order.serviceFee ?? order.platform_fee ?? order.fees
+  void opts
+
+  return {
+    id: id || title,
+    orderId: String(order.reference ?? order.order_number ?? id),
+    title,
+    meta: [when, place].filter(Boolean).join(' · ') || '—',
+    cover: localizedString(event?.cover ?? event?.banner ?? order.cover),
+    quantity: Number(order.quantity ?? tickets.length) || tickets.length || 1,
+    paid,
+    paymentStatus: payment,
+    paymentLabel: paid ? 'Paid' : 'Payment pending',
+    purchasedAt: formatApiDate(order.created_at ?? order.placed_at) || '—',
+    pricePaid: money(order.amount ?? order.total),
+    platformFee: feeRaw == null || feeRaw === '' ? '—' : money(feeRaw),
+    seatingType,
+    tickets,
+    organizerName: localizedString(
+      asRecord(event?.organizer)?.name ?? order.organizer_name,
+      'Organizer',
+    ),
   }
 }
 

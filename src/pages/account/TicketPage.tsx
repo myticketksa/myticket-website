@@ -2,16 +2,25 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useGetEventsQuery } from '@/app/api/eventsApi'
-import { useCancelOrderMutation, useGetOrdersQuery } from '@/app/api/ordersApi'
+import {
+  useCancelOrderMutation,
+  useGetOrderDetailsQuery,
+  useGetOrdersQuery,
+} from '@/app/api/ordersApi'
 import { StatusBadge } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { AccountSplit, TicketActionHeader } from '@/layouts'
-import { useAppDispatch } from '@/app/hooks'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { mapApiEventToCard } from '@/lib/api/mappers/events'
+import {
+  isOrderPaid,
+  mapOrderToDetailView,
+  type OrderDetailView,
+} from '@/lib/api/mappers/orders'
 import { extractOrderId } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
-import { MY_TICKETS, type TicketFixture } from '@/pages/_account/fixtures'
 import { CATALOG_EVENTS } from '@/pages/_guest/fixtures'
 import { slugify } from '@/pages/_guest/slugify'
 import { cn } from '@/lib/cn'
@@ -38,68 +47,35 @@ const OTHERS_BOOKED_FIXTURE = [
   },
 ] as const
 
-function mapOrderToTicket(
-  order: Record<string, unknown>,
-  labels: { when: string; seats: string },
-): TicketFixture {
-  const id = String(order.id ?? order.order_id ?? '')
-  const title = String(
-    order.title ?? order.event_title ?? order.name ?? `Order ${id || '—'}`,
-  )
-  return {
-    id: id || title,
-    orderId: String(order.reference ?? order.order_number ?? id),
-    title,
-    meta: String(order.meta ?? order.venue ?? order.status ?? ''),
-    status: String(order.status ?? 'UPCOMING') as TicketFixture['status'],
-    cover: String(order.cover ?? order.image ?? MY_TICKETS[0]?.cover ?? ''),
-    countdown: order.countdown ? String(order.countdown) : undefined,
-    facts: Array.isArray(order.facts)
-      ? (order.facts as { label: string; value: string }[])
-      : [
-          { label: labels.when, value: String(order.starts_at ?? order.date ?? '—') },
-          { label: labels.seats, value: String(order.seats ?? order.quantity ?? '—') },
-        ],
-    actions: (order.actions as TicketFixture['actions']) ?? ['qr'],
-    note: order.note ? String(order.note) : undefined,
-  }
-}
-
-function resolveOrder(
+function resolveOrderFromList(
   orders: Record<string, unknown>[] | undefined,
   id: string,
 ): Record<string, unknown> | undefined {
   if (!orders?.length) return undefined
-  return (
-    orders.find(
-      (order) =>
-        String(order.id ?? '') === id ||
-        String(order.order_id ?? '') === id ||
-        String(order.reference ?? '') === id ||
-        String(order.order_number ?? '') === id,
-    ) ?? orders[0]
+  return orders.find(
+    (order) =>
+      String(order.id ?? '') === id ||
+      String(order.order_id ?? '') === id ||
+      String(order.reference ?? '') === id ||
+      String(order.order_number ?? '') === id,
   )
-}
-
-function resolveTicket(
-  orders: Record<string, unknown>[] | undefined,
-  id: string,
-  labels: { when: string; seats: string },
-): TicketFixture {
-  const match = resolveOrder(orders, id)
-  if (match) return mapOrderToTicket(match, labels)
-  return MY_TICKETS.find((item) => item.id === id) ?? MY_TICKETS[0]
 }
 
 function isCancellable(order: Record<string, unknown> | undefined) {
   if (!order) return false
-  const status = String(order.status ?? '').toLowerCase()
+  if (isOrderPaid(order)) return false
+  const status = String(
+    order.orderStatus ?? order.order_status ?? order.status ?? '',
+  ).toLowerCase()
+  const payment = String(order.paymentStatus ?? order.payment_status ?? '').toLowerCase()
   return (
+    payment.includes('pending') ||
     status.includes('pending') ||
     status.includes('unpaid') ||
     status.includes('await') ||
     status.includes('draft') ||
-    status.includes('created')
+    status.includes('created') ||
+    status.includes('active')
   )
 }
 
@@ -108,8 +84,7 @@ function TicketQr({ seed }: { seed: number }) {
   const cells = Array.from({ length: 21 * 21 }, (_, index) => {
     const x = index % 21
     const y = Math.floor(index / 21)
-    const finder =
-      (x < 7 && y < 7) || (x > 13 && y < 7) || (x < 7 && y > 13)
+    const finder = (x < 7 && y < 7) || (x > 13 && y < 7) || (x < 7 && y > 13)
     const on = finder
       ? x === 0 ||
         y === 0 ||
@@ -138,29 +113,38 @@ function TicketQr({ seed }: { seed: number }) {
 
 /**
  * Ticket detail — Figma `207:9024`.
- * FunnelLayout (Logo · TICKET · Back) — no SiteHeader.
+ * Live `GET /tickets/orders/{orderId}` into the existing card / order-info chrome.
  */
 export function TicketPage() {
   const { t } = useTranslation('account')
-  const { id = 'winter-nights' } = useParams()
+  const { id = '' } = useParams()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
+  const user = useAppSelector(selectAuthUser)
   const { data: orders } = useGetOrdersQuery()
   const { data: eventsResult } = useGetEventsQuery()
   const apiEvents = eventsResult?.items
   const [cancelOrder, cancelState] = useCancelOrderMutation()
 
-  const factLabels = useMemo(
-    () => ({ when: t('ticket.factWhen'), seats: t('ticket.factSeats') }),
-    [t],
-  )
+  const listOrder = useMemo(() => resolveOrderFromList(orders, id), [orders, id])
+  const detailId = /^\d+$/.test(id) ? id : extractOrderId(listOrder) || id
+  const { data: orderDetail } = useGetOrderDetailsQuery(detailId, {
+    skip: !detailId || !/^\d+$/.test(String(detailId)),
+  })
 
-  const order = useMemo(() => resolveOrder(orders, id), [orders, id])
-  const ticket = useMemo(
-    () => resolveTicket(orders, id, factLabels),
-    [orders, id, factLabels],
-  )
-  const canCancel = isCancellable(order)
+  const orderRecord = useMemo(() => {
+    if (orderDetail && Object.keys(orderDetail).length > 0) return orderDetail
+    return listOrder
+  }, [orderDetail, listOrder])
+
+  const detail: OrderDetailView | undefined = useMemo(() => {
+    if (!orderRecord) return undefined
+    return mapOrderToDetailView(orderRecord, { holderName: user?.name })
+  }, [orderRecord, user?.name])
+
+  const holderName = user?.name?.trim() || 'Ticket holder'
+  const paid = detail?.paid ?? false
+  const canCancel = isCancellable(orderRecord)
 
   const rules = useMemo(
     () =>
@@ -174,7 +158,7 @@ export function TicketPage() {
   )
 
   async function handleCancel() {
-    const orderId = extractOrderId(order)
+    const orderId = extractOrderId(orderRecord)
     if (!orderId) {
       dispatch(toastPushed('error', t('ticket.cancelUnavailable')))
       return
@@ -207,6 +191,11 @@ export function TicketPage() {
     return OTHERS_BOOKED_FIXTURE.map((item) => ({ ...item }))
   }, [apiEvents])
 
+  const tickets = detail?.tickets ?? []
+  const title = detail?.title ?? t('tickets.title')
+  const meta = detail?.meta ?? '—'
+  const orderIdLabel = detail?.orderId ?? id
+
   return (
     <>
       <TicketActionHeader
@@ -222,10 +211,10 @@ export function TicketPage() {
               <p className="text-[17px] font-semibold text-ink-primary">{t('ticket.orderInfo')}</p>
               <dl className="mt-[14px] flex flex-col gap-[9px] text-[14px]">
                 {[
-                  [t('ticket.orderReference'), ticket.orderId],
-                  [t('ticket.purchased'), '27 July 2026'],
-                  [t('ticket.pricePaid'), 'SAR 1,183'],
-                  [t('ticket.platformFee'), 'SAR 49'],
+                  [t('ticket.orderReference'), orderIdLabel],
+                  [t('ticket.purchased'), detail?.purchasedAt ?? '—'],
+                  [t('ticket.pricePaid'), detail?.pricePaid ?? '—'],
+                  [t('ticket.platformFee'), detail?.platformFee ?? '—'],
                 ].map(([label, value]) => (
                   <div key={label} className="flex justify-between gap-md">
                     <dt className="text-ink-secondary">{label}</dt>
@@ -234,14 +223,11 @@ export function TicketPage() {
                 ))}
               </dl>
               <div className="mt-[14px] flex items-center gap-[11px] border-t border-border-divider pt-[14px]">
-                <span className="flex h-[28px] items-center rounded-[7px] bg-brand-gradient-start px-[10px] text-[12px] font-bold text-ink-body">
-                  tabby
-                </span>
-                <p className="text-[13px] text-ink-secondary">
-                  {t('ticket.tabbySchedule', { amount: '295.75', date: '8 Oct' })}
-                </p>
+                <StatusBadge tone={paid ? 'successTint' : 'brandTint'}>
+                  {detail?.paymentLabel ?? t('tickets.paymentPending')}
+                </StatusBadge>
               </div>
-              <Button variant="secondary" size="md" className="mt-lg w-full">
+              <Button variant="secondary" size="md" className="mt-lg w-full" disabled={!paid}>
                 {t('ticket.downloadInvoice')}
               </Button>
             </div>
@@ -249,7 +235,7 @@ export function TicketPage() {
             <div className="rounded-[20px] border border-border-default bg-bg-tint-brand p-[20px]">
               <p className="text-[17px] font-semibold text-ink-primary">{t('ticket.refundPolicy')}</p>
               <p className="mt-md text-[14px] leading-[1.55] text-ink-secondary">
-                {t('ticket.refundPolicyBefore', { date: '5 October 2026' })}{' '}
+                {t('ticket.refundPolicyBefore', { date: '—' })}{' '}
                 {t('ticket.transferGuest').toLowerCase()}.
               </p>
             </div>
@@ -312,62 +298,91 @@ export function TicketPage() {
         <div className="flex flex-col">
           <div className="flex flex-wrap items-center justify-between gap-md">
             <p className="text-[17px] font-semibold text-ink-primary">
-              {t('ticket.ticketCount', { count: 2 })}
+              {t('ticket.ticketCount', { count: Math.max(1, tickets.length || detail?.quantity || 1) })}
             </p>
             <div className="flex flex-wrap gap-sm">
-              <Button variant="secondary" size="md" className="h-[38px] rounded-[19px]">
+              <Button
+                variant="secondary"
+                size="md"
+                className="h-[38px] rounded-[19px]"
+                disabled={!paid}
+              >
                 {t('ticket.addToAppleWallet')}
               </Button>
-              <Button variant="secondary" size="md" className="h-[38px] rounded-[19px]">
+              <Button
+                variant="secondary"
+                size="md"
+                className="h-[38px] rounded-[19px]"
+                disabled={!paid}
+              >
                 {t('ticket.downloadPdf')}
               </Button>
             </div>
           </div>
 
           <div className="mt-lg flex flex-col gap-lg">
-            {[0, 1].map((seatIndex) => (
+            {(tickets.length > 0 ? tickets : [undefined]).map((seat, seatIndex) => (
               <article
-                key={seatIndex}
+                key={seat?.id ?? seatIndex}
                 className="relative flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
               >
                 <div className="min-w-0 flex-1 px-lg py-[18px] sm:px-[24px] sm:py-[22px]">
                   <div className="flex flex-wrap items-center gap-[10px]">
-                    <StatusBadge tone="brandTint">{t('ticket.badgeGoldFloor')}</StatusBadge>
-                    <StatusBadge tone="successTint">{t('ticket.badgeValid')}</StatusBadge>
+                    <StatusBadge tone="brandTint">
+                      {seat?.ticketTypeLabel ?? t('ticket.badgeGoldFloor')}
+                    </StatusBadge>
+                    <StatusBadge tone={paid ? 'successTint' : 'brandTint'}>
+                      {paid ? t('ticket.badgeValid') : t('tickets.paymentPending')}
+                    </StatusBadge>
                     <span className="text-[12px] text-ink-muted">
-                      {t('ticket.ticketId', { id: `${ticket.orderId}-${seatIndex + 1}` })}
+                      {t('ticket.ticketId', {
+                        id: seat?.id ?? `${orderIdLabel}-${seatIndex + 1}`,
+                      })}
                     </span>
                   </div>
                   <h1 className="mt-[14px] text-[24px] leading-[1.06] font-extrabold tracking-[-0.9px] text-ink-primary sm:text-[30px]">
-                    {ticket.title}
+                    {title}
                   </h1>
-                  <p className="mt-[6px] text-[14px] text-ink-secondary">{ticket.meta}</p>
+                  <p className="mt-[6px] text-[14px] text-ink-secondary">{meta}</p>
                   <div className="mt-[20px] grid grid-cols-2 gap-[12px] sm:grid-cols-5 sm:gap-[18px]">
                     {[
-                      [t('ticket.fieldHolder'), 'Sara Alghamdi'],
-                      [t('ticket.fieldGate'), 'Gate 3'],
-                      [t('ticket.fieldBlock'), 'Floor A'],
-                      [t('ticket.fieldRow'), 'C'],
-                      [t('ticket.fieldSeat'), String(11 + seatIndex)],
+                      [t('ticket.fieldHolder'), holderName],
+                      [t('ticket.fieldGate'), seat?.gate ?? '—'],
+                      [t('ticket.fieldBlock'), seat?.block ?? '—'],
+                      [t('ticket.fieldRow'), seat?.row ?? '—'],
+                      [t('ticket.fieldSeat'), seat?.seat ?? '—'],
                     ].map(([label, value]) => (
                       <div key={label} className="min-w-0">
                         <p className="text-[11px] font-bold tracking-[0.77px] text-ink-muted uppercase">
                           {label}
                         </p>
-                        <p className="mt-[4px] text-[15px] font-semibold text-ink-primary">{value}</p>
+                        <p className="mt-[4px] text-[15px] font-semibold text-ink-primary">
+                          {value}
+                        </p>
                       </div>
                     ))}
                   </div>
                   <div className="mt-[22px] flex flex-wrap gap-[10px] border-t border-dashed border-border-default pt-[18px]">
-                    <Link to={`/my-tickets/${ticket.id}/gift`}>
+                    {paid ? (
+                      <Link to={`/my-tickets/${detail?.id ?? id}/gift`}>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
+                        >
+                          {t('ticket.transferGuest')}
+                        </Button>
+                      </Link>
+                    ) : (
                       <Button
                         variant="secondary"
                         size="sm"
                         className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
+                        disabled
                       >
                         {t('ticket.transferGuest')}
                       </Button>
-                    </Link>
+                    )}
                     {canCancel && (
                       <Button
                         variant="secondary"
@@ -379,27 +394,45 @@ export function TicketPage() {
                         {t('ticket.cancelOrder')}
                       </Button>
                     )}
-                    <Link to={`/my-tickets/${ticket.id}/refund`}>
+                    {paid ? (
+                      <Link to={`/my-tickets/${detail?.id ?? id}/refund`}>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
+                        >
+                          {t('ticket.requestRefund')}
+                        </Button>
+                      </Link>
+                    ) : (
                       <Button
                         variant="secondary"
                         size="sm"
                         className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
+                        disabled
                       >
                         {t('ticket.requestRefund')}
                       </Button>
-                    </Link>
+                    )}
                   </div>
                 </div>
 
                 <div className="relative flex w-full shrink-0 flex-col items-center justify-center gap-[12px] border-t-2 border-dashed border-border-default bg-bg-page p-[22px] sm:w-[200px] sm:border-t-0 sm:border-s-2 md:w-[232px]">
-                  <div className="rounded-[12px] border border-border-default bg-surface-default p-[10px]">
+                  <div
+                    className={cn(
+                      'rounded-[12px] border border-border-default bg-surface-default p-[10px]',
+                      !paid && 'opacity-40',
+                    )}
+                  >
                     <TicketQr seed={seatIndex + 1} />
                   </div>
                   <div className="text-center text-[12px] leading-[1.45]">
                     <p className="font-semibold text-ink-secondary">
-                      {t('ticket.scanAtGate', { gate: '3' })}
+                      {t('ticket.scanAtGate', { gate: seat?.gate && seat.gate !== '—' ? seat.gate : '—' })}
                     </p>
-                    <p className="text-ink-muted">{t('ticket.worksOffline')}</p>
+                    <p className="text-ink-muted">
+                      {paid ? t('ticket.worksOffline') : t('tickets.paymentPending')}
+                    </p>
                   </div>
                   <span
                     aria-hidden="true"
@@ -433,7 +466,7 @@ export function TicketPage() {
               ))}
             </div>
             <p className="mt-[12px] text-[12px] text-ink-muted">
-              {t('ticket.rulesSetBy', { name: 'Riyadh Season' })}
+              {t('ticket.rulesSetBy', { name: detail?.organizerName ?? '—' })}
             </p>
           </div>
 

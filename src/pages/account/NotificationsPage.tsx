@@ -98,7 +98,12 @@ function mapNotification(record: Record<string, unknown>): NotificationFixture &
     title: String(record.title ?? record.subject ?? 'Notification'),
     body: String(record.body ?? record.message ?? record.content ?? ''),
     time: String(record.time ?? record.created_at ?? record.sent_at ?? ''),
-    unread: Boolean(record.unread ?? record.is_unread ?? !record.read_at),
+    unread: (() => {
+      if (typeof record.is_read === 'boolean') return !record.is_read
+      if (typeof record.isRead === 'boolean') return !record.isRead
+      if (typeof record.read === 'boolean') return !record.read
+      return Boolean(record.unread ?? record.is_unread ?? !record.read_at)
+    })(),
     group: mapNotificationGroup(record.group ?? record.period),
     category: mapNotificationCategory(record.category ?? record.type),
     categoryKey:
@@ -195,7 +200,7 @@ export function NotificationsPage() {
         }
       />
 
-      <PageSection padTop={0} padBottom={96}>
+      <PageSection padTop={32} padBottom={96}>
         <div className="flex flex-wrap gap-sm">
           {filters.map((item) => (
             <FilterChip

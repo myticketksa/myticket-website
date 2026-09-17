@@ -31,6 +31,7 @@ export function PageSection({
   style,
   ...props
 }: PageSectionProps) {
+  // Apply after `{...props}` so residual `style` in props cannot override pads.
   const paddingStyle: CSSProperties = {
     ...style,
     ...(padTop !== undefined ? { paddingTop: padTop } : null),
@@ -38,7 +39,7 @@ export function PageSection({
   }
 
   return (
-    <section className={cn('w-full', className)} style={paddingStyle} {...props}>
+    <section {...props} className={cn('w-full', className)} style={paddingStyle}>
       {inset ? (
         <div className="mx-auto w-full min-w-0 max-w-[var(--container-page)] px-page-gutter">
           {children}

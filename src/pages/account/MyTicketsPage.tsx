@@ -181,6 +181,9 @@ export function MyTicketsPage() {
                     <StatusBadge tone={statusTone(ticket.status)}>
                       {statusLabel(ticket.status)}
                     </StatusBadge>
+                    {ticket.note === 'Payment pending' ? (
+                      <StatusBadge tone="brandTint">{noteLabel(ticket.note)}</StatusBadge>
+                    ) : null}
                     <span className="text-[12px] text-ink-muted">
                       {t('account:tickets.orderLabel', { id: ticket.orderId })}
                     </span>
@@ -210,28 +213,55 @@ export function MyTicketsPage() {
                         <Button size="sm">{t('account:claim.cta')}</Button>
                       </Link>
                     ) : null}
-                    {ticket.actions.includes('qr') && (
-                      <Link to={href}>
-                        <Button size="sm">{t('account:tickets.showQr')}</Button>
-                      </Link>
-                    )}
-                    {ticket.actions.includes('transfer') && (
-                      <Link to={`/my-tickets/${ticket.id}/gift`}>
-                        <Button variant="secondary" size="sm" className="bg-bg-page">
+                    {ticket.actions.includes('qr') &&
+                      (ticket.paid ? (
+                        <Link to={href}>
+                          <Button size="sm">{t('account:tickets.showQr')}</Button>
+                        </Link>
+                      ) : (
+                        <Button size="sm" disabled>
+                          {t('account:tickets.showQr')}
+                        </Button>
+                      ))}
+                    {ticket.actions.includes('transfer') &&
+                      (ticket.paid ? (
+                        <Link to={`/my-tickets/${ticket.id}/gift`}>
+                          <Button variant="secondary" size="sm" className="bg-bg-page">
+                            {t('account:tickets.transferGuest')}
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button variant="secondary" size="sm" className="bg-bg-page" disabled>
                           {t('account:tickets.transferGuest')}
                         </Button>
-                      </Link>
-                    )}
-                    {ticket.actions.includes('refund') && (
-                      <Link to={`/my-tickets/${ticket.id}/refund`}>
-                        <Button variant="secondary" size="sm" className="bg-bg-page">
+                      ))}
+                    {ticket.actions.includes('resell') &&
+                      (ticket.paid ? (
+                        <Link to={`/my-tickets/${ticket.id}/resell`}>
+                          <Button variant="secondary" size="sm" className="bg-bg-page">
+                            {t('account:tickets.listAuction')}
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button variant="secondary" size="sm" className="bg-bg-page" disabled>
+                          {t('account:tickets.listAuction')}
+                        </Button>
+                      ))}
+                    {ticket.actions.includes('refund') &&
+                      (ticket.paid ? (
+                        <Link to={`/my-tickets/${ticket.id}/refund`}>
+                          <Button variant="secondary" size="sm" className="bg-bg-page">
+                            {t('account:tickets.requestRefund')}
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button variant="secondary" size="sm" className="bg-bg-page" disabled>
                           {t('account:tickets.requestRefund')}
                         </Button>
-                      </Link>
-                    )}
-                    {ticket.note && (
+                      ))}
+                    {ticket.note && ticket.note !== 'Payment pending' ? (
                       <span className="text-[12px] text-ink-muted">{noteLabel(ticket.note)}</span>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </article>
