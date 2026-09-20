@@ -84,7 +84,8 @@ export function TalentDetailPage() {
   const [requestOpen, setRequestOpen] = useState(false)
   const [reviewOpen, setReviewOpen] = useState(false)
 
-  const { data: apiTalents } = useGetTalentsQuery()
+  const { data: talentsResult } = useGetTalentsQuery()
+  const apiTalents = talentsResult?.items
 
   const catalog = useMemo(() => {
     if (apiTalents && apiTalents.length > 0) {

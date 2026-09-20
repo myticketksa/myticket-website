@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { EmptyState } from '@/components/feedback'
-import { Button } from '@/components/ui'
 import { AccountPageHead, AccountSplit } from '@/layouts'
 import { DefaultAccountAside } from '@/pages/_account/AccountAside'
 import { useGetGiftTicketsQuery } from '@/app/api/accountApis'
@@ -42,8 +41,8 @@ export function MyTicketsPage() {
   const { t } = useTranslation(['account', 'common'])
   const navigate = useNavigate()
   const [tab, setTab] = useState(0)
-  const { data: orders, isError, isFetching, isLoading } = useGetOrdersQuery()
-  const { data: gifts, isFetching: giftsFetching } = useGetGiftTicketsQuery()
+  const { data: orders, isLoading } = useGetOrdersQuery()
+  const { data: gifts } = useGetGiftTicketsQuery()
 
   const tickets = useMemo(() => {
     const fromOrders = orders && orders.length > 0 ? orders.map(mapOrderToMyTicket) : []
@@ -70,25 +69,11 @@ export function MyTicketsPage() {
 
   const visible = tickets.filter((ticket) => matchesTab(ticket.status, tab))
 
-  const subtitle = [
-    t('account:tickets.subtitle'),
-    isError ? t('account:tickets.refreshError') : null,
-    (isFetching || giftsFetching) && !isError ? t('account:tickets.updating') : null,
-  ]
-    .filter(Boolean)
-    .join(' ')
-
   return (
     <>
       <AccountPageHead
         eyebrow={t('account:eyebrow')}
         title={t('account:tickets.title')}
-        subtitle={subtitle}
-        actions={
-          <Button variant="secondary" size="md">
-            {t('account:tickets.addToWallet')}
-          </Button>
-        }
         tabs={tabs.map((item, index) => ({
           ...item,
           active: index === tab,

@@ -267,7 +267,8 @@ export function SearchResultsPage() {
 
   const { data: eventsResult, isError: eventsError } = useGetEventsQuery({ search: query })
   const apiEvents = eventsResult?.items
-  const { data: apiTalents, isError: talentsError } = useGetTalentsQuery()
+  const { data: talentsResult, isError: talentsError } = useGetTalentsQuery()
+  const apiTalents = talentsResult?.items
   const { data: apiExperiences, isError: experiencesError } = useGetExperiencesQuery()
 
   const toggleCity = (label: string) => {

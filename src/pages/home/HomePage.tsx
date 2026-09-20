@@ -20,7 +20,8 @@ export function HomePage() {
   const { data: eventsResult } = useGetEventsQuery()
   const apiEvents = eventsResult?.items
   const { data: apiAds } = useGetAdvertisementsQuery()
-  const { data: apiTalents } = useGetTalentsQuery()
+  const { data: talentsResult } = useGetTalentsQuery()
+  const apiTalents = talentsResult?.items
   const { data: apiExperiences } = useGetExperiencesQuery()
 
   return (

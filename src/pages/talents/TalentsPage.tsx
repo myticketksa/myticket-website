@@ -1,28 +1,27 @@
-import { useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { useGetTalentCategoriesQuery, useGetTalentsQuery } from '@/app/api/talentsApi'
-import { TalentCard, TalentDirectoryCard } from '@/components/cards'
+import { TalentDirectoryCard } from '@/components/cards'
 import { FilterChip } from '@/components/data-display'
 import { FadeUp, StaggerGroup } from '@/components/motion'
+import { NumberedPagination } from '@/components/navigation'
 import { Checkbox } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { mapCategoryLabels } from '@/lib/api/mappers/categories'
 import { mapApiTalentToCard } from '@/lib/api/mappers/talents'
+import { buildPageNumbers } from '@/lib/api/unwrap'
 import { catalogLabel } from '@/lib/i18n/catalogLabels'
 import {
-  BusinessStrip,
   CatalogBody,
   CatalogPageHead,
-  CatalogPager,
   CATALOG_TALENTS,
   CITY_FACETS,
   FilterSidebar,
   LinkedCard,
-  PromoBand,
   RATING_OPTIONS,
   ResultsToolbar,
   slugify,
-  TALENT_WEEK_IMAGES,
 } from '@/pages/_guest'
 
 const TALENT_CHIPS = [
@@ -72,18 +71,52 @@ function matchesChip(discipline: string, chip: string): boolean {
   return (map[chip] ?? [chip.toLowerCase().replace(/s$/, '')]).some((term) => d.includes(term))
 }
 
-/** Talents directory — Figma `207:5539`. Talents API with fixture fallback. */
+/** Talents directory — API list with real pagination. */
 export function TalentsPage() {
-  const { t } = useTranslation(['catalog', 'common'])
+  const { t } = useTranslation(['catalog', 'common', 'nav'])
   const baseId = useId()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const page = Math.max(1, Number(searchParams.get('page') || 1) || 1)
   const [chip, setChip] = useState('All talents')
   const [when, setWhen] = useState<(typeof WHEN_OPTIONS)[number]>('Anytime')
   const [cities, setCities] = useState<string[]>([])
   const [rating, setRating] = useState('Any')
   const [sortKey, setSortKey] = useState<(typeof SORT_KEYS)[number]>('soonest')
 
-  const { data: apiTalents, isFetching, isError } = useGetTalentsQuery()
+  const { data: talentsResult, isFetching, isError } = useGetTalentsQuery({ page })
+  const apiTalents = talentsResult?.items
+  const pagination = talentsResult?.pagination
   const { data: apiCategories } = useGetTalentCategoriesQuery()
+
+  const setPage = (next: number) => {
+    const safe = Math.max(1, next)
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (safe <= 1) params.delete('page')
+        else params.set('page', String(safe))
+        return params
+      },
+      { replace: true },
+    )
+  }
+
+  const skipPageResetRef = useRef(true)
+  useEffect(() => {
+    if (skipPageResetRef.current) {
+      skipPageResetRef.current = false
+      return
+    }
+    setSearchParams(
+      (prev) => {
+        if (!prev.get('page') || prev.get('page') === '1') return prev
+        const next = new URLSearchParams(prev)
+        next.delete('page')
+        return next
+      },
+      { replace: true },
+    )
+  }, [chip, when, cities, rating, sortKey, setSearchParams])
 
   const talentChips = useMemo(
     () =>
@@ -141,6 +174,12 @@ export function TalentsPage() {
     return list
   }, [filtered, sortKey])
 
+  const lastPage = Math.max(1, pagination?.lastPage ?? 1)
+  const currentPage = Math.min(page, lastPage)
+  const pageNumbers = buildPageNumbers(currentPage, lastPage)
+  const usingApiPages = Boolean(apiTalents && apiTalents.length > 0 && pagination)
+  const resultCount = usingApiPages ? (pagination?.total ?? shown.length) : shown.length
+
   const sortLabels = {
     soonest: t('results.sortPlayingSoonest'),
     rating: t('results.sortTopRated'),
@@ -150,20 +189,12 @@ export function TalentsPage() {
     setSortKey(SORT_KEYS[(idx + 1) % SORT_KEYS.length]!)
   }
 
-  const subtitleParts = [
-    t('pages.talentsSubtitle'),
-    isError ? t('pages.apiPreview') : null,
-    isFetching ? t('pages.updating') : null,
-  ].filter(Boolean)
-
   return (
     <>
       <PageSection padTop={14} padBottom={0}>
         <FadeUp>
           <CatalogPageHead
-            eyebrow={t('pages.talentsEyebrow')}
-            title={t('pages.talentsTitle')}
-            subtitle={subtitleParts.join(' ')}
+            title={t('nav:talents')}
             chips={talentChips.map((label) => ({
               label,
               displayLabel: catalogLabel(t, label),
@@ -174,45 +205,7 @@ export function TalentsPage() {
         </FadeUp>
       </PageSection>
 
-      <PageSection padTop={30} padBottom={0}>
-        <FadeUp className="mb-[18px] flex flex-col items-start gap-md sm:flex-row sm:items-end sm:justify-between sm:gap-4xl">
-          <div>
-            <h2 className="text-heading-h2 text-ink-primary">{t('pages.onStageSeason')}</h2>
-            <p className="mt-sm text-body-default text-ink-secondary">
-              {t('pages.onStageLede')}
-            </p>
-          </div>
-          <a
-            href="#directory"
-            className="flex items-center gap-[5px] text-[14px] font-bold text-ink-brand-mid"
-          >
-            {t('pages.allTalentsLink')}
-          </a>
-        </FadeUp>
-        <StaggerGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {catalog.slice(0, 4).map((talent, i) => (
-            <LinkedCard
-              key={talent.slug ?? talent.name}
-              to={`/talents/${talent.slug ?? slugify(talent.name)}`}
-            >
-              <TalentCard
-                name={talent.name}
-                discipline={talent.discipline}
-                rating={talent.rating}
-                reviews={talent.reviews ?? ''}
-                city={talent.city ?? ''}
-                nextLabel={'nextLabel' in talent ? talent.nextLabel : undefined}
-                nextEvent={'nextEvent' in talent ? talent.nextEvent : undefined}
-                verified={talent.verified}
-                image={talent.image ?? TALENT_WEEK_IMAGES[i]}
-                limited
-              />
-            </LinkedCard>
-          ))}
-        </StaggerGroup>
-      </PageSection>
-
-      <PageSection padTop={44} padBottom={0} id="directory">
+      <PageSection padTop={28} padBottom={0} id="directory">
         <CatalogBody
           filterWidth={252}
           filters={
@@ -284,16 +277,23 @@ export function TalentsPage() {
         >
           <ResultsToolbar
             countLabel={t('results.countTalents', {
-              count: Math.min(9, shown.length),
-              total: shown.length,
+              count: shown.length,
+              total: resultCount,
             })}
             sortLabel={t('results.sort')}
             sortValue={sortLabels[sortKey]}
             onSortClick={cycleSort}
             showViewToggle={false}
           />
+          {(isError || isFetching) && (
+            <p className="mt-sm text-[13px] text-ink-muted">
+              {[isError ? t('pages.apiPreview') : null, isFetching ? t('pages.updating') : null]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          )}
           <StaggerGroup className="mt-[18px] grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
-            {shown.slice(0, 9).map((talent) => (
+            {shown.map((talent) => (
               <LinkedCard
                 key={talent.slug ?? talent.name}
                 to={`/talents/${talent.slug ?? slugify(talent.name)}`}
@@ -302,28 +302,17 @@ export function TalentsPage() {
               </LinkedCard>
             ))}
           </StaggerGroup>
-          <div className="mt-[36px]">
-            <CatalogPager pages={[1, 2, 3, 4, 46]} />
-          </div>
+          {lastPage > 1 ? (
+            <div className="mt-[36px]">
+              <NumberedPagination
+                page={currentPage}
+                pages={pageNumbers}
+                onPageChange={setPage}
+              />
+            </div>
+          ) : null}
         </CatalogBody>
       </PageSection>
-
-      <PageSection padTop={80} padBottom={0}>
-        <PromoBand
-          tone="inverse"
-          heading={t('pages.talentsPromoHeading')}
-          body={t('pages.talentsPromoBody')}
-          ctaLabel={t('pages.talentsPromoCta')}
-          ctaTo="/register"
-        />
-      </PageSection>
-
-      <BusinessStrip
-        heading={t('pages.performerHeading')}
-        body={t('pages.performerBody')}
-        ctaLabel={t('pages.performerCta')}
-        ctaTo="/apply/talent"
-      />
     </>
   )
 }

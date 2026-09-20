@@ -168,8 +168,6 @@ export function DefaultAccountAside() {
           ))}
         </ul>
       </Panel>
-      <AccountRecsCard />
-      <AccountSupportCard />
     </div>
   )
 }

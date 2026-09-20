@@ -9,7 +9,6 @@ import { NumberedPagination } from '@/components/navigation'
 import {
   CatalogBody,
   CatalogPageHead,
-  CatalogSaveAlertActions,
   CATALOG_EVENTS,
   EVENT_CATEGORY_CHIPS,
   FilterSidebar,
@@ -285,14 +284,6 @@ export function EventsPage() {
             onChipSelect={(label) => {
               setCategory(label)
             }}
-            actions={
-              <CatalogSaveAlertActions
-                saveLabel={t('pages.saveSearch')}
-                alertLabel={t('pages.alertNewCategory', {
-                  category: categoryDisplay.toLowerCase(),
-                })}
-              />
-            }
           />
         </FadeUp>
       </PageSection>

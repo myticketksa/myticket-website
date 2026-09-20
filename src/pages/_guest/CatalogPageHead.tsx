@@ -14,7 +14,7 @@ export interface CatalogChip {
 
 export interface CatalogPageHeadProps {
   title: string
-  subtitle: string
+  subtitle?: string
   chips?: CatalogChip[]
   onChipSelect?: (label: string) => void
   /** Secondary + primary actions on the right of the title row (Events pattern). */
@@ -43,9 +43,11 @@ export function CatalogPageHead({
       <div className="flex w-full flex-col items-start gap-lg sm:flex-row sm:items-end sm:justify-between sm:gap-4xl">
         <div className="min-w-0 flex-1">
           <h1 className="text-display-hero text-ink-primary">{title}</h1>
-          <p className="mt-[10px] max-w-[620px] text-[17px] leading-[1.45] font-normal text-ink-secondary">
-            {subtitle}
-          </p>
+          {subtitle ? (
+            <p className="mt-[10px] max-w-[620px] text-[17px] leading-[1.45] font-normal text-ink-secondary">
+              {subtitle}
+            </p>
+          ) : null}
         </div>
         {actions && <div className="w-full shrink-0 sm:w-auto">{actions}</div>}
       </div>

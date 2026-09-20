@@ -1,7 +1,21 @@
 import { baseApi } from './baseApi'
-import { asList, unwrapData } from '@/lib/api/unwrap'
+import {
+  asList,
+  extractPagination,
+  type ApiPagination,
+  unwrapData,
+} from '@/lib/api/unwrap'
 
 export type ApiRecord = Record<string, unknown>
+
+export type TalentsListResult = {
+  items: ApiRecord[]
+  pagination: ApiPagination
+}
+
+export type GetTalentsParams = {
+  page?: number
+}
 
 export const talentsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -10,10 +24,30 @@ export const talentsApi = baseApi.injectEndpoints({
       transformResponse: (response: unknown) => asList<ApiRecord>(response),
       providesTags: ['Talent'],
     }),
-    getTalents: build.query<ApiRecord[], void>({
-      query: () => '/talents',
-      transformResponse: (response: unknown) => asList<ApiRecord>(response),
-      providesTags: [{ type: 'Talent', id: 'LIST' }],
+    getTalents: build.query<TalentsListResult, void | GetTalentsParams>({
+      query: (params) => {
+        const page = params && 'page' in params ? params.page : undefined
+        return {
+          url: '/talents',
+          params: {
+            ...(page && page > 1 ? { page } : page === 1 ? { page: 1 } : {}),
+          },
+        }
+      },
+      transformResponse: (response: unknown): TalentsListResult => ({
+        items: asList<ApiRecord>(response),
+        pagination: extractPagination(response),
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.items.map((talent) => ({
+                type: 'Talent' as const,
+                id: String(talent.id ?? ''),
+              })),
+              { type: 'Talent', id: 'LIST' },
+            ]
+          : [{ type: 'Talent', id: 'LIST' }],
     }),
     getTalentDetails: build.query<ApiRecord, string | number>({
       query: (id) => `/talents/${id}`,

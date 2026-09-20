@@ -21,7 +21,6 @@ import { writeFreeSeatingSession } from '@/lib/purchase/holdSession'
 import { Avatar } from '@/components/data-display'
 import {
   ArrowUpRightIcon,
-  CalendarIcon,
   HeartGlyphIcon,
   StarFillIcon,
 } from '@/components/icons'
@@ -33,7 +32,6 @@ import {
 } from '@/components/navigation'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
-import { cn } from '@/lib/cn'
 import {
   CATALOG_EVENTS,
   DetailGallery,
@@ -48,26 +46,21 @@ import {
 } from '@/pages/_guest'
 
 /**
- * Figma `207:4797` tab rail — About · Line-up · Venue · Reviews · Policies.
- * Organizer sits between Venue and Reviews in the continuous article (no tab).
+ * Figma `207:4797` tab rail — About · Venue · Reviews.
  */
-const TABS = ['About', 'Line-up', 'Venue', 'Reviews', 'Policies'] as const
+const TABS = ['About', 'Venue', 'Reviews'] as const
 type Tab = (typeof TABS)[number]
 
 const TAB_IDS: Record<Tab, string> = {
   About: 'about',
-  'Line-up': 'line-up',
   Venue: 'venue',
   Reviews: 'reviews',
-  Policies: 'policies',
 }
 
 const TAB_LABEL_KEYS: Record<Tab, string> = {
   About: 'detail.about',
-  'Line-up': 'detail.lineUp',
   Venue: 'detail.venue',
   Reviews: 'detail.reviews',
-  Policies: 'detail.policies',
 }
 
 const REVIEWS = [
@@ -91,25 +84,6 @@ const REVIEWS = [
     date: 'Reviewed 2 March 2026',
     rating: '4.0',
     body: "Gold pit is worth it if you want to be close, but arrive by 19:00 or you'll be behind the early crowd.",
-  },
-] as const
-
-const POLICIES = [
-  {
-    label: 'Refunds',
-    body: 'Full refund up to 72 hours before the event. No refunds after that, but tickets can be listed on the resale auction.',
-  },
-  {
-    label: 'Transfers',
-    body: 'Free transfer to another MyTicket account up to 2 hours before doors.',
-  },
-  {
-    label: 'Age',
-    body: 'All ages. Under 12s must be accompanied and are seated on the eastern lawn.',
-  },
-  {
-    label: 'Prohibited',
-    body: 'Professional cameras, outside food and drink, and any glass containers.',
   },
 ] as const
 
@@ -476,26 +450,32 @@ export function EventDetailPage() {
       </PageSection>
 
       <PageSection padTop={34} padBottom={0}>
-        <div className="flex w-full flex-col items-start gap-[48px] lg:flex-row">
-          <article className="min-w-0 flex-1">
+        {/*
+          Mobile stack: title → ticket CTA → tabs/content.
+          Desktop: article column + sticky CTA (row-span), same as before.
+        */}
+        <div className="grid w-full grid-cols-1 items-start gap-2xl sm:gap-3xl lg:grid-cols-[minmax(0,1fr)_388px] lg:gap-x-[48px] lg:gap-y-0">
+          <header className="min-w-0 lg:col-start-1 lg:row-start-1">
             <FadeUp>
-              <h1 className="text-display-hero text-ink-primary">{title}</h1>
+              <h1 className="text-balance text-display-hero text-ink-primary">{title}</h1>
 
-              <div className="mt-[14px] flex flex-wrap items-center gap-[18px] text-[15px]">
-                <span className="flex items-center gap-[5px] font-semibold text-ink-primary">
+              <div className="mt-[14px] flex flex-col gap-sm text-[14px] sm:flex-row sm:flex-wrap sm:items-center sm:gap-[18px] sm:text-[15px]">
+                <span className="inline-flex items-center gap-[5px] font-semibold text-ink-primary">
                   <StarFillIcon size={15} />
                   {display.rating}
                 </span>
                 <span className="text-ink-secondary">{display.when}</span>
                 <span className="text-ink-secondary">{display.venue}</span>
-                <span className="text-ink-secondary">{display.attendance}</span>
+                {display.attendance ? (
+                  <span className="text-ink-secondary">{display.attendance}</span>
+                ) : null}
               </div>
             </FadeUp>
 
-            <div className="mt-[22px] flex flex-wrap gap-row-gap">
+            <div className="mt-xl flex flex-col gap-md sm:mt-[22px] sm:flex-row sm:flex-wrap sm:gap-row-gap">
               <Button
                 variant="secondary"
-                className="h-[40px] rounded-[20px] border px-lg"
+                className="h-[44px] w-full rounded-[20px] border px-lg sm:h-[40px] sm:w-auto"
                 icon={<HeartGlyphIcon size={16} filled={isSaved} />}
                 onClick={() => void handleSave()}
               >
@@ -503,205 +483,18 @@ export function EventDetailPage() {
               </Button>
               <Button
                 variant="secondary"
-                className="h-[40px] rounded-[20px] border px-lg"
+                className="h-[44px] w-full rounded-[20px] border px-lg sm:h-[40px] sm:w-auto"
                 icon={<ArrowUpRightIcon size={16} />}
                 disabled
                 title="Share not available yet"
               >
                 {t('detail.share')}
               </Button>
-              <Button
-                variant="secondary"
-                className="h-[40px] rounded-[20px] border px-lg"
-                icon={<CalendarIcon size={16} />}
-                disabled
-                title="Calendar export not available yet"
-              >
-                {t('detail.addToCalendar')}
-              </Button>
             </div>
-
-            <div className="sticky top-[var(--spacing-header)] z-10 mt-[34px] bg-bg-page pt-sm">
-              <DetailSectionTabs aria-label={t('detail.sectionsAria')}>
-                {TABS.map((item) => (
-                  <DetailSectionTab
-                    key={item}
-                    active={tab === item}
-                    onClick={() => jumpTo(item)}
-                  >
-                    {t(TAB_LABEL_KEYS[item])}
-                  </DetailSectionTab>
-                ))}
-              </DetailSectionTabs>
-            </div>
-
-            {/* About — Figma draws body + highlights with no section H2. */}
-            <section id="about" className="scroll-mt-[calc(var(--spacing-header)+72px)]">
-              <p className="mt-[28px] max-w-[720px] text-[16px] leading-[1.6] text-ink-body">
-                {EVENT_DETAIL.about}
-              </p>
-              <div className="mt-[18px] grid max-w-[720px] grid-cols-1 gap-md sm:grid-cols-2">
-                {EVENT_DETAIL.highlights.map((h) => (
-                  <div
-                    key={h.title}
-                    className="flex gap-[11px] rounded-[14px] border border-border-default bg-surface-default px-lg py-[14px]"
-                  >
-                    <span className="mt-[6px] size-[7px] shrink-0 rounded-full bg-brand-primary" />
-                    <div>
-                      <p className="text-[14px] font-semibold text-ink-primary">{h.title}</p>
-                      <p className="mt-[2px] text-[13px] leading-[1.45] text-ink-secondary">
-                        {h.body}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section
-              id="line-up"
-              className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-[44px]"
-            >
-              <h2 className="text-heading-h2-section text-ink-primary">{t('detail.lineUp')}</h2>
-              <p className="mt-[6px] text-[15px] text-ink-secondary">
-                Four acts across one stage. Set times published 48 hours before doors.
-              </p>
-              <div className="mt-[18px] grid grid-cols-2 gap-lg lg:grid-cols-4">
-                {EVENT_DETAIL.lineup.map((act) => (
-                  <div
-                    key={act.name}
-                    className="overflow-hidden rounded-[16px] border border-border-default bg-surface-default"
-                  >
-                    <div className="h-[150px]">
-                      <img src={act.image} alt="" className="size-full object-cover" />
-                    </div>
-                    <div className="px-[14px] pt-[13px] pb-[15px]">
-                      <p className="text-[15px] font-semibold text-ink-primary">{act.name}</p>
-                      <p className="mt-[2px] text-[13px] text-ink-secondary">{act.role}</p>
-                      <p className="mt-sm text-[12px] font-semibold text-ink-brand">{act.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section
-              id="venue"
-              className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-[44px]"
-            >
-              <h2 className="text-heading-h2-section text-ink-primary">
-                Venue & getting there
-              </h2>
-              <div className="mt-[18px] overflow-hidden rounded-[18px] border border-border-default bg-surface-default">
-                <div className="relative h-[260px] w-full overflow-hidden bg-bg-skeleton">
-                  <img
-                    src={EVENT_DETAIL_VENUE_MAP}
-                    alt="Map of King Abdullah Park, Al Malaz, Riyadh"
-                    className="size-full object-cover"
-                  />
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-lg border-b border-border-divider px-3xl py-md">
-                  <p className="text-[14px] text-ink-secondary">
-                    King Abdullah Park, Al Malaz, Riyadh 12836
-                  </p>
-                  <a
-                    href={MAPS_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-[36px] items-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand"
-                  >
-                    Open in maps
-                  </a>
-                </div>
-                <div className="flex flex-col gap-3xl px-lg pt-[22px] pb-3xl sm:flex-row sm:px-3xl">
-                  {[
-                    {
-                      label: 'Address',
-                      body: 'King Abdullah Park, Al Malaz, Riyadh 12836',
-                    },
-                    {
-                      label: 'Getting there',
-                      body: 'Metro Line 2 to Al Malaz (7 min walk). Paid parking in lots C and D, SAR 20.',
-                    },
-                    {
-                      label: 'Accessibility',
-                      body: 'Step-free entry at Gate 3. Wheelchair bays in the seated tier — book by phone.',
-                    },
-                  ].map((fact) => (
-                    <div key={fact.label} className="min-w-0 flex-1">
-                      <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-                        {fact.label}
-                      </p>
-                      <p className="mt-[6px] text-[14px] leading-[1.5] text-ink-body">{fact.body}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            <section
-              id="reviews"
-              className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-[44px]"
-            >
-              <div className="flex flex-wrap items-end justify-between gap-md">
-                <h2 className="min-w-0 text-heading-h2-section text-ink-primary">{t('detail.reviews')}</h2>
-                <div className="flex items-center gap-[5px] text-[15px] text-ink-secondary">
-                  <StarFillIcon size={15} />
-                  <span>{EVENT_DETAIL.reviewsSummary}</span>
-                </div>
-              </div>
-              <div className="mt-[18px] grid grid-cols-1 gap-lg lg:grid-cols-3">
-                {REVIEWS.map((review) => (
-                  <div
-                    key={review.name}
-                    className="flex flex-col gap-[11px] rounded-[16px] border border-border-default bg-surface-default p-[18px]"
-                  >
-                    <div className="flex items-center gap-[11px]">
-                      <Avatar
-                        initials={review.initials}
-                        size="md"
-                        className="!size-[36px] !bg-border-divider !bg-none text-[14px] font-semibold text-ink-secondary"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[14px] font-semibold text-ink-primary">{review.name}</p>
-                        <p className="text-[12px] text-ink-muted">{review.date}</p>
-                      </div>
-                      <StarFillIcon size={13} />
-                      <span className="text-[13px] font-semibold text-ink-primary">
-                        {review.rating}
-                      </span>
-                    </div>
-                    <p className="text-[14px] leading-[1.55] text-ink-secondary">{review.body}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section
-              id="policies"
-              className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-[44px] pb-2xl"
-            >
-              <h2 className="text-heading-h2-section text-ink-primary">{t('detail.policies')}</h2>
-              <div className="mt-[18px] rounded-[18px] border border-border-default bg-surface-default px-[22px] py-sm text-[14px]">
-                {POLICIES.map((row, i, arr) => (
-                  <div
-                    key={row.label}
-                    className={cn(
-                      'flex flex-col gap-sm py-lg sm:flex-row sm:gap-3xl',
-                      i < arr.length - 1 && 'border-b border-border-divider',
-                    )}
-                  >
-                    <p className="w-full shrink-0 font-semibold text-ink-primary sm:w-[200px]">
-                      {row.label}
-                    </p>
-                    <p className="min-w-0 flex-1 leading-[1.5] text-ink-body">{row.body}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </article>
+          </header>
 
           <StickyCtaCard
+            className="w-full min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1"
             fromPrice={display.fromPrice}
             note={EVENT_DETAIL.salesClose}
             tiers={freeSeatingTiers ?? EVENT_DETAIL.tiers}
@@ -727,6 +520,130 @@ export function EventDetailPage() {
             footerNote={EVENT_DETAIL.footerNote}
             aside={<StickyCtaAssurances items={EVENT_DETAIL.assurances} />}
           />
+
+          <article className="min-w-0 lg:col-start-1 lg:row-start-2">
+            <div className="sticky top-[var(--spacing-header)] z-10 mt-sm bg-bg-page pt-sm sm:mt-[34px]">
+              <DetailSectionTabs
+                aria-label={t('detail.sectionsAria')}
+                className="gap-xl sm:gap-[26px]"
+              >
+                {TABS.map((item) => (
+                  <DetailSectionTab
+                    key={item}
+                    active={tab === item}
+                    onClick={() => jumpTo(item)}
+                    className="flex min-h-[44px] items-end sm:min-h-0"
+                  >
+                    {t(TAB_LABEL_KEYS[item])}
+                  </DetailSectionTab>
+                ))}
+              </DetailSectionTabs>
+            </div>
+
+            <section id="about" className="scroll-mt-[calc(var(--spacing-header)+72px)]">
+              <p className="mt-2xl max-w-[720px] text-pretty text-[15px] leading-[1.6] text-ink-body sm:mt-[28px] sm:text-[16px]">
+                {EVENT_DETAIL.about}
+              </p>
+            </section>
+
+            <section
+              id="venue"
+              className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-3xl sm:mt-[44px]"
+            >
+              <h2 className="text-balance text-heading-h2-section text-ink-primary">
+                Venue & getting there
+              </h2>
+              <div className="mt-[18px] overflow-hidden rounded-[18px] border border-border-default bg-surface-default">
+                <div className="relative h-[200px] w-full overflow-hidden bg-bg-skeleton sm:h-[260px]">
+                  <img
+                    src={EVENT_DETAIL_VENUE_MAP}
+                    alt="Map of King Abdullah Park, Al Malaz, Riyadh"
+                    className="size-full object-cover"
+                  />
+                </div>
+                <div className="flex flex-col items-stretch gap-md border-b border-border-divider px-lg py-md sm:flex-row sm:items-center sm:justify-between sm:gap-lg sm:px-3xl">
+                  <p className="min-w-0 text-[13px] text-pretty text-ink-secondary sm:text-[14px]">
+                    King Abdullah Park, Al Malaz, Riyadh 12836
+                  </p>
+                  <a
+                    href={MAPS_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-[44px] shrink-0 items-center justify-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand sm:h-[36px]"
+                  >
+                    Open in maps
+                  </a>
+                </div>
+                <div className="flex flex-col gap-2xl px-lg pt-xl pb-2xl sm:flex-row sm:gap-3xl sm:px-3xl sm:pt-[22px] sm:pb-3xl">
+                  {[
+                    {
+                      label: 'Address',
+                      body: 'King Abdullah Park, Al Malaz, Riyadh 12836',
+                    },
+                    {
+                      label: 'Getting there',
+                      body: 'Metro Line 2 to Al Malaz (7 min walk). Paid parking in lots C and D, SAR 20.',
+                    },
+                    {
+                      label: 'Accessibility',
+                      body: 'Step-free entry at Gate 3. Wheelchair bays in the seated tier — book by phone.',
+                    },
+                  ].map((fact) => (
+                    <div key={fact.label} className="min-w-0 flex-1">
+                      <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
+                        {fact.label}
+                      </p>
+                      <p className="mt-[6px] text-[14px] leading-[1.5] text-pretty text-ink-body">
+                        {fact.body}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <section
+              id="reviews"
+              className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-3xl pb-2xl sm:mt-[44px]"
+            >
+              <div className="flex flex-col gap-sm sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-md">
+                <h2 className="min-w-0 text-balance text-heading-h2-section text-ink-primary">
+                  {t('detail.reviews')}
+                </h2>
+                <div className="flex items-center gap-[5px] text-[14px] text-ink-secondary sm:text-[15px]">
+                  <StarFillIcon size={15} />
+                  <span>{EVENT_DETAIL.reviewsSummary}</span>
+                </div>
+              </div>
+              <div className="mt-[18px] grid grid-cols-1 gap-lg lg:grid-cols-3">
+                {REVIEWS.map((review) => (
+                  <div
+                    key={review.name}
+                    className="flex flex-col gap-[11px] rounded-[16px] border border-border-default bg-surface-default p-lg sm:p-[18px]"
+                  >
+                    <div className="flex items-center gap-[11px]">
+                      <Avatar
+                        initials={review.initials}
+                        size="md"
+                        className="!size-[36px] !bg-border-divider !bg-none text-[14px] font-semibold text-ink-secondary"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[14px] font-semibold text-ink-primary">{review.name}</p>
+                        <p className="text-[12px] text-ink-muted">{review.date}</p>
+                      </div>
+                      <StarFillIcon size={13} className="shrink-0" />
+                      <span className="shrink-0 text-[13px] font-semibold text-ink-primary">
+                        {review.rating}
+                      </span>
+                    </div>
+                    <p className="text-[14px] leading-[1.55] text-pretty text-ink-secondary">
+                      {review.body}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </article>
         </div>
       </PageSection>
 
@@ -781,23 +698,23 @@ function SimilarEventCard({
       to={`/events/${eventSlug}`}
       className="flex min-w-0 flex-col overflow-hidden rounded-[16px] border border-border-default bg-surface-default"
     >
-      <div className="h-[170px] w-full overflow-hidden bg-bg-skeleton">
+      <div className="h-[150px] w-full overflow-hidden bg-bg-skeleton sm:h-[170px]">
         {image ? (
           <img src={image} alt="" className="size-full object-cover" />
         ) : null}
       </div>
       <div className="flex flex-1 flex-col px-lg pt-[15px] pb-[16px]">
         <p className="text-[12px] font-semibold text-ink-muted">{date}</p>
-        <p className="mt-[6px] text-[15px] leading-[1.25] font-semibold text-ink-primary">
+        <p className="mt-[6px] text-[15px] leading-[1.25] font-semibold text-balance text-ink-primary">
           {title}
         </p>
         <p className="mt-[6px] text-[13px] text-ink-secondary">{venue}</p>
-        <div className="mt-auto flex items-center justify-between pt-[12px]">
+        <div className="mt-auto flex items-end justify-between gap-md pt-[12px]">
           <span className="flex items-center gap-[5px] text-[13px] font-medium text-ink-primary">
             <StarFillIcon size={13} />
             {rating}
           </span>
-          <span className="text-[17px] font-semibold tabular-nums text-ink-primary">
+          <span className="shrink-0 text-[15px] font-semibold tabular-nums text-ink-primary sm:text-[17px]">
             From {price}
           </span>
         </div>

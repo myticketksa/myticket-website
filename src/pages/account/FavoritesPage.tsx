@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRightIcon, HeartIcon, StarIcon } from '@/components/icons'
 import { FilterChip } from '@/components/data-display'
 import { EmptyState } from '@/components/feedback'
-import { Button } from '@/components/ui'
 import { AccountPageHead, PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
 import {
@@ -85,15 +84,7 @@ export function FavoritesPage() {
       <AccountPageHead
         eyebrow={t('account:eyebrow')}
         title={t('account:favorites.title')}
-        subtitle={t('account:favorites.subtitle')}
         className="border-b-0"
-        actions={
-          <Link to="/settings">
-            <Button variant="secondary" size="md">
-              {t('account:favorites.notificationSettings')}
-            </Button>
-          </Link>
-        }
       />
 
       <PageSection padTop={0} padBottom={96}>
