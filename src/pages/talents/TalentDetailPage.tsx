@@ -221,9 +221,9 @@ export function TalentDetailPage() {
         />
       </PageSection>
 
-      <PageSection padTop={28} padBottom={96}>
-        <FadeUp className="mx-auto flex max-w-[720px] flex-col items-center text-center">
-          <div className="size-[168px] overflow-hidden rounded-full border border-border-default bg-bg-skeleton">
+      <PageSection padTop={20} padBottom={64}>
+        <FadeUp className="mx-auto flex w-full max-w-[720px] flex-col items-center px-0 text-center">
+          <div className="size-[120px] overflow-hidden rounded-full border border-border-default bg-bg-skeleton sm:size-[168px]">
             <img
               src={talent.image ?? TALENT_DETAIL_GALLERY.main}
               alt=""
@@ -231,11 +231,11 @@ export function TalentDetailPage() {
             />
           </div>
 
-          <h1 className="mt-[22px] min-w-0 text-center text-display-hero text-ink-primary">
+          <h1 className="mt-xl min-w-0 max-w-full text-balance text-center text-display-hero text-ink-primary sm:mt-[22px]">
             {talent.name}
           </h1>
 
-          <p className="mt-[10px] text-[17px] text-ink-secondary">{talent.discipline}</p>
+          <p className="mt-[10px] text-[15px] text-ink-secondary sm:text-[17px]">{talent.discipline}</p>
 
           {talent.city ? (
             <p className="mt-[8px] text-[14px] font-medium text-ink-muted">{talent.city}</p>
@@ -250,22 +250,31 @@ export function TalentDetailPage() {
           </p>
 
           {biography ? (
-            <p className="mt-[20px] max-w-[560px] text-[15px] leading-[1.6] text-ink-secondary">
+            <p className="mt-xl max-w-[560px] text-pretty text-[15px] leading-[1.6] text-ink-secondary sm:mt-[20px]">
               {biography}
             </p>
           ) : null}
 
-          <div className="mt-[28px] flex flex-wrap justify-center gap-row-gap">
+          <div className="mt-2xl grid w-full max-w-[440px] grid-cols-2 gap-md sm:mt-[28px] sm:flex sm:max-w-none sm:flex-wrap sm:justify-center sm:gap-row-gap">
             <Button
               onClick={() => void handleFollowToggle()}
               disabled={followState.isLoading || unfollowState.isLoading}
+              className="min-h-[44px] w-full sm:w-auto"
             >
               {following ? 'Unfollow' : 'Follow'}
             </Button>
-            <Button icon={<PaperPlaneIcon size={18} />} onClick={openRequest}>
+            <Button
+              icon={<PaperPlaneIcon size={18} />}
+              onClick={openRequest}
+              className="min-h-[44px] w-full sm:w-auto"
+            >
               Request
             </Button>
-            <Button icon={<StarOutlineIcon size={18} weight="fill" />} onClick={openReview}>
+            <Button
+              icon={<StarOutlineIcon size={18} weight="fill" />}
+              onClick={openReview}
+              className="min-h-[44px] w-full sm:w-auto"
+            >
               Rate & review
             </Button>
             <Button
@@ -273,13 +282,14 @@ export function TalentDetailPage() {
               size="md"
               aria-label={favourited ? 'Remove from favourites' : 'Add to favourites'}
               onClick={handleFavourite}
-              className={favourited ? 'text-ink-brand' : undefined}
+              className={favourited ? 'min-h-[44px] text-ink-brand' : 'min-h-[44px]'}
             >
               <HeartGlyphIcon size={18} filled={favourited} />
             </Button>
             <Button
               icon={<UsersIcon size={18} />}
               onClick={() => navigate('/talents')}
+              className="col-span-2 min-h-[44px] w-full sm:col-auto sm:w-auto"
             >
               Browse talents
             </Button>
@@ -287,18 +297,20 @@ export function TalentDetailPage() {
         </FadeUp>
 
         {works.length > 0 && (
-          <div className="mx-auto mt-[56px] max-w-[960px]">
-            <h2 className="text-heading-h2-section text-center text-ink-primary">Previous work</h2>
-            <p className="mt-[6px] text-center text-[15px] text-ink-secondary">
+          <div className="mx-auto mt-3xl max-w-[960px] sm:mt-[56px]">
+            <h2 className="text-heading-h2-section text-center text-balance text-ink-primary">
+              Previous work
+            </h2>
+            <p className="mt-[6px] text-center text-[14px] text-pretty text-ink-secondary sm:text-[15px]">
               Highlights from this talent’s portfolio.
             </p>
-            <div className="mt-[22px] grid grid-cols-1 gap-lg sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-xl grid grid-cols-1 gap-lg sm:mt-[22px] sm:grid-cols-2 lg:grid-cols-3">
               {works.map((work) => (
                 <div
                   key={work.key}
                   className="overflow-hidden rounded-[16px] border border-border-default bg-surface-default"
                 >
-                  <div className="h-[140px] bg-bg-skeleton">
+                  <div className="aspect-[16/10] bg-bg-skeleton sm:aspect-auto sm:h-[140px]">
                     {work.image ? (
                       <img src={work.image} alt="" className="size-full object-cover" />
                     ) : null}
@@ -316,7 +328,7 @@ export function TalentDetailPage() {
         )}
 
         <SimilarSection
-          className="mt-[64px]"
+          className="mt-3xl sm:mt-[64px]"
           heading="More talents"
           lede="Limited public profiles — name, craft and rating."
         >

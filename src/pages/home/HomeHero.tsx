@@ -91,27 +91,28 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
 
   return (
     <PageSection
-      padTop={60}
       padBottom={0}
-      className="relative overflow-hidden bg-bg-page"
+      className="relative overflow-hidden bg-bg-page pt-3xl sm:pt-[48px] lg:pt-[60px]"
       style={{
         backgroundImage:
           'radial-gradient(ellipse 1100px 620px at 8% -10%, color-mix(in srgb, var(--color-brand-primary) 22%, transparent), transparent 62%), radial-gradient(ellipse 900px 560px at 96% 4%, color-mix(in srgb, var(--color-brand-primary) 14%, transparent), transparent 60%)',
       }}
     >
-      <div className="flex flex-col gap-[52px] lg:flex-row lg:items-start">
-        <div className="flex w-full max-w-[675px] flex-col pt-xl">
+      <div className="flex flex-col gap-3xl lg:flex-row lg:items-start lg:gap-[52px]">
+        {/* 1. Copy + search — primary mobile stack */}
+        <div className="flex w-full max-w-[675px] flex-col lg:pt-xl">
           <FadeUp inView={false} delay={0.05} distance={8}>
-            <div
-              className="inline-flex max-w-full flex-wrap items-center gap-[9px] rounded-[22px] bg-identity-gradient py-[7px] pe-[15px] ps-[11px] text-[13px] font-bold text-ink-inverse shadow-[0px_8px_22px_-10px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)]"
-            >
-              <span className="size-[7px] shrink-0 rounded-pill bg-ink-inverse" aria-hidden />
-              {t('home.liveCount')}
+            <div className="flex w-full max-w-full items-start gap-[10px] rounded-[16px] bg-identity-gradient px-[14px] py-[10px] text-[12px] leading-[1.4] font-bold text-ink-inverse shadow-[0px_8px_22px_-10px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)] sm:inline-flex sm:w-auto sm:items-center sm:rounded-[22px] sm:py-[7px] sm:pe-[15px] sm:ps-[11px] sm:text-[13px] sm:leading-none">
+              <span
+                className="mt-[5px] size-[7px] shrink-0 rounded-pill bg-ink-inverse sm:mt-0"
+                aria-hidden
+              />
+              <span className="min-w-0 text-pretty">{t('home.liveCount')}</span>
             </div>
           </FadeUp>
 
           <FadeUp inView={false} delay={0.1} distance={12}>
-            <h1 className="mt-[26px] text-[36px] leading-[1.08] font-bold tracking-[-0.04em] text-ink-primary sm:text-[48px] lg:text-display-hero-xl">
+            <h1 className="mt-xl text-[32px] leading-[1.1] font-bold tracking-[-0.04em] text-balance text-ink-primary sm:mt-[26px] sm:text-[42px] sm:leading-[1.08] lg:text-display-hero-xl">
               <span className="block">{t('home.heroLine1')}</span>
               <span className="block">{t('home.heroLine2')}</span>
               <span
@@ -125,7 +126,7 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
               </span>
             </h1>
 
-            <p className="mt-2xl max-w-[480px] text-[18px] leading-[1.55] font-medium text-ink-secondary">
+            <p className="mt-lg max-w-[480px] text-[16px] leading-[1.55] font-medium text-pretty text-ink-secondary sm:mt-2xl sm:text-[18px]">
               {t('home.heroLede')}
             </p>
           </FadeUp>
@@ -133,65 +134,74 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
           <FadeUp inView={false} delay={0.2} distance={8}>
             <form
               action="/search"
-              className="mt-3xl flex w-full flex-col gap-[10px] rounded-[20px] border border-border-default bg-surface-default p-sm shadow-[0px_22px_48px_-24px_color-mix(in_srgb,var(--color-brand-primary)_55%,transparent),0px_2px_4px_0px_color-mix(in_srgb,var(--color-ink-primary)_4%,transparent)] sm:flex-row sm:items-center"
+              className="mt-2xl flex w-full flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default shadow-[0px_22px_48px_-24px_color-mix(in_srgb,var(--color-brand-primary)_55%,transparent),0px_2px_4px_0px_color-mix(in_srgb,var(--color-ink-primary)_4%,transparent)] sm:mt-3xl sm:flex-row sm:items-center sm:gap-[10px] sm:p-sm"
             >
-            <label className="flex min-w-0 flex-1 items-center gap-md px-lg py-[10px]">
-              <SearchIcon size={19} className="shrink-0 text-brand-primary" />
-              <input
-                name="q"
-                placeholder={searchPlaceholder}
-                className="min-w-0 flex-1 bg-transparent text-[16px] font-medium text-ink-primary outline-none placeholder:text-ink-muted"
-              />
-            </label>
-            <span className="hidden h-[28px] w-px bg-border-default sm:block" />
-            <label className="relative flex h-[58px] shrink-0 items-center gap-sm px-[14px]">
-              <span className="sr-only">{t('home.region')}</span>
-              <select
-                name="region"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="appearance-none bg-transparent pe-lg text-[15px] font-semibold text-ink-secondary outline-none cursor-pointer"
-              >
-                {REGION_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {t(`home.regions.${opt.key}`)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDownIcon
-                size={12}
-                className="pointer-events-none absolute end-[14px] text-ink-primary"
-              />
-            </label>
-            <button
-              type="submit"
-              className="flex h-[58px] shrink-0 items-center justify-center rounded-[14px] bg-identity-gradient px-[30px] text-[15px] font-bold text-ink-inverse shadow-[0px_8px_20px_-8px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)]"
-            >
-              {t('common:actions.search')}
-            </button>
-          </form>
+              <label className="flex min-h-[52px] min-w-0 flex-1 items-center gap-md border-b border-border-default px-lg py-[12px] sm:min-h-0 sm:border-b-0 sm:py-[10px]">
+                <SearchIcon size={19} className="shrink-0 text-brand-primary" />
+                <input
+                  name="q"
+                  placeholder={searchPlaceholder}
+                  className="min-w-0 flex-1 bg-transparent text-[16px] font-medium text-ink-primary outline-none placeholder:truncate placeholder:text-ink-muted"
+                />
+              </label>
+              <span className="hidden h-[28px] w-px shrink-0 bg-border-default sm:block" />
+              <div className="flex items-stretch gap-sm p-sm sm:contents sm:p-0">
+                <label className="relative flex min-h-[48px] min-w-0 flex-1 items-center gap-sm rounded-[14px] bg-bg-page px-[14px] sm:h-[58px] sm:flex-none sm:rounded-none sm:bg-transparent">
+                  <span className="sr-only">{t('home.region')}</span>
+                  <select
+                    name="region"
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value)}
+                    className="w-full min-w-0 appearance-none bg-transparent pe-lg text-[14px] font-semibold text-ink-secondary outline-none cursor-pointer sm:text-[15px]"
+                  >
+                    {REGION_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {t(`home.regions.${opt.key}`)}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon
+                    size={12}
+                    className="pointer-events-none absolute end-[14px] text-ink-primary"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className="flex h-[48px] shrink-0 items-center justify-center rounded-[14px] bg-identity-gradient px-[22px] text-[15px] font-bold text-ink-inverse shadow-[0px_8px_20px_-8px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)] sm:h-[58px] sm:px-[30px]"
+                >
+                  {t('common:actions.search')}
+                </button>
+              </div>
+            </form>
           </FadeUp>
 
           <FadeUp inView={false} delay={0.25} distance={0}>
-          <div className="mt-[18px] flex flex-wrap items-center gap-sm">
-            <span className="text-[13px] font-semibold text-ink-muted">{t('home.popular')}</span>
-            {HOME_POPULAR.map((term) => (
-              <PopularChip key={term} href={`/search?q=${encodeURIComponent(term)}`}>
-                {term}
-              </PopularChip>
-            ))}
-          </div>
+            <div className="mt-lg flex flex-col gap-sm sm:mt-[18px] sm:flex-row sm:flex-wrap sm:items-center">
+              <span className="text-[13px] font-semibold text-ink-muted">{t('home.popular')}</span>
+              <div className="flex flex-wrap items-center gap-sm">
+                {HOME_POPULAR.map((term) => (
+                  <PopularChip key={term} href={`/search?q=${encodeURIComponent(term)}`}>
+                    {term}
+                  </PopularChip>
+                ))}
+              </div>
+            </div>
           </FadeUp>
         </div>
 
-        <FadeUp inView={false} delay={0.3} distance={16} className="flex w-full max-w-[593px] flex-col gap-[14px]">
-          <div className="flex h-[36px] items-center justify-between">
+        {/* 2. Featured carousel — after copy on mobile */}
+        <FadeUp
+          inView={false}
+          delay={0.3}
+          distance={16}
+          className="flex w-full max-w-[593px] flex-col gap-[14px]"
+        >
+          <div className="flex flex-col gap-md sm:h-[36px] sm:flex-row sm:items-center sm:justify-between sm:gap-sm">
             <p className="text-label-overline text-brand-gradient-end">{t('home.featured')}</p>
-            {/* Figma `207:4402` — flat 8px gap: link text, 13px arrow, then 36×36 prev/next. */}
-            <div className="flex items-center gap-sm">
+            <div className="flex items-center justify-between gap-sm sm:justify-end">
               <Link
                 to="/events"
-                className="group/link flex items-center gap-sm text-[13px] font-bold text-brand-gradient-end transition-colors duration-fast ease-standard hover:text-ink-brand"
+                className="group/link inline-flex min-h-[44px] items-center gap-sm text-[13px] font-bold text-brand-gradient-end transition-colors duration-fast ease-standard hover:text-ink-brand sm:min-h-0"
               >
                 {t('home.seeAllFeatured')}
                 <ArrowRightIcon
@@ -199,22 +209,24 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
                   className="shrink-0 transition-transform duration-fast ease-standard group-hover/link:translate-x-0.5 motion-reduce:group-hover/link:translate-x-0"
                 />
               </Link>
-              <button
-                type="button"
-                aria-label={t('home.prevFeatured')}
-                onClick={goPrev}
-                className="flex size-[36px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border-[1.5px] border-border-default bg-surface-default text-ink-primary transition-colors duration-normal ease-standard hover:border-border-brand"
-              >
-                <ArrowLeftIcon size={14} />
-              </button>
-              <button
-                type="button"
-                aria-label={t('home.nextFeatured')}
-                onClick={goNext}
-                className="flex size-[36px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border-[1.5px] border-border-default bg-surface-default text-ink-primary transition-colors duration-normal ease-standard hover:border-border-brand"
-              >
-                <ArrowRightIcon size={14} />
-              </button>
+              <div className="flex items-center gap-sm">
+                <button
+                  type="button"
+                  aria-label={t('home.prevFeatured')}
+                  onClick={goPrev}
+                  className="flex size-[44px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border-[1.5px] border-border-default bg-surface-default text-ink-primary transition-colors duration-normal ease-standard hover:border-border-brand sm:size-[36px]"
+                >
+                  <ArrowLeftIcon size={14} />
+                </button>
+                <button
+                  type="button"
+                  aria-label={t('home.nextFeatured')}
+                  onClick={goNext}
+                  className="flex size-[44px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border-[1.5px] border-border-default bg-surface-default text-ink-primary transition-colors duration-normal ease-standard hover:border-border-brand sm:size-[36px]"
+                >
+                  <ArrowRightIcon size={14} />
+                </button>
+              </div>
             </div>
           </div>
 

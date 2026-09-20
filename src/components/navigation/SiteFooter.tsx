@@ -9,6 +9,7 @@ import youtubeIcon from '@/assets/social/youtube.svg'
 import appStoreBadge from '@/assets/store/app-store-badge.svg'
 import googlePlayBadge from '@/assets/store/google-play-badge.png'
 import { cn } from '@/lib/cn'
+import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/site'
 import { Logo } from './Logo'
 
 const SOCIAL = [
@@ -55,72 +56,92 @@ export interface SiteFooterProps {
   className?: string
 }
 
-/** Horizontal footer: logo · social · legal · store badges, then copyright bar. */
+/**
+ * Footer — stacked sections on mobile (logo → stores → social → legal),
+ * single horizontal band from lg.
+ */
 export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
   const { t } = useTranslation('nav')
 
   return (
     <footer
       className={cn(
-        'flex w-full flex-col items-center bg-bg-warm mt-16',
+        'mt-16 flex w-full flex-col items-center bg-bg-warm',
         size === 'full' && 'border-t border-border-default',
         className,
       )}
     >
       {size === 'full' && (
-        <div className="flex w-full max-w-[1400px] flex-col gap-xl px-gutter-desktop pt-3xl pb-xl lg:flex-row lg:items-center lg:justify-between lg:gap-3xl">
-          <Link to="/" aria-label={t('home')} className="shrink-0">
+        <div className="flex w-full max-w-[1400px] flex-col gap-3xl px-gutter-desktop pt-3xl pb-2xl lg:flex-row lg:items-center lg:justify-between lg:gap-3xl lg:pb-xl">
+          <Link to="/" aria-label={t('home')} className="shrink-0 self-start">
             <Logo height={36} />
           </Link>
 
-          <nav
-            aria-label={t('footer.social', { defaultValue: 'Follow us' })}
-            className="flex flex-wrap items-center gap-x-lg gap-y-md"
-          >
-            {SOCIAL.map(({ name, href, icon }) => (
+          {/* Mobile order: stores → social → legal. Desktop: social → legal → stores. */}
+          <div className="flex flex-col gap-3xl lg:contents">
+            <nav
+              aria-label={t('footer.social', { defaultValue: 'Follow us' })}
+              className="order-2 flex flex-wrap items-center gap-md lg:order-none"
+            >
+              {SOCIAL.map(({ name, href, icon }) => (
+                <a
+                  key={name}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={name}
+                  title={name}
+                  className="inline-flex size-[44px] items-center justify-center rounded-[12px] border border-border-default bg-surface-default text-ink-primary transition-colors duration-micro ease-micro hover:border-border-brand hover:text-ink-brand-mid lg:size-auto lg:gap-[8px] lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0"
+                >
+                  <img src={icon} alt="" width={18} height={18} className="size-[18px]" />
+                  <span className="hidden text-[13px] font-semibold lg:inline">{name}</span>
+                </a>
+              ))}
+            </nav>
+
+            <nav
+              aria-label={t('footer.legal')}
+              className="order-3 flex flex-col gap-md sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3xl sm:gap-y-md lg:order-none"
+            >
+              {LEGAL.map((link) => (
+                <Link
+                  key={link.key}
+                  to={link.href}
+                  className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-ink-primary transition-colors duration-micro ease-micro hover:text-ink-brand-mid sm:min-h-0 sm:text-[13px]"
+                >
+                  {t(`footer.${link.key}`)}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="order-1 flex flex-wrap items-center gap-md lg:order-none">
               <a
-                key={name}
-                href={href}
+                href={APP_STORE_URL}
                 target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-[8px] text-[13px] font-semibold text-ink-primary transition-colors duration-micro ease-micro hover:text-ink-brand-mid"
+                rel="noreferrer"
+                aria-label={t('footer.iosApp')}
+                className="inline-flex h-[44px] w-[135px] items-center justify-center"
               >
-                <img src={icon} alt="" width={18} height={18} className="size-[18px]" />
-                <span>{name}</span>
+                <img
+                  src={appStoreBadge}
+                  alt={t('footer.iosApp')}
+                  className="h-full w-full object-contain object-center"
+                />
               </a>
-            ))}
-          </nav>
-
-          <nav
-            aria-label={t('footer.legal')}
-            className="flex flex-wrap items-center gap-x-lg gap-y-sm"
-          >
-            {LEGAL.map((link) => (
-              <Link
-                key={link.key}
-                to={link.href}
-                className="text-[13px] font-semibold text-ink-primary transition-colors duration-micro ease-micro hover:text-ink-brand-mid"
+              <a
+                href={PLAY_STORE_URL}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={t('footer.androidApp')}
+                className="inline-flex h-[44px] w-[135px] items-center justify-center"
               >
-                {t(`footer.${link.key}`)}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="flex shrink-0 flex-wrap items-center gap-sm">
-            <a href="#" aria-label={t('footer.iosApp')} className="inline-flex h-[40px]">
-              <img
-                src={appStoreBadge}
-                alt={t('footer.iosApp')}
-                className="h-full w-auto max-w-[120px] object-contain"
-              />
-            </a>
-            <a href="#" aria-label={t('footer.androidApp')} className="inline-flex h-[40px]">
-              <img
-                src={googlePlayBadge}
-                alt={t('footer.androidApp')}
-                className="h-full w-auto max-w-[135px] object-contain"
-              />
-            </a>
+                <img
+                  src={googlePlayBadge}
+                  alt={t('footer.androidApp')}
+                  className="h-full w-full object-contain object-center"
+                />
+              </a>
+            </div>
           </div>
         </div>
       )}

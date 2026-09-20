@@ -33,13 +33,13 @@ export function AccountDonePanel({
   const resolvedTitle = title ?? t('accountDone.title', { name: firstName })
 
   return (
-    <div className="flex gap-[16px] rounded-[16px] border border-state-success-border bg-state-success-tint px-[20px] py-[18px]">
-      <div className="flex size-[44px] shrink-0 items-center justify-center rounded-[22px] bg-brand-gradient text-[15px] font-bold text-ink-inverse">
+    <div className="flex gap-[12px] rounded-[16px] border border-state-success-border bg-state-success-tint px-lg py-md sm:gap-[16px] sm:px-[20px] sm:py-[18px]">
+      <div className="flex size-[40px] shrink-0 items-center justify-center rounded-[22px] bg-brand-gradient text-[14px] font-bold text-ink-inverse sm:size-[44px] sm:text-[15px]">
         {resolvedInitials}
       </div>
       <div className="min-w-0">
-        <p className="text-[15px] font-bold text-state-success">{resolvedTitle}</p>
-        <p className="mt-[2px] text-[13px] text-ink-secondary">{subtitle}</p>
+        <p className="text-[14px] font-bold text-state-success sm:text-[15px]">{resolvedTitle}</p>
+        <p className="mt-[2px] text-[12px] text-pretty text-ink-secondary sm:text-[13px]">{subtitle}</p>
       </div>
     </div>
   )
@@ -53,16 +53,18 @@ export function ReviewSummary({
 }) {
   const { t } = useTranslation('forms')
   return (
-    <div className="rounded-[16px] border border-border-default bg-bg-page px-[18px] py-[16px]">
+    <div className="rounded-[16px] border border-border-default bg-bg-page px-lg py-md sm:px-[18px] sm:py-[16px]">
       <p className="text-[14px] font-bold text-ink-primary">{t('review.heading')}</p>
-      <dl className="mt-[12px] flex flex-col gap-[10px]">
+      <dl className="mt-[12px] flex flex-col gap-[12px]">
         {rows.map((row) => (
           <div
             key={row.label}
-            className="flex items-start justify-between gap-[16px] text-[13.5px]"
+            className="flex flex-col gap-[2px] text-[13.5px] sm:flex-row sm:items-start sm:justify-between sm:gap-[16px]"
           >
             <dt className="shrink-0 font-medium text-ink-muted">{row.label}</dt>
-            <dd className="min-w-0 text-end font-semibold text-ink-primary">{row.value}</dd>
+            <dd className="min-w-0 break-words font-semibold text-ink-primary sm:text-end">
+              {row.value}
+            </dd>
           </div>
         ))}
       </dl>

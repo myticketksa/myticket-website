@@ -49,6 +49,7 @@ export function ChipMultiSelect({
               key={key}
               selected={value.includes(key)}
               onClick={() => toggle(option)}
+              className="min-h-[40px]"
             >
               {optionLabel(option)}
             </FilterChip>

@@ -4,6 +4,7 @@ import { useGetFavoritesQuery } from '@/app/api/accountApis'
 import { useAppSelector } from '@/app/hooks'
 import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
 import { ACCOUNT_NAV_LINKS, SIDEBAR_RECS } from './fixtures'
+import { cn } from '@/lib/cn'
 
 function Panel({
   title,
@@ -28,13 +29,18 @@ function Panel({
  * Shared wallet credit card — Figma aside on My Tickets and siblings.
  * Always reads `user.walletBalance` from the saved login session.
  */
-export function AccountWalletCard() {
+export function AccountWalletCard({ className }: { className?: string } = {}) {
   const { t } = useTranslation('account')
   const user = useAppSelector(selectAuthUser)
   const display = formatAuthWalletBalance(user?.walletBalance)
 
   return (
-    <div className="rounded-[20px] border border-border-default bg-surface-inverse p-xl text-bg-page">
+    <div
+      className={cn(
+        'rounded-[20px] border border-border-default bg-surface-inverse p-xl text-bg-page',
+        className,
+      )}
+    >
       <p className="text-[12px] font-bold tracking-[0.08em] text-bg-page uppercase">
         {t('wallet.title')}
       </p>

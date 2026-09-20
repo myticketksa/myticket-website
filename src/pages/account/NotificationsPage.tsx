@@ -32,6 +32,34 @@ function titleCaseType(raw: string): string {
     .join(' ')
 }
 
+/** Known API notification `type` values — chip labels live in i18n. */
+const KNOWN_NOTIFICATION_TYPES = [
+  'MESSAGE',
+  'TICKET',
+  'TALENT_EVENT',
+  'ORGANIZATION_REQUEST',
+  'PROMOCODE',
+  'ORGANIZE_EVENT',
+  'ANNOUNCEMENT',
+] as const
+
+function normalizeNotificationType(raw: unknown): string {
+  return String(raw ?? 'OTHER')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, '_') || 'OTHER'
+}
+
+function notificationTypeLabel(
+  typeKey: string,
+  t: (key: string) => string,
+): string {
+  const key = `account:notifications.filters.${typeKey}`
+  const translated = t(key)
+  if (translated !== key) return translated
+  return titleCaseType(typeKey)
+}
+
 function NotificationIcon({ icon }: { icon: NotificationFixture['icon'] }) {
   const common = 'text-ink-brand'
   if (icon === 'star')
@@ -66,11 +94,15 @@ function NotificationIcon({ icon }: { icon: NotificationFixture['icon'] }) {
 }
 
 function mapNotificationIcon(raw: unknown): NotificationFixture['icon'] {
-  const value = String(raw ?? '').toLowerCase()
-  if (value.includes('star') || value.includes('wait')) return 'star'
-  if (value.includes('mail') || value.includes('email') || value.includes('announce')) return 'mail'
-  if (value.includes('ticket') || value.includes('order')) return 'ticket'
-  if (value.includes('price')) return 'price'
+  const value = normalizeNotificationType(raw)
+  if (value === 'MESSAGE' || value.includes('CHAT') || value.includes('MAIL')) return 'mail'
+  if (value === 'TICKET' || value.includes('GIFT') || value.includes('ORDER')) return 'ticket'
+  if (value === 'TALENT_EVENT' || value === 'ORGANIZE_EVENT' || value.includes('EVENT')) {
+    return 'star'
+  }
+  if (value === 'PROMOCODE' || value.includes('PROMO') || value.includes('PRICE')) return 'price'
+  if (value === 'ORGANIZATION_REQUEST' || value.includes('REQUEST')) return 'heart'
+  if (value.includes('ANNOUNCE')) return 'mail'
   return 'heart'
 }
 
@@ -93,8 +125,7 @@ type MappedNotification = NotificationFixture & {
 }
 
 function mapNotification(record: Record<string, unknown>): MappedNotification {
-  const typeRaw = String(record.type ?? record.category ?? 'OTHER').trim() || 'OTHER'
-  const typeKey = typeRaw.toUpperCase()
+  const typeKey = normalizeNotificationType(record.type ?? record.category)
   return {
     id: notificationId(record),
     title: String(record.title ?? record.subject ?? 'Notification'),
@@ -111,11 +142,11 @@ function mapNotification(record: Record<string, unknown>): MappedNotification {
     typeKey,
     tag: record.tag ? String(record.tag) : undefined,
     cta: record.cta ? String(record.cta) : record.action ? String(record.action) : undefined,
-    icon: mapNotificationIcon(record.icon ?? record.type ?? record.category),
+    icon: mapNotificationIcon(typeKey),
   }
 }
 
-/** Notifications — chips from API `type` values (title-cased). */
+/** Notifications — chips from API `type` with title-cased known labels. */
 export function NotificationsPage() {
   const { t } = useTranslation(['account', 'common'])
   const navigate = useNavigate()
@@ -139,7 +170,14 @@ export function NotificationsPage() {
   const unreadCount = allItems.filter((item) => item.unread).length
 
   const filters = useMemo(() => {
-    const typeKeys = [...new Set(allItems.map((item) => item.typeKey))].sort()
+    const present = new Set(allItems.map((item) => item.typeKey))
+    // Prefer known API types in a stable order, then any unexpected types.
+    const orderedKnown = KNOWN_NOTIFICATION_TYPES.filter((type) => present.has(type))
+    const extras = [...present]
+      .filter((type) => !(KNOWN_NOTIFICATION_TYPES as readonly string[]).includes(type))
+      .sort()
+    const typeKeys = [...orderedKnown, ...extras]
+
     return [
       {
         id: 'all',
@@ -148,7 +186,7 @@ export function NotificationsPage() {
       },
       ...typeKeys.map((typeKey) => ({
         id: typeKey,
-        label: titleCaseType(typeKey),
+        label: notificationTypeLabel(typeKey, t),
         count: allItems.filter((n) => n.typeKey === typeKey && n.unread).length || undefined,
       })),
     ]
@@ -185,18 +223,20 @@ export function NotificationsPage() {
       />
 
       <PageSection padTop={32} padBottom={96}>
-        <div className="flex flex-wrap gap-sm">
-          {filters.map((item) => (
-            <FilterChip
-              key={item.id}
-              selected={filter === item.id}
-              count={item.count}
-              onClick={() => setFilter(item.id)}
-              className="h-[40px] rounded-[20px] px-[18px] font-bold"
-            >
-              {item.label}
-            </FilterChip>
-          ))}
+        <div className="-mx-page-gutter overflow-x-auto px-page-gutter [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
+          <div className="flex w-max min-w-full flex-nowrap gap-sm sm:w-auto sm:flex-wrap">
+            {filters.map((item) => (
+              <FilterChip
+                key={item.id}
+                selected={filter === item.id}
+                count={item.count}
+                onClick={() => setFilter(item.id)}
+                className="h-[44px] shrink-0 rounded-[22px] px-[18px] font-bold sm:h-[40px] sm:rounded-[20px]"
+              >
+                {item.label}
+              </FilterChip>
+            ))}
+          </div>
         </div>
 
         <div className="mt-[26px] flex flex-col gap-[30px]">

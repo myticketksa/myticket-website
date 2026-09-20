@@ -42,18 +42,22 @@ export function FileDropButton({
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
         className={cn(
-          'flex min-h-[46px] w-full flex-col items-center justify-center gap-[4px] rounded-[12px]',
-          'border-[1.5px] border-dashed border-border-dashed bg-bg-page px-[14px] py-[12px]',
+          'flex min-h-[56px] w-full flex-col items-center justify-center gap-[4px] rounded-[12px]',
+          'border-[1.5px] border-dashed border-border-dashed bg-bg-page px-[14px] py-[14px]',
           'text-[13.5px] font-semibold text-ink-secondary',
           'transition-colors hover:border-border-focus hover:text-ink-primary',
           disabled && 'cursor-not-allowed opacity-55',
         )}
       >
-        <span className="inline-flex items-center gap-[6px]">
-          <Glyph size={14} weight="bold" />
-          {label}
+        <span className="inline-flex max-w-full items-center justify-center gap-[6px] text-center">
+          <Glyph size={14} weight="bold" className="shrink-0" />
+          <span className="min-w-0">{label}</span>
         </span>
-        {hint && <span className="text-[12px] font-medium text-ink-muted">{hint}</span>}
+        {hint && (
+          <span className="max-w-full text-center text-[12px] font-medium text-pretty text-ink-muted">
+            {hint}
+          </span>
+        )}
         {fileName && (
           <span className="max-w-full truncate text-[12px] font-semibold text-ink-brand">
             {fileName}

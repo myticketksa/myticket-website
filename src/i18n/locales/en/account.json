@@ -358,6 +358,13 @@
     "preferences": "Preferences",
     "filters": {
       "all": "All",
+      "MESSAGE": "Message",
+      "TICKET": "Ticket",
+      "TALENT_EVENT": "Talent Event",
+      "ORGANIZATION_REQUEST": "Organization Request",
+      "PROMOCODE": "Promocode",
+      "ORGANIZE_EVENT": "Organize Event",
+      "ANNOUNCEMENT": "Announcement",
       "tickets": "Tickets & orders",
       "waitlists": "Waitlists",
       "prices": "Prices & auction",

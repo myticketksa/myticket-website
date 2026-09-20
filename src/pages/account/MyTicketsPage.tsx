@@ -148,18 +148,24 @@ export function MyTicketsPage() {
                     </h2>
                     <dl className="mt-[12px] flex flex-col gap-[6px] text-[13px]">
                       <div className="flex justify-between gap-md">
-                        <dt className="text-ink-muted">{t('account:tickets.facts.city')}</dt>
-                        <dd className="text-end font-semibold text-ink-primary">{ticket.city}</dd>
+                        <dt className="shrink-0 text-ink-muted">{t('account:tickets.facts.city')}</dt>
+                        <dd className="min-w-0 text-end font-semibold break-words text-ink-primary">
+                          {ticket.city}
+                        </dd>
                       </div>
                       <div className="flex justify-between gap-md">
-                        <dt className="text-ink-muted">{t('account:tickets.facts.startTime')}</dt>
-                        <dd className="text-end font-semibold text-ink-primary">
+                        <dt className="shrink-0 text-ink-muted">
+                          {t('account:tickets.facts.startTime')}
+                        </dt>
+                        <dd className="min-w-0 text-end font-semibold break-words text-ink-primary">
                           {ticket.startTime}
                         </dd>
                       </div>
                       <div className="flex justify-between gap-md">
-                        <dt className="text-ink-muted">{t('account:tickets.facts.orderDate')}</dt>
-                        <dd className="text-end font-semibold text-ink-primary">
+                        <dt className="shrink-0 text-ink-muted">
+                          {t('account:tickets.facts.orderDate')}
+                        </dt>
+                        <dd className="min-w-0 text-end font-semibold break-words text-ink-primary">
                           {ticket.orderDate}
                         </dd>
                       </div>

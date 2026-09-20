@@ -358,6 +358,13 @@
     "preferences": "التفضيلات",
     "filters": {
       "all": "الكل",
+      "MESSAGE": "رسالة",
+      "TICKET": "تذكرة",
+      "TALENT_EVENT": "فعالية موهبة",
+      "ORGANIZATION_REQUEST": "طلب منشأة",
+      "PROMOCODE": "رمز ترويجي",
+      "ORGANIZE_EVENT": "تنظيم فعالية",
+      "ANNOUNCEMENT": "إعلان",
       "tickets": "التذاكر والطلبات",
       "waitlists": "قوائم الانتظار",
       "prices": "الأسعار والمزاد",

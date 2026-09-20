@@ -22,6 +22,13 @@ export function absoluteUrl(path = '/'): string {
   return `${SITE_ORIGIN}${normalized}`
 }
 
+/** Official MyTicket mobile apps. */
+export const APP_STORE_URL =
+  'https://apps.apple.com/eg/app/%D8%AA%D8%B0%D9%83%D8%B1%D8%AA%D9%8A-my-ticket/id1524202385'
+
+export const PLAY_STORE_URL =
+  'https://play.google.com/store/apps/details?id=com.t4l.myticket'
+
 export type FormatDocumentTitleOptions = {
   /** Localized home title, e.g. `MyTicket — Live events…`. */
   homeTitle?: string
