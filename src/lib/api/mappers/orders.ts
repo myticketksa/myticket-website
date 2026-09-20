@@ -182,6 +182,13 @@ export type MyTicketCard = {
   id: string
   orderId: string
   title: string
+  /** City / venue place string from the event. */
+  city: string
+  /** Formatted event start time. */
+  startTime: string
+  /** Formatted order / reservation date. */
+  orderDate: string
+  /** Legacy combined meta — kept for gift/detail fallbacks. */
   meta: string
   status: 'UPCOMING' | 'AWAITING SEAT' | 'PAST' | 'TRANSFERRED' | 'LISTED'
   countdown?: string
@@ -282,9 +289,10 @@ export function mapOrderToMyTicket(order: ApiRecord): MyTicketCard {
     ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
     : formatApiDate(order.starts_at ?? order.date)
   const place =
-    (event && pickLocalized(event, ['place', 'venue', 'location'])) ||
-    localizedString(order.venue ?? order.place)
+    (event && pickLocalized(event, ['place', 'venue', 'location', 'city'])) ||
+    localizedString(order.venue ?? order.place ?? order.city)
   const meta = [when, place].filter(Boolean).join(' · ') || '—'
+  const orderDate = formatApiDate(order.created_at ?? order.createdAt ?? order.placed_at) || '—'
 
   const cover = localizedString(
     event?.cover ?? event?.banner ?? order.cover ?? order.image,
@@ -307,6 +315,9 @@ export function mapOrderToMyTicket(order: ApiRecord): MyTicketCard {
     id: id || title,
     orderId: String(order.reference ?? order.order_number ?? id),
     title,
+    city: place || '—',
+    startTime: when || '—',
+    orderDate,
     meta,
     status,
     countdown: status === 'UPCOMING' || status === 'AWAITING SEAT'
@@ -346,11 +357,14 @@ export type OrderDetailView = {
   orderId: string
   title: string
   meta: string
+  city: string
+  startTime: string
   cover: string
   quantity: number
   paid: boolean
   paymentStatus: string
   paymentLabel: string
+  paymentMethod: string
   purchasedAt: string
   pricePaid: string
   platformFee: string
@@ -383,12 +397,20 @@ export function mapOrderToDetailView(
     ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
     : formatApiDate(order.created_at)
   const place =
-    (event && pickLocalized(event, ['place', 'venue', 'location'])) ||
-    localizedString(order.venue ?? order.place)
+    (event && pickLocalized(event, ['place', 'venue', 'location', 'city'])) ||
+    localizedString(order.venue ?? order.place ?? order.city)
   const seatingRaw = String(event?.seatingType ?? event?.seating_type ?? 'assigned').toLowerCase()
   const seatingType = seatingRaw === 'free' ? 'free' : 'assigned'
   const paid = isOrderPaid(order)
   const payment = localizedString(order.paymentStatus ?? order.payment_status, 'pending')
+  const paymentMethod = localizedString(
+    order.paymentMethod ??
+      order.payment_method ??
+      order.payment_channel ??
+      order.paymentChannel ??
+      order.method,
+    paid ? 'Card' : '—',
+  )
   const tierName = localizedString(ticketType?.name, 'Ticket')
 
   const rawTickets = Array.isArray(order.tickets) ? order.tickets : []
@@ -438,11 +460,14 @@ export function mapOrderToDetailView(
     orderId: String(order.reference ?? order.order_number ?? id),
     title,
     meta: [when, place].filter(Boolean).join(' · ') || '—',
+    city: place || '—',
+    startTime: when || '—',
     cover: localizedString(event?.cover ?? event?.banner ?? order.cover),
     quantity: Number(order.quantity ?? tickets.length) || tickets.length || 1,
     paid,
     paymentStatus: payment,
     paymentLabel: paid ? 'Paid' : 'Payment pending',
+    paymentMethod,
     purchasedAt: formatApiDate(order.created_at ?? order.placed_at) || '—',
     pricePaid: money(order.amount ?? order.total),
     platformFee: feeRaw == null || feeRaw === '' ? '—' : money(feeRaw),

@@ -109,6 +109,9 @@ export const accountApis = baseApi.injectEndpoints({
         ...(body.type === 'talent'
           ? ([{ type: 'Talent', id: String(body.id) }] as const)
           : []),
+        ...(body.type === 'experience'
+          ? ([{ type: 'Experience', id: String(body.id) }] as const)
+          : []),
       ],
     }),
     sendGiftTicket: build.mutation<

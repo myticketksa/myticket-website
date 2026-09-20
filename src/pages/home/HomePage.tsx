@@ -9,7 +9,6 @@ import {
   HomeCta,
   HomeEvents,
   HomeExperiences,
-  HomeFeatured,
   HomeFreeEvents,
   HomeTalents,
 } from './HomeSections'
@@ -34,7 +33,6 @@ export function HomePage() {
       <HomeCategories apiCategories={apiCategories} />
       <HomeEvents apiEvents={apiEvents} />
       <HomeFreeEvents apiEvents={apiEvents} />
-      <HomeFeatured apiAds={apiAds} apiEvents={apiEvents} />
       <HomeExperiences apiExperiences={apiExperiences} />
       <HomeCta />
     </>

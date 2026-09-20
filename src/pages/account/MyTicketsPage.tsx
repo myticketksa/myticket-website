@@ -1,24 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { StatusBadge } from '@/components/data-display'
 import { EmptyState } from '@/components/feedback'
 import { Button } from '@/components/ui'
 import { AccountPageHead, AccountSplit } from '@/layouts'
 import { DefaultAccountAside } from '@/pages/_account/AccountAside'
-import { type TicketStatus } from '@/pages/_account/fixtures'
 import { useGetGiftTicketsQuery } from '@/app/api/accountApis'
 import { useGetOrdersQuery } from '@/app/api/ordersApi'
 import { mapGiftTicketToMyTicket } from '@/lib/api/mappers/gifts'
 import { mapOrderToMyTicket } from '@/lib/api/mappers/orders'
-
-function statusTone(status: TicketStatus | string) {
-  const value = String(status).toUpperCase()
-  if (value.includes('AWAIT') || value.includes('UPCOMING')) {
-    return 'brandTint' as const
-  }
-  return 'inactive' as const
-}
 
 function matchesTab(status: string, tab: number) {
   if (tab === 0) return status === 'UPCOMING' || status === 'AWAITING SEAT'
@@ -45,8 +35,8 @@ function ticketHref(ticket: {
 }
 
 /**
- * My tickets — Figma `207:9469`. Live `GET /tickets/orders` + `GET /gift-tickets`
- * into the existing card layout (Transferred tab includes gifts).
+ * My tickets — compact cover cards in a 2-column grid.
+ * Live `GET /tickets/orders` + `GET /gift-tickets`.
  */
 export function MyTicketsPage() {
   const { t } = useTranslation(['account', 'common'])
@@ -87,26 +77,6 @@ export function MyTicketsPage() {
   ]
     .filter(Boolean)
     .join(' ')
-
-  function statusLabel(status: string) {
-    const key = `account:tickets.status.${status}` as const
-    const translated = t(key)
-    return translated === key ? status : translated
-  }
-
-  function factLabel(label: string) {
-    const normalized = label.trim().toLowerCase()
-    if (normalized === 'tier') return t('account:tickets.facts.tier')
-    if (normalized === 'row') return t('account:tickets.facts.row')
-    if (normalized === 'seats') return t('account:tickets.facts.seats')
-    if (normalized === 'gate') return t('account:tickets.facts.gate')
-    return label
-  }
-
-  function noteLabel(note: string) {
-    if (note === 'Payment pending') return t('account:tickets.paymentPending')
-    return note
-  }
 
   return (
     <>
@@ -152,121 +122,53 @@ export function MyTicketsPage() {
             </div>
           )}
 
-          {visible.map((ticket) => {
-            const href = ticketHref(ticket)
-            const claimable = 'claimable' in ticket && Boolean(ticket.claimable)
-            return (
-              <article
-                key={ticket.id}
-                className="flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
-              >
-                <div className="relative h-[160px] w-full shrink-0 sm:h-auto sm:w-[148px] sm:self-stretch md:w-[196px]">
-                  {ticket.cover ? (
-                    <img
-                      src={ticket.cover}
-                      alt=""
-                      className="absolute inset-0 size-full object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-bg-tint-brand" />
-                  )}
-                  {ticket.countdown && (
-                    <span className="absolute top-[12px] start-[12px] rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold tracking-[0.06em] text-bg-page uppercase">
-                      {ticket.countdown}
-                    </span>
-                  )}
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col px-lg py-[18px] sm:px-[22px] sm:py-[20px]">
-                  <div className="flex flex-wrap items-center gap-[9px]">
-                    <StatusBadge tone={statusTone(ticket.status)}>
-                      {statusLabel(ticket.status)}
-                    </StatusBadge>
-                    {ticket.note === 'Payment pending' ? (
-                      <StatusBadge tone="brandTint">{noteLabel(ticket.note)}</StatusBadge>
-                    ) : null}
-                    <span className="text-[12px] text-ink-muted">
-                      {t('account:tickets.orderLabel', { id: ticket.orderId })}
-                    </span>
+          <div className="grid grid-cols-1 gap-[14px] md:grid-cols-2">
+            {visible.map((ticket) => {
+              const href = ticketHref(ticket)
+              return (
+                <Link
+                  key={ticket.id}
+                  to={href}
+                  className="flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default outline-offset-2 transition-opacity hover:opacity-95 focus-visible:outline-2 focus-visible:outline-ink-brand"
+                >
+                  <div className="relative h-[160px] w-full shrink-0">
+                    {ticket.cover ? (
+                      <img
+                        src={ticket.cover}
+                        alt=""
+                        className="absolute inset-0 size-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-bg-tint-brand" />
+                    )}
                   </div>
-                  <Link
-                    to={href}
-                    className="mt-[10px] text-[20px] leading-[1.08] font-extrabold tracking-[-0.81px] text-ink-primary hover:text-ink-brand sm:text-[24px] lg:text-[27px]"
-                  >
-                    {ticket.title}
-                  </Link>
-                  <p className="mt-[5px] text-[14px] text-ink-secondary">{ticket.meta}</p>
-                  <div className="mt-lg grid grid-cols-2 gap-lg border-y border-border-divider py-[14px] sm:grid-cols-4">
-                    {ticket.facts.map((fact) => (
-                      <div key={fact.label} className="min-w-0">
-                        <p className="text-[11px] font-bold tracking-[0.07em] text-ink-muted uppercase">
-                          {factLabel(fact.label)}
-                        </p>
-                        <p className="mt-[3px] text-[15px] font-semibold text-ink-primary">
-                          {fact.value}
-                        </p>
+                  <div className="flex min-w-0 flex-1 flex-col px-lg py-[16px] sm:px-[18px]">
+                    <h2 className="text-[18px] leading-[1.15] font-extrabold tracking-[-0.4px] text-ink-primary sm:text-[20px]">
+                      {ticket.title}
+                    </h2>
+                    <dl className="mt-[12px] flex flex-col gap-[6px] text-[13px]">
+                      <div className="flex justify-between gap-md">
+                        <dt className="text-ink-muted">{t('account:tickets.facts.city')}</dt>
+                        <dd className="text-end font-semibold text-ink-primary">{ticket.city}</dd>
                       </div>
-                    ))}
+                      <div className="flex justify-between gap-md">
+                        <dt className="text-ink-muted">{t('account:tickets.facts.startTime')}</dt>
+                        <dd className="text-end font-semibold text-ink-primary">
+                          {ticket.startTime}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-md">
+                        <dt className="text-ink-muted">{t('account:tickets.facts.orderDate')}</dt>
+                        <dd className="text-end font-semibold text-ink-primary">
+                          {ticket.orderDate}
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
-                  <div className="mt-lg flex flex-wrap items-center gap-[9px]">
-                    {claimable ? (
-                      <Link to={href}>
-                        <Button size="sm">{t('account:claim.cta')}</Button>
-                      </Link>
-                    ) : null}
-                    {ticket.actions.includes('qr') &&
-                      (ticket.paid ? (
-                        <Link to={href}>
-                          <Button size="sm">{t('account:tickets.showQr')}</Button>
-                        </Link>
-                      ) : (
-                        <Button size="sm" disabled>
-                          {t('account:tickets.showQr')}
-                        </Button>
-                      ))}
-                    {ticket.actions.includes('transfer') &&
-                      (ticket.paid ? (
-                        <Link to={`/my-tickets/${ticket.id}/gift`}>
-                          <Button variant="secondary" size="sm" className="bg-bg-page">
-                            {t('account:tickets.transferGuest')}
-                          </Button>
-                        </Link>
-                      ) : (
-                        <Button variant="secondary" size="sm" className="bg-bg-page" disabled>
-                          {t('account:tickets.transferGuest')}
-                        </Button>
-                      ))}
-                    {ticket.actions.includes('resell') &&
-                      (ticket.paid ? (
-                        <Link to={`/my-tickets/${ticket.id}/resell`}>
-                          <Button variant="secondary" size="sm" className="bg-bg-page">
-                            {t('account:tickets.listAuction')}
-                          </Button>
-                        </Link>
-                      ) : (
-                        <Button variant="secondary" size="sm" className="bg-bg-page" disabled>
-                          {t('account:tickets.listAuction')}
-                        </Button>
-                      ))}
-                    {ticket.actions.includes('refund') &&
-                      (ticket.paid ? (
-                        <Link to={`/my-tickets/${ticket.id}/refund`}>
-                          <Button variant="secondary" size="sm" className="bg-bg-page">
-                            {t('account:tickets.requestRefund')}
-                          </Button>
-                        </Link>
-                      ) : (
-                        <Button variant="secondary" size="sm" className="bg-bg-page" disabled>
-                          {t('account:tickets.requestRefund')}
-                        </Button>
-                      ))}
-                    {ticket.note && ticket.note !== 'Payment pending' ? (
-                      <span className="text-[12px] text-ink-muted">{noteLabel(ticket.note)}</span>
-                    ) : null}
-                  </div>
-                </div>
-              </article>
-            )
-          })}
+                </Link>
+              )
+            })}
+          </div>
         </div>
       </AccountSplit>
     </>

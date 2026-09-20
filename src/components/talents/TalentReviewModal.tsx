@@ -4,8 +4,10 @@ import { StarFillIcon } from '@/components/icons'
 import { Button, Field, Textarea } from '@/components/ui'
 import { cn } from '@/lib/cn'
 
+export type ReviewEntityType = 'talent' | 'experience'
+
 export type TalentReviewPayload = {
-  type: 'talent'
+  type: ReviewEntityType
   id: number
   rating: number
   name: string
@@ -15,7 +17,9 @@ export type TalentReviewPayload = {
 export interface TalentReviewModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  talentId: number
+  talentId?: number
+  experienceId?: number
+  entityType?: ReviewEntityType
   userName: string
   onSubmit: (payload: TalentReviewPayload) => Promise<void>
   submitting?: boolean
@@ -25,6 +29,8 @@ export function TalentReviewModal({
   open,
   onOpenChange,
   talentId,
+  experienceId,
+  entityType = talentId != null ? 'talent' : 'experience',
   userName,
   onSubmit,
   submitting,
@@ -32,6 +38,7 @@ export function TalentReviewModal({
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const entityId = entityType === 'experience' ? experienceId : talentId
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -40,9 +47,13 @@ export function TalentReviewModal({
       setError('Pick a rating from 1 to 5.')
       return
     }
+    if (entityId == null || !Number.isFinite(entityId)) {
+      setError('This item is not available to rate yet.')
+      return
+    }
     await onSubmit({
-      type: 'talent',
-      id: talentId,
+      type: entityType,
+      id: entityId,
       rating,
       name: userName,
       comment: comment.trim() || undefined,

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useSubmitReviewMutation } from '@/app/api/accountApis'
 import {
   useFavoriteExperienceMutation,
   useGetExperienceDetailsQuery,
@@ -8,7 +10,7 @@ import {
   useUnfavoriteExperienceMutation,
 } from '@/app/api/experiencesApi'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { selectIsAuthenticated } from '@/features/auth/authSlice'
+import { selectAuthUser, selectIsAuthenticated } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 import { ExperienceCard } from '@/components/cards'
@@ -16,6 +18,10 @@ import { StarFillIcon } from '@/components/icons'
 import { FadeUp } from '@/components/motion'
 import { Breadcrumbs } from '@/components/navigation'
 import { Button } from '@/components/ui'
+import {
+  TalentReviewModal,
+  type TalentReviewPayload,
+} from '@/components/talents/TalentReviewModal'
 import { PageSection } from '@/layouts'
 import {
   mapApiExperienceToCard,
@@ -32,28 +38,24 @@ import {
   LinkedCard,
   SimilarSection,
   slugify,
-  StickyCtaCard,
 } from '@/pages/_guest'
-
-const DEFAULT_INCLUDES = [
-  'Licensed local host and safety briefing',
-  'Transport from the city meeting point',
-  'Light refreshments during the experience',
-  'Free cancellation up to 48 hours before start',
-] as const
 
 /** Experience detail — Figma `207:7048`. Experiences API with fixture fallback. */
 export function ExperienceDetailPage() {
+  const { t } = useTranslation(['catalog', 'nav'])
   const { slug } = useParams()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
+  const user = useAppSelector(selectAuthUser)
   const slugOrId = slug ?? ''
 
   const { data: apiExperiences } = useGetExperiencesQuery()
   const [favoriteExperience, favState] = useFavoriteExperienceMutation()
   const [unfavoriteExperience, unfavState] = useUnfavoriteExperienceMutation()
+  const [submitReview, reviewState] = useSubmitReviewMutation()
   const [saved, setSaved] = useState(false)
+  const [reviewOpen, setReviewOpen] = useState(false)
 
   const catalog = useMemo((): MappedExperience[] => {
     if (apiExperiences && apiExperiences.length > 0) {
@@ -107,15 +109,10 @@ export function ExperienceDetailPage() {
     }
   }, [experience.isFavorite])
 
-  const guestLabel = experience.guests ?? 'Up to 12 guests'
   const aboutText =
     experience.about ??
     experience.summary ??
     'A hosted experience on MyTicket — small groups, verified hosts, and clear cancellation. Meet at the published pickup point; transfers and equipment are included unless noted otherwise.'
-  const includesList =
-    experience.includes && experience.includes.length > 0
-      ? experience.includes
-      : [...DEFAULT_INCLUDES]
 
   const galleryMain =
     experience.banner ?? experience.image ?? experience.photos?.[0] ?? EXPERIENCE_DETAIL_GALLERY.main
@@ -131,6 +128,8 @@ export function ExperienceDetailPage() {
       ? `+${(experience.photos?.length ?? 0) - 4} photos`
       : '+24 photos'
   const mapsQuery = experience.mapQuery ?? experience.place
+  const numericId = resolvedId != null ? Number(resolvedId) : Number.NaN
+  const reviewerName = user?.name?.trim() || 'Guest'
 
   async function handleSave() {
     if (!isAuthenticated) {
@@ -156,13 +155,31 @@ export function ExperienceDetailPage() {
     }
   }
 
+  function handleRateClick() {
+    if (!isAuthenticated) {
+      navigate('/sign-in')
+      return
+    }
+    setReviewOpen(true)
+  }
+
+  async function handleReviewSubmit(payload: TalentReviewPayload) {
+    try {
+      await submitReview(payload).unwrap()
+      setReviewOpen(false)
+      dispatch(toastPushed('success', 'Thanks — your rating was submitted'))
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not submit rating')))
+    }
+  }
+
   return (
     <>
       <PageSection padTop={26} padBottom={0}>
         <Breadcrumbs
           items={[
             { label: 'Home', href: '/' },
-            { label: 'Experiences', href: '/experiences' },
+            { label: t('nav:experiences'), href: '/experiences' },
             { label: experience.title },
           ]}
         />
@@ -180,80 +197,57 @@ export function ExperienceDetailPage() {
       </PageSection>
 
       <PageSection padTop={34} padBottom={0}>
-        <div className="flex flex-col items-start gap-[48px] lg:flex-row">
-          <article className="min-w-0 flex-1">
-            <FadeUp>
-              <p className="text-label-overline text-ink-brand-mid">{experience.meta}</p>
-              <h1 className="text-display-hero mt-sm text-ink-primary">{experience.title}</h1>
-              <div className="mt-[14px] flex flex-wrap items-center gap-[18px] text-[15px]">
-                <span className="flex items-center gap-[5px] font-semibold text-ink-primary">
-                  <StarFillIcon size={15} />
-                  {ratingDisplay}
-                </span>
-                <span className="text-ink-secondary">{experience.place}</span>
-                <span className="text-ink-secondary">{guestLabel}</span>
-              </div>
-            </FadeUp>
-            <div className="mt-[22px] flex gap-row-gap">
-              <Button
-                variant="secondary"
-                loading={favState.isLoading || unfavState.isLoading}
-                onClick={() => void handleSave()}
+        <article className="min-w-0 max-w-[860px]">
+          <FadeUp>
+            <p className="text-label-overline text-ink-brand-mid">{experience.meta}</p>
+            <h1 className="text-display-hero mt-sm text-ink-primary">{experience.title}</h1>
+            <div className="mt-[14px] flex flex-wrap items-center gap-[18px] text-[15px]">
+              <span className="flex items-center gap-[5px] font-semibold text-ink-primary">
+                <StarFillIcon size={15} />
+                {ratingDisplay}
+              </span>
+              <span className="text-ink-secondary">{experience.place}</span>
+            </div>
+          </FadeUp>
+          <div className="mt-[22px] flex flex-wrap gap-row-gap">
+            <Button
+              variant="secondary"
+              loading={favState.isLoading || unfavState.isLoading}
+              onClick={() => void handleSave()}
+            >
+              {saved ? 'Saved' : 'Save'}
+            </Button>
+            <Button variant="secondary" onClick={handleRateClick}>
+              Rate this experience
+            </Button>
+          </div>
+
+          <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">About</h2>
+          <p className="mt-[18px] max-w-[720px] text-[16px] leading-[1.6] text-ink-secondary">
+            {aboutText}
+          </p>
+
+          <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">Meeting point</h2>
+          <div className="mt-[18px] overflow-hidden rounded-[18px] border border-border-default">
+            <div className="relative h-[220px] w-full overflow-hidden">
+              <img src={EXPERIENCE_DETAIL_MAP} alt="" className="size-full object-cover" />
+            </div>
+            <div className="flex items-center justify-between gap-lg px-lg py-md">
+              <p className="text-[14px] text-ink-secondary">{experience.place}</p>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-[36px] items-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand"
               >
-                {saved ? 'Saved' : 'Save'}
-              </Button>
-              <Button variant="secondary" disabled title="Share not available yet">
-                Share
-              </Button>
+                Open in maps
+              </a>
             </div>
-
-            <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">About</h2>
-            <p className="mt-[18px] max-w-[720px] text-[16px] leading-[1.6] text-ink-secondary">
-              {aboutText}
-            </p>
-
-            <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">What’s included</h2>
-            <ul className="mt-[18px] max-w-[720px] list-disc space-y-sm pl-xl text-[15px] text-ink-secondary">
-              {includesList.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-
-            <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">Meeting point</h2>
-            <div className="mt-[18px] overflow-hidden rounded-[18px] border border-border-default">
-              <div className="relative h-[220px] w-full overflow-hidden">
-                <img
-                  src={EXPERIENCE_DETAIL_MAP}
-                  alt=""
-                  className="size-full object-cover"
-                />
-              </div>
-              <div className="flex items-center justify-between gap-lg px-lg py-md">
-                <p className="text-[14px] text-ink-secondary">{experience.place}</p>
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-[36px] items-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand"
-                >
-                  Open in maps
-                </a>
-              </div>
-            </div>
-          </article>
-
-          <StickyCtaCard
-            fromLabel="From"
-            fromPrice={experience.price ?? 'SAR —'}
-            note="Per guest · select a date to confirm"
-            primaryLabel="Check availability"
-            secondaryLabel="Ask the host"
-            secondaryTo="/support/new"
-          />
-        </div>
+          </div>
+        </article>
       </PageSection>
 
-      <SimilarSection heading="Similar experiences">
+      <SimilarSection heading={`Similar ${t('nav:experiences').toLowerCase()}`}>
         {catalog
           .filter((e) => e.title !== experience.title)
           .slice(0, 4)
@@ -275,6 +269,16 @@ export function ExperienceDetailPage() {
             </LinkedCard>
           ))}
       </SimilarSection>
+
+      <TalentReviewModal
+        open={reviewOpen}
+        onOpenChange={setReviewOpen}
+        entityType="experience"
+        experienceId={Number.isFinite(numericId) ? numericId : undefined}
+        userName={reviewerName}
+        onSubmit={handleReviewSubmit}
+        submitting={reviewState.isLoading}
+      />
     </>
   )
 }

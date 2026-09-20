@@ -88,9 +88,11 @@ export function mapGiftTicketToMyTicket(gift: ApiRecord): MyTicketCard & {
     ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
     : formatApiDate(gift.startTime ?? gift.starts_at ?? gift.date)
   const place =
-    (event ? pickLocalized(event, ['place', 'venue', 'location']) : '') ||
-    localizedString(gift.venue ?? gift.place ?? order?.venue)
+    (event ? pickLocalized(event, ['place', 'venue', 'location', 'city']) : '') ||
+    localizedString(gift.venue ?? gift.place ?? gift.city ?? order?.venue)
   const meta = [when, place].filter(Boolean).join(' · ') || '—'
+  const orderDate =
+    formatApiDate(gift.created_at ?? gift.createdAt ?? order?.created_at ?? order?.createdAt) || '—'
 
   const cover = localizedString(
     event?.cover ?? event?.banner ?? gift.cover ?? gift.image ?? order?.cover,
@@ -125,6 +127,9 @@ export function mapGiftTicketToMyTicket(gift: ApiRecord): MyTicketCard & {
         giftTicketId,
     ),
     title: resolvedTitle,
+    city: place || '—',
+    startTime: when || '—',
+    orderDate,
     meta,
     status: 'TRANSFERRED',
     facts: [

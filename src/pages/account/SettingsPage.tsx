@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { Breadcrumbs } from '@/components/navigation'
@@ -184,10 +184,8 @@ export function SettingsPage() {
   const [deleteAccount, deleteState] = useDeleteAccountMutation()
   const [updateGuest, updateState] = useUpdateGuestProfileMutation()
   const [deletePassword, setDeletePassword] = useState('')
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [profile, setProfile] = useState<ProfileFormValues>(() => profileFromUser(user))
   const [savedProfile, setSavedProfile] = useState<ProfileFormValues>(() => profileFromUser(user))
-  const photoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const next = profileFromUser(user)
@@ -198,24 +196,6 @@ export function SettingsPage() {
     }))
     setSavedProfile(next)
   }, [user?.name, user?.email, user?.phone])
-
-  useEffect(() => {
-    return () => {
-      if (photoUrl) URL.revokeObjectURL(photoUrl)
-    }
-  }, [photoUrl])
-
-  function handlePhotoUpload(file: File | undefined) {
-    if (!file) return
-    if (file.size > 4 * 1024 * 1024) {
-      dispatch(toastPushed('error', t('settings.photoTooLarge')))
-      return
-    }
-    setPhotoUrl((current) => {
-      if (current) URL.revokeObjectURL(current)
-      return URL.createObjectURL(file)
-    })
-  }
 
   const initials = user?.name ? initialsFromName(user.name) : ACCOUNT_USER.initials
 
@@ -228,10 +208,6 @@ export function SettingsPage() {
       ...savedProfile,
       currentPassword: '',
       password: '',
-    })
-    setPhotoUrl((current) => {
-      if (current) URL.revokeObjectURL(current)
-      return null
     })
   }
 
@@ -391,51 +367,11 @@ export function SettingsPage() {
 
               <div className="mt-[22px] flex flex-wrap items-center gap-[18px]">
                 <div className="relative size-[66px] shrink-0 overflow-hidden rounded-[33px]">
-                  {photoUrl ? (
-                    <img src={photoUrl} alt="" className="size-full object-cover" />
-                  ) : (
-                    <Avatar
-                      initials={initials}
-                      size="lg"
-                      className="!size-[66px] !rounded-[33px] !bg-surface-inverse !text-[25px] !tracking-[-0.75px] !text-bg-page"
-                    />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-semibold text-ink-primary">{t('settings.photoTitle')}</p>
-                  <p className="mt-[3px] text-[13px] text-ink-secondary">{t('settings.photoHint')}</p>
-                </div>
-                <div className="flex gap-sm">
-                  <input
-                    ref={photoInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg"
-                    className="sr-only"
-                    onChange={(event) => {
-                      handlePhotoUpload(event.target.files?.[0])
-                      event.target.value = ''
-                    }}
+                  <Avatar
+                    initials={initials}
+                    size="lg"
+                    className="!size-[66px] !rounded-[33px] !bg-surface-inverse !text-[25px] !tracking-[-0.75px] !text-bg-page"
                   />
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="bg-bg-page"
-                    onClick={() => photoInputRef.current?.click()}
-                  >
-                    {t('settings.upload')}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setPhotoUrl((current) => {
-                        if (current) URL.revokeObjectURL(current)
-                        return null
-                      })
-                    }}
-                  >
-                    {t('settings.remove')}
-                  </Button>
                 </div>
               </div>
 

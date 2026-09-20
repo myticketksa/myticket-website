@@ -86,7 +86,10 @@
       "tier": "الفئة",
       "row": "الصف",
       "seats": "المقاعد",
-      "gate": "البوابة"
+      "gate": "البوابة",
+      "city": "المدينة",
+      "startTime": "وقت البداية",
+      "orderDate": "تاريخ الطلب"
     },
     "status": {
       "UPCOMING": "قادمة",
@@ -126,6 +129,13 @@
     "fieldBlock": "الكتلة",
     "fieldRow": "الصف",
     "fieldSeat": "المقعد",
+    "fieldCity": "المدينة",
+    "fieldStartTime": "وقت البداية",
+    "fieldTicketNumber": "رقم التذكرة",
+    "fieldTicketType": "نوع التذكرة",
+    "fieldPaymentMethod": "طريقة الدفع",
+    "fieldReservationDate": "تاريخ الحجز",
+    "gift": "إهداء",
     "transferGuest": "نقل إلى ضيف",
     "cancelOrder": "إلغاء الطلب",
     "requestRefund": "طلب استرداد",
@@ -290,7 +300,7 @@
     "filters": {
       "all": "الكل",
       "events": "فعاليات",
-      "experiences": "تجارب",
+      "experiences": "معالم وأنشطة",
       "talents": "مواهِب"
     },
     "kinds": {
@@ -319,7 +329,7 @@
     "filters": {
       "all": "الكل",
       "events": "فعاليات",
-      "experiences": "تجارب",
+      "experiences": "معالم وأنشطة",
       "talents": "مواهِب"
     },
     "kinds": {

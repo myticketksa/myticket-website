@@ -17,7 +17,6 @@ import {
 import { catalogLabel } from '@/lib/i18n/catalogLabels'
 import {
   CATALOG_EXPERIENCES,
-  CatalogPageHead,
   CITY_FACETS,
   LinkedCard,
   PromoBand,
@@ -137,11 +136,9 @@ export function ExperiencesPage() {
   )
   const activities = filtered.filter((exp) => exp.experienceType === 'activity')
 
-  const subtitleParts = [
-    t('pages.experiencesSubtitle'),
-    isError ? t('pages.apiPreview') : null,
-    isFetching ? t('pages.updating') : null,
-  ].filter(Boolean)
+  const subtitleParts = [isError ? t('pages.apiPreview') : null, isFetching ? t('pages.updating') : null].filter(
+    Boolean,
+  )
 
   return (
     <>
@@ -156,10 +153,9 @@ export function ExperiencesPage() {
 
       <PageSection padTop={14} padBottom={0}>
         <FadeUp>
-          <CatalogPageHead
-            title={t('pages.experiencesTitle')}
-            subtitle={subtitleParts.join(' ')}
-          />
+          {subtitleParts.length > 0 ? (
+            <p className="mb-lg text-[14px] text-ink-secondary">{subtitleParts.join(' ')}</p>
+          ) : null}
         </FadeUp>
 
         <div className="mt-3xl flex h-auto w-full flex-col gap-md rounded-[18px] border border-border-default bg-surface-default p-md sm:h-[72px] sm:flex-row sm:items-center sm:gap-0 sm:p-0 sm:px-[14px]">

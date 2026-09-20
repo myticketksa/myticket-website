@@ -112,7 +112,7 @@ export function WalletPage() {
       />
       <AccountSplit>
         <div className="flex flex-col gap-[22px]">
-          <div className="grid gap-lg md:grid-cols-[1.4fr_1fr_1fr]">
+          <div className="grid gap-lg md:grid-cols-1">
             <div className="rounded-[20px] bg-surface-inverse p-3xl text-bg-page">
               <p className="text-[12px] font-bold tracking-[0.08em] text-bg-page/60 uppercase">
                 {t('wallet.available')}
@@ -171,28 +171,6 @@ export function WalletPage() {
                   </Button>
                 </div>
               )}
-            </div>
-            <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
-              <p className="text-[12px] font-bold tracking-[0.07em] text-ink-muted uppercase">
-                {t('wallet.pending')}
-              </p>
-              <p className="mt-[10px] text-[32px] leading-none font-extrabold tracking-[-0.96px] text-ink-primary">
-                {balances.pending}
-              </p>
-              <p className="mt-auto pt-lg text-[13px] leading-[1.45] text-ink-secondary">
-                {t('wallet.pendingNote')}
-              </p>
-            </div>
-            <div className="rounded-[20px] border border-border-default bg-surface-default p-xl">
-              <p className="text-[12px] font-bold tracking-[0.07em] text-ink-muted uppercase">
-                {t('wallet.earnedYear')}
-              </p>
-              <p className="mt-[10px] text-[32px] leading-none font-extrabold tracking-[-0.96px] text-ink-primary">
-                {balances.earnedYear}
-              </p>
-              <p className="mt-auto pt-lg text-[13px] leading-[1.45] text-ink-secondary">
-                {t('wallet.earnedNote')}
-              </p>
             </div>
           </div>
 

@@ -16,13 +16,21 @@ import { AccountPageHead, PageSection } from '@/layouts'
 import { type NotificationFixture } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
 import {
-  useGetNotificationCategoriesQuery,
   useGetNotificationsQuery,
   useMarkAllNotificationsReadMutation,
   useMarkNotificationReadMutation,
 } from '@/app/api/accountApis'
 
-const FILTER_IDS = ['all', 'tickets', 'waitlists', 'prices', 'following'] as const
+function titleCaseType(raw: string): string {
+  const value = raw.trim()
+  if (!value) return 'Other'
+  return value
+    .toLowerCase()
+    .split(/[_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
 
 function NotificationIcon({ icon }: { icon: NotificationFixture['icon'] }) {
   const common = 'text-ink-brand'
@@ -60,19 +68,10 @@ function NotificationIcon({ icon }: { icon: NotificationFixture['icon'] }) {
 function mapNotificationIcon(raw: unknown): NotificationFixture['icon'] {
   const value = String(raw ?? '').toLowerCase()
   if (value.includes('star') || value.includes('wait')) return 'star'
-  if (value.includes('mail') || value.includes('email')) return 'mail'
+  if (value.includes('mail') || value.includes('email') || value.includes('announce')) return 'mail'
   if (value.includes('ticket') || value.includes('order')) return 'ticket'
   if (value.includes('price')) return 'price'
   return 'heart'
-}
-
-function mapNotificationCategory(raw: unknown): NotificationFixture['category'] {
-  const value = String(raw ?? 'all').toLowerCase()
-  if (value.includes('ticket') || value.includes('order')) return 'tickets'
-  if (value.includes('wait')) return 'waitlists'
-  if (value.includes('price') || value.includes('auction')) return 'prices'
-  if (value.includes('follow')) return 'following'
-  return 'all'
 }
 
 function mapNotificationGroup(raw: unknown): NotificationFixture['group'] {
@@ -88,11 +87,14 @@ function notificationId(record: Record<string, unknown>): string | number | unde
   return undefined
 }
 
-function mapNotification(record: Record<string, unknown>): NotificationFixture & {
+type MappedNotification = NotificationFixture & {
   id?: string | number
-  categoryKey?: string
-} {
-  const categoryId = record.category_id ?? record.categoryId
+  typeKey: string
+}
+
+function mapNotification(record: Record<string, unknown>): MappedNotification {
+  const typeRaw = String(record.type ?? record.category ?? 'OTHER').trim() || 'OTHER'
+  const typeKey = typeRaw.toUpperCase()
   return {
     id: notificationId(record),
     title: String(record.title ?? record.subject ?? 'Notification'),
@@ -105,24 +107,20 @@ function mapNotification(record: Record<string, unknown>): NotificationFixture &
       return Boolean(record.unread ?? record.is_unread ?? !record.read_at)
     })(),
     group: mapNotificationGroup(record.group ?? record.period),
-    category: mapNotificationCategory(record.category ?? record.type),
-    categoryKey:
-      categoryId != null
-        ? String(categoryId)
-        : mapNotificationCategory(record.category ?? record.type),
+    category: 'all',
+    typeKey,
     tag: record.tag ? String(record.tag) : undefined,
     cta: record.cta ? String(record.cta) : record.action ? String(record.action) : undefined,
-    icon: mapNotificationIcon(record.icon ?? record.category ?? record.type),
+    icon: mapNotificationIcon(record.icon ?? record.type ?? record.category),
   }
 }
 
-/** Notifications — Figma `207:8824`. Full-bleed list with filter chips. */
+/** Notifications — chips from API `type` values (title-cased). */
 export function NotificationsPage() {
   const { t } = useTranslation(['account', 'common'])
   const navigate = useNavigate()
   const [filter, setFilter] = useState('all')
   const { data: notifications, isLoading } = useGetNotificationsQuery()
-  const { data: categories } = useGetNotificationCategoriesQuery()
   const [markAllRead, markAllState] = useMarkAllNotificationsReadMutation()
   const [markRead] = useMarkNotificationReadMutation()
 
@@ -134,41 +132,27 @@ export function NotificationsPage() {
   }, [notifications])
 
   const items = useMemo(
-    () =>
-      filter === 'all'
-        ? allItems
-        : allItems.filter((item) => ('categoryKey' in item ? item.categoryKey : item.category) === filter),
+    () => (filter === 'all' ? allItems : allItems.filter((item) => item.typeKey === filter)),
     [allItems, filter],
   )
 
   const unreadCount = allItems.filter((item) => item.unread).length
+
   const filters = useMemo(() => {
-    if (categories && categories.length > 0) {
-      return [
-        {
-          id: 'all',
-          label: t('account:notifications.filters.all'),
-          count: unreadCount || undefined,
-        },
-        ...categories.map((category) => {
-          const id = String(category.id ?? category.slug ?? category.name_en)
-          const label = String(
-            category.name_ar ?? category.name_en ?? category.name ?? category.label ?? id,
-          )
-          const count = Number(category.notifications_count ?? 0) || undefined
-          return { id, label, count }
-        }),
-      ]
-    }
-    return FILTER_IDS.map((id) => ({
-      id,
-      label: t(`account:notifications.filters.${id}`),
-      count:
-        id === 'all'
-          ? unreadCount || undefined
-          : allItems.filter((n) => n.category === id && n.unread).length || undefined,
-    }))
-  }, [allItems, categories, unreadCount, t])
+    const typeKeys = [...new Set(allItems.map((item) => item.typeKey))].sort()
+    return [
+      {
+        id: 'all',
+        label: t('account:notifications.filters.all'),
+        count: unreadCount || undefined,
+      },
+      ...typeKeys.map((typeKey) => ({
+        id: typeKey,
+        label: titleCaseType(typeKey),
+        count: allItems.filter((n) => n.typeKey === typeKey && n.unread).length || undefined,
+      })),
+    ]
+  }, [allItems, unreadCount, t])
 
   const groups = ['TODAY', 'YESTERDAY', 'EARLIER'] as const
 
@@ -206,7 +190,7 @@ export function NotificationsPage() {
             <FilterChip
               key={item.id}
               selected={filter === item.id}
-              count={'count' in item ? item.count : undefined}
+              count={item.count}
               onClick={() => setFilter(item.id)}
               className="h-[40px] rounded-[20px] px-[18px] font-bold"
             >
@@ -249,7 +233,7 @@ export function NotificationsPage() {
                 <ul className="mt-md flex flex-col gap-[10px]">
                   {groupItems.map((item) => (
                     <li
-                      key={`${item.title}-${'id' in item ? item.id : item.time}`}
+                      key={`${item.title}-${item.id ?? item.time}`}
                       className={cn(
                         'flex flex-col gap-lg rounded-[20px] border px-xl py-[18px] sm:flex-row sm:items-start',
                         item.unread
@@ -292,8 +276,9 @@ export function NotificationsPage() {
                           aria-label={t('notifications.dismissAria')}
                           className="flex size-[34px] items-center justify-center text-ink-muted hover:text-ink-primary"
                           onClick={() => {
-                            const id = 'id' in item ? item.id : undefined
-                            if (typeof id === 'string' || typeof id === 'number') markRead(id)
+                            if (typeof item.id === 'string' || typeof item.id === 'number') {
+                              markRead(item.id)
+                            }
                           }}
                         >
                           <CloseIcon size={17} />
@@ -306,13 +291,6 @@ export function NotificationsPage() {
             )
           })}
         </div>
-
-        <p className="mt-xl text-[13px] text-ink-muted">
-          Prefer fewer pings?{' '}
-          <Link to="/settings" className="font-semibold text-ink-brand">
-            Adjust notification settings
-          </Link>
-        </p>
       </PageSection>
     </>
   )

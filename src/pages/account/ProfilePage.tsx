@@ -7,7 +7,6 @@ import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSli
 import {
   ArrowRightIcon,
   BellRingingIcon,
-  BriefcaseIcon,
   HeartIcon,
   UserIcon,
   WalletIcon,
@@ -121,6 +120,14 @@ export function ProfilePage() {
                 {t('profile.editProfile')}
               </Button>
             </Link>
+            <Button
+              variant="destructive"
+              size="md"
+              loading={logoutLoading}
+              onClick={() => void signOut()}
+            >
+              {t('profile.signOut')}
+            </Button>
           </div>
         </div>
       </PageSection>
@@ -232,7 +239,7 @@ export function ProfilePage() {
         )}
       </PageSection>
 
-      <PageSection padTop={40} padBottom={0}>
+      <PageSection padTop={40} padBottom={96}>
         <div className="mb-lg flex flex-wrap items-end justify-between gap-md">
           <div>
             <h2 className="text-[24px] font-extrabold text-ink-primary">
@@ -274,40 +281,6 @@ export function ProfilePage() {
               </Link>
             )
           })}
-          <Link
-            to="/become-business"
-            className="flex flex-col justify-between rounded-[18px] border border-border-default bg-surface-default p-xl hover:border-border-brand sm:col-span-2 lg:col-span-4"
-          >
-            <div className="flex flex-col items-stretch gap-md sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex items-start gap-md">
-                <BriefcaseIcon size={15} className="mt-[2px] shrink-0 text-ink-brand" />
-                <div>
-                  <p className="text-[16px] font-bold text-ink-primary">
-                    {t('profile.becomeBusiness')}
-                  </p>
-                  <p className="mt-xs text-[13px] text-ink-secondary">
-                    {t('profile.becomeBusinessBody')}
-                  </p>
-                </div>
-              </div>
-              <Button size="sm" className="w-full sm:w-auto">
-                {t('profile.apply')}
-              </Button>
-            </div>
-          </Link>
-        </div>
-      </PageSection>
-
-      <PageSection padTop={32} padBottom={96}>
-        <div className="flex flex-wrap items-center justify-end gap-lg rounded-[16px] border border-border-default bg-surface-default px-xl py-lg">
-          <Button
-            variant="destructive"
-            size="sm"
-            loading={logoutLoading}
-            onClick={() => void signOut()}
-          >
-            {t('profile.signOut')}
-          </Button>
         </div>
       </PageSection>
     </>

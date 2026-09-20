@@ -86,7 +86,10 @@
       "tier": "Tier",
       "row": "Row",
       "seats": "Seats",
-      "gate": "Gate"
+      "gate": "Gate",
+      "city": "City",
+      "startTime": "Start time",
+      "orderDate": "Order date"
     },
     "status": {
       "UPCOMING": "Upcoming",
@@ -126,6 +129,13 @@
     "fieldBlock": "BLOCK",
     "fieldRow": "ROW",
     "fieldSeat": "SEAT",
+    "fieldCity": "CITY",
+    "fieldStartTime": "START TIME",
+    "fieldTicketNumber": "TICKET NO.",
+    "fieldTicketType": "TICKET TYPE",
+    "fieldPaymentMethod": "PAYMENT METHOD",
+    "fieldReservationDate": "RESERVATION DATE",
+    "gift": "Gift",
     "transferGuest": "Transfer to a guest",
     "cancelOrder": "Cancel order",
     "requestRefund": "Request a refund",
@@ -290,7 +300,7 @@
     "filters": {
       "all": "All",
       "events": "Events",
-      "experiences": "Experiences",
+      "experiences": "Attractions & Activities",
       "talents": "Talents"
     },
     "kinds": {
@@ -319,7 +329,7 @@
     "filters": {
       "all": "All",
       "events": "Events",
-      "experiences": "Experiences",
+      "experiences": "Attractions & Activities",
       "talents": "Talents"
     },
     "kinds": {
