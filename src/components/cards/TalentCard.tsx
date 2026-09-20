@@ -46,6 +46,46 @@ export function TalentCard({
 }: TalentCardProps) {
   const showDiscovery = verified
 
+  if (limited) {
+    const filled = Math.max(0, Math.min(5, Math.round(Number.parseFloat(rating) || 0)))
+
+    return (
+      <article
+        className={cn(
+          'group flex flex-col items-center gap-md bg-transparent text-center',
+          className,
+        )}
+      >
+        <div className="size-[112px] overflow-hidden rounded-full bg-bg-skeleton sm:size-[128px]">
+          {image ? (
+            <img
+              src={image}
+              alt=""
+              className="size-full object-cover transition-transform duration-slow ease-standard group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+            />
+          ) : (
+            <ImagePlaceholder ratio="fill" caption="" />
+          )}
+        </div>
+        <h3 className="max-w-full text-[15px] font-bold text-balance text-ink-primary sm:text-[16px]">
+          {name}
+        </h3>
+        <div
+          className="flex items-center justify-center gap-[3px]"
+          aria-label={`${rating} of 5`}
+        >
+          {Array.from({ length: 5 }, (_, i) => (
+            <StarFillIcon
+              key={i}
+              size={14}
+              className={i < filled ? 'text-brand-primary' : 'text-border-default'}
+            />
+          ))}
+        </div>
+      </article>
+    )
+  }
+
   return (
     <article
       className={cn(
@@ -73,7 +113,7 @@ export function TalentCard({
           </p>
         )}
 
-        {!limited && !showDiscovery && nextLabel && (
+        {!showDiscovery && nextLabel && (
           <p className="absolute top-[10px] start-[10px] rounded-[12px] bg-surface-default px-[10px] py-[5px] text-[11px] font-bold text-ink-primary">
             {nextLabel}
           </p>
@@ -89,16 +129,12 @@ export function TalentCard({
           <span className="flex items-start gap-xs text-ink-primary">
             <StarFillIcon className="mt-[1px] shrink-0" />
             <span className="text-[13px] font-bold">{rating}</span>
-            {!limited && (
-              <span className="text-[13px] font-medium text-ink-muted">({reviews})</span>
-            )}
+            <span className="text-[13px] font-medium text-ink-muted">({reviews})</span>
           </span>
-          {!limited && (
-            <span className="text-[13px] font-medium text-ink-secondary">{city}</span>
-          )}
+          <span className="text-[13px] font-medium text-ink-secondary">{city}</span>
         </div>
 
-        {!limited && nextEvent && (
+        {nextEvent && (
           <>
             <Divider className="my-[11px]" />
             <p className="text-[11px] font-bold tracking-[0.66px] text-brand-gradient-end uppercase">

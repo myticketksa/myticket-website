@@ -25,6 +25,7 @@ import {
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
+import { useRequireAuth } from '@/lib/auth/useRequireAuth'
 import { mapApiIdLabelOptions, type IdLabelOption } from '@/lib/api/formPayload'
 import { clearDraft, loadDraft, saveDraft } from '@/lib/forms/draftStorage'
 import { apiErrorMessage } from '@/lib/api/unwrap'
@@ -72,9 +73,12 @@ export function ApplyTalentPage() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const user = useAppSelector(selectAuthUser)
+  const { isAuthenticated, requireAuth } = useRequireAuth()
   const [applyTalent, applyState] = useApplyTalentMutation()
-  const { data: apiCities } = useGetCitiesQuery()
-  const { data: apiCategories } = useGetPerformanceCategoriesQuery()
+  const { data: apiCities } = useGetCitiesQuery(undefined, { skip: !isAuthenticated })
+  const { data: apiCategories } = useGetPerformanceCategoriesQuery(undefined, {
+    skip: !isAuthenticated,
+  })
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<TalentDraft>(() => ({
     email: user?.email ?? '',
@@ -89,6 +93,10 @@ export function ApplyTalentPage() {
   }))
   const [draftSaved, setDraftSaved] = useState(false)
   const [restoredNote, setRestoredNote] = useState(false)
+
+  useEffect(() => {
+    if (!isAuthenticated) requireAuth()
+  }, [isAuthenticated]) // requireAuth is stable enough for gate-once
 
   const steps = useMemo(
     () => STEP_KEYS.map((key) => t(`forms:talent.steps.${key}`)),
@@ -226,6 +234,8 @@ export function ApplyTalentPage() {
     setDraftSaved(false)
     setRestoredNote(false)
   }
+
+  if (!isAuthenticated) return null
 
   return (
     <FormWizardShell

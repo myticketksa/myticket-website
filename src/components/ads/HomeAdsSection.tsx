@@ -24,8 +24,16 @@ export type AdRecord = {
   [key: string]: unknown
 }
 
-function asText(value: unknown, fallback = '') {
+export function asAdText(value: unknown, fallback = '') {
   return value == null || value === '' ? fallback : String(value)
+}
+
+export function partitionAds(ads?: AdRecord[]) {
+  const list = ads ?? []
+  return {
+    videos: list.filter((ad) => Boolean(asAdText(ad.video))),
+    images: list.filter((ad) => Boolean(asAdText(ad.image)) && !asAdText(ad.video)),
+  }
 }
 
 function AdsSectionLabel({
@@ -47,82 +55,89 @@ function AdsSectionLabel({
   )
 }
 
-/** Home ads band — videos carousel first, then images. Hides empty groups. */
-export function HomeAdsSection({ ads }: { ads?: AdRecord[] }) {
+/** Image ads band — used when not embedded in the hero. */
+export function HomeImageAdsSection({ ads }: { ads?: AdRecord[] }) {
   const { t } = useTranslation('catalog')
+  const images = useMemo(() => partitionAds(ads).images, [ads])
 
-  const { videos, images } = useMemo(() => {
-    const list = ads ?? []
-    return {
-      videos: list.filter((ad) => Boolean(asText(ad.video))),
-      images: list.filter((ad) => Boolean(asText(ad.image)) && !asText(ad.video)),
-    }
-  }, [ads])
-
-  if (videos.length === 0 && images.length === 0) return null
+  if (images.length === 0) return null
 
   return (
-    <>
-      {videos.length > 0 ? (
-        <PageSection padTop={56} padBottom={0}>
-          <FadeUp>
-            <AdsSectionLabel icon={<PlayIcon size={14} weight="fill" />}>
-              {t('home.adsVideosHeading')}
-            </AdsSectionLabel>
-          </FadeUp>
-          <div className="relative mt-[16px]">
-            <Carousel opts={{ align: 'start', loop: videos.length > 2 }}>
-              <CarouselContent>
-                {videos.map((ad) => (
-                  <CarouselItem
-                    key={String(ad.id ?? ad.video)}
-                    className="basis-[85%] sm:basis-1/2 lg:basis-1/3"
-                  >
-                    <AdVideoCard
-                      title={asText(ad.title, 'Advertisement')}
-                      description={asText(ad.description) || undefined}
-                      video={asText(ad.video)}
-                      poster={asText(ad.image) || undefined}
-                    />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden sm:inline-flex" />
-              <CarouselNext className="hidden sm:inline-flex" />
-            </Carousel>
-          </div>
-        </PageSection>
-      ) : null}
+    <PageSection padTop={56} padBottom={0}>
+      <FadeUp>
+        <AdsSectionLabel icon={<ImageIcon size={14} weight="fill" />}>
+          {t('home.adsImagesHeading')}
+        </AdsSectionLabel>
+      </FadeUp>
+      <div className="relative mt-[16px]">
+        <Carousel opts={{ align: 'start', loop: images.length > 2 }}>
+          <CarouselContent>
+            {images.map((ad) => (
+              <CarouselItem
+                key={String(ad.id ?? ad.image)}
+                className="basis-[85%] sm:basis-1/2 lg:basis-1/3"
+              >
+                <AdImageCard
+                  title={asAdText(ad.title, 'Advertisement')}
+                  description={asAdText(ad.description) || undefined}
+                  image={asAdText(ad.image)}
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden sm:inline-flex" />
+          <CarouselNext className="hidden sm:inline-flex" />
+        </Carousel>
+      </div>
+    </PageSection>
+  )
+}
 
-      {images.length > 0 ? (
-        <PageSection padTop={56} padBottom={0}>
-          <FadeUp>
-            <AdsSectionLabel icon={<ImageIcon size={14} weight="fill" />}>
-              {t('home.adsImagesHeading')}
-            </AdsSectionLabel>
-          </FadeUp>
-          <div className="relative mt-[16px]">
-            <Carousel opts={{ align: 'start', loop: images.length > 2 }}>
-              <CarouselContent>
-                {images.map((ad) => (
-                  <CarouselItem
-                    key={String(ad.id ?? ad.image)}
-                    className="basis-[85%] sm:basis-1/2 lg:basis-1/3"
-                  >
-                    <AdImageCard
-                      title={asText(ad.title, 'Advertisement')}
-                      description={asText(ad.description) || undefined}
-                      image={asText(ad.image)}
-                    />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden sm:inline-flex" />
-              <CarouselNext className="hidden sm:inline-flex" />
-            </Carousel>
-          </div>
-        </PageSection>
-      ) : null}
+/** Video ads band — placed under Talents on home. */
+export function HomeVideoAdsSection({ ads }: { ads?: AdRecord[] }) {
+  const { t } = useTranslation('catalog')
+  const videos = useMemo(() => partitionAds(ads).videos, [ads])
+
+  if (videos.length === 0) return null
+
+  return (
+    <PageSection padTop={56} padBottom={0}>
+      <FadeUp>
+        <AdsSectionLabel icon={<PlayIcon size={14} weight="fill" />}>
+          {t('home.adsVideosHeading')}
+        </AdsSectionLabel>
+      </FadeUp>
+      <div className="relative mt-[16px]">
+        <Carousel opts={{ align: 'start', loop: videos.length > 2 }}>
+          <CarouselContent>
+            {videos.map((ad) => (
+              <CarouselItem
+                key={String(ad.id ?? ad.video)}
+                className="basis-[85%] sm:basis-1/2 lg:basis-1/3"
+              >
+                <AdVideoCard
+                  title={asAdText(ad.title, 'Advertisement')}
+                  description={asAdText(ad.description) || undefined}
+                  video={asAdText(ad.video)}
+                  poster={asAdText(ad.image) || undefined}
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden sm:inline-flex" />
+          <CarouselNext className="hidden sm:inline-flex" />
+        </Carousel>
+      </div>
+    </PageSection>
+  )
+}
+
+/** @deprecated Prefer HomeVideoAdsSection / hero image ads. Kept for callers. */
+export function HomeAdsSection({ ads }: { ads?: AdRecord[] }) {
+  return (
+    <>
+      <HomeVideoAdsSection ads={ads} />
+      <HomeImageAdsSection ads={ads} />
     </>
   )
 }

@@ -29,6 +29,12 @@ export const APP_STORE_URL =
 export const PLAY_STORE_URL =
   'https://play.google.com/store/apps/details?id=com.t4l.myticket'
 
+/** Public contact — shown in the site footer. */
+export const SITE_PHONE = '+966 51 269 782'
+export const SITE_PHONE_HREF = 'tel:+96651269782'
+export const SITE_EMAIL = 'business@myticket.sa'
+export const SITE_EMAIL_HREF = 'mailto:business@myticket.sa'
+
 export type FormatDocumentTitleOptions = {
   /** Localized home title, e.g. `MyTicket — Live events…`. */
   homeTitle?: string

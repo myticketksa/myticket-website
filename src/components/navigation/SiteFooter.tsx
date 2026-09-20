@@ -9,7 +9,14 @@ import youtubeIcon from '@/assets/social/youtube.svg'
 import appStoreBadge from '@/assets/store/app-store-badge.svg'
 import googlePlayBadge from '@/assets/store/google-play-badge.png'
 import { cn } from '@/lib/cn'
-import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/site'
+import {
+  APP_STORE_URL,
+  PLAY_STORE_URL,
+  SITE_EMAIL,
+  SITE_EMAIL_HREF,
+  SITE_PHONE,
+  SITE_PHONE_HREF,
+} from '@/lib/site'
 import { Logo } from './Logo'
 
 const SOCIAL = [
@@ -57,8 +64,8 @@ export interface SiteFooterProps {
 }
 
 /**
- * Footer — stacked sections on mobile (logo → stores → social → legal),
- * single horizontal band from lg.
+ * Footer — stacked sections on mobile (logo → stores → contact → social → legal),
+ * single horizontal band from lg. Social is icons-only.
  */
 export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
   const { t } = useTranslation('nav')
@@ -73,15 +80,31 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
     >
       {size === 'full' && (
         <div className="flex w-full max-w-[1400px] flex-col gap-3xl px-gutter-desktop pt-3xl pb-2xl lg:flex-row lg:items-center lg:justify-between lg:gap-3xl lg:pb-xl">
-          <Link to="/" aria-label={t('home')} className="shrink-0 self-start">
-            <Logo height={36} />
-          </Link>
+          <div className="flex shrink-0 flex-col gap-md self-start">
+            <Link to="/" aria-label={t('home')}>
+              <Logo height={36} />
+            </Link>
+            <div className="flex flex-col gap-xs text-[13px] font-semibold text-ink-secondary">
+              <a
+                href={SITE_PHONE_HREF}
+                className="inline-flex min-h-[36px] items-center transition-colors duration-micro ease-micro hover:text-ink-brand-mid"
+              >
+                {SITE_PHONE}
+              </a>
+              <a
+                href={SITE_EMAIL_HREF}
+                className="inline-flex min-h-[36px] items-center transition-colors duration-micro ease-micro hover:text-ink-brand-mid"
+              >
+                {SITE_EMAIL}
+              </a>
+            </div>
+          </div>
 
           {/* Mobile order: stores → social → legal. Desktop: social → legal → stores. */}
           <div className="flex flex-col gap-3xl lg:contents">
             <nav
               aria-label={t('footer.social', { defaultValue: 'Follow us' })}
-              className="order-2 flex flex-wrap items-center gap-md lg:order-none"
+              className="order-2 flex flex-wrap items-center gap-sm lg:order-none"
             >
               {SOCIAL.map(({ name, href, icon }) => (
                 <a
@@ -91,10 +114,9 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
                   rel="noopener noreferrer"
                   aria-label={name}
                   title={name}
-                  className="inline-flex size-[44px] items-center justify-center rounded-[12px] border border-border-default bg-surface-default text-ink-primary transition-colors duration-micro ease-micro hover:border-border-brand hover:text-ink-brand-mid lg:size-auto lg:gap-[8px] lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0"
+                  className="inline-flex size-[44px] items-center justify-center rounded-[12px] border border-border-default bg-surface-default text-ink-primary transition-colors duration-micro ease-micro hover:border-border-brand hover:bg-bg-tint-brand"
                 >
                   <img src={icon} alt="" width={18} height={18} className="size-[18px]" />
-                  <span className="hidden text-[13px] font-semibold lg:inline">{name}</span>
                 </a>
               ))}
             </nav>
@@ -120,7 +142,7 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={t('footer.iosApp')}
-                className="inline-flex h-[44px] w-[135px] items-center justify-center"
+                className="inline-flex h-[36px] w-[110px] items-center justify-center"
               >
                 <img
                   src={appStoreBadge}
@@ -133,7 +155,7 @@ export function SiteFooter({ size = 'full', className }: SiteFooterProps) {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={t('footer.androidApp')}
-                className="inline-flex h-[44px] w-[135px] items-center justify-center"
+                className="inline-flex h-[36px] w-[110px] items-center justify-center"
               >
                 <img
                   src={googlePlayBadge}

@@ -1,35 +1,22 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { ApiRecord } from '@/app/api/eventsApi'
+import type { AdRecord } from '@/components/ads'
+import { asAdText, partitionAds } from '@/components/ads'
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
   ChevronDownIcon,
   SearchIcon,
 } from '@/components/icons'
-import { FeaturedHeroCard } from '@/components/cards'
 import { PopularChip } from '@/components/data-display'
 import { FadeUp } from '@/components/motion'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
-import { mapApiEventToCard } from '@/lib/api/mappers/events'
-import { useEventFavorites } from '@/lib/favorites/useEventFavorites'
-import { slugify } from '@/pages/_guest'
-import { HOME_FEATURED, HOME_POPULAR } from './home-data'
-import { HOME_HERO_IMAGES } from './home-media'
+import { HOME_POPULAR } from './home-data'
 
 /**
- * Home Hero — Figma `207:4364`.
- *
- * Pad-top 60 inside the section (header sits above via MainLayout). Intro column 675,
- * carousel 593, gap 52. H1 is Display/Hero XL; the third line uses a three-stop ramp that
- * ends on `--ink-brand-strong` rather than `--brand-gradient-end`, so it is written out
- * rather than folded into `text-brand-gradient`.
- *
- * The search bar is **not** `SearchPill` — it is a composite 74-tall control with a field,
- * region selector and identity-gradient button. Popular terms use `PopularChip` (h30, r16),
- * not `FilterChip` / `CategoryChip`.
+ * Home Hero — copy + search + image-ad slider (replaces Featured this week).
+ * 1 ad → full-width single card; 2+ ads → two side-by-side cards with autoplay.
  */
 
 const REGION_OPTIONS = [
@@ -39,44 +26,90 @@ const REGION_OPTIONS = [
   { value: 'Dammam', key: 'dammam' as const },
 ]
 
-export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
+const AUTO_MS = 5000
+
+function HeroAdCard({
+  ad,
+  className,
+  full,
+}: {
+  ad: AdRecord
+  className?: string
+  /** Single-ad mode: span the full two-card media column. */
+  full?: boolean
+}) {
+  const title = asAdText(ad.title)
+  const description = asAdText(ad.description)
+  const image = asAdText(ad.image)
+
+  return (
+    <article
+      className={cn(
+        'group relative flex flex-col items-start justify-end overflow-hidden rounded-[22px] border border-border-default bg-bg-skeleton p-[18px]',
+        full
+          ? 'h-[360px] w-full sm:h-[420px] lg:h-[494px]'
+          : 'h-[360px] min-w-0 flex-1 sm:h-[420px] lg:h-[494px]',
+        className,
+      )}
+    >
+      {image ? (
+        <img
+          src={image}
+          alt={title || ''}
+          className="absolute inset-0 size-full object-cover transition-transform duration-slow ease-standard group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
+        />
+      ) : null}
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(25,16,8,0.08)_0%,rgba(25,16,8,0)_28%,rgba(25,16,8,0.55)_68%,rgba(25,16,8,0.92)_100%)]" />
+      {(title || description) && (
+        <div className="relative z-[1] flex w-full flex-col">
+          {title ? (
+            <p className="text-[18px] leading-[1.2] font-bold text-balance text-ink-inverse sm:text-[22px]">
+              {title}
+            </p>
+          ) : null}
+          {description ? (
+            <p className="mt-[6px] line-clamp-2 text-[13px] font-medium text-ink-inverse/90">
+              {description}
+            </p>
+          ) : null}
+        </div>
+      )}
+    </article>
+  )
+}
+
+export function HomeHero({ apiAds }: { apiAds?: AdRecord[] }) {
   const { t } = useTranslation(['catalog', 'common'])
   const [slide, setSlide] = useState(0)
   const [region, setRegion] = useState(REGION_OPTIONS[0]!.value)
-  const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
+  const [paused, setPaused] = useState(false)
 
-  const featuredSource = useMemo(() => {
-    if (apiEvents && apiEvents.length > 0) {
-      return apiEvents.slice(0, 2).map((event) => {
-        const mapped = mapApiEventToCard(event)
-        return {
-          date: mapped.date,
-          title: mapped.title,
-          venue: mapped.venue,
-          rating: mapped.rating,
-          price: mapped.price,
-          category: mapped.category ?? 'Events',
-          flag: mapped.flag,
-          slug: mapped.slug,
-          image: mapped.image,
-          id: mapped.id,
-        }
-      })
-    }
-    return HOME_FEATURED.map((f) => ({ ...f, slug: slugify(f.title), image: undefined as string | undefined }))
-  }, [apiEvents])
+  const imageAds = useMemo(() => partitionAds(apiAds).images, [apiAds])
+  const single = imageAds.length === 1
 
-  const featuredSlides = useMemo(() => {
-    if (featuredSource.length < 2) return [featuredSource]
-    return [
-      featuredSource.slice(0, 2),
-      [featuredSource[1]!, featuredSource[0]!],
-      featuredSource.slice(0, 2),
-    ] as const
-  }, [featuredSource])
+  /** Each slide shows a pair of ads (current + next); single ad is one full card. */
+  const pairedSlides = useMemo(() => {
+    if (imageAds.length < 2) return [] as AdRecord[][]
+    return imageAds.map((_, i) => [
+      imageAds[i]!,
+      imageAds[(i + 1) % imageAds.length]!,
+    ])
+  }, [imageAds])
 
-  const cards = featuredSlides[slide] ?? featuredSlides[0] ?? featuredSource.slice(0, 2)
-  const slideCount = featuredSlides.length
+  const slideCount = single ? 1 : pairedSlides.length
+  const pair = pairedSlides[slide] ?? pairedSlides[0]
+
+  useEffect(() => {
+    setSlide(0)
+  }, [imageAds.length])
+
+  useEffect(() => {
+    if (slideCount < 2 || paused) return
+    const id = window.setInterval(() => {
+      setSlide((s) => (s + 1) % slideCount)
+    }, AUTO_MS)
+    return () => window.clearInterval(id)
+  }, [slideCount, paused])
 
   const goPrev = () => setSlide((s) => (s - 1 + slideCount) % slideCount)
   const goNext = () => setSlide((s) => (s + 1) % slideCount)
@@ -99,7 +132,6 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
       }}
     >
       <div className="flex flex-col gap-3xl lg:flex-row lg:items-start lg:gap-[52px]">
-        {/* 1. Copy + search — primary mobile stack */}
         <div className="flex w-full max-w-[675px] flex-col lg:pt-xl">
           <FadeUp inView={false} delay={0.05} distance={8}>
             <div className="flex w-full max-w-full items-start gap-[10px] rounded-[16px] bg-identity-gradient px-[14px] py-[10px] text-[12px] leading-[1.4] font-bold text-ink-inverse shadow-[0px_8px_22px_-10px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)] sm:inline-flex sm:w-auto sm:items-center sm:rounded-[22px] sm:py-[7px] sm:pe-[15px] sm:ps-[11px] sm:text-[13px] sm:leading-none">
@@ -179,101 +211,83 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
           </FadeUp>
         </div>
 
-        {/* 2. Featured carousel — after copy on mobile */}
-        <FadeUp
-          inView={false}
-          delay={0.3}
-          distance={16}
-          className="flex w-full max-w-[593px] flex-col gap-[14px]"
-        >
-          <div className="flex flex-col gap-md sm:h-[36px] sm:flex-row sm:items-center sm:justify-between sm:gap-sm">
-            <p className="text-label-overline text-brand-gradient-end">{t('home.featured')}</p>
-            <div className="flex items-center justify-between gap-sm sm:justify-end">
-              <Link
-                to="/events"
-                className="group/link inline-flex min-h-[44px] items-center gap-sm text-[13px] font-bold text-brand-gradient-end transition-colors duration-fast ease-standard hover:text-ink-brand sm:min-h-0"
-              >
-                {t('home.seeAllFeatured')}
-                <ArrowRightIcon
-                  size={13}
-                  className="shrink-0 transition-transform duration-fast ease-standard group-hover/link:translate-x-0.5 motion-reduce:group-hover/link:translate-x-0"
-                />
-              </Link>
-              <div className="flex items-center gap-sm">
-                <button
-                  type="button"
-                  aria-label={t('home.prevFeatured')}
-                  onClick={goPrev}
-                  className="flex size-[44px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border-[1.5px] border-border-default bg-surface-default text-ink-primary transition-colors duration-normal ease-standard hover:border-border-brand sm:size-[36px]"
-                >
-                  <ArrowLeftIcon size={14} />
-                </button>
-                <button
-                  type="button"
-                  aria-label={t('home.nextFeatured')}
-                  onClick={goNext}
-                  className="flex size-[44px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border-[1.5px] border-border-default bg-surface-default text-ink-primary transition-colors duration-normal ease-standard hover:border-border-brand sm:size-[36px]"
-                >
-                  <ArrowRightIcon size={14} />
-                </button>
-              </div>
+        {imageAds.length > 0 ? (
+          <FadeUp
+            inView={false}
+            delay={0.3}
+            distance={16}
+            className="flex w-full max-w-[593px] flex-col gap-[14px]"
+          >
+            <div className="flex flex-col gap-md sm:h-[36px] sm:flex-row sm:items-center sm:justify-between sm:gap-sm">
+              <p className="text-label-overline text-brand-gradient-end">
+                {t('home.adsImagesHeading')}
+              </p>
+              {!single ? (
+                <div className="flex items-center justify-end gap-sm">
+                  <button
+                    type="button"
+                    aria-label={t('home.prevFeatured')}
+                    onClick={goPrev}
+                    className="flex size-[44px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border-[1.5px] border-border-default bg-surface-default text-ink-primary transition-colors duration-normal ease-standard hover:border-border-brand sm:size-[36px]"
+                  >
+                    <ArrowLeftIcon size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={t('home.nextFeatured')}
+                    onClick={goNext}
+                    className="flex size-[44px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border-[1.5px] border-border-default bg-surface-default text-ink-primary transition-colors duration-normal ease-standard hover:border-border-brand sm:size-[36px]"
+                  >
+                    <ArrowRightIcon size={14} />
+                  </button>
+                </div>
+              ) : null}
             </div>
-          </div>
 
-          <div className="flex flex-col gap-lg overflow-hidden rounded-[22px] sm:flex-row">
-            {cards.map((card, i) => {
-              const imageIndex = HOME_FEATURED.findIndex((f) => f.title === card.title)
-              return (
-                <Link
-                  key={`${slide}-${card.title}`}
-                  to={`/events/${'slug' in card && card.slug ? card.slug : slugify(card.title)}`}
-                  className={cn('min-w-0 flex-1', i > 0 && 'hidden sm:block')}
-                >
-                  <FeaturedHeroCard
-                    date={card.date}
-                    title={card.title}
-                    venue={card.venue}
-                    rating={card.rating}
-                    price={card.price}
-                    category={card.category}
-                    flag={'flag' in card ? card.flag : undefined}
-                    image={
-                      'image' in card && card.image
-                        ? card.image
-                        : HOME_HERO_IMAGES[imageIndex >= 0 ? imageIndex : i]
-                    }
-                    className="w-full"
-                    favourited={'id' in card ? isFavourite(card.id) : false}
-                    onToggleFavourite={
-                      'id' in card && canFavourite(card.id)
-                        ? () => void toggleFavourite(card.id)
-                        : undefined
-                    }
+            <div
+              className="w-full"
+              onMouseEnter={() => setPaused(true)}
+              onMouseLeave={() => setPaused(false)}
+              onFocusCapture={() => setPaused(true)}
+              onBlurCapture={() => setPaused(false)}
+            >
+              {single && imageAds[0] ? (
+                <HeroAdCard ad={imageAds[0]} full />
+              ) : pair ? (
+                <div className="flex flex-col gap-lg sm:flex-row sm:gap-md">
+                  {pair.map((ad, i) => (
+                    <HeroAdCard
+                      key={`${slide}-${String(ad.id ?? ad.image)}-${i}`}
+                      ad={ad}
+                      className={cn(i > 0 && 'hidden sm:flex')}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            {!single && slideCount > 1 ? (
+              <div className="flex gap-[7px]" role="tablist" aria-label={t('home.featuredSlides')}>
+                {pairedSlides.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    role="tab"
+                    aria-selected={i === slide}
+                    aria-label={t('home.featuredSlide', { n: i + 1 })}
+                    onClick={() => setSlide(i)}
+                    className={cn(
+                      'h-[6px] rounded-[3px] transition-[width,background] duration-normal ease-standard',
+                      i === slide
+                        ? 'w-[28px] bg-brand-gradient'
+                        : 'w-[12px] bg-neutral-scrollbar',
+                    )}
                   />
-                </Link>
-              )
-            })}
-          </div>
-
-          <div className="flex gap-[7px]" role="tablist" aria-label={t('home.featuredSlides')}>
-            {featuredSlides.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                role="tab"
-                aria-selected={i === slide}
-                aria-label={t('home.featuredSlide', { n: i + 1 })}
-                onClick={() => setSlide(i)}
-                className={cn(
-                  'h-[6px] rounded-[3px] transition-[width,background] duration-normal ease-standard',
-                  i === slide
-                    ? 'w-[28px] bg-brand-gradient'
-                    : 'w-[12px] bg-neutral-scrollbar',
-                )}
-              />
-            ))}
-          </div>
-        </FadeUp>
+                ))}
+              </div>
+            ) : null}
+          </FadeUp>
+        ) : null}
       </div>
     </PageSection>
   )

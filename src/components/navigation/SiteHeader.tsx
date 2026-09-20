@@ -411,12 +411,12 @@ function MainNav({
       />
       <NavItem
         label={t('institutions')}
-        href="/apply/vendor"
+        href="/become-business"
         state={institutionsActive ? activeItemState : 'default'}
         className={itemClassName}
         onClick={(event) => {
           event.preventDefault()
-          onNavigate('/apply/vendor')
+          onNavigate('/become-business')
         }}
       />
     </nav>

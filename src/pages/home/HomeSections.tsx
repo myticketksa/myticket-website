@@ -46,9 +46,9 @@ import {
 } from './home-media'
 import { HomeSectionHeader } from './HomeSectionHeader'
 
-/** Limited public talent strip — avatar, name, discipline, rating only. */
+/** Limited public talent strip — circular avatar, name, star rating. */
 export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) {
-  const { t } = useTranslation('catalog')
+  const { t } = useTranslation(['catalog', 'common'])
   const talents = useMemo(() => {
     if (apiTalents && apiTalents.length > 0) {
       return apiTalents.map(mapApiTalentToCard).slice(0, HOME_TALENTS.length)
@@ -59,7 +59,10 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
   return (
     <PageSection padTop={84} padBottom={0}>
       <FadeUp>
-        <HomeSectionHeader heading={t('home.talentsHeading')} />
+        <HomeSectionHeader
+          heading={t('home.talentsHeading')}
+          link={{ label: t('common:actions.viewAll'), to: '/talents' }}
+        />
       </FadeUp>
       <div className="relative mt-[26px]">
         <Carousel opts={{ align: 'start', loop: talents.length > 3 }}>
@@ -67,7 +70,7 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
             {talents.map((talent, i) => (
               <CarouselItem
                 key={talent.slug}
-                className="basis-[70%] sm:basis-1/2 md:basis-1/3 lg:basis-1/5"
+                className="basis-[45%] sm:basis-1/3 md:basis-1/4 lg:basis-1/5"
               >
                 <Link to={`/talents/${talent.slug}`} className="block min-w-0">
                   <TalentCard
@@ -134,7 +137,7 @@ export function HomeCategories({ apiCategories }: { apiCategories?: EventApiReco
 
 /** Figma `207:4459` — upcoming events carousel (no time tabs). */
 export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
-  const { t } = useTranslation('catalog')
+  const { t } = useTranslation(['catalog', 'common'])
   const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
 
   const events = useMemo(() => {
@@ -151,7 +154,10 @@ export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
   return (
     <PageSection padTop={60} padBottom={0}>
       <FadeUp>
-        <HomeSectionHeader heading={t('home.ticketsAndOffersHeading')} />
+        <HomeSectionHeader
+          heading={t('home.ticketsAndOffersHeading')}
+          link={{ label: t('common:actions.viewAll'), to: '/events' }}
+        />
       </FadeUp>
       <EventCarousel
         events={events}
@@ -165,7 +171,7 @@ export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
 
 /** Newest events first — same events API, sorted by created/id descending. */
 export function HomeRecentlyAdded({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
-  const { t } = useTranslation('catalog')
+  const { t } = useTranslation(['catalog', 'common'])
   const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
 
   const events = useMemo(() => {
@@ -193,7 +199,10 @@ export function HomeRecentlyAdded({ apiEvents }: { apiEvents?: EventApiRecord[] 
   return (
     <PageSection padTop={72} padBottom={0}>
       <FadeUp>
-        <HomeSectionHeader heading={t('home.recentlyAddedHeading')} />
+        <HomeSectionHeader
+          heading={t('home.recentlyAddedHeading')}
+          link={{ label: t('common:actions.viewAll'), to: '/events?sort=newest' }}
+        />
       </FadeUp>
       <EventCarousel
         events={events}
@@ -207,7 +216,7 @@ export function HomeRecentlyAdded({ apiEvents }: { apiEvents?: EventApiRecord[] 
 
 /** Free events rail — directly under upcoming; hidden when empty. */
 export function HomeFreeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
-  const { t } = useTranslation('catalog')
+  const { t } = useTranslation(['catalog', 'common'])
   const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
 
   const freeEvents = useMemo(() => {
@@ -229,7 +238,10 @@ export function HomeFreeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) 
   return (
     <PageSection padTop={60} padBottom={0}>
       <FadeUp>
-        <HomeSectionHeader heading={t('home.freeEventsHeading')} />
+        <HomeSectionHeader
+          heading={t('home.freeEventsHeading')}
+          link={{ label: t('common:actions.viewAll'), to: '/events?free=1' }}
+        />
       </FadeUp>
       <EventCarousel
         events={freeEvents}
@@ -420,7 +432,7 @@ export function HomeFeatured({
 
 /** Home experience rails — attractions first, then activities (API `type`). */
 export function HomeExperiences({ apiExperiences }: { apiExperiences?: ExperienceApiRecord[] }) {
-  const { t } = useTranslation('catalog')
+  const { t } = useTranslation(['catalog', 'common'])
 
   const mapped = useMemo((): MappedExperience[] => {
     if (apiExperiences && apiExperiences.length > 0) {
@@ -455,7 +467,13 @@ export function HomeExperiences({ apiExperiences }: { apiExperiences?: Experienc
       {attractions.length > 0 ? (
         <PageSection padTop={88} padBottom={0}>
           <FadeUp>
-            <HomeSectionHeader heading={t('home.attractionsHeading')} />
+            <HomeSectionHeader
+              heading={t('home.attractionsHeading')}
+              link={{
+                label: t('common:actions.viewAll'),
+                to: '/experiences?type=attraction',
+              }}
+            />
           </FadeUp>
           <ExperienceCarousel items={attractions} />
         </PageSection>
@@ -464,7 +482,13 @@ export function HomeExperiences({ apiExperiences }: { apiExperiences?: Experienc
       {activities.length > 0 ? (
         <PageSection padTop={88} padBottom={0}>
           <FadeUp>
-            <HomeSectionHeader heading={t('home.activitiesHeading')} />
+            <HomeSectionHeader
+              heading={t('home.activitiesHeading')}
+              link={{
+                label: t('common:actions.viewAll'),
+                to: '/experiences?type=activity',
+              }}
+            />
           </FadeUp>
           <ExperienceCarousel items={activities} />
         </PageSection>

@@ -19,6 +19,7 @@ import { useApplyVendorMutation, useGetCitiesQuery } from '@/app/api/accountApis
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
+import { useRequireAuth } from '@/lib/auth/useRequireAuth'
 import { mapApiIdLabelOptions, type IdLabelOption } from '@/lib/api/formPayload'
 import { clearDraft, loadDraft, saveDraft } from '@/lib/forms/draftStorage'
 import { apiErrorMessage } from '@/lib/api/unwrap'
@@ -56,8 +57,9 @@ export function ApplyVendorPage() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const user = useAppSelector(selectAuthUser)
+  const { isAuthenticated, requireAuth } = useRequireAuth()
   const [applyVendor, applyState] = useApplyVendorMutation()
-  const { data: apiCities } = useGetCitiesQuery()
+  const { data: apiCities } = useGetCitiesQuery(undefined, { skip: !isAuthenticated })
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<VendorDraft>(() => ({
     email: user?.email ?? '',
@@ -74,6 +76,10 @@ export function ApplyVendorPage() {
   }))
   const [draftSaved, setDraftSaved] = useState(false)
   const [restoredNote, setRestoredNote] = useState(false)
+
+  useEffect(() => {
+    if (!isAuthenticated) requireAuth()
+  }, [isAuthenticated]) // gate once when signed out
 
   const steps = useMemo(
     () => STEP_KEYS.map((key) => t(`forms:vendor.steps.${key}`)),
@@ -200,6 +206,8 @@ export function ApplyVendorPage() {
     setDraftSaved(false)
     setRestoredNote(false)
   }
+
+  if (!isAuthenticated) return null
 
   return (
     <FormWizardShell

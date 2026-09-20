@@ -2,7 +2,7 @@ import { useGetAdvertisementsQuery } from '@/app/api/accountApis'
 import { useGetEventsQuery } from '@/app/api/eventsApi'
 import { useGetExperiencesQuery } from '@/app/api/experiencesApi'
 import { useGetTalentsQuery } from '@/app/api/talentsApi'
-import { HomeAdsSection } from '@/components/ads'
+import { HomeVideoAdsSection } from '@/components/ads'
 import { HomeHero } from './HomeHero'
 import {
   HomeEvents,
@@ -13,8 +13,8 @@ import {
 } from './HomeSections'
 
 /**
- * Home — Hero → Ads → Recently added → Tickets & offers → Free events →
- * Talents → Touristic monuments → Fun activities.
+ * Home — Hero (with image ads) → Recently added → Tickets & offers → Free events →
+ * Talents → Video ads → Touristic monuments → Fun activities.
  */
 export function HomePage() {
   const { data: eventsResult } = useGetEventsQuery()
@@ -26,12 +26,12 @@ export function HomePage() {
 
   return (
     <>
-      <HomeHero apiEvents={apiEvents} />
-      <HomeAdsSection ads={apiAds} />
+      <HomeHero apiAds={apiAds} />
       <HomeRecentlyAdded apiEvents={apiEvents} />
       <HomeEvents apiEvents={apiEvents} />
       <HomeFreeEvents apiEvents={apiEvents} />
       <HomeTalents apiTalents={apiTalents} />
+      <HomeVideoAdsSection ads={apiAds} />
       <HomeExperiences apiExperiences={apiExperiences} />
     </>
   )
