@@ -1,7 +1,9 @@
+import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AdImageCard } from '@/components/ads/AdImageCard'
 import { AdVideoCard } from '@/components/ads/AdVideoCard'
+import { ImageIcon, PlayIcon } from '@/components/icons'
 import { FadeUp } from '@/components/motion'
 import {
   Carousel,
@@ -11,7 +13,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/Carousel'
 import { PageSection } from '@/layouts'
-import { HomeSectionHeader } from '@/pages/home/HomeSectionHeader'
+import { cn } from '@/lib/cn'
 
 export type AdRecord = {
   id?: number | string
@@ -24,6 +26,25 @@ export type AdRecord = {
 
 function asText(value: unknown, fallback = '') {
   return value == null || value === '' ? fallback : String(value)
+}
+
+function AdsSectionLabel({
+  icon,
+  children,
+  className,
+}: {
+  icon: ReactNode
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn('flex items-center gap-[8px]', className)}>
+      <span className="inline-flex size-[28px] items-center justify-center rounded-[10px] bg-bg-tint-brand text-ink-brand">
+        {icon}
+      </span>
+      <h2 className="text-[15px] font-bold tracking-[-0.01em] text-ink-primary">{children}</h2>
+    </div>
+  )
 }
 
 /** Home ads band — videos carousel first, then images. Hides empty groups. */
@@ -45,15 +66,11 @@ export function HomeAdsSection({ ads }: { ads?: AdRecord[] }) {
       {videos.length > 0 ? (
         <PageSection padTop={56} padBottom={0}>
           <FadeUp>
-            <HomeSectionHeader
-              overline={t('home.adsVideosOverline', { defaultValue: 'Spotlight' })}
-              heading={t('home.adsVideosHeading', { defaultValue: 'Watch what’s on' })}
-              lede={t('home.adsVideosLede', {
-                defaultValue: 'Short clips from events and moments around the Kingdom.',
-              })}
-            />
+            <AdsSectionLabel icon={<PlayIcon size={14} weight="fill" />}>
+              {t('home.adsVideosHeading')}
+            </AdsSectionLabel>
           </FadeUp>
-          <div className="relative mt-[22px]">
+          <div className="relative mt-[16px]">
             <Carousel opts={{ align: 'start', loop: videos.length > 2 }}>
               <CarouselContent>
                 {videos.map((ad) => (
@@ -65,6 +82,7 @@ export function HomeAdsSection({ ads }: { ads?: AdRecord[] }) {
                       title={asText(ad.title, 'Advertisement')}
                       description={asText(ad.description) || undefined}
                       video={asText(ad.video)}
+                      poster={asText(ad.image) || undefined}
                     />
                   </CarouselItem>
                 ))}
@@ -79,15 +97,11 @@ export function HomeAdsSection({ ads }: { ads?: AdRecord[] }) {
       {images.length > 0 ? (
         <PageSection padTop={56} padBottom={0}>
           <FadeUp>
-            <HomeSectionHeader
-              overline={t('home.adsImagesOverline', { defaultValue: 'Promotions' })}
-              heading={t('home.adsImagesHeading', { defaultValue: 'From the MyTicket board' })}
-              lede={t('home.adsImagesLede', {
-                defaultValue: 'Featured campaigns and seasonal highlights.',
-              })}
-            />
+            <AdsSectionLabel icon={<ImageIcon size={14} weight="fill" />}>
+              {t('home.adsImagesHeading')}
+            </AdsSectionLabel>
           </FadeUp>
-          <div className="relative mt-[22px]">
+          <div className="relative mt-[16px]">
             <Carousel opts={{ align: 'start', loop: images.length > 2 }}>
               <CarouselContent>
                 {images.map((ad) => (

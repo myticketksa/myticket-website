@@ -25,7 +25,7 @@ import { buildPageNumbers } from '@/lib/api/unwrap'
 import { useEventFavorites } from '@/lib/favorites/useEventFavorites'
 import { catalogLabel } from '@/lib/i18n/catalogLabels'
 
-const SORT_KEYS = ['date', 'price', 'rating'] as const
+const SORT_KEYS = ['date', 'newest', 'price', 'rating'] as const
 
 type SortKey = (typeof SORT_KEYS)[number]
 
@@ -105,10 +105,17 @@ export function EventsPage() {
   const { t } = useTranslation(['catalog', 'nav', 'common'])
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Math.max(1, Number(searchParams.get('page') || 1) || 1)
+  const sortParam = searchParams.get('sort')
   const [category, setCategory] = useState('All events')
   const [view, setView] = useState<'grid' | 'list'>('grid')
-  const [sortKey, setSortKey] = useState<SortKey>('date')
+  const [sortKey, setSortKey] = useState<SortKey>(
+    sortParam === 'newest' ? 'newest' : 'date',
+  )
   const [filters, setFilters] = useState<FilterSidebarState>(EMPTY_FILTERS)
+
+  useEffect(() => {
+    if (sortParam === 'newest') setSortKey('newest')
+  }, [sortParam])
 
   const { data: eventsResult, isFetching, isError } = useGetEventsQuery({ page })
   const apiEvents = eventsResult?.items
@@ -205,6 +212,12 @@ export function EventsPage() {
       list.sort((a, b) => parsePrice(a.price) - parsePrice(b.price))
     } else if (sortKey === 'rating') {
       list.sort((a, b) => Number.parseFloat(b.rating) - Number.parseFloat(a.rating))
+    } else if (sortKey === 'newest') {
+      list.sort((a, b) => {
+        const aId = Number(('id' in a && a.id) || 0)
+        const bId = Number(('id' in b && b.id) || 0)
+        return bId - aId
+      })
     }
     return list
   }, [filtered, sortKey])
@@ -216,13 +229,24 @@ export function EventsPage() {
 
   const sortLabels: Record<SortKey, string> = {
     date: t('results.sortDateSoonest'),
+    newest: t('results.sortNewest'),
     price: t('results.sortPriceLow'),
     rating: t('results.sortRating'),
   }
   const sortModeLabel = sortLabels[sortKey]
   const cycleSort = () => {
     const idx = SORT_KEYS.indexOf(sortKey)
-    setSortKey(SORT_KEYS[(idx + 1) % SORT_KEYS.length]!)
+    const next = SORT_KEYS[(idx + 1) % SORT_KEYS.length]!
+    setSortKey(next)
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next === 'newest') params.set('sort', 'newest')
+        else params.delete('sort')
+        return params
+      },
+      { replace: true },
+    )
   }
 
   const categoryDisplay = catalogLabel(t, category)

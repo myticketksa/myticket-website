@@ -6,27 +6,14 @@ import { selectIsAuthenticated } from '@/features/auth/authSlice'
 import { useHeaderAccount } from '@/lib/auth/accountChip'
 
 /**
- * Pattern A — MainLayout. Verified on Home `207:4362`.
- *
- * SiteHeader + Outlet + SiteFooter. Sections inside the outlet are full-bleed and use
- * `PageSection` for the 1320 band. Active nav is derived from the path's first segment.
- *
- * Pages with no active item (Home, Event Details, Search) leave the header
- * unmarked; detail pages under a listing section use `section` state on the parent item.
+ * Pattern A — MainLayout.
+ * Active nav derived from path. Offers marks /events listing;
+ * Tickets & offers marks experience filters and newest-events entry points.
  */
-const LISTING_ACTIVE: Record<string, string> = {
-  events: 'Events',
-  talents: 'Talents',
-  experiences: 'Experiences',
-}
-
-const DETAIL_SECTION: Record<string, string> = {
-  events: 'Events',
-  talents: 'Talents',
-  experiences: 'Experiences',
-}
-
-function resolveNav(pathname: string): {
+function resolveNav(
+  pathname: string,
+  search: string,
+): {
   activeItem?: string
   activeItemState?: 'active' | 'section'
 } {
@@ -35,17 +22,36 @@ function resolveNav(pathname: string): {
   if (!root) return {}
 
   if (root === 'search') return {}
-  // Vendors nav opens the apply funnel — mark active on that path.
+
   if (pathname.startsWith('/apply/vendor')) {
-    return { activeItem: 'Vendors', activeItemState: 'active' }
+    return { activeItem: 'Institutions', activeItemState: 'active' }
   }
 
-  if (root in LISTING_ACTIVE) {
-    if (segments.length === 1) {
-      return { activeItem: LISTING_ACTIVE[root], activeItemState: 'active' }
+  if (root === 'talents') {
+    return {
+      activeItem: 'Talents',
+      activeItemState: segments.length === 1 ? 'active' : 'section',
     }
-    if (root in DETAIL_SECTION) {
-      return { activeItem: DETAIL_SECTION[root], activeItemState: 'section' }
+  }
+
+  if (root === 'events') {
+    const params = new URLSearchParams(search)
+    if (params.get('sort') === 'newest') {
+      return {
+        activeItem: 'TicketsAndOffers',
+        activeItemState: segments.length === 1 ? 'active' : 'section',
+      }
+    }
+    return {
+      activeItem: 'Offers',
+      activeItemState: segments.length === 1 ? 'active' : 'section',
+    }
+  }
+
+  if (root === 'experiences') {
+    return {
+      activeItem: 'TicketsAndOffers',
+      activeItemState: segments.length === 1 ? 'active' : 'section',
     }
   }
 
@@ -53,8 +59,8 @@ function resolveNav(pathname: string): {
 }
 
 export function MainLayout() {
-  const { pathname } = useLocation()
-  const nav = resolveNav(pathname)
+  const { pathname, search } = useLocation()
+  const nav = resolveNav(pathname, search)
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
   const account = useHeaderAccount()
   const signedIn = isAuthenticated || pathname === '/order-confirmation'

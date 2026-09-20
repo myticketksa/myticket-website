@@ -7,22 +7,36 @@ export interface AdImageCardProps {
   className?: string
 }
 
-/** Reusable advertisement image card for home ads carousels. */
+/** Ad image tile — media only until hover/focus reveals title + description. */
 export function AdImageCard({ title, description, image, className }: AdImageCardProps) {
   return (
     <article
       className={cn(
-        'flex h-full flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default',
+        'group relative overflow-hidden rounded-[20px] border border-border-default bg-bg-skeleton',
+        'aspect-[16/10] outline-none focus-within:ring-2 focus-within:ring-border-focus',
         className,
       )}
+      tabIndex={0}
     >
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-bg-skeleton">
-        <img src={image} alt="" className="size-full object-cover" />
-      </div>
-      <div className="flex flex-1 flex-col px-lg py-[14px]">
-        <h3 className="text-[16px] font-bold text-ink-primary">{title}</h3>
+      <img
+        src={image}
+        alt=""
+        className="size-full object-cover transition-transform duration-normal ease-standard group-hover:scale-[1.03] group-focus-within:scale-[1.03]"
+      />
+
+      <div
+        className={cn(
+          'pointer-events-none absolute inset-0 flex flex-col justify-end',
+          'bg-gradient-to-t from-ink-primary/85 via-ink-primary/45 to-transparent',
+          'px-lg pb-lg pt-3xl',
+          'opacity-0 transition-opacity duration-normal ease-standard',
+          'group-hover:opacity-100 group-focus-within:opacity-100',
+          '[@media(hover:none)]:opacity-100',
+        )}
+      >
+        <h3 className="text-[16px] font-bold text-ink-inverse text-balance">{title}</h3>
         {description ? (
-          <p className="mt-[4px] line-clamp-2 text-[13px] font-medium text-ink-secondary">
+          <p className="mt-[4px] line-clamp-2 text-[13px] font-medium text-ink-inverse/90 text-pretty">
             {description}
           </p>
         ) : null}

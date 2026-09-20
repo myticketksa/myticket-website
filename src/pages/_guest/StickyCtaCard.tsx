@@ -88,10 +88,10 @@ export function StickyCtaCard({
         className,
       )}
     >
-      <div className="flex w-full flex-col rounded-[20px] border border-border-default bg-surface-default p-lg shadow-[0px_18px_40px_-26px_rgba(25,16,8,0.3),0px_1px_2px_0px_rgba(25,16,8,0.04)] sm:p-[22px]">
-        <div className="flex w-full items-baseline justify-between gap-md">
-          <p className="text-[14px] text-ink-secondary sm:text-[15px]">{resolvedFromLabel}</p>
-          <p className="text-[22px] font-semibold tabular-nums text-ink-primary sm:text-[26px]">
+      <div className="flex w-full flex-col rounded-[20px] border border-border-default bg-surface-default p-[22px] shadow-[0px_18px_40px_-26px_rgba(25,16,8,0.3),0px_1px_2px_0px_rgba(25,16,8,0.04)]">
+        <div className="flex w-full items-baseline justify-between">
+          <p className="text-[15px] text-ink-secondary">{resolvedFromLabel}</p>
+          <p className="text-[26px] font-semibold tabular-nums text-ink-primary">
             {fromPrice}
           </p>
         </div>
@@ -174,7 +174,7 @@ export function StickyCtaCard({
                         onChangeQty?.(tier.name, Math.max(0, (tier.qty ?? 0) - 1))
                       }
                       className={cn(
-                        'flex size-[40px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default sm:size-[30px]',
+                        'flex size-[30px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default',
                         qtyInteractive
                           ? 'text-ink-primary hover:border-border-brand'
                           : 'cursor-not-allowed text-ink-disabled',
@@ -182,7 +182,7 @@ export function StickyCtaCard({
                     >
                       <MinusIcon size={16} />
                     </button>
-                    <span className="min-w-[1.5ch] text-center text-[15px] font-semibold text-ink-primary tabular-nums">
+                    <span className="min-w-[1ch] text-center text-[15px] font-semibold text-ink-primary tabular-nums">
                       {tier.qty ?? 0}
                     </span>
                     <button
@@ -194,7 +194,7 @@ export function StickyCtaCard({
                         onChangeQty?.(tier.name, Math.min(6, (tier.qty ?? 0) + 1))
                       }
                       className={cn(
-                        'flex size-[40px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default text-[16px] sm:size-[30px]',
+                        'flex size-[30px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default text-[16px]',
                         qtyInteractive
                           ? 'text-ink-primary hover:border-border-brand'
                           : 'cursor-not-allowed text-ink-disabled',

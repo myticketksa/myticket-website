@@ -79,4 +79,7 @@ export {
   ArrowCounterClockwise as ArrowCounterClockwiseIcon,
   HourglassMedium as HourglassIcon,
   UserCircle as UserCircleIcon,
+  Play as PlayIcon,
+  Pause as PauseIcon,
+  Image as ImageIcon,
 } from '@phosphor-icons/react'

@@ -5,8 +5,11 @@
   "home": "الصفحة الرئيسية لـ MyTicket",
   "main": "الرئيسية",
   "events": "الفعاليات",
+  "ticketsAndOffers": "التذاكر والعروض",
+  "offers": "العروض",
   "talents": "المواهب",
   "experiences": "معالم وأنشطة",
+  "institutions": "المنشآت",
   "vendors": "المنشآت",
   "auctions": "المزادات",
   "myTickets": "تذاكري",
@@ -14,6 +17,17 @@
   "profile": "الملف الشخصي",
   "profileNamed": "الملف الشخصي، {{name}}",
   "searchPlaceholder": "ابحث عن فعاليات أو مواهب…",
+  "ticketsMenu": {
+    "upcoming": "العروض القادمة",
+    "newlyAdded": "المضاف حديثاً",
+    "landmarks": "معالم سياحية",
+    "activities": "أنشطة ترفيهية"
+  },
+  "accountMenu": {
+    "profile": "الملف الشخصي",
+    "reservations": "الحجوزات",
+    "favorites": "المفضلة"
+  },
   "footer": {
     "platform": "المنصة",
     "account": "الحساب",

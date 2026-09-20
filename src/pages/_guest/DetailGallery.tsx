@@ -29,13 +29,13 @@ export function DetailGallery({
         className,
       )}
     >
-      <div className="relative aspect-[16/10] min-w-0 overflow-hidden rounded-[14px] sm:rounded-[18px] lg:aspect-auto lg:h-full lg:flex-1">
+      <div className="relative aspect-[16/10] min-w-0 overflow-hidden rounded-[18px] lg:aspect-auto lg:h-full lg:flex-1">
         {mainImage ? (
           <img src={mainImage} alt="" className="size-full object-cover" />
         ) : (
           <ImagePlaceholder ratio="fill" caption="Event imagery 16:10" />
         )}
-        <div className="absolute top-[12px] start-[12px] flex max-w-[calc(100%-24px)] flex-wrap gap-sm sm:top-[18px] sm:start-[18px]">
+        <div className="absolute top-[18px] start-[18px] flex gap-sm">
           {category && (
             <span className="rounded-[14px] bg-bg-page/94 px-[11px] py-[6px] text-[12px] font-semibold text-ink-primary">
               {category}
@@ -49,7 +49,7 @@ export function DetailGallery({
         </div>
       </div>
 
-      <div className="flex h-[72px] w-full shrink-0 gap-md sm:h-[88px] sm:gap-[14px] lg:h-full lg:w-[421px] lg:flex-col">
+      <div className="flex h-[88px] w-full shrink-0 gap-[14px] lg:h-full lg:w-[421px] lg:flex-col">
         {[0, 1, 2].map((i) => {
           const src = thumbs[i]
           const isLast = i === 2

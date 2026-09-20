@@ -59,13 +59,7 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
   return (
     <PageSection padTop={84} padBottom={0}>
       <FadeUp>
-        <HomeSectionHeader
-          overline={t('home.talentsOverline')}
-          overlineTone="brand"
-          heading={t('home.talentsHeading')}
-          lede={t('home.talentsLede')}
-          link={{ label: t('home.browseAllTalents'), to: '/talents' }}
-        />
+        <HomeSectionHeader heading={t('home.talentsHeading')} />
       </FadeUp>
       <div className="relative mt-[26px]">
         <Carousel opts={{ align: 'start', loop: talents.length > 3 }}>
@@ -118,13 +112,7 @@ export function HomeCategories({ apiCategories }: { apiCategories?: EventApiReco
   return (
     <PageSection padTop={72} padBottom={0}>
       <FadeUp>
-        <HomeSectionHeader
-          overline={t('home.whatsOn')}
-          heading={t('home.browseCategory')}
-          lede={t('home.browseCategoryLede')}
-          ledeMaxWidth={null}
-          link={{ label: t('home.fullTaxonomy'), to: '/events' }}
-        />
+        <HomeSectionHeader heading={t('home.browseCategory')} />
       </FadeUp>
       <FadeUp className="mt-[22px] -me-page-gutter overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:overflow-hidden">
         <div className="flex w-max gap-[9px] pr-page-gutter sm:w-auto">
@@ -163,11 +151,49 @@ export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
   return (
     <PageSection padTop={60} padBottom={0}>
       <FadeUp>
-        <HomeSectionHeader
-          overline={t('home.onSaleNow')}
-          heading={t('home.eventsHeading')}
-          lede={t('home.eventsCountMoment', { count: events.length })}
-        />
+        <HomeSectionHeader heading={t('home.ticketsAndOffersHeading')} />
+      </FadeUp>
+      <EventCarousel
+        events={events}
+        isFavourite={isFavourite}
+        toggleFavourite={toggleFavourite}
+        canFavourite={canFavourite}
+      />
+    </PageSection>
+  )
+}
+
+/** Newest events first — same events API, sorted by created/id descending. */
+export function HomeRecentlyAdded({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
+  const { t } = useTranslation('catalog')
+  const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
+
+  const events = useMemo(() => {
+    if (apiEvents && apiEvents.length > 0) {
+      const ranked = [...apiEvents].sort((a, b) => {
+        const aTime =
+          Date.parse(String(a.created_at ?? a.createdAt ?? '')) ||
+          Number(a.id) ||
+          0
+        const bTime =
+          Date.parse(String(b.created_at ?? b.createdAt ?? '')) ||
+          Number(b.id) ||
+          0
+        return bTime - aTime
+      })
+      return ranked.map(mapApiEventToCard).slice(0, HOME_EVENTS.length)
+    }
+    return HOME_EVENTS.map((e) => ({
+      ...e,
+      slug: slugify(e.title),
+      isFree: e.price === 'Free',
+    })).reverse()
+  }, [apiEvents])
+
+  return (
+    <PageSection padTop={72} padBottom={0}>
+      <FadeUp>
+        <HomeSectionHeader heading={t('home.recentlyAddedHeading')} />
       </FadeUp>
       <EventCarousel
         events={events}
@@ -203,12 +229,7 @@ export function HomeFreeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) 
   return (
     <PageSection padTop={60} padBottom={0}>
       <FadeUp>
-        <HomeSectionHeader
-          overline={t('home.freeEventsOverline')}
-          heading={t('home.freeEventsHeading')}
-          lede={t('home.freeEventsLede', { count: freeEvents.length })}
-          link={{ label: t('home.seeAllFreeEvents'), to: '/events?free=1' }}
-        />
+        <HomeSectionHeader heading={t('home.freeEventsHeading')} />
       </FadeUp>
       <EventCarousel
         events={freeEvents}
@@ -434,18 +455,7 @@ export function HomeExperiences({ apiExperiences }: { apiExperiences?: Experienc
       {attractions.length > 0 ? (
         <PageSection padTop={88} padBottom={0}>
           <FadeUp>
-            <HomeSectionHeader
-              overline={t('home.attractionsOverline', { defaultValue: 'Worth the trip' })}
-              heading={t('home.attractionsHeading', { defaultValue: 'Attractions' })}
-              lede={t('home.attractionsLede', {
-                defaultValue: 'Landmarks and destinations open year-round.',
-              })}
-              ledeMaxWidth={null}
-              link={{
-                label: t('home.browseAllAttractions', { defaultValue: 'Browse attractions' }),
-                to: '/experiences?type=attraction',
-              }}
-            />
+            <HomeSectionHeader heading={t('home.attractionsHeading')} />
           </FadeUp>
           <ExperienceCarousel items={attractions} />
         </PageSection>
@@ -454,18 +464,7 @@ export function HomeExperiences({ apiExperiences }: { apiExperiences?: Experienc
       {activities.length > 0 ? (
         <PageSection padTop={88} padBottom={0}>
           <FadeUp>
-            <HomeSectionHeader
-              overline={t('home.activitiesOverline', { defaultValue: 'Do something' })}
-              heading={t('home.activitiesHeading', { defaultValue: 'Activities' })}
-              lede={t('home.activitiesLede', {
-                defaultValue: 'Workshops, tours and hands-on experiences.',
-              })}
-              ledeMaxWidth={null}
-              link={{
-                label: t('home.browseAllActivities', { defaultValue: 'Browse activities' }),
-                to: '/experiences?type=activity',
-              }}
-            />
+            <HomeSectionHeader heading={t('home.activitiesHeading')} />
           </FadeUp>
           <ExperienceCarousel items={activities} />
         </PageSection>

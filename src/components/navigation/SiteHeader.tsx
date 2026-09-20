@@ -1,10 +1,16 @@
 import { useEffect, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Dialog as DialogPrimitive } from 'radix-ui'
+import { Dialog as DialogPrimitive, DropdownMenu } from 'radix-ui'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { Avatar, CountBadge, FlagSaudiArabia, FlagUnitedStates } from '@/components/data-display'
-import { BellIcon, CloseIcon, HeartGlyphIcon, MenuIcon, PowerIcon } from '@/components/icons'
+import {
+  BellIcon,
+  ChevronDownIcon,
+  CloseIcon,
+  MenuIcon,
+  PowerIcon,
+} from '@/components/icons'
 import { Button } from '@/components/ui'
 import { mobileNavToggled, selectMobileNavOpen } from '@/features/ui/uiSlice'
 import { useLocale } from '@/i18n/locale'
@@ -15,15 +21,12 @@ import { NavItem } from './NavItem'
 import { SearchPill } from './SearchPill'
 
 /**
- * Figma `SiteHeader` — node 207:2936, State=Signed out `207:2937` / Signed in `207:2954`.
- *
- * Desktop (`lg+`) matches the Figma 1400 band layout. Below `lg`, nav collapses into an
- * accessible drawer driven by `ui.mobileNavOpen` — the desktop row is otherwise unchanged.
+ * Site header — Logo · nav · search · bell · profile/login · language.
+ * Nav: Tickets & offers (dropdown) · Talents · Offers · Institutions.
  */
-export type NavId = 'Events' | 'Talents' | 'Experiences' | 'Vendors'
+export type NavId = 'TicketsAndOffers' | 'Talents' | 'Offers' | 'Institutions'
 
 export interface HeaderNavLink {
-  /** Stable id for active matching (English). Display text comes from `label`. */
   id?: NavId | string
   label: string
   href: string
@@ -32,15 +35,9 @@ export interface HeaderNavLink {
 export interface SiteHeaderProps {
   state?: 'signedOut' | 'signedIn'
   nav?: HeaderNavLink[]
-  /**
-   * Nav item id to mark. `active` is a listing page on its own item;
-   * `section` is a detail page marking its parent. Omit on pages with no active item.
-   * Callers (e.g. MainLayout) pass English ids: `Events` | `Talents` | `Experiences` | `Vendors`.
-   */
   activeItem?: NavId | string
   activeItemState?: 'active' | 'section'
   showSearch?: boolean
-  /** Signed-in only. */
   account?: {
     name: string
     initials: string
@@ -50,21 +47,24 @@ export interface SiteHeaderProps {
   className?: string
 }
 
-const DEFAULT_NAV: { id: NavId; href: string }[] = [
-  { id: 'Events', href: '/events' },
-  { id: 'Talents', href: '/talents' },
-  { id: 'Experiences', href: '/experiences' },
-  { id: 'Vendors', href: '/apply/vendor' },
+const TICKETS_OFFERS_LINKS = [
+  { key: 'upcoming' as const, href: '/events' },
+  { key: 'newlyAdded' as const, href: '/events?sort=newest' },
+  { key: 'landmarks' as const, href: '/experiences?type=attraction' },
+  { key: 'activities' as const, href: '/experiences?type=activity' },
 ]
 
-function navItemActive(item: HeaderNavLink, activeItem?: string) {
-  if (!activeItem) return false
-  return (item.id ?? item.label) === activeItem
+const PROFILE_LINKS = [
+  { key: 'profile' as const, href: '/profile' },
+  { key: 'reservations' as const, href: '/my-tickets' },
+  { key: 'favorites' as const, href: '/favorites' },
+]
+
+function navItemActive(id: string | undefined, activeItem?: string) {
+  if (!activeItem || !id) return false
+  return id === activeItem
 }
 
-/**
- * Header language switcher - shows flag icon (Saudi Arabia for Arabic, US for English).
- */
 function HeaderLanguagePill({ className }: { className?: string }) {
   const { locale, toggleLocale } = useLocale()
 
@@ -83,44 +83,157 @@ function HeaderLanguagePill({ className }: { className?: string }) {
   )
 }
 
-function AuthCluster({
+function dropdownContentClassName() {
+  return cn(
+    'z-[60] min-w-[220px] overflow-hidden rounded-[14px] border border-border-default',
+    'bg-surface-default p-sm shadow-[0px_18px_40px_-24px_rgba(25,16,8,0.35)]',
+    'data-[state=open]:animate-in data-[state=closed]:animate-out',
+  )
+}
+
+function dropdownItemClassName() {
+  return cn(
+    'flex cursor-pointer select-none items-center rounded-[10px] px-md py-[10px]',
+    'text-[14px] font-semibold text-ink-primary outline-none',
+    'data-[highlighted]:bg-bg-page data-[highlighted]:text-ink-brand-mid',
+  )
+}
+
+function TicketsOffersDropdown({
+  active,
+  activeItemState,
+  onNavigate,
+}: {
+  active: boolean
+  activeItemState: 'active' | 'section'
+  onNavigate: (path: string) => void
+}) {
+  const { t } = useTranslation('nav')
+
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button
+          type="button"
+          className={cn(
+            'inline-flex items-center gap-[6px] text-[15px] leading-[normal] font-semibold whitespace-nowrap',
+            'transition-[color,opacity] duration-micro ease-micro',
+            !active && 'text-ink-primary hover:text-ink-secondary',
+            active &&
+              activeItemState === 'active' &&
+              'border-b-2 border-border-focus pb-[4px] text-ink-brand-mid',
+            active && activeItemState === 'section' && 'text-brand-primary',
+          )}
+        >
+          {t('ticketsAndOffers')}
+          <ChevronDownIcon size={12} className="opacity-70" />
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="start"
+          sideOffset={10}
+          className={dropdownContentClassName()}
+        >
+          {TICKETS_OFFERS_LINKS.map((item) => (
+            <DropdownMenu.Item
+              key={item.key}
+              className={dropdownItemClassName()}
+              onSelect={() => onNavigate(item.href)}
+            >
+              {t(`ticketsMenu.${item.key}`)}
+            </DropdownMenu.Item>
+          ))}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  )
+}
+
+function ProfileDropdown({
+  account,
+  onNavigate,
+}: {
+  account?: SiteHeaderProps['account']
+  onNavigate: (path: string) => void
+}) {
+  const { t } = useTranslation(['nav', 'common'])
+  const { signOut, isLoading } = useSignOut()
+
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button
+          type="button"
+          className="flex shrink-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pe-[12px] ps-[5px] transition-[border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:opacity-95"
+          aria-label={
+            account?.name
+              ? t('nav:profileNamed', { name: account.name })
+              : t('nav:profile')
+          }
+        >
+          <Avatar initials={account?.initials ?? ''} size="md" />
+          <span className="hidden max-w-[8rem] truncate text-[14px] font-bold text-ink-primary xl:inline">
+            {account?.name}
+          </span>
+          <ChevronDownIcon size={12} className="opacity-70" />
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="end"
+          sideOffset={10}
+          className={dropdownContentClassName()}
+        >
+          {PROFILE_LINKS.map((item) => (
+            <DropdownMenu.Item
+              key={item.key}
+              className={dropdownItemClassName()}
+              onSelect={() => onNavigate(item.href)}
+            >
+              {t(`nav:accountMenu.${item.key}`)}
+            </DropdownMenu.Item>
+          ))}
+          <DropdownMenu.Separator className="my-sm h-px bg-border-divider" />
+          <DropdownMenu.Item
+            className={cn(dropdownItemClassName(), 'text-state-danger data-[highlighted]:text-state-danger')}
+            disabled={isLoading}
+            onSelect={() => {
+              void signOut()
+            }}
+          >
+            <span className="inline-flex items-center gap-[8px]">
+              <PowerIcon size={14} />
+              {t('common:actions.signOut')}
+            </span>
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  )
+}
+
+function DesktopAuthActions({
   state,
   account,
-  signInIcon,
   onNavigate,
-  onClose,
 }: {
   state: 'signedOut' | 'signedIn'
   account?: SiteHeaderProps['account']
-  signInIcon: boolean
   onNavigate: (path: string) => void
-  onClose?: () => void
 }) {
   const { t } = useTranslation(['nav', 'common'])
 
   if (state === 'signedOut') {
     return (
-      <div className="flex shrink-0 items-center gap-[14px]">
-        <HeaderLanguagePill />
-        <Button
-          variant="secondary"
-          size="md"
-          icon={signInIcon ? <HeartGlyphIcon size={16} /> : undefined}
-          onClick={() => onNavigate('/sign-in')}
-        >
-          {t('common:actions.signIn')}
-        </Button>
-        <Button size="md" onClick={() => onNavigate('/register')}>
-          {t('common:actions.createAccount')}
-        </Button>
-      </div>
+      <Button size="md" onClick={() => onNavigate('/sign-in')}>
+        {t('common:actions.login')}
+      </Button>
     )
   }
 
   return (
-    <div className="flex shrink-0 items-center gap-[14px]">
-      <HeaderLanguagePill />
-
+    <>
       <span className="relative shrink-0">
         <Button
           variant="icon"
@@ -139,40 +252,19 @@ function AuthCluster({
           </span>
         )}
       </span>
-
-      <Link
-        to="/my-tickets"
-        onClick={onClose}
-        className="text-[15px] font-bold whitespace-nowrap text-ink-primary transition-[color,opacity] duration-micro ease-micro hover:text-ink-secondary"
-      >
-        {t('nav:myTickets')}
-      </Link>
-
-      <Link
-        to="/profile"
-        onClick={onClose}
-        className="flex shrink-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pe-[14px] ps-[5px] transition-[border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:opacity-95"
-      >
-        <Avatar initials={account?.initials ?? ''} size="md" />
-        <span className="text-[14px] font-bold whitespace-nowrap text-ink-primary">
-          {account?.name}
-        </span>
-      </Link>
-    </div>
+      <ProfileDropdown account={account} onNavigate={onNavigate} />
+    </>
   )
 }
 
-/** Mobile drawer auth — language / bell / avatar on one row; tickets + sign out below. */
 function MobileDrawerAuth({
   state,
   account,
-  signInIcon,
   onNavigate,
   onClose,
 }: {
   state: 'signedOut' | 'signedIn'
   account?: SiteHeaderProps['account']
-  signInIcon: boolean
   onNavigate: (path: string) => void
   onClose: () => void
 }) {
@@ -182,18 +274,8 @@ function MobileDrawerAuth({
   if (state === 'signedOut') {
     return (
       <div className="mb-xl flex flex-col gap-sm">
-        <HeaderLanguagePill className="self-start" />
-        <Button
-          variant="secondary"
-          size="md"
-          icon={signInIcon ? <HeartGlyphIcon size={16} /> : undefined}
-          onClick={() => onNavigate('/sign-in')}
-          className="w-full"
-        >
-          {t('common:actions.signIn')}
-        </Button>
-        <Button size="md" onClick={() => onNavigate('/register')} className="w-full">
-          {t('common:actions.createAccount')}
+        <Button size="md" onClick={() => onNavigate('/sign-in')} className="w-full">
+          {t('common:actions.login')}
         </Button>
       </div>
     )
@@ -202,7 +284,6 @@ function MobileDrawerAuth({
   return (
     <div className="mb-xl flex flex-col gap-md">
       <div className="flex items-center gap-sm">
-        <HeaderLanguagePill />
         <span className="relative shrink-0">
           <Button
             variant="icon"
@@ -221,32 +302,26 @@ function MobileDrawerAuth({
             </span>
           )}
         </span>
-        <Link
-          to="/profile"
-          onClick={onClose}
-          className="ms-auto flex shrink-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pe-[12px] ps-[5px] transition-[border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:opacity-95"
-          aria-label={
-            account?.name
-              ? t('nav:profileNamed', { name: account.name })
-              : t('nav:profile')
-          }
-        >
+        <div className="ms-auto flex min-w-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pe-[12px] ps-[5px]">
           <Avatar initials={account?.initials ?? ''} size="md" />
           {account?.name ? (
             <span className="max-w-[7rem] truncate text-[13px] font-bold text-ink-primary">
               {account.name}
             </span>
           ) : null}
-        </Link>
+        </div>
       </div>
 
-      <Link
-        to="/my-tickets"
-        onClick={onClose}
-        className="text-[15px] font-bold text-ink-primary transition-[color,opacity] duration-micro ease-micro hover:text-ink-secondary"
-      >
-        {t('nav:myTickets')}
-      </Link>
+      {PROFILE_LINKS.map((item) => (
+        <Link
+          key={item.key}
+          to={item.href}
+          onClick={onClose}
+          className="text-[15px] font-bold text-ink-primary transition-colors duration-micro ease-micro hover:text-ink-secondary"
+        >
+          {t(`nav:accountMenu.${item.key}`)}
+        </Link>
+      ))}
 
       <button
         type="button"
@@ -264,14 +339,96 @@ function MobileDrawerAuth({
   )
 }
 
+function MainNav({
+  activeItem,
+  activeItemState,
+  onNavigate,
+  className,
+  itemClassName,
+  ticketsMode = 'dropdown',
+}: {
+  activeItem?: string
+  activeItemState: 'active' | 'section'
+  onNavigate: (path: string) => void
+  className?: string
+  itemClassName?: string
+  ticketsMode?: 'dropdown' | 'flat'
+}) {
+  const { t } = useTranslation('nav')
+
+  const talentsActive = navItemActive('Talents', activeItem)
+  const offersActive = navItemActive('Offers', activeItem)
+  const institutionsActive = navItemActive('Institutions', activeItem)
+  const ticketsActive = navItemActive('TicketsAndOffers', activeItem)
+
+  return (
+    <nav aria-label={t('main')} className={className}>
+      {ticketsMode === 'dropdown' ? (
+        <TicketsOffersDropdown
+          active={ticketsActive}
+          activeItemState={activeItemState}
+          onNavigate={onNavigate}
+        />
+      ) : (
+        <>
+          <p className="text-[12px] font-bold tracking-[0.06em] text-ink-muted uppercase">
+            {t('ticketsAndOffers')}
+          </p>
+          {TICKETS_OFFERS_LINKS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={cn(
+                'min-h-[44px] text-start text-[14px] font-semibold text-ink-primary',
+                itemClassName,
+              )}
+              onClick={() => onNavigate(item.href)}
+            >
+              {t(`ticketsMenu.${item.key}`)}
+            </button>
+          ))}
+        </>
+      )}
+      <NavItem
+        label={t('talents')}
+        href="/talents"
+        state={talentsActive ? activeItemState : 'default'}
+        className={itemClassName}
+        onClick={(event) => {
+          event.preventDefault()
+          onNavigate('/talents')
+        }}
+      />
+      <NavItem
+        label={t('offers')}
+        href="/events"
+        state={offersActive ? activeItemState : 'default'}
+        className={itemClassName}
+        onClick={(event) => {
+          event.preventDefault()
+          onNavigate('/events')
+        }}
+      />
+      <NavItem
+        label={t('institutions')}
+        href="/apply/vendor"
+        state={institutionsActive ? activeItemState : 'default'}
+        className={itemClassName}
+        onClick={(event) => {
+          event.preventDefault()
+          onNavigate('/apply/vendor')
+        }}
+      />
+    </nav>
+  )
+}
+
 export function SiteHeader({
   state = 'signedOut',
-  nav,
   activeItem,
   activeItemState = 'active',
   showSearch = true,
   account,
-  signInIcon = true,
   className,
 }: SiteHeaderProps) {
   const { t } = useTranslation(['nav', 'common'])
@@ -279,14 +436,6 @@ export function SiteHeader({
   const { pathname } = useLocation()
   const dispatch = useAppDispatch()
   const mobileNavOpen = useAppSelector(selectMobileNavOpen)
-
-  const resolvedNav: HeaderNavLink[] =
-    nav ??
-    DEFAULT_NAV.map((item) => ({
-      id: item.id,
-      href: item.href,
-      label: t(`nav:${item.id.toLowerCase()}`),
-    }))
 
   useEffect(() => {
     dispatch(mobileNavToggled(false))
@@ -325,21 +474,17 @@ export function SiteHeader({
         className,
       )}
     >
-      <div className="flex h-full w-full max-w-[1400px] items-center gap-md px-gutter-desktop lg:gap-[38px]">
+      <div className="flex h-full w-full max-w-[1400px] items-center gap-md px-gutter-desktop lg:gap-[28px]">
         <Link to="/" aria-label={t('nav:home')} className="shrink-0">
           <Logo height={40} alt="" />
         </Link>
 
-        <nav aria-label={t('nav:main')} className="hidden shrink-0 items-center gap-2xl lg:flex">
-          {resolvedNav.map((item) => (
-            <NavItem
-              key={item.id ?? item.href}
-              label={item.label}
-              href={item.href}
-              state={navItemActive(item, activeItem) ? activeItemState : 'default'}
-            />
-          ))}
-        </nav>
+        <MainNav
+          activeItem={activeItem}
+          activeItemState={activeItemState}
+          onNavigate={go}
+          className="hidden shrink-0 items-center gap-2xl lg:flex"
+        />
 
         <div className="h-px flex-1" />
 
@@ -352,16 +497,13 @@ export function SiteHeader({
           </form>
         )}
 
-        <div className="hidden lg:block">
-          <AuthCluster
-            state={state}
-            account={account}
-            signInIcon={signInIcon}
-            onNavigate={go}
-          />
+        <div className="hidden items-center gap-[14px] lg:flex">
+          <DesktopAuthActions state={state} account={account} onNavigate={go} />
+          <HeaderLanguagePill />
         </div>
 
         <div className="flex shrink-0 items-center gap-sm lg:hidden">
+          <HeaderLanguagePill />
           {state === 'signedIn' && (
             <Button
               variant="icon"
@@ -411,28 +553,20 @@ export function SiteHeader({
               <MobileDrawerAuth
                 state={state}
                 account={account}
-                signInIcon={signInIcon}
                 onNavigate={go}
                 onClose={closeDrawer}
               />
 
               <div className="mb-xl h-px w-full bg-border-divider" />
 
-              <nav aria-label={t('nav:main')} className="flex flex-col gap-md">
-                {resolvedNav.map((item) => (
-                  <NavItem
-                    key={item.id ?? item.href}
-                    label={item.label}
-                    href={item.href}
-                    state={navItemActive(item, activeItem) ? activeItemState : 'default'}
-                    className="min-h-[44px] items-center"
-                    onClick={(event) => {
-                      event.preventDefault()
-                      go(item.href)
-                    }}
-                  />
-                ))}
-              </nav>
+              <MainNav
+                activeItem={activeItem}
+                activeItemState={activeItemState}
+                onNavigate={go}
+                ticketsMode="flat"
+                className="flex flex-col items-stretch gap-md"
+                itemClassName="min-h-[44px] items-center"
+              />
 
               {showSearch && (
                 <form onSubmit={onSearch} className="mt-xl sm:hidden">

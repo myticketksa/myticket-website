@@ -1,21 +1,20 @@
 import { useGetAdvertisementsQuery } from '@/app/api/accountApis'
-import { useGetEventCategoriesQuery, useGetEventsQuery } from '@/app/api/eventsApi'
+import { useGetEventsQuery } from '@/app/api/eventsApi'
 import { useGetExperiencesQuery } from '@/app/api/experiencesApi'
 import { useGetTalentsQuery } from '@/app/api/talentsApi'
 import { HomeAdsSection } from '@/components/ads'
 import { HomeHero } from './HomeHero'
 import {
-  HomeCategories,
-  HomeCta,
   HomeEvents,
   HomeExperiences,
   HomeFreeEvents,
+  HomeRecentlyAdded,
   HomeTalents,
 } from './HomeSections'
 
 /**
- * Home — Figma `207:4362` (guest BIG_CHANGES: no public vendor/organizer discovery).
- * Catalog APIs with fixture fallback in section components.
+ * Home — Hero → Ads → Recently added → Tickets & offers → Free events →
+ * Talents → Touristic monuments → Fun activities.
  */
 export function HomePage() {
   const { data: eventsResult } = useGetEventsQuery()
@@ -23,18 +22,16 @@ export function HomePage() {
   const { data: apiAds } = useGetAdvertisementsQuery()
   const { data: apiTalents } = useGetTalentsQuery()
   const { data: apiExperiences } = useGetExperiencesQuery()
-  const { data: apiCategories } = useGetEventCategoriesQuery()
 
   return (
     <>
       <HomeHero apiEvents={apiEvents} />
       <HomeAdsSection ads={apiAds} />
-      <HomeTalents apiTalents={apiTalents} />
-      <HomeCategories apiCategories={apiCategories} />
+      <HomeRecentlyAdded apiEvents={apiEvents} />
       <HomeEvents apiEvents={apiEvents} />
       <HomeFreeEvents apiEvents={apiEvents} />
+      <HomeTalents apiTalents={apiTalents} />
       <HomeExperiences apiExperiences={apiExperiences} />
-      <HomeCta />
     </>
   )
 }

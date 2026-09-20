@@ -112,18 +112,8 @@ export function HomeHero({ apiEvents }: { apiEvents?: ApiRecord[] }) {
           </FadeUp>
 
           <FadeUp inView={false} delay={0.1} distance={12}>
-            <h1 className="mt-xl text-[32px] leading-[1.1] font-bold tracking-[-0.04em] text-balance text-ink-primary sm:mt-[26px] sm:text-[42px] sm:leading-[1.08] lg:text-display-hero-xl">
-              <span className="block">{t('home.heroLine1')}</span>
-              <span className="block">{t('home.heroLine2')}</span>
-              <span
-                className="block bg-clip-text text-transparent"
-                style={{
-                  backgroundImage:
-                    'linear-gradient(135deg, var(--color-brand-gradient-start) 0%, var(--color-ink-brand) 46%, var(--color-ink-brand-strong) 100%)',
-                }}
-              >
-                {t('home.heroTitleAccent')}
-              </span>
+            <h1 className="mt-xl max-w-[560px] text-[32px] leading-[1.1] font-bold tracking-[-0.04em] text-balance text-ink-primary sm:mt-[26px] sm:text-[42px] sm:leading-[1.08] lg:text-display-hero-xl">
+              {t('home.heroTitle')}
             </h1>
 
             <p className="mt-lg max-w-[480px] text-[16px] leading-[1.55] font-medium text-pretty text-ink-secondary sm:mt-2xl sm:text-[18px]">
