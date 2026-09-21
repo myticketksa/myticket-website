@@ -51,6 +51,10 @@ function parsePrice(price: string): number {
   return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
 }
 
+function categoryKey(value: string | undefined): string {
+  return (value ?? "").trim().toLocaleLowerCase().replace(/\s+/g, " ");
+}
+
 function startOfLocalDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
@@ -120,15 +124,26 @@ export function EventsPage() {
     if (sortParam === "newest") setSortKey("newest");
   }, [sortParam]);
 
+  const { data: apiCategories } = useGetEventCategoriesQuery();
+  const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites();
+
+  const selectedCategoryId = useMemo(() => {
+    if (categoryKey(category) === categoryKey("All events")) return undefined;
+    const selected = (apiCategories ?? []).find((record) => {
+      const label = mapCategoryLabels([record])[0];
+      return categoryKey(label) === categoryKey(category);
+    });
+    const id = selected?.id;
+    return typeof id === "string" || typeof id === "number" ? id : undefined;
+  }, [apiCategories, category]);
+
   const {
     data: eventsResult,
     isFetching,
     isError,
-  } = useGetEventsQuery({ page });
+  } = useGetEventsQuery({ page, categoryId: selectedCategoryId });
   const apiEvents = eventsResult?.items;
   const pagination = eventsResult?.pagination;
-  const { data: apiCategories } = useGetEventCategoriesQuery();
-  const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites();
 
   const setPage = (next: number) => {
     const safe = Math.max(1, next);
@@ -190,23 +205,26 @@ export function EventsPage() {
   );
 
   const catalog = useMemo(() => {
-    if (apiEvents && apiEvents.length > 0) {
-      return apiEvents.map(mapApiEventToCard);
+    if (eventsResult !== undefined) {
+      return (apiEvents ?? []).map(mapApiEventToCard);
     }
     return CATALOG_EVENTS.map((event) => ({
       ...event,
       slug: slugify(event.title),
     }));
-  }, [apiEvents]);
+  }, [apiEvents, eventsResult]);
 
   const filtered = useMemo(() => {
     const ratingFloor = parseRatingFloor(filters.rating);
     const freeOnly = filters.other.includes("Free entry only");
+    const hasEventCategories = catalog.some((event) => event.category?.trim());
 
     return catalog.filter((e) => {
-      if (category !== "All events") {
-        if (e.category && e.category.toLowerCase() !== category.toLowerCase())
-          return false;
+      if (
+        categoryKey(category) !== categoryKey("All events") &&
+        hasEventCategories
+      ) {
+        if (categoryKey(e.category) !== categoryKey(category)) return false;
       }
       if (
         filters.cities.length > 0 &&
