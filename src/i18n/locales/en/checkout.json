@@ -173,6 +173,28 @@
     "seat": "SEAT",
     "holder": "HOLDER",
     "ticketNo": "TICKET NO.",
+    "eventStart": "STARTS",
+    "venue": "VENUE",
+    "scanStatus": "SCAN STATUS",
+    "seatingType": "SEATING",
+    "scanAtEntry": "Scan at entry",
+    "paymentStatus": "Payment",
+    "orderStatus": "Order",
+    "paymentPendingNote": "Payment is still pending — your QR activates once payment succeeds.",
+    "seating": {
+      "free": "Free seating",
+      "assigned": "Assigned seats"
+    },
+    "status": {
+      "pending": "Pending",
+      "pending_payment": "Pending payment",
+      "succeeded": "Paid",
+      "paid": "Paid",
+      "completed": "Completed",
+      "active": "Active",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
     "ticketFallback": "TICKET",
     "ticketHolder": "Ticket holder",
     "loadingTitle": "Loading…",

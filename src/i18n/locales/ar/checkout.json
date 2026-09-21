@@ -173,6 +173,28 @@
     "seat": "المقعد",
     "holder": "الحامل",
     "ticketNo": "رقم التذكرة",
+    "eventStart": "البداية",
+    "venue": "المكان",
+    "scanStatus": "حالة المسح",
+    "seatingType": "الجلوس",
+    "scanAtEntry": "امسح عند الدخول",
+    "paymentStatus": "الدفع",
+    "orderStatus": "الطلب",
+    "paymentPendingNote": "الدفع ما زال معلّقاً — يُفعَّل رمز QR بعد نجاح الدفع.",
+    "seating": {
+      "free": "جلوس حر",
+      "assigned": "مقاعد محددة"
+    },
+    "status": {
+      "pending": "معلّق",
+      "pending_payment": "بانتظار الدفع",
+      "succeeded": "مدفوع",
+      "paid": "مدفوع",
+      "completed": "مكتمل",
+      "active": "نشط",
+      "failed": "فشل",
+      "cancelled": "ملغى"
+    },
     "ticketFallback": "تذكرة",
     "ticketHolder": "حامل التذكرة",
     "loadingTitle": "جاري التحميل…",

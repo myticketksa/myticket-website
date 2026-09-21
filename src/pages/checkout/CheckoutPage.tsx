@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import eventThumb from '@/assets/checkout/event-thumb.png'
 import { CheckIcon } from '@/components/icons'
-import { MoneyAmount, PriceDisplay } from '@/components/data-display'
+import { PriceDisplay } from '@/components/data-display'
 import { Button, Checkbox, Field, Radio, RadioGroup, TextInput } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { usePayOrderMutation, useCreateOrderMutation, useApplyPromoCodeMutation } from '@/app/api/ordersApi'
@@ -20,7 +20,7 @@ import {
   type HeldSeatSnapshot,
 } from '@/lib/purchase/holdSession'
 
-type PaymentMethod = 'card' | 'apple' | 'tabby' | 'tamara' | 'wallet' | 'sadad'
+type PaymentMethod = 'card' | 'apple' | 'wallet'
 
 type HeldSeat = HeldSeatSnapshot
 
@@ -63,7 +63,7 @@ export function CheckoutPage() {
   const [applyPromo, promoState] = useApplyPromoCodeMutation()
   const [releaseHold] = useReleaseHoldMutation()
   const paidRef = useRef(false)
-  const [method, setMethod] = useState<PaymentMethod>('tabby')
+  const [method, setMethod] = useState<PaymentMethod>('card')
   const [assignGuests, setAssignGuests] = useState(false)
   const [acceptRefund, setAcceptRefund] = useState(true)
 
@@ -139,22 +139,13 @@ export function CheckoutPage() {
   const payLabels: Record<PaymentMethod, string> = {
     card: t('checkout.pay'),
     apple: t('checkout.payApple'),
-    tabby: t('checkout.payTabby'),
-    tamara: t('checkout.payTamara'),
     wallet: t('checkout.payWallet'),
-    sadad: t('checkout.paySadad'),
   }
   const payLabel = payLabels[method]
   const paying = payState.isLoading || createState.isLoading
   const assurances = [
     t('checkout.assurances.issued'),
     t('checkout.assurances.held'),
-  ] as const
-  const tabbySchedule = [
-    t('checkout.tabbySchedule.today'),
-    t('checkout.tabbySchedule.month1'),
-    t('checkout.tabbySchedule.month2'),
-    t('checkout.tabbySchedule.month3'),
   ] as const
 
   function buildBeneficiaries(count: number) {
@@ -413,63 +404,6 @@ export function CheckoutPage() {
             />
 
             <PaymentCard
-              value="tabby"
-              selected={method === 'tabby'}
-              title={t('checkout.methods.tabby')}
-              subtitle={t('checkout.methods.tabbySub')}
-              leading={
-                <MethodMark className="bg-brand-gradient-start text-ink-body">
-                  tabby
-                </MethodMark>
-              }
-              trailing={
-                <span className="rounded-[13px] bg-bg-tint-brand px-[10px] py-[5px] text-[12px] font-semibold text-ink-brand-strong">
-                  {t('checkout.methods.tabbyBadge')}
-                </span>
-              }
-            >
-              {method === 'tabby' && (
-                <div className="mt-lg w-full border-t border-border-divider pt-lg">
-                  <div className="grid grid-cols-2 gap-[10px] sm:grid-cols-4">
-                    {tabbySchedule.map((label) => (
-                      <div
-                        key={label}
-                        className="rounded-[12px] border border-border-default bg-bg-page p-md text-center"
-                      >
-                        <p className="text-[11px] font-semibold tracking-[0.55px] text-ink-muted">
-                          {label}
-                        </p>
-                        <p className="mt-[5px] text-[15px] font-semibold text-ink-primary">
-                          <MoneyAmount value={314} />
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-[10px] text-[12px] leading-[1.5] text-ink-secondary">
-                    {t('checkout.methods.tabbyNote')}
-                  </p>
-                </div>
-              )}
-            </PaymentCard>
-
-            <PaymentCard
-              value="tamara"
-              selected={method === 'tamara'}
-              title={t('checkout.methods.tamara')}
-              subtitle={t('checkout.methods.tamaraSub')}
-              leading={
-                <MethodMark className="bg-payment-tamara text-payment-tamara-ink">
-                  tamara
-                </MethodMark>
-              }
-              trailing={
-                <span className="rounded-[13px] bg-payment-tamara-badge px-[10px] py-[5px] text-[12px] font-semibold text-payment-tamara-badge-ink">
-                  {t('checkout.methods.tamaraBadge')}
-                </span>
-              }
-            />
-
-            <PaymentCard
               value="wallet"
               selected={method === 'wallet'}
               title={t('checkout.methods.wallet')}
@@ -478,16 +412,6 @@ export function CheckoutPage() {
                 <MethodMark className="bg-bg-tint-brand text-ink-link-hover">
                   {walletLabel}
                 </MethodMark>
-              }
-            />
-
-            <PaymentCard
-              value="sadad"
-              selected={method === 'sadad'}
-              title={t('checkout.methods.sadad')}
-              subtitle={t('checkout.methods.sadadSub')}
-              leading={
-                <MethodMark className="bg-border-divider text-ink-body">SADAD</MethodMark>
               }
             />
           </RadioGroup>
@@ -621,9 +545,6 @@ export function CheckoutPage() {
                   value={total}
                 />
               </div>
-              <p className="mt-[8px] text-[13px] font-semibold text-ink-brand">
-                {t('checkout.payToday', { amount: Math.round(total / 4).toLocaleString() })}
-              </p>
             </div>
 
             <Button

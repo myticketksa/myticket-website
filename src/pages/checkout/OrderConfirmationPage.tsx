@@ -4,14 +4,22 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import checkIcon from '@/assets/checkout/check-26.svg'
 import { ShareIcon } from '@/components/icons'
-import { Divider, PriceDisplay } from '@/components/data-display'
+import {
+  Divider,
+  PriceDisplay,
+  StatusBadge,
+  type StatusTone,
+} from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
 import { useGetOrderDetailsQuery } from '@/app/api/ordersApi'
 import { useAppSelector } from '@/app/hooks'
 import { selectAuthUser } from '@/features/auth/authSlice'
-import { mapOrderConfirmation } from '@/lib/api/mappers/orders'
+import {
+  mapOrderConfirmation,
+  type OrderConfirmationView,
+} from '@/lib/api/mappers/orders'
 
 const NEXT_STEP_KEYS = ['offline', 'share', 'remind'] as const
 
@@ -40,14 +48,38 @@ function resolveOrderId(searchParams: URLSearchParams) {
   )
 }
 
-function paymentLineLabel(
-  label: string,
-  t: (key: string) => string,
-): string {
+function paymentLineLabel(label: string, t: (key: string) => string): string {
   if (label === 'wallet') return t('confirmation.walletBalance')
   if (label === 'card') return t('confirmation.cardPayment')
   return label
 }
+
+function statusTone(status: string): StatusTone {
+  const value = status.toLowerCase()
+  if (
+    value.includes('success') ||
+    value === 'paid' ||
+    value === 'completed' ||
+    value === 'active'
+  ) {
+    return 'successTint'
+  }
+  if (value.includes('pending') || value.includes('await')) return 'infoTint'
+  if (value.includes('fail') || value.includes('cancel') || value.includes('reject')) {
+    return 'dangerTint'
+  }
+  return 'neutralOutline'
+}
+
+function formatStatusLabel(status: string, translate: (key: string) => string): string {
+  if (!status || status === '—') return '—'
+  const key = `confirmation.status.${status}`
+  const translated = translate(key)
+  if (translated !== key) return translated
+  return status.replace(/_/g, ' ')
+}
+
+type ConfirmationView = OrderConfirmationView & { apiNote: string | null }
 
 /**
  * Order Confirmation — Figma `207:8462`. Uses `MainLayout` (SiteHeader + SiteFooter).
@@ -63,7 +95,7 @@ export function OrderConfirmationPage() {
     skip: !orderId,
   })
 
-  const view = useMemo(() => {
+  const view = useMemo((): ConfirmationView => {
     if (order && Object.keys(order).length > 0) {
       return {
         ...mapOrderConfirmation(order, {
@@ -71,7 +103,7 @@ export function OrderConfirmationPage() {
           email: user?.email,
           holder: user?.name,
         }),
-        apiNote: null as string | null,
+        apiNote: null,
       }
     }
 
@@ -82,15 +114,25 @@ export function OrderConfirmationPage() {
       placedAt: '—',
       eventTitle: isFetching ? t('confirmation.loadingTitle') : t('confirmation.unavailableTitle'),
       eventMeta: '—',
+      eventPlace: '—',
+      eventStart: '—',
+      eventCover: '',
+      eventSlug: '',
+      shortDescription: '',
+      seatingType: 'assigned',
       tierLabel: t('confirmation.ticketFallback'),
+      unitPrice: '0.00',
       holder: user?.name ?? t('confirmation.ticketHolder'),
-      tickets: [] as { id: string; seat: string; gate: string; qrValue: string }[],
+      tickets: [],
+      lineItems: [],
       subtotal: '0.00',
-      serviceFee: null as string | null,
-      vat: null as string | null,
+      serviceFee: null,
+      vat: null,
       total: '0.00',
-      paymentLines: [] as { label: string; amount: string }[],
-      cashback: null as string | null,
+      paymentLines: [],
+      cashback: null,
+      paymentStatus: '',
+      orderStatus: '',
       apiNote: isError
         ? t('confirmation.loadError')
         : isFetching
@@ -100,6 +142,9 @@ export function OrderConfirmationPage() {
             : t('confirmation.completeCheckout'),
     }
   }, [isError, isFetching, order, orderId, t, user?.email, user?.name])
+
+  const paymentPending =
+    view.paymentStatus.includes('pending') || view.paymentStatus.includes('await')
 
   return (
     <PageSection padTop={52} padBottom={96}>
@@ -116,11 +161,30 @@ export function OrderConfirmationPage() {
         {view.apiNote ? (
           <p className="mt-[8px] max-w-[560px] text-[13px] text-ink-muted">{view.apiNote}</p>
         ) : null}
+        {paymentPending ? (
+          <p className="mt-[8px] max-w-[560px] text-[13px] font-semibold text-state-warning">
+            {t('confirmation.paymentPendingNote')}
+          </p>
+        ) : null}
         <p className="mt-[10px] text-[13.5px] font-bold">
           <span className="text-ink-muted">{t('confirmation.orderReference')}</span>{' '}
           <span className="text-ink-primary">{view.reference}</span>{' '}
           <span className="text-ink-muted">· {view.placedAt}</span>
         </p>
+        {(view.paymentStatus || view.orderStatus) && (
+          <div className="mt-[12px] flex flex-wrap items-center justify-center gap-sm">
+            {view.paymentStatus ? (
+              <StatusBadge tone={statusTone(view.paymentStatus)}>
+                {t('confirmation.paymentStatus')}: {formatStatusLabel(view.paymentStatus, t)}
+              </StatusBadge>
+            ) : null}
+            {view.orderStatus ? (
+              <StatusBadge tone={statusTone(view.orderStatus)}>
+                {t('confirmation.orderStatus')}: {formatStatusLabel(view.orderStatus, t)}
+              </StatusBadge>
+            ) : null}
+          </div>
+        )}
       </div>
 
       <div className="mx-auto mt-[40px] flex max-w-[1040px] flex-col gap-[32px] lg:flex-row lg:items-start">
@@ -132,13 +196,20 @@ export function OrderConfirmationPage() {
             >
               <div className="min-w-0 flex-1 px-lg py-[18px] sm:px-[26px] sm:py-[22px]">
                 <p className="text-[12px] font-bold tracking-[0.96px] text-brand-gradient-end">
-                  {view.tierLabel}
+                  {ticket.ticketTypeLabel
+                    ? ticket.ticketTypeLabel.toUpperCase()
+                    : view.tierLabel}
                 </p>
                 <h2 className="mt-[6px] text-[20px] leading-[1.1] font-extrabold tracking-[-0.6px] text-ink-primary sm:text-[24px]">
                   {view.eventTitle}
                 </h2>
                 <p className="mt-[6px] text-[14px] text-ink-secondary">{view.eventMeta}</p>
-                <div className="mt-lg grid gap-[26px] sm:grid-cols-3">
+                {view.shortDescription ? (
+                  <p className="mt-[8px] text-[13px] leading-[1.5] text-ink-muted">
+                    {view.shortDescription}
+                  </p>
+                ) : null}
+                <div className="mt-lg grid gap-[26px] sm:grid-cols-2 lg:grid-cols-3">
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
                       {t('confirmation.seat')}
@@ -157,15 +228,52 @@ export function OrderConfirmationPage() {
                     </p>
                     <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{ticket.id}</p>
                   </div>
+                  <div>
+                    <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
+                      {t('confirmation.eventStart')}
+                    </p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{view.eventStart}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
+                      {t('confirmation.venue')}
+                    </p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{view.eventPlace}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
+                      {t('confirmation.scanStatus')}
+                    </p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">
+                      {formatStatusLabel(ticket.scanStatus, t)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
+                      {t('confirmation.seatingType')}
+                    </p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">
+                      {t(`confirmation.seating.${view.seatingType}`)}
+                    </p>
+                  </div>
                 </div>
               </div>
               <div className="flex shrink-0 flex-col items-center justify-center gap-sm border-t-[1.5px] border-dashed border-border-default bg-bg-page px-[22px] py-[18px] sm:border-t-0 sm:border-l-[1.5px]">
-                <div className="rounded-[10px] border border-border-default bg-surface-default p-sm">
+                <div
+                  className={cn(
+                    'rounded-[10px] border border-border-default bg-surface-default p-sm',
+                    paymentPending && 'opacity-50',
+                  )}
+                >
                   <TicketQr value={ticket.qrValue} />
                 </div>
                 {ticket.gate !== '—' ? (
                   <p className="text-[12px] font-semibold text-ink-secondary">{ticket.gate}</p>
-                ) : null}
+                ) : (
+                  <p className="text-[12px] font-semibold text-ink-muted">
+                    {t('confirmation.scanAtEntry')}
+                  </p>
+                )}
               </div>
             </article>
           ))}
@@ -191,12 +299,26 @@ export function OrderConfirmationPage() {
           <div className="rounded-[20px] border border-border-default bg-surface-default p-[24px]">
             <h3 className="text-[15px] font-semibold text-ink-primary">{t('confirmation.whatPaid')}</h3>
             <div className="mt-md flex flex-col gap-sm text-[14px]">
-              <div className="flex justify-between gap-md">
-                <span className="text-ink-secondary">
-                  {view.ticketCount} × {view.tierLabel}
-                </span>
-                <PriceDisplay context="row">{view.subtotal}</PriceDisplay>
-              </div>
+              {view.lineItems.length > 0
+                ? view.lineItems.map((line) => (
+                    <div
+                      key={`${line.label}-${line.quantity}-${line.subtotal}`}
+                      className="flex justify-between gap-md"
+                    >
+                      <span className="text-ink-secondary">
+                        {line.quantity} × {line.label}
+                      </span>
+                      <PriceDisplay context="row">{line.subtotal}</PriceDisplay>
+                    </div>
+                  ))
+                : (
+                    <div className="flex justify-between gap-md">
+                      <span className="text-ink-secondary">
+                        {view.ticketCount} × {view.tierLabel}
+                      </span>
+                      <PriceDisplay context="row">{view.subtotal}</PriceDisplay>
+                    </div>
+                  )}
               {view.serviceFee != null ? (
                 <div className="flex justify-between gap-md">
                   <span className="text-ink-secondary">{t('confirmation.serviceFee')}</span>
@@ -249,7 +371,7 @@ export function OrderConfirmationPage() {
               {t('confirmation.shareNight')}
             </Button>
             <Link
-              to="/events"
+              to={view.eventSlug ? `/events/${view.eventSlug}` : '/events'}
               className={cn(
                 'inline-flex h-btn-sm items-center justify-center rounded-btn-sm',
                 'border-[1.5px] border-border-default bg-surface-default px-btn-pad-sm',
