@@ -91,7 +91,7 @@ function dropdownContentClassName() {
   return cn(
     'z-[60] min-w-[220px] overflow-hidden rounded-[14px] border border-border-default',
     'bg-surface-default p-sm shadow-[0px_18px_40px_-24px_rgba(25,16,8,0.35)]',
-    'data-[state=open]:animate-in data-[state=closed]:animate-out',
+    'text-start data-[state=open]:animate-in data-[state=closed]:animate-out',
   )
 }
 
@@ -113,9 +113,11 @@ function TicketsOffersDropdown({
   onNavigate: (path: string) => void
 }) {
   const { t } = useTranslation('nav')
+  const { locale } = useLocale()
+  const dir = locale === 'ar' ? 'rtl' : 'ltr'
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root dir={dir}>
       <DropdownMenu.Trigger asChild>
         <button
           type="button"
@@ -136,7 +138,9 @@ function TicketsOffersDropdown({
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           align="start"
+          side="bottom"
           sideOffset={10}
+          collisionPadding={12}
           className={dropdownContentClassName()}
         >
           {TICKETS_OFFERS_LINKS.map((item) => (
@@ -162,10 +166,12 @@ function ProfileDropdown({
   onNavigate: (path: string) => void
 }) {
   const { t } = useTranslation(['nav', 'common'])
+  const { locale } = useLocale()
   const { signOut, isLoading } = useSignOut()
+  const dir = locale === 'ar' ? 'rtl' : 'ltr'
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root dir={dir}>
       <DropdownMenu.Trigger asChild>
         <button
           type="button"
@@ -186,7 +192,9 @@ function ProfileDropdown({
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           align="end"
+          side="bottom"
           sideOffset={10}
+          collisionPadding={12}
           className={dropdownContentClassName()}
         >
           {PROFILE_LINKS.map((item) => (

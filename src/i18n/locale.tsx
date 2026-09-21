@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { Direction } from 'radix-ui'
 import { useTranslation } from 'react-i18next'
 import i18n, { STORAGE_KEY, readStoredLocale, type Locale } from './config'
 
@@ -41,6 +42,7 @@ const LocaleContext = createContext<LocaleContextValue | null>(null)
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => readStoredLocale())
   const { t } = useTranslation('common')
+  const dir = locale === 'ar' ? 'rtl' : 'ltr'
 
   // Sync document + storage whenever locale commits (after i18n has switched).
   useEffect(() => {
@@ -82,10 +84,12 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   return (
     <LocaleContext.Provider value={value}>
-      {/* Remount on locale so memoized API mappers / fixtures refresh translations. */}
-      <div key={locale} className="contents">
-        {children}
-      </div>
+      <Direction.Provider dir={dir}>
+        {/* Remount on locale so memoized API mappers / fixtures refresh translations. */}
+        <div key={locale} className="contents" dir={dir}>
+          {children}
+        </div>
+      </Direction.Provider>
     </LocaleContext.Provider>
   )
 }
