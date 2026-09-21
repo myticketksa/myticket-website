@@ -173,7 +173,7 @@ height, `gap 38`.
 SiteHeader
 ├── Logo                 73x40
 ├── Nav                  gap 24 (--space-2xl)
-│    └── NavItem x5      Events, Talents, Organizers, Vendors, Experiences
+│    └── NavItem x5      Events, Talents, Organizers, Facilities, Experiences
 ├── grow spacer          flex-1
 ├── Search slot          w 300, min 200, max 300
 │    └── SearchPill      fills the slot

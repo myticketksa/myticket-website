@@ -130,7 +130,7 @@ export function MarketingStats({
   )
 }
 
-/* ── Role landing (For Vendors / Organizers / Talents) ───────────────────── */
+/* ── Role landing (For Facilities / Organizers / Talents) ─────────────────── */
 
 export type RoleLandingStat = { value: string; label: string }
 export type RoleBenefit = { title: string; body: string }

@@ -10,7 +10,7 @@ export interface BusinessStripProps {
   className?: string
 }
 
-/** Bottom “Become a …” strip used on Talents / Vendors / Organizers. */
+/** Bottom “Become a …” strip used on Talents / Facilities / Organizers. */
 export function BusinessStrip({
   heading,
   body,

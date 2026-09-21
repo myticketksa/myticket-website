@@ -144,7 +144,7 @@ export function ProbeRoute() {
           htmlFor="brief"
           counter="0 / 600 · min 80 characters"
         >
-          <Textarea id="brief" placeholder="Tell the vendor what you need, dates, and your budget…" />
+          <Textarea id="brief" placeholder="Tell the facility what you need, dates, and your budget…" />
         </Field>
       </div>
 
@@ -355,7 +355,7 @@ export function ProbeRoute() {
           <SearchPill className="w-[300px]" />
           <NavItem label="Events" href="#" state="default" />
           <NavItem label="Talents" href="#" state="active" />
-          <NavItem label="Vendors" href="#" state="section" />
+          <NavItem label="Facilities" href="#" state="section" />
         </div>
         <Breadcrumbs
           items={[

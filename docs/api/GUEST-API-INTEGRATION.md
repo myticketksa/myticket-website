@@ -160,9 +160,9 @@ Guest product expects `role: "guest"` only. Vendor/Talent acceptance does **not*
 | `/wallet` | Wallet | Yes | `/wallet`, topup | P1 |
 | `/my-reviews` | Reviews | Yes | `/reviews` | P1 |
 | `/my-submissions` | Experience submissions | Yes | `/experiences/my-submissions` | P1 |
-| `/my-vendor-application`, `/my-talent-application` | Application status | Yes | `GET /applications` | P1 |
+| `/my-facilities-application` (redirect from `/my-vendor-application`), `/my-talent-application` | Application status | Yes | `GET /applications` | P1 |
 | `/my-auction-activity` | Auction activity | **Gap** | None | Blocked |
-| `/apply/vendor`, `/apply/talent` | Apply wizards | Yes | `POST /applications/vendor\|talent` + generals | P1 |
+| `/apply/facilities` (redirect from `/apply/vendor`), `/apply/talent` | Apply wizards | Yes | `POST /applications/vendor\|talent` + generals | P1 |
 | `/apply/organizer` | Office CTA | **No** | Do not call Organizer Apply | — |
 | `/submit-experience` | Submit place | Yes | `POST /experiences` + categories/cities | P1 |
 | `/application-submitted` | Confirmation | No | Static | — |
@@ -266,8 +266,8 @@ Optional / seated: `ticketId`, `quantity`, `seatIds`, `holdId` (required for ass
 | Method | Path | Auth | Content-Type | Guest routes |
 |--------|------|------|--------------|--------------|
 | `POST` | `/applications/talent` | Auth | `multipart/form-data` | `/apply/talent` → `/application-submitted` |
-| `POST` | `/applications/vendor` | Auth | `multipart/form-data` | `/apply/vendor` → `/application-submitted` |
-| `GET` | `/applications` | Auth | — | `/my-talent-application`, `/my-vendor-application` |
+| `POST` | `/applications/vendor` | Auth | `multipart/form-data` | `/apply/facilities` → `/application-submitted` |
+| `GET` | `/applications` | Auth | — | `/my-talent-application`, `/my-facilities-application` |
 
 **OUT:** `POST /applications/organizer` — guest UI is office contact only (`/apply/organizer`, `/for-organizers`).
 
@@ -420,7 +420,7 @@ Ask backend / wait for the next collection before a full “remove fixtures” m
 
 ## 7. Static surfaces (no API)
 
-`/about`, `/help`, `/legal`, `/for-vendors`, `/for-organizers`, `/for-talents`, `/become-business`, `/apply/organizer`, `/application-submitted`, `/maintenance`, `404`, marketing copy on Home below data sections.
+`/about`, `/help`, `/legal`, `/for-facilities` (redirect from `/for-vendors`), `/for-organizers`, `/for-talents`, `/become-business`, `/apply/organizer`, `/application-submitted`, `/maintenance`, `404`, marketing copy on Home below data sections.
 
 ---
 

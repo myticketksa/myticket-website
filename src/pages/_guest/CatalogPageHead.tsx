@@ -19,7 +19,7 @@ export interface CatalogPageHeadProps {
   onChipSelect?: (label: string) => void
   /** Secondary + primary actions on the right of the title row (Events pattern). */
   actions?: ReactNode
-  /** Optional eyebrow above the H1 (Talents / Vendors / Auction). */
+  /** Optional eyebrow above the H1 (Talents / Facilities / Auction). */
   eyebrow?: string
   className?: string
 }

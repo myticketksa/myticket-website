@@ -5,6 +5,7 @@ import {
   selectIsAuthenticated,
   type AuthUser,
 } from '@/features/auth/authSlice'
+import { countUnreadNotifications } from '@/lib/notifications/unread'
 
 export function accountChipFromUser(
   user: AuthUser | null | undefined,
@@ -26,10 +27,6 @@ export function accountChipFromUser(
   }
 }
 
-function isUnreadNotification(record: Record<string, unknown>) {
-  return Boolean(record.unread ?? record.is_unread ?? !record.read_at)
-}
-
 /** Same signed-in header chip on MainLayout and AccountLayout. */
 export function useHeaderAccount() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
@@ -37,6 +34,6 @@ export function useHeaderAccount() {
   const { data: notifications } = useGetNotificationsQuery(undefined, {
     skip: !isAuthenticated,
   })
-  const unread = (notifications ?? []).filter(isUnreadNotification).length
+  const unread = countUnreadNotifications(notifications)
   return accountChipFromUser(user, unread)
 }

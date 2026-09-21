@@ -16,10 +16,15 @@ import { AccountPageHead, PageSection } from '@/layouts'
 import { type NotificationFixture } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
 import {
+  formatHumanDateTime,
+  notificationDayGroup,
+} from '@/lib/api/locale'
+import {
   useGetNotificationsQuery,
   useMarkAllNotificationsReadMutation,
   useMarkNotificationReadMutation,
 } from '@/app/api/accountApis'
+import { isUnreadNotification } from '@/lib/notifications/unread'
 
 function titleCaseType(raw: string): string {
   const value = raw.trim()
@@ -106,13 +111,6 @@ function mapNotificationIcon(raw: unknown): NotificationFixture['icon'] {
   return 'heart'
 }
 
-function mapNotificationGroup(raw: unknown): NotificationFixture['group'] {
-  const value = String(raw ?? '').toUpperCase()
-  if (value.includes('TODAY')) return 'TODAY'
-  if (value.includes('YESTERDAY')) return 'YESTERDAY'
-  return 'EARLIER'
-}
-
 function notificationId(record: Record<string, unknown>): string | number | undefined {
   const raw = record.id ?? record.notification_id
   if (typeof raw === 'string' || typeof raw === 'number') return raw
@@ -126,18 +124,14 @@ type MappedNotification = NotificationFixture & {
 
 function mapNotification(record: Record<string, unknown>): MappedNotification {
   const typeKey = normalizeNotificationType(record.type ?? record.category)
+  const createdAt = record.created_at ?? record.sent_at ?? record.time ?? record.createdAt
   return {
     id: notificationId(record),
     title: String(record.title ?? record.subject ?? 'Notification'),
     body: String(record.body ?? record.message ?? record.content ?? ''),
-    time: String(record.time ?? record.created_at ?? record.sent_at ?? ''),
-    unread: (() => {
-      if (typeof record.is_read === 'boolean') return !record.is_read
-      if (typeof record.isRead === 'boolean') return !record.isRead
-      if (typeof record.read === 'boolean') return !record.read
-      return Boolean(record.unread ?? record.is_unread ?? !record.read_at)
-    })(),
-    group: mapNotificationGroup(record.group ?? record.period),
+    time: formatHumanDateTime(createdAt) || String(createdAt ?? ''),
+    unread: isUnreadNotification(record),
+    group: notificationDayGroup(createdAt),
     category: 'all',
     typeKey,
     tag: record.tag ? String(record.tag) : undefined,
@@ -171,7 +165,6 @@ export function NotificationsPage() {
 
   const filters = useMemo(() => {
     const present = new Set(allItems.map((item) => item.typeKey))
-    // Prefer known API types in a stable order, then any unexpected types.
     const orderedKnown = KNOWN_NOTIFICATION_TYPES.filter((type) => present.has(type))
     const extras = [...present]
       .filter((type) => !(KNOWN_NOTIFICATION_TYPES as readonly string[]).includes(type))
@@ -193,6 +186,13 @@ export function NotificationsPage() {
   }, [allItems, unreadCount, t])
 
   const groups = ['TODAY', 'YESTERDAY', 'EARLIER'] as const
+
+  function markItemRead(item: MappedNotification) {
+    if (!item.unread) return
+    if (typeof item.id === 'string' || typeof item.id === 'number') {
+      void markRead(item.id)
+    }
+  }
 
   return (
     <>
@@ -279,7 +279,17 @@ export function NotificationsPage() {
                         item.unread
                           ? 'border-border-brand-soft bg-surface-default'
                           : 'border-border-default bg-bg-page',
+                        'cursor-pointer transition-colors hover:border-border-brand',
                       )}
+                      onClick={() => markItemRead(item)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          markItemRead(item)
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
                     >
                       <NotificationIcon icon={item.icon} />
                       <div className="min-w-0 flex-1">
@@ -299,7 +309,9 @@ export function NotificationsPage() {
                         <p className="mt-xs text-[14px] leading-[1.55] font-medium text-ink-secondary">
                           {item.body}
                         </p>
-                        <p className="mt-xs text-[12px] font-semibold text-ink-muted">{item.time}</p>
+                        <p className="mt-xs text-[12px] font-semibold text-ink-muted">
+                          {item.time}
+                        </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-[10px]">
                         {item.cta && (
@@ -307,6 +319,10 @@ export function NotificationsPage() {
                             size="md"
                             variant={item.tag ? 'primary' : 'secondary'}
                             className="h-[40px] rounded-[20px] px-xl text-[13px] font-bold"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              markItemRead(item)
+                            }}
                           >
                             {item.cta}
                           </Button>
@@ -315,10 +331,9 @@ export function NotificationsPage() {
                           type="button"
                           aria-label={t('notifications.dismissAria')}
                           className="flex size-[34px] items-center justify-center text-ink-muted hover:text-ink-primary"
-                          onClick={() => {
-                            if (typeof item.id === 'string' || typeof item.id === 'number') {
-                              markRead(item.id)
-                            }
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            markItemRead(item)
                           }}
                         >
                           <CloseIcon size={17} />

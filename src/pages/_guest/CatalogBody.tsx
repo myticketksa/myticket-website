@@ -8,7 +8,7 @@ import { cn } from '@/lib/cn'
 export interface CatalogBodyProps {
   filters: ReactNode
   children: ReactNode
-  /** Filter column width — Events 268, Talents/Vendors 252, Search 244. */
+  /** Filter column width — Events 268, Talents/Facilities 252, Search 244. */
   filterWidth?: 268 | 252 | 244
   className?: string
 }

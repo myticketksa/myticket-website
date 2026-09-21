@@ -247,7 +247,7 @@ function DesktopAuthActions({
         >
           <BellIcon size={16} />
         </Button>
-        {account?.notifications !== undefined && (
+        {account?.notifications != null && account.notifications > 0 && (
           <span className="absolute -top-[5.5px] -end-[5.5px]">
             <CountBadge
               count={account.notifications}
@@ -297,7 +297,7 @@ function MobileDrawerAuth({
           >
             <BellIcon size={16} />
           </Button>
-          {account?.notifications !== undefined && (
+          {account?.notifications != null && account.notifications > 0 && (
             <span className="absolute -top-[5.5px] -end-[5.5px]">
               <CountBadge
                 count={account.notifications}
@@ -512,14 +512,24 @@ export function SiteHeader({
         <div className="flex shrink-0 items-center gap-sm lg:hidden">
           <HeaderLanguagePill />
           {state === 'signedIn' && (
-            <Button
-              variant="icon"
-              size="sm"
-              aria-label={t('nav:notifications')}
-              onClick={() => go('/notifications')}
-            >
-              <BellIcon size={16} />
-            </Button>
+            <span className="relative shrink-0">
+              <Button
+                variant="icon"
+                size="sm"
+                aria-label={t('nav:notifications')}
+                onClick={() => go('/notifications')}
+              >
+                <BellIcon size={16} />
+              </Button>
+              {account?.notifications != null && account.notifications > 0 && (
+                <span className="absolute -top-[5.5px] -end-[5.5px]">
+                  <CountBadge
+                    count={account.notifications}
+                    className="h-[17px] min-w-[17px] rounded-[9px] text-[10px]"
+                  />
+                </span>
+              )}
+            </span>
           )}
           <Button
             variant="icon"

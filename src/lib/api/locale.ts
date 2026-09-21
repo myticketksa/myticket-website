@@ -136,6 +136,77 @@ export function formatApiDate(value: unknown, localeArg?: Locale): string {
   })
 }
 
+/**
+ * Human-friendly notification timestamps:
+ * recent → relative ("3 hours ago"); yesterday → "Yesterday, 08:06"; else short date + time.
+ */
+export function formatHumanDateTime(value: unknown, localeArg?: Locale): string {
+  const locale = localeArg ?? getActiveLocale()
+  const raw = localizedString(value, { locale })
+  if (!raw) return ''
+  const date = new Date(raw)
+  if (Number.isNaN(date.getTime())) return raw
+
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffSec = Math.round(diffMs / 1000)
+  const absSec = Math.abs(diffSec)
+  const rtf = new Intl.RelativeTimeFormat(bcp47(locale), { numeric: 'auto' })
+
+  if (absSec < 60) return rtf.format(-Math.round(diffSec), 'second')
+  if (absSec < 3600) return rtf.format(-Math.round(diffSec / 60), 'minute')
+  if (absSec < 86400) return rtf.format(-Math.round(diffSec / 3600), 'hour')
+
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startYesterday = new Date(startToday)
+  startYesterday.setDate(startYesterday.getDate() - 1)
+  const timePart = date.toLocaleTimeString(bcp47(locale), {
+    hour: '2-digit',
+    minute: '2-digit',
+    numberingSystem: 'latn',
+  })
+
+  if (date >= startYesterday && date < startToday) {
+    const yesterdayLabel = locale === 'ar' ? 'أمس' : 'Yesterday'
+    return `${yesterdayLabel}, ${timePart}`
+  }
+
+  if (date >= startToday) {
+    const todayLabel = locale === 'ar' ? 'اليوم' : 'Today'
+    return `${todayLabel}, ${timePart}`
+  }
+
+  if (absSec < 7 * 86400) {
+    return `${rtf.format(-Math.round(diffSec / 86400), 'day')}, ${timePart}`
+  }
+
+  return date.toLocaleString(bcp47(locale), {
+    day: 'numeric',
+    month: 'short',
+    year: date.getFullYear() === now.getFullYear() ? undefined : 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    numberingSystem: 'latn',
+  })
+}
+
+/** Bucket a timestamp into Today / Yesterday / Earlier for inbox grouping. */
+export function notificationDayGroup(
+  value: unknown,
+): 'TODAY' | 'YESTERDAY' | 'EARLIER' {
+  const raw = localizedString(value)
+  if (!raw) return 'EARLIER'
+  const date = new Date(raw)
+  if (Number.isNaN(date.getTime())) return 'EARLIER'
+  const now = new Date()
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startYesterday = new Date(startToday)
+  startYesterday.setDate(startYesterday.getDate() - 1)
+  if (date >= startToday) return 'TODAY'
+  if (date >= startYesterday) return 'YESTERDAY'
+  return 'EARLIER'
+}
+
 /** First ticket type id from an event detail/list row (for hold / create order). */
 export function firstTicketTypeId(event: ApiRecord | undefined): number | undefined {
   if (!event) return undefined

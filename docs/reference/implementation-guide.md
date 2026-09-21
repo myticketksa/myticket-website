@@ -132,7 +132,7 @@
 
 | # | Screen Name | Figma Link | Size |
 |---|-------------|------------|------|
-| 47 | For Vendors | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12388) | 1440×2747 |
+| 47 | For Facilities | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12388) | 1440×2747 |
 | 48 | For Organizers | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12611) | 1440×2770 |
 | 49 | For Talents | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12768) | 1440×2747 |
 
@@ -225,7 +225,8 @@ const routes = [
   // Forms
   { path: "/submit-experience",   component: "SubmitExperiencePage", figmaNode: "207-6961" },
   { path: "/become-business",     component: "BecomeBusinessPage",   figmaNode: "207-10047" },
-  { path: "/apply/vendor",        component: "ApplyVendorPage",      figmaNode: "207-11368" },
+  { path: "/apply/facilities",    component: "ApplyVendorPage",      figmaNode: "207-11368" },
+  { path: "/apply/vendor",        component: "→ /apply/facilities",  figmaNode: "207-11368" },
   { path: "/apply/organizer",     component: "ApplyOrganizerPage",   figmaNode: "207-11424" },
   { path: "/apply/talent",        component: "ApplyTalentPage",      figmaNode: "207-11482" },
   { path: "/application-submitted",component: "ApplicationSubmittedPage", figmaNode: "207-11329" },
@@ -239,7 +240,8 @@ const routes = [
   { path: "/about",               component: "AboutPage",            figmaNode: "207-11984" },
   { path: "/help",                component: "HelpPage",             figmaNode: "207-12147" },
   { path: "/legal",               component: "LegalPage",            figmaNode: "207-12042" },
-  { path: "/for-vendors",         component: "ForVendorsPage",       figmaNode: "207-12388" },
+  { path: "/for-facilities",      component: "ForVendorsPage",       figmaNode: "207-12388" },
+  { path: "/for-vendors",         component: "→ /for-facilities",    figmaNode: "207-12388" },
   { path: "/for-organizers",      component: "ForOrganizersPage",    figmaNode: "207-12611" },
   { path: "/for-talents",         component: "ForTalentsPage",       figmaNode: "207-12768" },
 
