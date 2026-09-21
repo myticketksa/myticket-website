@@ -10,13 +10,9 @@
  * glyph is a one-line change here rather than an edit across every screen.
  */
 export {
-  // direction
+  // direction (vertical only — horizontal arrows live in `directional.tsx`)
   CaretDown as ChevronDownIcon,
   CaretUp as ChevronUpIcon,
-  CaretLeft as ChevronLeftIcon,
-  CaretRight as ChevronRightIcon,
-  ArrowLeft as ArrowLeftIcon,
-  ArrowRight as ArrowRightIcon,
   ArrowUpRight as ArrowUpRightIcon,
 
   // actions

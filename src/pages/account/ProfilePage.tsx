@@ -11,7 +11,7 @@ import {
   UserIcon,
   WalletIcon,
 } from '@/components/icons'
-import { Avatar, StatusBadge } from '@/components/data-display'
+import { Avatar, MoneyAmount, StatusBadge } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { PROFILE_TICKET_COVERS } from '@/pages/_account/account-media'
@@ -119,8 +119,8 @@ export function ProfilePage() {
                 </p>
               </div>
               <div className="min-w-0 text-center sm:text-start">
-                <p className="truncate text-[18px] font-extrabold tabular-nums text-ink-primary sm:text-[22px]">
-                  {walletLabel}
+                <p className="truncate text-[18px] font-extrabold text-ink-primary sm:text-[22px]">
+                  <MoneyAmount value={walletLabel} />
                 </p>
                 <p className="mt-[2px] text-[11px] text-ink-muted sm:text-[12px]">
                   {t('profile.wallet')}
@@ -189,11 +189,13 @@ export function ProfilePage() {
                 <p className="mt-sm text-[13px] text-pretty text-ink-secondary">{desc}</p>
                 <div className="mt-lg">
                   <StatusBadge tone="successTint">
-                    {tile.href === '/wallet'
-                      ? walletLabel
-                      : tile.key === 'favorites'
-                        ? String(savedCount)
-                        : tag}
+                    {tile.href === '/wallet' ? (
+                      <MoneyAmount value={walletLabel} />
+                    ) : tile.key === 'favorites' ? (
+                      String(savedCount)
+                    ) : (
+                      tag
+                    )}
                   </StatusBadge>
                 </div>
               </Link>

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
+import { MoneyAmount, parseMoneyDisplay } from '@/components/data-display'
 import { ArrowRightIcon, CheckGlyphIcon, MinusIcon, PlusIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
@@ -76,10 +77,12 @@ export function StickyCtaCard({
 }: StickyCtaCardProps) {
   const navigate = useNavigate()
   const { t } = useTranslation('catalog')
+  const { t: tCommon } = useTranslation('common')
   const resolvedFromLabel = fromLabel ?? t('stickyCta.fromLabel')
   const resolvedPrimaryLabel = primaryLabel ?? t('stickyCta.chooseSeats')
   const maxPerOrder = t('stickyCta.maxPerOrder')
   const canPrimary = Boolean(primaryTo || onPrimaryClick) && !primaryDisabled
+  const isFreeFrom = parseMoneyDisplay(fromPrice).kind === 'free'
 
   return (
     <div
@@ -90,10 +93,21 @@ export function StickyCtaCard({
     >
       <div className="flex w-full flex-col rounded-[20px] border border-border-default bg-surface-default p-lg shadow-[0px_18px_40px_-26px_rgba(25,16,8,0.3),0px_1px_2px_0px_rgba(25,16,8,0.04)] lg:p-[22px]">
         <div className="flex w-full items-baseline justify-between gap-md">
-          <p className="text-[14px] text-ink-secondary lg:text-[15px]">{resolvedFromLabel}</p>
-          <p className="text-[22px] font-semibold tabular-nums text-ink-primary lg:text-[26px]">
-            {fromPrice}
-          </p>
+          {isFreeFrom ? (
+            <MoneyAmount
+              value={fromPrice}
+              freeLabel={tCommon('currency.freeTickets')}
+              className="text-[22px] font-semibold text-ink-primary lg:text-[26px]"
+            />
+          ) : (
+            <>
+              <p className="text-[14px] text-ink-secondary lg:text-[15px]">{resolvedFromLabel}</p>
+              <MoneyAmount
+                value={fromPrice}
+                className="text-[22px] font-semibold text-ink-primary lg:text-[26px]"
+              />
+            </>
+          )}
         </div>
         {note && (
           <p className="mt-xs text-[13px] font-semibold text-brand-gradient-end">{note}</p>
@@ -137,9 +151,10 @@ export function StickyCtaCard({
                     </p>
                   </div>
                   <div className="shrink-0 text-end">
-                    <p className="text-[16px] font-semibold tabular-nums text-ink-primary">
-                      {tier.price}
-                    </p>
+                    <MoneyAmount
+                      value={tier.price}
+                      className="text-[16px] font-semibold text-ink-primary"
+                    />
                     <p
                       className={cn(
                         'text-[12px]',
@@ -236,13 +251,13 @@ export function StickyCtaCard({
                 className="flex w-full items-baseline justify-between text-[14px]"
               >
                 <span className="text-ink-secondary">{line.label}</span>
-                <span className="tabular-nums text-ink-primary">{line.value}</span>
+                <MoneyAmount value={line.value} className="text-ink-primary" />
               </div>
             ))}
             {total && (
               <div className="flex w-full items-baseline justify-between border-t border-border-divider pt-sm font-semibold text-ink-primary">
                 <span className="text-[15px]">{t('stickyCta.total')}</span>
-                <span className="text-[22px] tabular-nums">{total}</span>
+                <MoneyAmount value={total} className="text-[22px]" />
               </div>
             )}
           </div>

@@ -29,6 +29,7 @@ import { useRequireAuth } from '@/lib/auth/useRequireAuth'
 import { mapApiIdLabelOptions, type IdLabelOption } from '@/lib/api/formPayload'
 import { clearDraft, loadDraft, saveDraft } from '@/lib/forms/draftStorage'
 import { apiErrorMessage } from '@/lib/api/unwrap'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 
 const STEP_KEYS = ['account', 'performer', 'portfolio', 'categories', 'review'] as const
 
@@ -68,6 +69,7 @@ type TalentDraft = {
 /** Apply talent — FormData keys match Postman `POST /applications/talent`. */
 export function ApplyTalentPage() {
   const { t } = useTranslation(['forms', 'common'])
+  const { t: tCatalog } = useTranslation('catalog')
   const { roleLabel } = useLocale()
   const talent = roleLabel('talent')
   const navigate = useNavigate()
@@ -131,8 +133,12 @@ export function ApplyTalentPage() {
   }, [apiCategories, t])
 
   const cityOptions = useMemo(
-    () => mapApiIdLabelOptions(apiCities, FALLBACK_CITIES),
-    [apiCities],
+    () =>
+      mapApiIdLabelOptions(apiCities, FALLBACK_CITIES).map((city) => ({
+        ...city,
+        label: catalogLabel(tCatalog, city.label),
+      })),
+    [apiCities, tCatalog],
   )
 
   const lastStep = STEP_KEYS.length - 1

@@ -38,7 +38,7 @@ export function ForVendorsPage() {
         eyebrow={t('forRole.title', { role })}
         title={t('forVendors.title')}
         subtitle={t('forVendors.lede', { role })}
-        primaryCta={{ label: t('forRole.submitRequest'), to: '/apply/vendor' }}
+        primaryCta={{ label: t('forRole.submitRequest'), to: '/apply/facilities' }}
         secondaryCta={{ label: t('forRole.seeBusinessPaths'), to: '/become-business' }}
         stats={stats}
         imageryLabel={t('forVendors.imageryLabel')}
@@ -56,7 +56,7 @@ export function ForVendorsPage() {
         title={t('forVendors.closingTitle')}
         subtitle={t('forVendors.closingSubtitle')}
         buttonLabel={t('forVendors.closingCta')}
-        buttonTo="/apply/vendor"
+        buttonTo="/apply/facilities"
       />
     </>
   )

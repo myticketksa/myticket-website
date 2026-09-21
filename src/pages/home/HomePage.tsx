@@ -13,8 +13,8 @@ import {
 } from './HomeSections'
 
 /**
- * Home — Hero (with image ads) → Recently added → Tickets & offers → Free events →
- * Talents → Video ads → Touristic monuments → Fun activities.
+ * Home — Hero (with image ads) → Recently added → Tickets & offers → Talents →
+ * Free events → Video ads → Touristic monuments → Fun activities.
  */
 export function HomePage() {
   const { data: eventsResult } = useGetEventsQuery()
@@ -29,8 +29,8 @@ export function HomePage() {
       <HomeHero apiAds={apiAds} />
       <HomeRecentlyAdded apiEvents={apiEvents} />
       <HomeEvents apiEvents={apiEvents} />
-      <HomeFreeEvents apiEvents={apiEvents} />
       <HomeTalents apiTalents={apiTalents} />
+      <HomeFreeEvents apiEvents={apiEvents} />
       <HomeVideoAdsSection ads={apiAds} />
       <HomeExperiences apiExperiences={apiExperiences} />
     </>

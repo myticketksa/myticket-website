@@ -21,6 +21,14 @@ function applyDocumentLocale(locale: Locale) {
   if (og) og.content = locale === 'ar' ? 'ar_SA' : 'en_SA'
 }
 
+function persistLocale(locale: Locale) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, locale)
+  } catch {
+    /* ignore */
+  }
+}
+
 type LocaleContextValue = {
   locale: Locale
   setLocale: (locale: Locale) => void
@@ -34,25 +42,33 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => readStoredLocale())
   const { t } = useTranslation('common')
 
+  // Sync document + storage whenever locale commits (after i18n has switched).
   useEffect(() => {
     applyDocumentLocale(locale)
-    try {
-      window.localStorage.setItem(STORAGE_KEY, locale)
-    } catch {
-      /* ignore */
-    }
-    if (i18n.language !== locale) {
-      void i18n.changeLanguage(locale)
-    }
+    persistLocale(locale)
   }, [locale])
 
   const setLocale = useCallback((next: Locale) => {
-    setLocaleState(next)
+    void (async () => {
+      if ((i18n.resolvedLanguage || i18n.language)?.startsWith(next)) {
+        setLocaleState(next)
+        applyDocumentLocale(next)
+        persistLocale(next)
+        return
+      }
+      // Wait for catalogs to activate so remounted trees don't paint stale language.
+      await i18n.changeLanguage(next)
+      applyDocumentLocale(next)
+      persistLocale(next)
+      setLocaleState(next)
+    })()
   }, [])
 
   const toggleLocale = useCallback(() => {
-    setLocaleState((prev) => (prev === 'en' ? 'ar' : 'en'))
-  }, [])
+    const current =
+      (i18n.resolvedLanguage || i18n.language || locale).startsWith('ar') ? 'ar' : 'en'
+    setLocale(current === 'en' ? 'ar' : 'en')
+  }, [locale, setLocale])
 
   const roleLabel = useCallback(
     (role: RoleKey) => t(`roles.${role}`),
@@ -64,7 +80,14 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     [locale, setLocale, toggleLocale, roleLabel],
   )
 
-  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
+  return (
+    <LocaleContext.Provider value={value}>
+      {/* Remount on locale so memoized API mappers / fixtures refresh translations. */}
+      <div key={locale} className="contents">
+        {children}
+      </div>
+    </LocaleContext.Provider>
+  )
 }
 
 export function useLocale() {
@@ -80,4 +103,4 @@ export function roleLabelFor(role: RoleKey, locale: Locale = 'en') {
   return i18n.getFixedT(locale, 'common')(`roles.${role}`)
 }
 
-export { readStoredLocale, STORAGE_KEY }
+export { readStoredLocale, STORAGE_KEY, applyDocumentLocale }

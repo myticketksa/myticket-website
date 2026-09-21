@@ -1,7 +1,7 @@
 /** Shared helpers for MyTicket API records (often bilingual `{ en, ar }`). */
 
 import type { Locale } from '@/i18n/config'
-import { readStoredLocale } from '@/i18n/config'
+import { getActiveLocale } from '@/i18n/config'
 
 type ApiRecord = Record<string, unknown>
 
@@ -16,7 +16,7 @@ function preferredKeys(locale: Locale): string[] {
     : ['en', 'name_en', 'name', 'title', 'label', 'ar', 'name_ar']
 }
 
-/** Resolve bilingual API values using the active UI locale (defaults to stored). */
+/** Resolve bilingual API values using the active UI locale (defaults to i18n language). */
 export function localizedString(
   value: unknown,
   fallbackOrOptions: string | LocalizedOptions = '',
@@ -26,7 +26,7 @@ export function localizedString(
       ? { fallback: fallbackOrOptions }
       : fallbackOrOptions
   const fallback = options.fallback ?? ''
-  const locale = options.locale ?? readStoredLocale()
+  const locale = options.locale ?? getActiveLocale()
 
   if (value == null) return fallback
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
@@ -76,38 +76,51 @@ function bcp47(locale: Locale): string {
   return locale === 'ar' ? 'ar-SA' : 'en-SA'
 }
 
+/**
+ * Format a SAR amount as a figure only (no "SAR" / "ر.س" text).
+ * Pair with `MoneyAmount` / `SarSymbol` in the UI for the official currency mark.
+ * Plain-text fallbacks still use the Unicode Saudi Riyal sign (U+20C1) when needed.
+ */
 export function formatMoneySar(
   value: unknown,
-  fallbackOrLocale: string | Locale = 'SAR —',
+  fallbackOrLocale: string | Locale = '—',
   localeArg?: Locale,
 ): string {
   const locale =
     localeArg ??
     (fallbackOrLocale === 'en' || fallbackOrLocale === 'ar'
       ? fallbackOrLocale
-      : readStoredLocale())
+      : getActiveLocale())
   const fallback =
-    fallbackOrLocale === 'en' || fallbackOrLocale === 'ar' ? 'SAR —' : fallbackOrLocale
+    fallbackOrLocale === 'en' || fallbackOrLocale === 'ar' ? '—' : fallbackOrLocale
 
   if (value == null || value === '') return fallback
-  if (typeof value === 'string' && /sar|ر\.?\s*س/i.test(value)) return value
+  if (typeof value === 'string') {
+    const stripped = value
+      .replace(/^(From|من)\s+/i, '')
+      .replace(/^(?:SAR|SR|RS|﷼|⃁|ر\.?\s*س\.?)\s*/i, '')
+      .trim()
+    if (/^(free|مجاني)$/i.test(stripped)) {
+      return locale === 'ar' ? 'مجاني' : 'Free'
+    }
+    if (/^[\d,]+(?:\.\d+)?\+?$/.test(stripped)) return stripped
+    if (/sar|ر\.?\s*س|⃁/i.test(value)) return stripped || fallback
+  }
   const n = Number(value)
   if (!Number.isFinite(n)) return localizedString(value, { locale, fallback })
   if (n === 0) return locale === 'ar' ? 'مجاني' : 'Free'
   try {
     return new Intl.NumberFormat(bcp47(locale), {
-      style: 'currency',
-      currency: 'SAR',
       numberingSystem: 'latn',
       maximumFractionDigits: n % 1 === 0 ? 0 : 2,
     }).format(n)
   } catch {
-    return `SAR ${n % 1 === 0 ? n.toFixed(0) : n.toFixed(2)}`
+    return n % 1 === 0 ? n.toFixed(0) : n.toFixed(2)
   }
 }
 
 export function formatApiDate(value: unknown, localeArg?: Locale): string {
-  const locale = localeArg ?? readStoredLocale()
+  const locale = localeArg ?? getActiveLocale()
   const raw = localizedString(value, { locale })
   if (!raw) return ''
   const date = new Date(raw)

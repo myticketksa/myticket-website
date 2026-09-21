@@ -27,9 +27,9 @@
     "addFunds": "إضافة رصيد",
     "withdraw": "سحب",
     "topUp": "شحن",
-    "topUpAmount": "مبلغ الشحن (ر.س)",
+    "topUpAmount": "مبلغ الشحن",
     "customAmount": "مبلغ مخصص",
-    "confirmTopUp": "تأكيد الشحن · {{amount}}",
+    "confirmTopUp": "تأكيد الشحن · ⃁ {{amount}}",
     "invalidAmount": "أدخل مبلغ شحن صالحاً",
     "topUpSuccess": "تم إرسال طلب الشحن",
     "topUpFailed": "فشل الشحن",
@@ -43,7 +43,7 @@
       "pending": "معلّق"
     },
     "withdrawTitle": "سحب إلى حسابك البنكي",
-    "withdrawBody": "تصل المدفوعات خلال ٢–٣ أيام عمل. الحد الأدنى ٥٠ ر.س.",
+    "withdrawBody": "تصل المدفوعات خلال ٢–٣ أيام عمل. الحد الأدنى ⃁ 50.",
     "verifiedAccount": "حساب موثّق",
     "requestWithdrawal": "طلب سحب",
     "paymentMethods": "طرق الدفع",
@@ -55,7 +55,52 @@
     "cashbackGuide": "اقرأ الدليل ←",
     "statusCleared": "مصفّى",
     "statusPending": "معلّق",
-    "exportCsv": "تصدير CSV"
+    "statusAvailable": "متاح",
+    "statusSpent": "أُنفق عند الدفع",
+    "exportCsv": "تصدير CSV",
+    "emptyActivity": "لا نشاط بعد",
+    "orderRef": "طلب {{id}}",
+    "payoutRef": "مرجع الدفع {{id}}",
+    "types": {
+      "cashback": "كاش باك",
+      "purchase": "شراء",
+      "refund": "استرداد",
+      "topup": "شحن",
+      "top_up": "شحن",
+      "withdraw": "سحب",
+      "withdrawal": "سحب",
+      "auction": "بيع مزاد",
+      "resale": "عائد إعادة بيع",
+      "debit": "دفع",
+      "credit": "رصيد"
+    },
+    "txns": {
+      "cashbackWinter": {
+        "label": "كاش باك · ليالي الشتاء",
+        "detail": "يُحرَّر بعد العرض",
+        "date": "٨ أكتوبر ٢٠٢٦"
+      },
+      "paidWinter": {
+        "label": "دفع نحو ليالي الشتاء",
+        "detail": "طلب MT-2026-84193",
+        "date": "٢٧ يوليو ٢٠٢٦"
+      },
+      "cashbackComedy": {
+        "label": "كاش باك · نادي الرياض للكوميديا",
+        "detail": "طلب MT-2026-71204",
+        "date": "٢٠ أبريل ٢٠٢٦"
+      },
+      "auctionGold": {
+        "label": "بيع مزاد · زوج ذهبي",
+        "detail": "مرجع الدفع PO-30291",
+        "date": "١٢ مارس ٢٠٢٦"
+      },
+      "refundComedy": {
+        "label": "استرداد · ليلة كوميديا",
+        "detail": "طلب MT-2026-69011",
+        "date": "٢ فبراير ٢٠٢٦"
+      }
+    }
   },
   "tickets": {
     "title": "تذاكري",
@@ -230,7 +275,7 @@
     "ifSells": "إذا بيعت عند مزايدتك الابتدائية",
     "commission": "عمولة MyTicket · ١٠٪",
     "youReceiveAtLeast": "تستلم على الأقل",
-    "paidNote": "دفعت {{paid}} ر.س لهذه التذكرة. لا تتجاوز المزايدات سعرك الابتدائي — تحتفظ بـ ٩٠٪ أينما وصلت.",
+    "paidNote": "دفعت ⃁ {{paid}} لهذه التذكرة. لا تتجاوز المزايدات سعرك الابتدائي — تحتفظ بـ ٩٠٪ أينما وصلت.",
     "rulesTitle": "القواعد بوضوح",
     "ruleCancelBefore": "يمكنك إلغاء العرض في أي وقت",
     "ruleCancelEmphasis": "حتى تصل أول مزايدة",
@@ -307,7 +352,7 @@
       "Event": "فعالية",
       "Experience": "تجربة",
       "Talent": "موهبة",
-      "Vendor": "بائع"
+      "Vendor": "منشأة"
     },
     "cta": {
       "tickets": "احصل على تذاكر",
@@ -336,7 +381,7 @@
       "Event": "فعالية",
       "Experience": "تجربة",
       "Talent": "موهبة",
-      "Vendor": "بائع"
+      "Vendor": "منشأة"
     },
     "cta": {
       "tickets": "احصل على تذاكر",
@@ -513,7 +558,7 @@
     "settingsTitle": "الحساب والإعدادات",
     "settingsSubtitle": "كل ما يتعلق بتسجيل الدخول والدفع والإشعارات.",
     "openSettings": "فتح الإعدادات ←",
-    "becomeBusinessBody": "طلب بائع أو موهبة — أرسل مرة واحدة وتابع مراجعة الإدارة. شراكة المنظم تُرتب عبر مكتبنا.",
+    "becomeBusinessBody": "طلب منشأة أو موهبة — أرسل مرة واحدة وتابع مراجعة الإدارة. شراكة المنظم تُرتب عبر مكتبنا.",
     "apply": "قدّم",
     "signedInDevice": "مسجّل الدخول على هذا الجهاز منذ {{when}} · {{device}}",
     "manageDevices": "إدارة الأجهزة",
@@ -544,7 +589,7 @@
         "meta": "٦ مكتوبة"
       },
       "vendor": {
-        "label": "طلب بائع",
+        "label": "طلب المنشأة",
         "meta": "تتبع الحالة"
       },
       "talent": {
@@ -599,7 +644,8 @@
       "pending": "قيد الانتظار",
       "accepted": "مقبول",
       "rejected": "مرفوض"
-    }
+    },
+    "refMeta": "{{date}} · مرجع {{ref}}"
   },
   "auctionActivity": {
     "title": "نشاط المزاد",

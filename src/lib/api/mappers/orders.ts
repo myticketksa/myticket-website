@@ -11,6 +11,13 @@ export type OrderConfirmationTicket = {
   id: string
   seat: string
   gate: string
+  /** Value encoded into the QR (ticket id / qr code from API). */
+  qrValue: string
+}
+
+export type OrderConfirmationPaymentLine = {
+  label: string
+  amount: string
 }
 
 export type OrderConfirmationView = {
@@ -24,12 +31,12 @@ export type OrderConfirmationView = {
   holder: string
   tickets: OrderConfirmationTicket[]
   subtotal: string
-  serviceFee: string
-  vat: string
+  serviceFee: string | null
+  vat: string | null
   total: string
-  walletPaid: string
-  cardPaid: string
-  cashback: string
+  /** Payment breakdown rows taken only from API fields that are present. */
+  paymentLines: OrderConfirmationPaymentLine[]
+  cashback: string | null
 }
 
 function asRecord(value: unknown): ApiRecord | undefined {
@@ -59,19 +66,39 @@ function formatSeatLabel(seat: unknown, fallback = '—'): string {
   return fallback
 }
 
-function money(value: unknown, fallback = 'SAR 0.00'): string {
+function money(value: unknown, fallback = '0.00'): string {
   if (value == null || value === '') return fallback
   const formatted = formatMoneySar(value, fallback)
-  if (formatted === 'Free') return 'SAR 0.00'
+  if (formatted === 'Free' || formatted === 'مجاني') return '0.00'
   // Keep two-decimal checkout style when formatMoneySar drops cents on whole numbers.
   const n = Number(value)
   if (Number.isFinite(n)) {
-    return `SAR ${n.toLocaleString(undefined, {
+    return n.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    })}`
+    })
   }
   return formatted
+}
+
+function hasMoneyValue(value: unknown): boolean {
+  if (value == null || value === '') return false
+  const n = Number(value)
+  if (Number.isFinite(n)) return true
+  return String(value).trim().length > 0
+}
+
+function ticketQrValue(ticket: ApiRecord, fallbackId: string): string {
+  const raw =
+    ticket.qrCode ??
+    ticket.qr_code ??
+    ticket.qr ??
+    ticket.code ??
+    ticket.ticket_code ??
+    ticket.barcode ??
+    ticket.id ??
+    fallbackId
+  return String(raw).trim() || fallbackId
 }
 
 function mapTickets(order: ApiRecord): OrderConfirmationTicket[] {
@@ -83,21 +110,32 @@ function mapTickets(order: ApiRecord): OrderConfirmationTicket[] {
       const fromOrderSeats = Array.isArray(order.seats)
         ? formatSeatLabel(order.seats[index], '')
         : ''
+      const seatRecord = asRecord(ticket.seat)
+      const gateFromSeat =
+        localizedString(seatRecord?.gate ?? seatRecord?.entry) ||
+        localizedString(ticket.gate ?? ticket.entry)
+      const id = String(ticket.id ?? ticket.ticket_number ?? `MT-${index + 1}`)
       return {
-        id: String(ticket.id ?? ticket.ticket_number ?? `MT-${index + 1}`),
+        id,
         seat: fromTicket || fromOrderSeats || '—',
-        gate: localizedString(ticket.gate ?? ticket.entry, 'Scan at gate'),
+        gate: gateFromSeat || '—',
+        qrValue: ticketQrValue(ticket, id),
       }
     })
   }
 
   const seats = order.seats
   if (Array.isArray(seats) && seats.length > 0) {
-    return seats.map((item, index) => ({
-      id: String(asRecord(item)?.seat_id ?? `MT-${index + 1}`),
-      seat: formatSeatLabel(item),
-      gate: 'Scan at gate',
-    }))
+    return seats.map((item, index) => {
+      const seat = asRecord(item) ?? {}
+      const id = String(seat.seat_id ?? seat.id ?? `MT-${index + 1}`)
+      return {
+        id,
+        seat: formatSeatLabel(item),
+        gate: localizedString(seat.gate ?? seat.entry, '—'),
+        qrValue: ticketQrValue(seat, id),
+      }
+    })
   }
 
   return []
@@ -106,6 +144,7 @@ function mapTickets(order: ApiRecord): OrderConfirmationTicket[] {
 /**
  * Map `GET /tickets/orders/:id` (sample: nested event, ticketType, tickets[].seat)
  * into the order-confirmation page view model. UI-agnostic — strings only.
+ * Payment rows are only included when the API provides corresponding fields.
  */
 export function mapOrderConfirmation(
   order: ApiRecord,
@@ -138,13 +177,69 @@ export function mapOrderConfirmation(
   const computedSubtotal =
     Number.isFinite(unitPrice) && quantity > 0 ? unitPrice * quantity : undefined
   const subtotalRaw =
-    order.subtotal ?? order.items_total ?? computedSubtotal ?? amount
-  const serviceFeeRaw = order.service_fee ?? order.serviceFee ?? order.fees ?? 0
-  const vatRaw = order.vat ?? order.tax ?? 0
+    order.subtotal ?? order.items_total ?? order.itemsTotal ?? computedSubtotal ?? amount
+  const serviceFeeRaw = order.service_fee ?? order.serviceFee ?? order.platform_fee ?? order.fees
+  const vatRaw = order.vat ?? order.tax ?? order.tax_amount ?? order.taxAmount
   const totalRaw = order.total ?? order.amount ?? amount
 
-  const placedRaw = order.created_at ?? order.placed_at
+  const placedRaw = order.created_at ?? order.placed_at ?? order.createdAt
   const placedAt = formatApiDate(placedRaw) || localizedString(placedRaw) || '—'
+
+  const paymentMethod = localizedString(
+    order.paymentMethod ??
+      order.payment_method ??
+      order.payment_channel ??
+      order.paymentChannel ??
+      order.paymentBrand ??
+      order.payment_brand ??
+      order.brand ??
+      order.method,
+  )
+  const cardLast4 = localizedString(
+    order.card_last4 ?? order.cardLast4 ?? order.last4 ?? order.card_last_four,
+  )
+  const walletRaw = order.wallet_paid ?? order.wallet_amount ?? order.walletPaid ?? order.walletAmount
+  const cardRaw =
+    order.card_paid ??
+    order.card_amount ??
+    order.cardPaid ??
+    order.cardAmount ??
+    order.paid_by_card ??
+    order.paidByCard
+  const cashbackRaw = order.cashback ?? order.cashback_earned ?? order.cashbackEarned
+
+  const paymentLines: OrderConfirmationPaymentLine[] = []
+  if (hasMoneyValue(walletRaw) && Number(walletRaw) !== 0) {
+    paymentLines.push({ label: 'wallet', amount: money(walletRaw) })
+  }
+  if (hasMoneyValue(cardRaw) && Number(cardRaw) !== 0) {
+    const label =
+      paymentMethod && cardLast4
+        ? `${paymentMethod} ···· ${cardLast4}`
+        : paymentMethod || (cardLast4 ? `···· ${cardLast4}` : 'card')
+    paymentLines.push({ label, amount: money(cardRaw) })
+  } else if (paymentMethod && !hasMoneyValue(walletRaw)) {
+    // Method known but no split amounts — show method against total when present.
+    if (hasMoneyValue(totalRaw)) {
+      paymentLines.push({
+        label: cardLast4 ? `${paymentMethod} ···· ${cardLast4}` : paymentMethod,
+        amount: money(totalRaw),
+      })
+    }
+  }
+
+  const orderIdFallback = String(order.id ?? opts.orderId ?? '—')
+  const mappedTickets =
+    tickets.length > 0
+      ? tickets
+      : [
+          {
+            id: orderIdFallback,
+            seat: formatSeatLabel(order.seat, 'General admission'),
+            gate: localizedString(order.gate ?? order.entry, '—'),
+            qrValue: ticketQrValue(order, orderIdFallback),
+          },
+        ]
 
   return {
     email: opts.email || localizedString(order.email ?? order.customer_email) || '—',
@@ -158,23 +253,14 @@ export function mapOrderConfirmation(
       opts.holder ||
       localizedString(order.holder ?? order.customer_name) ||
       'Ticket holder',
-    tickets:
-      tickets.length > 0
-        ? tickets
-        : [
-            {
-              id: String(order.id ?? opts.orderId ?? '—'),
-              seat: formatSeatLabel(order.seat, 'General admission'),
-              gate: 'Scan at gate',
-            },
-          ],
+    tickets: mappedTickets,
     subtotal: money(subtotalRaw),
-    serviceFee: money(serviceFeeRaw),
-    vat: money(vatRaw),
+    serviceFee: hasMoneyValue(serviceFeeRaw) ? money(serviceFeeRaw) : null,
+    vat: hasMoneyValue(vatRaw) ? money(vatRaw) : null,
     total: money(totalRaw),
-    walletPaid: money(order.wallet_paid ?? order.wallet_amount ?? 0),
-    cardPaid: money(order.card_paid ?? order.card_amount ?? totalRaw),
-    cashback: money(order.cashback ?? order.cashback_earned ?? 0),
+    paymentLines,
+    cashback:
+      hasMoneyValue(cashbackRaw) && Number(cashbackRaw) !== 0 ? money(cashbackRaw) : null,
   }
 }
 
@@ -350,6 +436,8 @@ export type OrderTicketSeatView = {
   block: string
   row: string
   seat: string
+  /** Value encoded into the QR (ticket id / qr code from API). */
+  qrValue: string
 }
 
 export type OrderDetailView = {
@@ -420,8 +508,9 @@ export function mapOrderToDetailView(
           const ticket = asRecord(item) ?? {}
           const seat = ticket.seat
           const hasSeat = seat != null && typeof seat === 'object'
+          const ticketId = String(ticket.id ?? `${id}-${index + 1}`)
           return {
-            id: String(ticket.id ?? `${id}-${index + 1}`),
+            id: ticketId,
             ticketTypeLabel: localizedString(ticket.ticketType ?? ticket.ticket_type, tierName),
             scanStatus: localizedString(ticket.scanStatus ?? ticket.scan_status, payment),
             gate: hasSeat ? seatField(seat, 'gate') || '—' : '—',
@@ -438,6 +527,7 @@ export function mapOrderToDetailView(
               : seatingType === 'free'
                 ? 'GA'
                 : '—',
+            qrValue: ticketQrValue(ticket, ticketId),
           }
         })
       : [
@@ -449,6 +539,7 @@ export function mapOrderToDetailView(
             block: seatingType === 'free' ? 'General' : '—',
             row: '—',
             seat: seatingType === 'free' ? 'GA' : '—',
+            qrValue: ticketQrValue(order, id || '1'),
           },
         ]
 

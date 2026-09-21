@@ -73,4 +73,17 @@ void i18n.use(initReactI18next).init({
     : undefined,
 })
 
+/** Active UI locale — prefers i18n over localStorage so toggles apply immediately. */
+export function getActiveLocale(): Locale {
+  const lng = i18n.resolvedLanguage || i18n.language || readStoredLocale()
+  return lng.startsWith('ar') ? 'ar' : 'en'
+}
+
+// Apply dir/lang before first paint when possible.
+if (typeof document !== 'undefined') {
+  const initial = readStoredLocale()
+  document.documentElement.lang = initial
+  document.documentElement.dir = initial === 'ar' ? 'rtl' : 'ltr'
+}
+
 export default i18n

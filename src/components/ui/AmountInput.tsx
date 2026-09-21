@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes } from 'react'
+import { SarSymbol } from '@/components/icons'
 import { cn } from '@/lib/cn'
 
 /**
@@ -13,11 +14,11 @@ import { cn } from '@/lib/cn'
  * It also hugs its content: the source declares no width.
  */
 export interface AmountInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
-  /** Currency code shown before the value. */
+  /** @deprecated Official SAR mark is always shown; kept for call-site compat. */
   currency?: string
 }
 
-export function AmountInput({ className, currency = 'SAR', ...props }: AmountInputProps) {
+export function AmountInput({ className, currency: _currency, ...props }: AmountInputProps) {
   return (
     <div
       className={cn(
@@ -26,9 +27,10 @@ export function AmountInput({ className, currency = 'SAR', ...props }: AmountInp
         'focus-within:border-border-focus',
         className,
       )}
+      dir="ltr"
     >
-      <span className="shrink-0 text-[15px] font-semibold text-ink-secondary">
-        {currency}
+      <span className="shrink-0 text-ink-secondary" aria-hidden>
+        <SarSymbol className="h-[1.05em] w-auto" />
       </span>
       <input
         type="text"

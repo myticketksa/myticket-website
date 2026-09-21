@@ -49,17 +49,20 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
 /** Format the saved login wallet balance for UI (AccountWalletCard, profile, wallet page). */
 export function formatAuthWalletBalance(
   value: unknown,
-  fallback = 'SAR 0',
+  fallback = '0',
 ): string {
   if (value == null || value === '') return fallback
   const raw = String(value)
-  if (/sar/i.test(raw)) return raw
+  const stripped = raw
+    .replace(/^(?:SAR|SR|RS|﷼|⃁|ر\.?\s*س\.?)\s*/i, '')
+    .trim()
+  if (/sar|ر\.?\s*س|⃁/i.test(raw) && stripped) return stripped
   const num = Number(value)
-  if (!Number.isFinite(num)) return raw
-  return `SAR ${num.toLocaleString(undefined, {
+  if (!Number.isFinite(num)) return stripped || raw
+  return num.toLocaleString(undefined, {
     minimumFractionDigits: num % 1 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
-  })}`
+  })
 }
 
 function readStoredUser(): AuthUser | null {

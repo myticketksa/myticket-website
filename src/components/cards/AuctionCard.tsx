@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Divider } from '@/components/data-display'
+import { Divider, MoneyAmount } from '@/components/data-display'
 import { cn } from '@/lib/cn'
 import { useLiveRemaining } from '@/lib/countdown/useLiveRemaining'
 
@@ -114,14 +114,18 @@ export function AuctionCard({
         <div className="mt-md flex w-full items-end justify-between">
           <div className="flex flex-col items-start gap-[2px]">
             <p className="text-[12px] font-medium text-ink-muted">{t('pages.highestBid')}</p>
-            <p className="text-[21px] font-extrabold tabular-nums text-brand-identity-end">
-              {highestBid}
-            </p>
+            <MoneyAmount
+              value={highestBid}
+              className="text-[21px] font-extrabold text-brand-identity-end"
+            />
           </div>
 
           <div className="flex flex-col items-end gap-[2px]">
             <p className="text-[12px] font-medium text-ink-muted">{t('pages.buyNow')}</p>
-            <p className="text-[15px] font-bold tabular-nums text-ink-secondary">{buyNow}</p>
+            <MoneyAmount
+              value={buyNow}
+              className="text-[15px] font-bold text-ink-secondary"
+            />
           </div>
         </div>
       </div>

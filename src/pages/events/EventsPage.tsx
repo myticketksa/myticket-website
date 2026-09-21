@@ -135,13 +135,32 @@ export function EventsPage() {
     )
   }
 
-  const skipPageResetRef = useRef(true)
+  // Reset to page 1 only when filters/sort actually change.
+  // Do not depend on `setSearchParams` — RR recreates it whenever `searchParams`
+  // change, which would wipe `?page=` right after a pagination click.
+  // Avoid a one-shot skip ref: React Strict Mode re-runs effects on the same
+  // instance and would burn the guard, then clear the page on the second pass.
+  const filterKey = useMemo(
+    () =>
+      JSON.stringify({
+        when: filters.when,
+        cities: filters.cities,
+        rating: filters.rating,
+        other: filters.other,
+        maxPrice: filters.maxPrice,
+        seatingTypes: filters.seatingTypes,
+      }),
+    [filters],
+  )
+  const pageResetSig = `${filterKey}\0${category}\0${sortKey}`
+  const prevPageResetSigRef = useRef<string | null>(null)
 
   useEffect(() => {
-    if (skipPageResetRef.current) {
-      skipPageResetRef.current = false
-      return
-    }
+    if (prevPageResetSigRef.current === pageResetSig) return
+    const isFirst = prevPageResetSigRef.current === null
+    prevPageResetSigRef.current = pageResetSig
+    if (isFirst) return
+
     setSearchParams(
       (prev) => {
         if (!prev.get('page') || prev.get('page') === '1') return prev
@@ -151,7 +170,7 @@ export function EventsPage() {
       },
       { replace: true },
     )
-  }, [filters, category, sortKey, setSearchParams])
+  }, [pageResetSig]) // eslint-disable-line react-hooks/exhaustive-deps -- omit setSearchParams on purpose
 
   const categoryChips = useMemo(
     () =>

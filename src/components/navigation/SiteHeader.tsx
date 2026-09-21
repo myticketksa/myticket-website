@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Dialog as DialogPrimitive, DropdownMenu } from 'radix-ui'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { selectIsAuthenticated } from '@/features/auth/authSlice'
 import { Avatar, CountBadge, FlagSaudiArabia, FlagUnitedStates } from '@/components/data-display'
 import {
   BellIcon,
@@ -66,13 +67,16 @@ function navItemActive(id: string | undefined, activeItem?: string) {
 }
 
 function HeaderLanguagePill({ className }: { className?: string }) {
+  const { t } = useTranslation('common')
   const { locale, toggleLocale } = useLocale()
 
   return (
     <button
       type="button"
       onClick={toggleLocale}
-      aria-label="Toggle language"
+      aria-label={
+        locale === 'en' ? t('language.switchToArabic') : t('language.switchToEnglish')
+      }
       className={cn(
         'shrink-0 transition-opacity duration-micro ease-micro hover:opacity-80',
         className,
@@ -355,11 +359,14 @@ function MainNav({
   ticketsMode?: 'dropdown' | 'flat'
 }) {
   const { t } = useTranslation('nav')
+  const isAuthenticated = useAppSelector(selectIsAuthenticated)
 
   const talentsActive = navItemActive('Talents', activeItem)
   const offersActive = navItemActive('Offers', activeItem)
   const institutionsActive = navItemActive('Institutions', activeItem)
   const ticketsActive = navItemActive('TicketsAndOffers', activeItem)
+  // Real auth only — do not follow chrome `signedIn` (e.g. order-confirmation overlay).
+  const institutionsHref = isAuthenticated ? '/apply/facilities' : '/become-business'
 
   return (
     <nav aria-label={t('main')} className={className}>
@@ -411,12 +418,12 @@ function MainNav({
       />
       <NavItem
         label={t('institutions')}
-        href="/become-business"
+        href={institutionsHref}
         state={institutionsActive ? activeItemState : 'default'}
         className={itemClassName}
         onClick={(event) => {
           event.preventDefault()
-          onNavigate('/become-business')
+          onNavigate(institutionsHref)
         }}
       />
     </nav>

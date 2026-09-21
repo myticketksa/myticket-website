@@ -1,5 +1,8 @@
+import { useTranslation } from 'react-i18next'
+import { MoneyAmount, parseMoneyDisplay } from '@/components/data-display'
 import { HeartGlyphIcon, StarFillIcon } from '@/components/icons'
 import { cn } from '@/lib/cn'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 
 /**
  * Figma `FeaturedHeroCard` — node 207:3194. The "Featured this week" carousel card.
@@ -94,6 +97,11 @@ export function FeaturedHeroCard({
   onTickets,
   className,
 }: FeaturedHeroCardProps) {
+  const { t } = useTranslation('common')
+  const { t: tCatalog } = useTranslation('catalog')
+  const isFree = parseMoneyDisplay(price).kind === 'free'
+  const categoryLabel = category ? catalogLabel(tCatalog, category) : undefined
+  const flagLabel = flag ? catalogLabel(tCatalog, flag) : undefined
   return (
     <article
       className={cn(
@@ -117,14 +125,14 @@ export function FeaturedHeroCard({
 
       <div className="absolute top-lg end-lg start-lg flex h-[34px] items-start justify-between">
         <div className="flex items-start gap-[6px]">
-          {category && (
+          {categoryLabel && (
             <p className="rounded-[13px] bg-surface-default px-[11px] py-[5px] text-[11px] font-bold text-ink-primary">
-              {category}
+              {categoryLabel}
             </p>
           )}
-          {flag && (
+          {flagLabel && (
             <p className="rounded-[13px] bg-brand-gradient-end px-[11px] py-[5px] text-[11px] font-bold text-ink-inverse">
-              {flag}
+              {flagLabel}
             </p>
           )}
         </div>
@@ -172,8 +180,18 @@ export function FeaturedHeroCard({
 
         <div className="mt-[14px] flex w-full items-center justify-between">
           <p className="flex items-baseline gap-[5px] text-ink-inverse">
-            <span className="text-[14px] font-medium">From</span>
-            <span className="text-[19px] font-extrabold tabular-nums">{price}</span>
+            {isFree ? (
+              <MoneyAmount
+                value={price}
+                freeLabel={t('currency.freeTickets')}
+                className="text-[19px] font-extrabold"
+              />
+            ) : (
+              <>
+                <span className="text-[14px] font-medium">{t('currency.from')}</span>
+                <MoneyAmount value={price} className="text-[19px] font-extrabold" />
+              </>
+            )}
           </p>
 
           {onTickets ? (
@@ -186,11 +204,11 @@ export function FeaturedHeroCard({
               }}
               className="flex h-[38px] shrink-0 items-center justify-center rounded-[19px] bg-identity-gradient px-[18px] text-[13px] font-bold text-ink-inverse"
             >
-              Tickets
+              {t('actions.tickets')}
             </button>
           ) : (
             <span className="pointer-events-none flex h-[38px] shrink-0 items-center justify-center rounded-[19px] bg-identity-gradient px-[18px] text-[13px] font-bold text-ink-inverse">
-              Tickets
+              {t('actions.tickets')}
             </span>
           )}
         </div>

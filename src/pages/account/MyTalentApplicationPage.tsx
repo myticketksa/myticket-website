@@ -53,7 +53,10 @@ export function MyTalentApplicationPage() {
               </StatusBadge>
             </div>
             <p className="mt-[4px] text-[13.5px] text-ink-secondary">
-              {application.submittedAt} · Ref {application.reference}
+              {t('applications.refMeta', {
+                date: application.submittedAt,
+                ref: application.reference,
+              })}
             </p>
             <p
               className={`mt-[5px] max-w-[640px] text-[13px] leading-[1.5] ${

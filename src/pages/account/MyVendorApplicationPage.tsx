@@ -33,7 +33,7 @@ export function MyVendorApplicationPage() {
         subtitle={t('applications.subtitle')}
         className="[&>div]:max-w-[1040px]"
         actions={
-          <Link to="/apply/vendor">
+          <Link to="/apply/facilities">
             <Button size="lg" variant="secondary">
               {t('applications.viewForm')}
             </Button>
@@ -53,7 +53,10 @@ export function MyVendorApplicationPage() {
               </StatusBadge>
             </div>
             <p className="mt-[4px] text-[13.5px] text-ink-secondary">
-              {application.submittedAt} · Ref {application.reference}
+              {t('applications.refMeta', {
+                date: application.submittedAt,
+                ref: application.reference,
+              })}
             </p>
             <p
               className={`mt-[5px] max-w-[640px] text-[13px] leading-[1.5] ${

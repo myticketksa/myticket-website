@@ -1,6 +1,6 @@
 {
   "roles": {
-    "vendor": "Vendor",
+    "vendor": "Facility",
     "organizer": "Organizer",
     "talent": "Talent"
   },
@@ -18,6 +18,7 @@
     "signOut": "Sign out",
     "createAccount": "Create account",
     "browseEvents": "Browse events",
+    "tickets": "Tickets",
     "learnMore": "Learn more",
     "submit": "Submit",
     "confirm": "Confirm",
@@ -72,7 +73,10 @@
   },
   "currency": {
     "free": "Free",
-    "sarFallback": "SAR —"
+    "freeTickets": "Free",
+    "sarFallback": "—",
+    "sarName": "Saudi Riyal",
+    "from": "From"
   },
   "language": {
     "switchToArabic": "Switch to Arabic",

@@ -26,8 +26,13 @@ function resolveNav(
   // Institutions → public chooser; apply funnels stay marked while in progress.
   if (
     pathname.startsWith('/become-business') ||
+    pathname.startsWith('/for-facilities') ||
+    pathname.startsWith('/for-vendors') ||
+    pathname.startsWith('/apply/facilities') ||
     pathname.startsWith('/apply/vendor') ||
-    pathname.startsWith('/apply/talent')
+    pathname.startsWith('/apply/talent') ||
+    pathname.startsWith('/my-facilities-application') ||
+    pathname.startsWith('/my-vendor-application')
   ) {
     return { activeItem: 'Institutions', activeItemState: 'active' }
   }

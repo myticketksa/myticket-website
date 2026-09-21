@@ -4,6 +4,7 @@ import { useGetFavoritesQuery } from '@/app/api/accountApis'
 import { useAppSelector } from '@/app/hooks'
 import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
 import { ACCOUNT_NAV_LINKS, SIDEBAR_RECS } from './fixtures'
+import { MoneyAmount } from '@/components/data-display'
 import { cn } from '@/lib/cn'
 
 function Panel({
@@ -44,7 +45,9 @@ export function AccountWalletCard({ className }: { className?: string } = {}) {
       <p className="text-[12px] font-bold tracking-[0.08em] text-bg-page uppercase">
         {t('wallet.title')}
       </p>
-      <p className="mt-sm text-[38px] leading-none font-extrabold tracking-[-1.14px]">{display}</p>
+      <p className="mt-sm text-[38px] leading-none font-extrabold tracking-[-1.14px]">
+        <MoneyAmount value={display} />
+      </p>
       <p className="mt-[6px] text-[13px] text-bg-page">{t('wallet.lede')}</p>
       <Link
         to="/wallet"

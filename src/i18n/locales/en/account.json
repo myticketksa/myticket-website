@@ -27,9 +27,9 @@
     "addFunds": "Add funds",
     "withdraw": "Withdraw",
     "topUp": "Top up",
-    "topUpAmount": "Top-up amount (SAR)",
+    "topUpAmount": "Top-up amount",
     "customAmount": "Custom amount",
-    "confirmTopUp": "Confirm top-up · {{amount}}",
+    "confirmTopUp": "Confirm top-up · ⃁ {{amount}}",
     "invalidAmount": "Enter a valid top-up amount",
     "topUpSuccess": "Top-up submitted",
     "topUpFailed": "Top-up failed",
@@ -43,7 +43,7 @@
       "pending": "Pending"
     },
     "withdrawTitle": "Withdraw to your bank",
-    "withdrawBody": "Payouts land in 2–3 working days. Minimum SAR 50.",
+    "withdrawBody": "Payouts land in 2–3 working days. Minimum ⃁ 50.",
     "verifiedAccount": "Verified account",
     "requestWithdrawal": "Request a withdrawal",
     "paymentMethods": "Payment methods",
@@ -55,7 +55,52 @@
     "cashbackGuide": "Read the guide →",
     "statusCleared": "Cleared",
     "statusPending": "Pending",
-    "exportCsv": "Export CSV"
+    "statusAvailable": "Available",
+    "statusSpent": "Spent at checkout",
+    "exportCsv": "Export CSV",
+    "emptyActivity": "No activity yet",
+    "orderRef": "Order {{id}}",
+    "payoutRef": "Payout reference {{id}}",
+    "types": {
+      "cashback": "Cashback",
+      "purchase": "Purchase",
+      "refund": "Refund",
+      "topup": "Top-up",
+      "top_up": "Top-up",
+      "withdraw": "Withdrawal",
+      "withdrawal": "Withdrawal",
+      "auction": "Auction sale",
+      "resale": "Resale payout",
+      "debit": "Payment",
+      "credit": "Credit"
+    },
+    "txns": {
+      "cashbackWinter": {
+        "label": "Cashback · Winter Nights",
+        "detail": "Releases after the show",
+        "date": "8 Oct 2026"
+      },
+      "paidWinter": {
+        "label": "Paid towards Winter Nights",
+        "detail": "Order MT-2026-84193",
+        "date": "27 Jul 2026"
+      },
+      "cashbackComedy": {
+        "label": "Cashback · Riyadh Comedy Club",
+        "detail": "Order MT-2026-71204",
+        "date": "20 Apr 2026"
+      },
+      "auctionGold": {
+        "label": "Auction sale · Gold pair",
+        "detail": "Payout reference PO-30291",
+        "date": "12 Mar 2026"
+      },
+      "refundComedy": {
+        "label": "Refund · Comedy Night",
+        "detail": "Order MT-2026-69011",
+        "date": "2 Feb 2026"
+      }
+    }
   },
   "tickets": {
     "title": "My tickets",
@@ -230,7 +275,7 @@
     "ifSells": "If it sells at your starting bid",
     "commission": "MyTicket commission · 10%",
     "youReceiveAtLeast": "You receive at least",
-    "paidNote": "You paid SAR {{paid}} for this ticket. Bids can't climb past your starting price — you keep 90% of wherever it lands.",
+    "paidNote": "You paid ⃁ {{paid}} for this ticket. Bids can't climb past your starting price — you keep 90% of wherever it lands.",
     "rulesTitle": "The rules, plainly",
     "ruleCancelBefore": "You can cancel the listing any time",
     "ruleCancelEmphasis": "until the first bid lands",
@@ -307,7 +352,7 @@
       "Event": "Event",
       "Experience": "Experience",
       "Talent": "Talent",
-      "Vendor": "Vendor"
+      "Vendor": "Facility"
     },
     "cta": {
       "tickets": "Get tickets",
@@ -336,7 +381,7 @@
       "Event": "Event",
       "Experience": "Experience",
       "Talent": "Talent",
-      "Vendor": "Vendor"
+      "Vendor": "Facility"
     },
     "cta": {
       "tickets": "Get tickets",
@@ -513,7 +558,7 @@
     "settingsTitle": "Account & settings",
     "settingsSubtitle": "Everything about how you sign in, pay and get notified.",
     "openSettings": "Open settings →",
-    "becomeBusinessBody": "Vendor or talent request — submit once, track admin review. Organizer partnership is arranged through our office.",
+    "becomeBusinessBody": "Facility or talent request — submit once, track admin review. Organizer partnership is arranged through our office.",
     "apply": "Apply",
     "signedInDevice": "Signed in on this device since {{when}} · {{device}}",
     "manageDevices": "Manage devices",
@@ -544,7 +589,7 @@
         "meta": "6 written"
       },
       "vendor": {
-        "label": "Vendor application",
+        "label": "Facility application",
         "meta": "Track status"
       },
       "talent": {
@@ -599,7 +644,8 @@
       "pending": "Pending",
       "accepted": "Accepted",
       "rejected": "Rejected"
-    }
+    },
+    "refMeta": "{{date}} · Ref {{ref}}"
   },
   "auctionActivity": {
     "title": "Auction activity",

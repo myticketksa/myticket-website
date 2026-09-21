@@ -1,4 +1,4 @@
-export { default as i18n } from './config'
+export { default as i18n, getActiveLocale } from './config'
 export {
   LocaleProvider,
   useLocale,

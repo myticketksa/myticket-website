@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FilterChip } from '@/components/data-display'
+import { FilterChip, MoneyAmount } from '@/components/data-display'
 import { Checkbox } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { catalogLabel } from '@/lib/i18n/catalogLabels'
@@ -383,8 +383,8 @@ function PriceSlider({
         />
       </div>
       <div className="mt-xs flex justify-between text-[12px] text-ink-muted">
-        <span>SAR {PRICE_MIN}</span>
-        <span>SAR 1,500+</span>
+        <MoneyAmount value={PRICE_MIN} />
+        <MoneyAmount value={`${(1500).toLocaleString('en-US')}+`} />
       </div>
     </div>
   )

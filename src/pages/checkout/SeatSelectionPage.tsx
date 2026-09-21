@@ -9,7 +9,7 @@ import {
   PlusIcon,
   SparkleIcon,
 } from '@/components/icons'
-import { Divider, FilterChip, PriceDisplay } from '@/components/data-display'
+import { Divider, FilterChip, MoneyAmount, PriceDisplay } from '@/components/data-display'
 import { EmptyState } from '@/components/feedback'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
@@ -47,10 +47,10 @@ interface SelectedSeat {
 const ZONE_IDS: Zone[] = ['all', 'vip', 'gold', 'silver', 'bronze']
 
 const PRICE_TIER_DEFS = [
-  { tone: 'bg-seat-vip', key: 'vip' as const, left: 34, price: 'SAR 680+' },
-  { tone: 'bg-brand-identity-end', key: 'gold' as const, left: 32, price: 'SAR 480+' },
-  { tone: 'bg-ink-brand', key: 'silver' as const, left: 117, price: 'SAR 260+' },
-  { tone: 'bg-ink-secondary', key: 'bronze' as const, left: 73, price: 'SAR 180+' },
+  { tone: 'bg-seat-vip', key: 'vip' as const, left: 34, price: '680+' },
+  { tone: 'bg-brand-identity-end', key: 'gold' as const, left: 32, price: '480+' },
+  { tone: 'bg-ink-brand', key: 'silver' as const, left: 117, price: '260+' },
+  { tone: 'bg-ink-secondary', key: 'bronze' as const, left: 73, price: '180+' },
 ] as const
 
 const ZOOM_MIN = 75
@@ -715,9 +715,11 @@ export function SeatSelectionPage() {
                   <p className="text-[14px] font-semibold text-ink-primary">{seat.label}</p>
                   <p className="text-[12px] text-ink-secondary">{seat.category}</p>
                 </div>
-                <PriceDisplay context="row" className="text-[14px] font-semibold">
-                  SAR {seat.price.toLocaleString('en-US')}
-                </PriceDisplay>
+                <PriceDisplay
+                  context="row"
+                  className="text-[14px] font-semibold"
+                  value={seat.price}
+                />
                 <button
                   type="button"
                   aria-label={t('seats.removeSeat', { label: seat.label })}
@@ -737,21 +739,21 @@ export function SeatSelectionPage() {
           <div className="flex flex-col gap-sm text-[14px]">
             <div className="flex justify-between">
               <span className="text-ink-secondary">{t('seats.subtotal')}</span>
-              <PriceDisplay context="row">SAR {subtotal.toLocaleString('en-US')}</PriceDisplay>
+              <PriceDisplay context="row" value={subtotal} />
             </div>
             <div className="flex justify-between">
               <span className="text-ink-secondary">{t('seats.serviceFee')}</span>
-              <PriceDisplay context="row">SAR {serviceFee.toLocaleString('en-US')}</PriceDisplay>
+              <PriceDisplay context="row" value={serviceFee} />
             </div>
             <div className="flex justify-between">
               <span className="text-ink-secondary">{t('seats.vat')}</span>
-              <PriceDisplay context="row">SAR {vat.toLocaleString('en-US')}</PriceDisplay>
+              <PriceDisplay context="row" value={vat} />
             </div>
           </div>
 
           <div className="mt-md flex items-baseline justify-between border-t border-border-divider pt-md">
             <span className="text-[16px] font-semibold text-ink-primary">{t('seats.total')}</span>
-            <PriceDisplay context="stat">SAR {total.toLocaleString('en-US')}</PriceDisplay>
+            <PriceDisplay context="stat" value={total} />
           </div>
 
           <Button
@@ -772,7 +774,7 @@ export function SeatSelectionPage() {
               : holding
                 ? t('seats.holding')
                 : t('seats.continuePayment', {
-                    amount: `SAR ${total.toLocaleString('en-US')}`,
+                    amount: total.toLocaleString('en-US'),
                   })}
           </Button>
           <p className="mt-md text-center text-[12px] leading-[1.5] text-ink-muted">
@@ -792,7 +794,10 @@ export function SeatSelectionPage() {
                 <span className="text-[13px] text-ink-secondary">
                   {t('seats.tiers.left', { count: tier.left })}
                 </span>
-                <span className="text-[13px] font-semibold text-ink-primary">{tier.price}</span>
+                <MoneyAmount
+                  value={tier.price}
+                  className="text-[13px] font-semibold text-ink-primary"
+                />
               </li>
             ))}
           </ul>

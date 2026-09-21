@@ -1,4 +1,4 @@
-import { ImagePlaceholder } from '@/components/data-display'
+import { ImagePlaceholder, MoneyAmount } from '@/components/data-display'
 import { StarFillIcon } from '@/components/icons'
 import { cn } from '@/lib/cn'
 
@@ -101,7 +101,10 @@ export function FeaturedPanelCard({
         <p className="mt-sm text-[14px] font-medium text-ink-secondary">{venue}</p>
 
         <div className="mt-lg flex w-full items-center justify-between">
-          <p className="text-[16px] font-extrabold tabular-nums text-ink-primary">{price}</p>
+          <MoneyAmount
+            value={price}
+            className="text-[16px] font-extrabold text-ink-primary"
+          />
 
           <span className="flex items-center gap-[5px] text-ink-muted">
             <StarFillIcon className="shrink-0" />

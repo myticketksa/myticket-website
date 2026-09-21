@@ -23,6 +23,7 @@ import { useRequireAuth } from '@/lib/auth/useRequireAuth'
 import { mapApiIdLabelOptions, type IdLabelOption } from '@/lib/api/formPayload'
 import { clearDraft, loadDraft, saveDraft } from '@/lib/forms/draftStorage'
 import { apiErrorMessage } from '@/lib/api/unwrap'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 
 const STEP_KEYS = ['account', 'business', 'services', 'credentials', 'review'] as const
 
@@ -52,6 +53,7 @@ type VendorDraft = {
 /** Apply vendor — FormData keys match Postman `POST /applications/vendor`. */
 export function ApplyVendorPage() {
   const { t } = useTranslation(['forms', 'common'])
+  const { t: tCatalog } = useTranslation('catalog')
   const { roleLabel } = useLocale()
   const vendor = roleLabel('vendor')
   const navigate = useNavigate()
@@ -103,8 +105,12 @@ export function ApplyVendorPage() {
   }, [user?.email, user?.phone])
 
   const cityOptions = useMemo(
-    () => mapApiIdLabelOptions(apiCities, FALLBACK_CITIES),
-    [apiCities],
+    () =>
+      mapApiIdLabelOptions(apiCities, FALLBACK_CITIES).map((city) => ({
+        ...city,
+        label: catalogLabel(tCatalog, city.label),
+      })),
+    [apiCities, tCatalog],
   )
 
   const lastStep = STEP_KEYS.length - 1
@@ -238,7 +244,7 @@ export function ApplyVendorPage() {
             : t('forms:vendor.submit')
           : t('common:actions.continue')
       }
-      trackHref="/my-vendor-application"
+      trackHref="/my-facilities-application"
       trackLabel={t('forms:vendor.track', { role: vendor })}
       onClear={handleClear}
       onSaveExit={handleSaveExit}

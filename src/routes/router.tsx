@@ -1,4 +1,4 @@
-import { createBrowserRouter, Outlet } from 'react-router-dom'
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import {
   MainLayout,
   AuthLayout,
@@ -46,6 +46,7 @@ import {
   NewSupportCasePage,
   SupportChatPage,
   AboutPage,
+  ForVendorsPage,
   HelpPage,
   LegalPage,
   MaintenancePage,
@@ -90,6 +91,8 @@ export const router = createBrowserRouter([
           { path: '/experiences/:slug', element: <ExperienceDetailPage /> },
           { path: '/order-confirmation', element: <OrderConfirmationPage /> },
           { path: '/become-business', element: <BecomeBusinessPage /> },
+          { path: '/for-facilities', element: <ForVendorsPage /> },
+          { path: '/for-vendors', element: <Navigate to="/for-facilities" replace /> },
           { path: '/about', element: <AboutPage /> },
           { path: '/help', element: <HelpPage /> },
           { path: '/legal', element: <LegalPage /> },
@@ -120,7 +123,11 @@ export const router = createBrowserRouter([
           { path: '/wallet', element: <WalletPage /> },
           { path: '/my-reviews', element: <MyReviewsPage /> },
           { path: '/my-submissions', element: <MySubmissionsPage /> },
-          { path: '/my-vendor-application', element: <MyVendorApplicationPage /> },
+          { path: '/my-facilities-application', element: <MyVendorApplicationPage /> },
+          {
+            path: '/my-vendor-application',
+            element: <Navigate to="/my-facilities-application" replace />,
+          },
           { path: '/my-talent-application', element: <MyTalentApplicationPage /> },
           { path: '/support', element: <MySupportCasesPage /> },
         ],
@@ -133,7 +140,8 @@ export const router = createBrowserRouter([
           { path: '/gift/claim/:giftTicketId', element: <ClaimGiftPage /> },
           { path: '/support/new', element: <NewSupportCasePage /> },
           { path: '/support/chat', element: <SupportChatPage /> },
-          { path: '/apply/vendor', element: <ApplyVendorPage /> },
+          { path: '/apply/facilities', element: <ApplyVendorPage /> },
+          { path: '/apply/vendor', element: <Navigate to="/apply/facilities" replace /> },
           { path: '/apply/talent', element: <ApplyTalentPage /> },
           { path: '/submit-experience', element: <SubmitExperiencePage /> },
           { path: '/application-submitted', element: <ApplicationSubmittedPage /> },

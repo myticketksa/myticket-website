@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useSubmitReviewMutation } from '@/app/api/accountApis'
 import {
@@ -50,11 +51,15 @@ import {
   TALENT_SIMILAR_IMAGES,
 } from '@/pages/_guest'
 
-function workFromApi(work: unknown, index: number) {
+function workFromApi(
+  work: unknown,
+  index: number,
+  fallbackTitle: (n: number) => string,
+) {
   if (typeof work === 'string') {
     return {
       key: `work-${index}`,
-      title: `Previous work ${index + 1}`,
+      title: fallbackTitle(index + 1),
       meta: '',
       image: work,
     }
@@ -62,7 +67,7 @@ function workFromApi(work: unknown, index: number) {
   const row = (work && typeof work === 'object' ? work : {}) as Record<string, unknown>
   return {
     key: String(row.id ?? index),
-    title: String(row.title ?? row.name ?? row.event ?? `Previous work ${index + 1}`),
+    title: String(row.title ?? row.name ?? row.event ?? fallbackTitle(index + 1)),
     meta: String(row.venue ?? row.date ?? row.location ?? ''),
     image: String(row.image ?? row.cover ?? row.thumbnail ?? row.url ?? '') || undefined,
   }
@@ -73,6 +78,7 @@ function workFromApi(work: unknown, index: number) {
  * previous works from API. Reviews are not shown publicly.
  */
 export function TalentDetailPage() {
+  const { t } = useTranslation('catalog')
   const { slug } = useParams()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
@@ -139,8 +145,12 @@ export function TalentDetailPage() {
 
   const works = useMemo(() => {
     if (!previousWorks?.length) return []
-    return previousWorks.slice(0, 9).map(workFromApi)
-  }, [previousWorks])
+    return previousWorks
+      .slice(0, 9)
+      .map((work, index) =>
+        workFromApi(work, index, (n) => t('talent.previousWorkFallback', { n })),
+      )
+  }, [previousWorks, t])
 
   const following = Boolean(talent.isFollowing)
   const favourited = talent.id ? isFavourite(talent.id) : false
@@ -151,13 +161,13 @@ export function TalentDetailPage() {
       try {
         if (following) {
           await unfollowTalent(talent.id!).unwrap()
-          dispatch(toastPushed('success', 'Unfollowed'))
+          dispatch(toastPushed('success', t('talent.toastUnfollowed')))
         } else {
           await followTalent(talent.id!).unwrap()
-          dispatch(toastPushed('success', 'Following'))
+          dispatch(toastPushed('success', t('talent.toastFollowing')))
         }
       } catch (error) {
-        dispatch(toastPushed('error', apiErrorMessage(error, 'Could not update follow')))
+        dispatch(toastPushed('error', apiErrorMessage(error, t('talent.toastFollowError'))))
       }
     })
   }
@@ -169,7 +179,9 @@ export function TalentDetailPage() {
         try {
           await toggleFavourite(talent.id)
         } catch (error) {
-          dispatch(toastPushed('error', apiErrorMessage(error, 'Could not update favourite')))
+          dispatch(
+            toastPushed('error', apiErrorMessage(error, t('talent.toastFavouriteError'))),
+          )
         }
       })()
     })
@@ -188,9 +200,9 @@ export function TalentDetailPage() {
     try {
       await requestTalent({ ...payload, talent_id: Number(talent.id) }).unwrap()
       setRequestOpen(false)
-      dispatch(toastPushed('success', 'Request sent'))
+      dispatch(toastPushed('success', t('talent.toastRequestSent')))
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not send request')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('talent.toastRequestError'))))
     }
   }
 
@@ -198,9 +210,9 @@ export function TalentDetailPage() {
     try {
       await submitReview(payload).unwrap()
       setReviewOpen(false)
-      dispatch(toastPushed('success', 'Rating submitted'))
+      dispatch(toastPushed('success', t('talent.toastRatingSubmitted')))
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not submit rating')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('talent.toastRatingError'))))
     }
   }
 
@@ -215,8 +227,8 @@ export function TalentDetailPage() {
       <PageSection padTop={26} padBottom={0}>
         <Breadcrumbs
           items={[
-            { label: 'Home', href: '/' },
-            { label: 'Talents', href: '/talents' },
+            { label: t('talent.crumbHome'), href: '/' },
+            { label: t('talent.crumbTalents'), href: '/talents' },
             { label: talent.name },
           ]}
         />
@@ -262,26 +274,28 @@ export function TalentDetailPage() {
               disabled={followState.isLoading || unfollowState.isLoading}
               className="min-h-[44px] w-full sm:w-auto"
             >
-              {following ? 'Unfollow' : 'Follow'}
+              {following ? t('talent.unfollow') : t('talent.follow')}
             </Button>
             <Button
               icon={<PaperPlaneIcon size={18} />}
               onClick={openRequest}
               className="min-h-[44px] w-full sm:w-auto"
             >
-              Request
+              {t('talent.request')}
             </Button>
             <Button
               icon={<StarOutlineIcon size={18} weight="fill" />}
               onClick={openReview}
               className="min-h-[44px] w-full sm:w-auto"
             >
-              Rate & review
+              {t('talent.rateReview')}
             </Button>
             <Button
               variant="icon"
               size="md"
-              aria-label={favourited ? 'Remove from favourites' : 'Add to favourites'}
+              aria-label={
+                favourited ? t('talent.removeFavourite') : t('talent.addFavourite')
+              }
               onClick={handleFavourite}
               className={favourited ? 'min-h-[44px] text-ink-brand' : 'min-h-[44px]'}
             >
@@ -292,7 +306,7 @@ export function TalentDetailPage() {
               onClick={() => navigate('/talents')}
               className="col-span-2 min-h-[44px] w-full sm:col-auto sm:w-auto"
             >
-              Browse talents
+              {t('talent.browseTalents')}
             </Button>
           </div>
         </FadeUp>
@@ -300,10 +314,10 @@ export function TalentDetailPage() {
         {works.length > 0 && (
           <div className="mx-auto mt-3xl max-w-[960px] sm:mt-[56px]">
             <h2 className="text-heading-h2-section text-center text-balance text-ink-primary">
-              Previous work
+              {t('talent.previousWork')}
             </h2>
             <p className="mt-[6px] text-center text-[14px] text-pretty text-ink-secondary sm:text-[15px]">
-              Highlights from this talent’s portfolio.
+              {t('talent.previousWorkLede')}
             </p>
             <div className="mt-xl grid grid-cols-1 gap-lg sm:mt-[22px] sm:grid-cols-2 lg:grid-cols-3">
               {works.map((work) => (
@@ -330,8 +344,8 @@ export function TalentDetailPage() {
 
         <SimilarSection
           className="mt-3xl sm:mt-[64px]"
-          heading="More talents"
-          lede="Limited public profiles — name, craft and rating."
+          heading={t('talent.moreTalents')}
+          lede={t('talent.moreTalentsLede')}
         >
           {catalog
             .filter((t) => t.name !== talent.name)

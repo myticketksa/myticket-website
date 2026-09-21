@@ -95,7 +95,7 @@ export const ACCOUNT_NAV_LINKS = [
   { id: 'favourites', href: '/favorites' },
   { id: 'waitlists', href: '/favorites' },
   { id: 'reviews', href: '/my-reviews' },
-  { id: 'vendor', href: '/my-vendor-application' },
+  { id: 'vendor', href: '/my-facilities-application' },
   { id: 'talent', href: '/my-talent-application' },
   { id: 'payment', href: '/settings' },
 ] as const
@@ -284,6 +284,8 @@ export const NOTIFICATIONS: NotificationFixture[] = [
 ]
 
 export interface WalletTxnFixture {
+  /** i18n key under `wallet.txns.*` when using fixtures. */
+  id?: string
   label: string
   detail: string
   date: string
@@ -294,42 +296,47 @@ export interface WalletTxnFixture {
 
 export const WALLET_TXNS: WalletTxnFixture[] = [
   {
+    id: 'cashbackWinter',
     label: 'Cashback · Winter Nights',
     detail: 'Releases after the show',
     date: '8 Oct 2026',
-    amount: '+ SAR 21.00',
+    amount: '+ 21.00',
     status: 'Pending',
     tone: 'pending',
   },
   {
+    id: 'paidWinter',
     label: 'Paid towards Winter Nights',
     detail: 'Order MT-2026-84193',
     date: '27 Jul 2026',
-    amount: '− SAR 60.00',
+    amount: '− 60.00',
     status: 'Spent at checkout',
     tone: 'debit',
   },
   {
+    id: 'cashbackComedy',
     label: 'Cashback · Riyadh Comedy Club',
     detail: 'Order MT-2026-71204',
     date: '20 Apr 2026',
-    amount: '+ SAR 18.00',
+    amount: '+ 18.00',
     status: 'Available',
     tone: 'credit',
   },
   {
+    id: 'auctionGold',
     label: 'Auction sale · Gold pair',
     detail: 'Payout reference PO-30291',
     date: '12 Mar 2026',
-    amount: '+ SAR 420.00',
+    amount: '+ 420.00',
     status: 'Available',
     tone: 'credit',
   },
   {
+    id: 'refundComedy',
     label: 'Refund · Comedy Night',
     detail: 'Order MT-2026-69011',
     date: '2 Feb 2026',
-    amount: '+ SAR 95.00',
+    amount: '+ 95.00',
     status: 'Available',
     tone: 'credit',
   },

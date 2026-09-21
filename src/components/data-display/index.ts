@@ -17,6 +17,11 @@ export { Divider, type DividerProps } from './Divider'
 export { MeterBar, type MeterBarProps } from './MeterBar'
 export { StarRating, type StarRatingProps } from './StarRating'
 export { PriceDisplay, type PriceDisplayProps } from './PriceDisplay'
+export {
+  MoneyAmount,
+  parseMoneyDisplay,
+  type MoneyAmountProps,
+} from './MoneyAmount'
 export { Countdown, type CountdownProps } from './Countdown'
 export { ImagePlaceholder, type ImagePlaceholderProps } from './ImagePlaceholder'
 export { FlagSaudiArabia, FlagUnitedStates } from './Flags'

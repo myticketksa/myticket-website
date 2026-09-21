@@ -1,6 +1,8 @@
-import { ImagePlaceholder } from '@/components/data-display'
+import { useTranslation } from 'react-i18next'
+import { ImagePlaceholder, MoneyAmount, parseMoneyDisplay } from '@/components/data-display'
 import { HeartGlyphIcon, StarFillIcon } from '@/components/icons'
 import { cn } from '@/lib/cn'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
 
 /**
  * Figma `EventCard` — Context=Home `207:3255`, `EventCard/Catalog` `207:3276`.
@@ -88,7 +90,12 @@ export function EventCard({
   favourited,
   className,
 }: EventCardProps) {
+  const { t } = useTranslation('catalog')
+  const { t: tCommon } = useTranslation('common')
   const isHome = context === 'home'
+  const isFree = parseMoneyDisplay(price).kind === 'free'
+  const categoryLabel = category ? catalogLabel(t, category) : undefined
+  const flagLabel = flag ? catalogLabel(t, flag) : undefined
 
   return (
     <article
@@ -111,7 +118,7 @@ export function EventCard({
           <ImagePlaceholder ratio="fill" caption="Event imagery 16:10" />
         )}
 
-        {flag && (
+        {flagLabel && (
           <p
             className={cn(
               'absolute top-[10px] start-[10px] rounded-[12px] px-[9px] py-xs text-[11px] font-semibold text-ink-inverse',
@@ -122,7 +129,7 @@ export function EventCard({
                 : 'bg-brand-gradient-end',
             )}
           >
-            {flag}
+            {flagLabel}
           </p>
         )}
 
@@ -155,9 +162,9 @@ export function EventCard({
           </span>
         )}
 
-        {category && (
+        {categoryLabel && (
           <p className="absolute bottom-[10px] start-[10px] rounded-[12px] bg-surface-inverse px-[9px] py-xs text-[11px] font-semibold text-bg-page">
-            {category}
+            {categoryLabel}
           </p>
         )}
       </div>
@@ -209,24 +216,36 @@ export function EventCard({
         </div>
 
         <div className="mt-auto flex w-full items-baseline justify-between border-t border-border-divider pt-md">
-          <span
-            className={cn(
-              'text-[13px] text-ink-muted',
-              isHome ? 'font-medium' : 'font-normal',
-            )}
-          >
-            From
-          </span>
-          <span
-            className={cn(
-              'tabular-nums',
-              isHome
-                ? 'text-[19px] font-extrabold text-brand-identity-end'
-                : 'text-[18px] font-semibold text-ink-primary',
-            )}
-          >
-            {price}
-          </span>
+          {isFree ? (
+            <MoneyAmount
+              value={price}
+              freeLabel={tCommon('currency.freeTickets')}
+              className={cn(
+                isHome
+                  ? 'text-[19px] font-extrabold text-brand-identity-end'
+                  : 'text-[18px] font-semibold text-ink-primary',
+              )}
+            />
+          ) : (
+            <>
+              <span
+                className={cn(
+                  'text-[13px] text-ink-muted',
+                  isHome ? 'font-medium' : 'font-normal',
+                )}
+              >
+                {tCommon('currency.from')}
+              </span>
+              <MoneyAmount
+                value={price}
+                className={cn(
+                  isHome
+                    ? 'text-[19px] font-extrabold text-brand-identity-end'
+                    : 'text-[18px] font-semibold text-ink-primary',
+                )}
+              />
+            </>
+          )}
         </div>
       </div>
     </article>

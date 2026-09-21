@@ -2,7 +2,7 @@
   "about": {
     "eyebrow": "About MyTicket",
     "title": "Saudi Arabia is going out. We hold the tickets.",
-    "lede": "MyTicket is where people across the Kingdom find live experiences — concerts, sports, festivals, theatre, family days, and places worth the drive — and buy their way in with one tap. Behind the curtain we partner with organizers through our office, and review vendor and talent requests from guest accounts.",
+    "lede": "MyTicket is where people across the Kingdom find live experiences — concerts, sports, festivals, theatre, family days, and places worth the drive — and buy their way in with one tap. Behind the curtain we partner with organizers through our office, and review facility and talent requests from guest accounts.",
     "ctaText": "The best way to understand MyTicket is to find your next night out.",
     "ctaLabel": "Browse what's on",
     "buildingSomething": "Building something?",
@@ -213,10 +213,10 @@
       },
       "business": {
         "title": "Business requests",
-        "blurb": "Vendor and talent requests, and how partnership works.",
+        "blurb": "Facility and talent requests, and how partnership works.",
         "faqs": [
           {
-            "q": "How do I become a vendor or talent?",
+            "q": "How do I become a facility or talent?",
             "a": "Sign in as a guest, open Become a business, and submit a request. Our team reviews it in 2–5 working days. Acceptance does not change your login — we contact you outside the platform if needed."
           },
           {
@@ -265,7 +265,7 @@
           },
           {
             "title": "5 · Business applications",
-            "body": "Vendors and talents may submit a request from a guest account for MyTicket to review. That does not create a separate login role. Business partnership accounts are created only after an office agreement. Guests do not browse vendor directories to book services inside the product."
+            "body": "Facilities and talents may submit a request from a guest account for MyTicket to review. That does not create a separate login role. Business partnership accounts are created only after an office agreement. Guests do not browse facility directories to book services inside the product."
           },
           {
             "title": "6 · Wallet & money",
@@ -386,7 +386,7 @@
       },
       {
         "title": "Partnership, not a directory",
-        "body": "Lineup and crew are arranged with MyTicket outside the guest app. Guests never browse organizer or vendor directories to book services."
+        "body": "Lineup and crew are arranged with MyTicket outside the guest app. Guests never browse organizer or facility directories to book services."
       }
     ],
     "steps": [
@@ -451,8 +451,8 @@
         "answer": "Payouts run weekly to your registered Saudi bank account. Sales, refunds and fees are itemised in your dashboard before each transfer."
       },
       {
-        "question": "Is there a talent or vendor directory for organizers?",
-        "answer": "No. Matching and contact for talent and vendors are handled by MyTicket outside the guest app — not by organizers browsing directories."
+        "question": "Is there a talent or facility directory for organizers?",
+        "answer": "No. Matching and contact for talent and facilities are handled by MyTicket outside the guest app — not by organizers browsing directories."
       }
     ],
     "closingTitle": "Ready to partner?",
@@ -480,7 +480,7 @@
     "benefits": [
       {
         "title": "A request, not a storefront",
-        "body": "You fill a short form. There is no public vendor directory for organizers to browse inside MyTicket."
+        "body": "You fill a short form. There is no public facility directory for organizers to browse inside MyTicket."
       },
       {
         "title": "Admin decides",
@@ -535,15 +535,15 @@
       "At least one photo of real previous work",
       "Your services, coverage area and business story"
     ],
-    "needNoteBody": "Every request is checked in 2–5 working days. Acceptance does not create a vendor login.",
+    "needNoteBody": "Every request is checked in 2–5 working days. Acceptance does not create a facility login.",
     "faqs": [
       {
-        "question": "Do I get a vendor account after acceptance?",
+        "question": "Do I get a facility account after acceptance?",
         "answer": "No. You keep the same guest login. Acceptance means our team may contact you outside MyTicket when your services are needed."
       },
       {
         "question": "Can organizers browse and book me here?",
-        "answer": "No. There is no public vendor directory. Matching and contact are handled by MyTicket outside the guest app."
+        "answer": "No. There is no public facility directory. Matching and contact are handled by MyTicket outside the guest app."
       },
       {
         "question": "How large does my business need to be?",

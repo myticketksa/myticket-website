@@ -16,7 +16,7 @@ export function ApplicationSubmittedPage() {
   const { roleLabel } = useLocale()
   const role = roleLabel(roleKey as RoleKey)
   const statusHref =
-    roleKey === 'talent' ? '/my-talent-application' : '/my-vendor-application'
+    roleKey === 'talent' ? '/my-talent-application' : '/my-facilities-application'
 
   return (
     <>

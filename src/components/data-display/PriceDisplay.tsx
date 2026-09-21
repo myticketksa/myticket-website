@@ -1,4 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react'
+import { MoneyAmount } from './MoneyAmount'
 import { cn } from '@/lib/cn'
 
 /**
@@ -8,11 +9,8 @@ import { cn } from '@/lib/cn'
  * line — never folded into a price. Wallet balances always show the withdrawable /
  * spend-only split."*
  *
- * `card` and `total` are both 14/700 — the source draws them identically and they
- * differ only by tabular figures, which Figma's API cannot express. **Every price
- * in the system is tabular in the source and none of them is tabular in Figma**,
- * so `tabular-nums` is applied to all six here. That is a restoration of the
- * source's intent, not an addition.
+ * Amounts render with the official Saudi Riyal mark via `MoneyAmount`.
+ * Prefer `value` for figures; string `children` that look like money are also parsed.
  */
 const CONTEXT = {
   card: 'text-[14px] font-bold',
@@ -25,21 +23,33 @@ const CONTEXT = {
 
 export interface PriceDisplayProps extends HTMLAttributes<HTMLSpanElement> {
   context?: keyof typeof CONTEXT
-  children: ReactNode
+  /** Preferred: numeric or legacy money string — rendered with the SAR mark. */
+  value?: number | string | null
+  children?: ReactNode
 }
 
 export function PriceDisplay({
   className,
   context = 'card',
+  value,
   children,
   ...props
 }: PriceDisplayProps) {
+  const content =
+    value !== undefined ? (
+      <MoneyAmount value={value} />
+    ) : typeof children === 'string' || typeof children === 'number' ? (
+      <MoneyAmount value={children} />
+    ) : (
+      children
+    )
+
   return (
     <span
       className={cn('tabular-nums text-ink-primary', CONTEXT[context], className)}
       {...props}
     >
-      {children}
+      {content}
     </span>
   )
 }

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Divider, ImagePlaceholder } from '@/components/data-display'
 import { StarFillIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
@@ -44,6 +45,7 @@ export function TalentCard({
   image,
   className,
 }: TalentCardProps) {
+  const { t } = useTranslation('catalog')
   const showDiscovery = verified
 
   if (limited) {
@@ -72,7 +74,7 @@ export function TalentCard({
         </h3>
         <div
           className="flex items-center justify-center gap-[3px]"
-          aria-label={`${rating} of 5`}
+          aria-label={t('talent.ratingOf5', { rating })}
         >
           {Array.from({ length: 5 }, (_, i) => (
             <StarFillIcon
@@ -109,7 +111,7 @@ export function TalentCard({
 
         {showDiscovery && (
           <p className="absolute top-[10px] start-[10px] rounded-[12px] bg-surface-default px-[10px] py-[5px] text-[10px] font-bold tracking-[0.02em] text-ink-brand">
-            Myticket Discovery
+            {t('talent.discovery')}
           </p>
         )}
 
@@ -138,7 +140,7 @@ export function TalentCard({
           <>
             <Divider className="my-[11px]" />
             <p className="text-[11px] font-bold tracking-[0.66px] text-brand-gradient-end uppercase">
-              Appearing next
+              {t('talent.appearingNext')}
             </p>
             <p className="mt-[3px] text-[13px] font-semibold text-ink-primary">{nextEvent}</p>
           </>
@@ -183,6 +185,7 @@ export function TalentDirectoryCard({
   limited = false,
   className,
 }: TalentDirectoryCardProps) {
+  const { t } = useTranslation('catalog')
   const showDiscovery = verified
 
   return (
@@ -197,7 +200,7 @@ export function TalentDirectoryCard({
 
         {showDiscovery && (
           <p className="absolute top-md start-md rounded-[13px] bg-bg-page/94 px-[10px] py-[5px] text-[10px] font-bold tracking-[0.02em] text-ink-brand">
-            Myticket Discovery
+            {t('talent.discovery')}
           </p>
         )}
 
@@ -217,7 +220,7 @@ export function TalentDirectoryCard({
         {!limited && nextShow && (
           <div className="mt-[10px] rounded-[12px] border border-border-divider bg-bg-page px-md py-[11px]">
             <p className="text-[11px] font-bold tracking-[0.66px] text-ink-muted uppercase">
-              Next show
+              {t('talent.nextShow')}
             </p>
             <p className="mt-xs text-[14px] font-semibold text-ink-primary">{nextShow.headline}</p>
             <p className="mt-[2px] text-[13px] text-ink-secondary">{nextShow.detail}</p>
@@ -227,14 +230,14 @@ export function TalentDirectoryCard({
         {!limited && (
           <div className="mt-auto flex w-full gap-sm pt-md">
             <Button className="h-[40px] flex-1 rounded-[20px]" onClick={onGetTickets}>
-              Get tickets
+              {t('talent.getTickets')}
             </Button>
             <Button
               variant="secondary"
               className="h-[40px] rounded-[20px] px-[14px]"
               onClick={onFollow}
             >
-              Follow
+              {t('talent.follow')}
             </Button>
           </div>
         )}

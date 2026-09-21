@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { QRCodeSVG } from 'qrcode.react'
 import {
   useCancelOrderMutation,
   useGetOrderDetailsQuery,
@@ -52,35 +53,17 @@ function isCancellable(order: Record<string, unknown> | undefined) {
   )
 }
 
-/** Decorative QR stand-in — Figma draws a dense matrix; a seeded grid keeps the stub readable. */
-function TicketQr({ seed }: { seed: number }) {
-  const cells = Array.from({ length: 21 * 21 }, (_, index) => {
-    const x = index % 21
-    const y = Math.floor(index / 21)
-    const finder = (x < 7 && y < 7) || (x > 13 && y < 7) || (x < 7 && y > 13)
-    const on = finder
-      ? x === 0 ||
-        y === 0 ||
-        x === 6 ||
-        y === 6 ||
-        (x > 13 && (x === 14 || x === 20 || y === 0 || y === 6)) ||
-        (y > 13 && (y === 14 || y === 20 || x === 0 || x === 6)) ||
-        (x >= 2 && x <= 4 && y >= 2 && y <= 4) ||
-        (x >= 16 && x <= 18 && y >= 2 && y <= 4) ||
-        (x >= 2 && x <= 4 && y >= 16 && y <= 18)
-      : ((x * 17 + y * 13 + seed * 7) % 5) > 1
-    return on
-  })
-
+function TicketQr({ value }: { value: string }) {
   return (
-    <div className="grid size-[126px] grid-cols-[repeat(21,minmax(0,1fr))] gap-px bg-surface-default">
-      {cells.map((on, index) => (
-        <span
-          key={index}
-          className={cn('size-full', on ? 'bg-surface-inverse' : 'bg-surface-default')}
-        />
-      ))}
-    </div>
+    <QRCodeSVG
+      value={value}
+      size={126}
+      level="M"
+      marginSize={0}
+      bgColor="#FFFFFF"
+      fgColor="#0A0A0A"
+      aria-label="Ticket QR code"
+    />
   )
 }
 
@@ -158,94 +141,98 @@ export function TicketPage() {
           </div>
 
           <div className="mt-lg flex flex-col gap-lg">
-            {(tickets.length > 0 ? tickets : [undefined]).map((seat, seatIndex) => (
-              <article
-                key={seat?.id ?? seatIndex}
-                className="relative flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
-              >
-                <div className="min-w-0 flex-1 px-lg py-[18px] sm:px-[24px] sm:py-[22px]">
-                  <div className="mt-0 grid grid-cols-2 gap-[12px] sm:grid-cols-3 sm:gap-[18px]">
-                    {[
-                      [t('ticket.fieldCity'), detail?.city ?? '—'],
-                      [t('ticket.fieldStartTime'), detail?.startTime ?? '—'],
-                      [t('ticket.fieldTicketNumber'), seat?.id ?? `${orderIdLabel}-${seatIndex + 1}`],
-                      [t('ticket.fieldSeat'), seat?.seat ?? '—'],
-                      [t('ticket.fieldTicketType'), seat?.ticketTypeLabel ?? '—'],
-                      [t('ticket.fieldPaymentMethod'), detail?.paymentMethod ?? '—'],
-                      [t('ticket.fieldReservationDate'), detail?.purchasedAt ?? '—'],
-                    ].map(([label, value]) => (
-                      <div key={label} className="min-w-0">
-                        <p className="text-[11px] font-bold tracking-[0.77px] text-ink-muted uppercase">
-                          {label}
-                        </p>
-                        <p className="mt-[4px] text-[15px] font-semibold text-ink-primary">
-                          {value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-[22px] flex flex-wrap gap-[10px] border-t border-dashed border-border-default pt-[18px]">
-                    {paid ? (
-                      <Link to={`/my-tickets/${detail?.id ?? id}/gift`}>
+            {(tickets.length > 0 ? tickets : [undefined]).map((seat, seatIndex) => {
+              const ticketNo = seat?.id ?? `${orderIdLabel}-${seatIndex + 1}`
+              const qrValue = seat?.qrValue || ticketNo
+              return (
+                <article
+                  key={seat?.id ?? seatIndex}
+                  className="relative flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
+                >
+                  <div className="min-w-0 flex-1 px-lg py-[18px] sm:px-[24px] sm:py-[22px]">
+                    <div className="mt-0 grid grid-cols-2 gap-[12px] sm:grid-cols-3 sm:gap-[18px]">
+                      {[
+                        [t('ticket.fieldCity'), detail?.city ?? '—'],
+                        [t('ticket.fieldStartTime'), detail?.startTime ?? '—'],
+                        [t('ticket.fieldTicketNumber'), ticketNo],
+                        [t('ticket.fieldSeat'), seat?.seat ?? '—'],
+                        [t('ticket.fieldTicketType'), seat?.ticketTypeLabel ?? '—'],
+                        [t('ticket.fieldPaymentMethod'), detail?.paymentMethod ?? '—'],
+                        [t('ticket.fieldReservationDate'), detail?.purchasedAt ?? '—'],
+                      ].map(([label, value]) => (
+                        <div key={label} className="min-w-0">
+                          <p className="text-[11px] font-bold tracking-[0.77px] text-ink-muted uppercase">
+                            {label}
+                          </p>
+                          <p className="mt-[4px] text-[15px] font-semibold text-ink-primary">
+                            {value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-[22px] flex flex-wrap gap-[10px] border-t border-dashed border-border-default pt-[18px]">
+                      {paid ? (
+                        <Link to={`/my-tickets/${detail?.id ?? id}/gift`}>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
+                          >
+                            {t('ticket.gift')}
+                          </Button>
+                        </Link>
+                      ) : (
                         <Button
                           variant="secondary"
                           size="sm"
                           className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
+                          disabled
                         >
                           {t('ticket.gift')}
                         </Button>
-                      </Link>
-                    ) : (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
-                        disabled
-                      >
-                        {t('ticket.gift')}
-                      </Button>
-                    )}
-                    {canCancel && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-[36px] rounded-[18px] bg-bg-page px-[14px] text-state-danger"
-                        loading={cancelState.isLoading}
-                        onClick={() => void handleCancel()}
-                      >
-                        {t('ticket.cancelOrder')}
-                      </Button>
-                    )}
+                      )}
+                      {canCancel && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-[36px] rounded-[18px] bg-bg-page px-[14px] text-state-danger"
+                          loading={cancelState.isLoading}
+                          onClick={() => void handleCancel()}
+                        >
+                          {t('ticket.cancelOrder')}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                <div className="relative flex w-full shrink-0 flex-col items-center justify-center gap-[12px] border-t-2 border-dashed border-border-default bg-bg-page p-[22px] sm:w-[200px] sm:border-t-0 sm:border-s-2 md:w-[232px]">
-                  <div
-                    className={cn(
-                      'rounded-[12px] border border-border-default bg-surface-default p-[10px]',
-                      !paid && 'opacity-40',
-                    )}
-                  >
-                    <TicketQr seed={seatIndex + 1} />
+                  <div className="relative flex w-full shrink-0 flex-col items-center justify-center gap-[12px] border-t-2 border-dashed border-border-default bg-bg-page p-[22px] sm:w-[200px] sm:border-t-0 sm:border-s-2 md:w-[232px]">
+                    <div
+                      className={cn(
+                        'rounded-[12px] border border-border-default bg-surface-default p-[10px]',
+                        !paid && 'opacity-40',
+                      )}
+                    >
+                      <TicketQr value={qrValue} />
+                    </div>
+                    <div className="text-center text-[12px] leading-[1.45]">
+                      <p className="font-semibold text-ink-secondary">
+                        {t('ticket.scanAtGate', {
+                          gate: seat?.gate && seat.gate !== '—' ? seat.gate : '—',
+                        })}
+                      </p>
+                    </div>
+                    <span
+                      aria-hidden="true"
+                      className="absolute top-[-11px] start-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="absolute bottom-[-11px] start-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
+                    />
                   </div>
-                  <div className="text-center text-[12px] leading-[1.45]">
-                    <p className="font-semibold text-ink-secondary">
-                      {t('ticket.scanAtGate', {
-                        gate: seat?.gate && seat.gate !== '—' ? seat.gate : '—',
-                      })}
-                    </p>
-                  </div>
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-[-11px] start-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
-                  />
-                  <span
-                    aria-hidden="true"
-                    className="absolute bottom-[-11px] start-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
-                  />
-                </div>
-              </article>
-            ))}
+                </article>
+              )
+            })}
           </div>
 
           <Link

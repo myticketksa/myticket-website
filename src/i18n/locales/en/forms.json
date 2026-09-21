@@ -75,7 +75,7 @@
     "notice": "Admin review only. If accepted, we contact you outside the platform when we need your services — there is no in-app browse-and-book flow.",
     "track": "Track your {{role}} request",
     "submit": "Submit request",
-    "success": "Vendor request submitted",
+    "success": "Facility request submitted",
     "error": "Could not submit request",
     "steps": {
       "account": "Account",
@@ -106,7 +106,7 @@
       "personalPhotoTitle": "Personal photo (optional)",
       "personalPhotoUpload": "Upload personal photo",
       "personalPhotoHint": "PNG or image · optional",
-      "confirm": "I confirm this information is accurate. I understand acceptance does not create a vendor login, and contact after review happens outside MyTicket.",
+      "confirm": "I confirm this information is accurate. I understand acceptance does not create a facility login, and contact after review happens outside MyTicket.",
       "reviewEmail": "Email",
       "reviewPhone": "Phone",
       "reviewBusiness": "Business",

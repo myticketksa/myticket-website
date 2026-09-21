@@ -1,4 +1,4 @@
-import { AttributeTag, ImagePlaceholder } from '@/components/data-display'
+import { AttributeTag, ImagePlaceholder, MoneyAmount } from '@/components/data-display'
 import { StarFillIcon } from '@/components/icons'
 import { cn } from '@/lib/cn'
 
@@ -226,7 +226,10 @@ export function ExperienceCard({
           {price && (
             <div className="mt-auto flex w-full items-baseline justify-between border-t border-border-divider pt-[12px]">
               <span className="text-[13px] font-normal text-ink-muted">{priceLabel}</span>
-              <span className="text-[18px] font-semibold text-ink-primary">{price}</span>
+              <MoneyAmount
+                value={price}
+                className="text-[18px] font-semibold text-ink-primary"
+              />
             </div>
           )}
         </div>

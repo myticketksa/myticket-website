@@ -18,7 +18,8 @@ import {
   resolveSeatingType,
 } from '@/lib/api/mappers/events'
 import { writeFreeSeatingSession } from '@/lib/purchase/holdSession'
-import { Avatar } from '@/components/data-display'
+import { catalogLabel } from '@/lib/i18n/catalogLabels'
+import { Avatar, MoneyAmount, parseMoneyDisplay } from '@/components/data-display'
 import {
   ArrowUpRightIcon,
   HeartGlyphIcon,
@@ -67,23 +68,23 @@ const REVIEWS = [
   {
     initials: 'MA',
     name: 'Mohammed A.',
-    date: 'Reviewed 12 March 2026',
+    dateKey: 'detail.reviewMohammedDate',
     rating: '5.0',
-    body: 'Sound was excellent even at the back of the field. Entry through Gate 3 took five minutes with the app ticket.',
+    bodyKey: 'detail.reviewMohammedBody',
   },
   {
     initials: 'HS',
     name: 'Hala S.',
-    date: 'Reviewed 9 March 2026',
+    dateKey: 'detail.reviewHalaDate',
     rating: '4.5',
-    body: 'Great atmosphere and the family lawn was genuinely comfortable. Food queues got long around 21:00.',
+    bodyKey: 'detail.reviewHalaBody',
   },
   {
     initials: 'KR',
     name: 'Khalid R.',
-    date: 'Reviewed 2 March 2026',
+    dateKey: 'detail.reviewKhalidDate',
     rating: '4.0',
-    body: "Gold pit is worth it if you want to be close, but arrive by 19:00 or you'll be behind the early crowd.",
+    bodyKey: 'detail.reviewKhalidBody',
   },
 ] as const
 
@@ -97,6 +98,33 @@ function pickDetailString(record: Record<string, unknown> | undefined, keys: str
     if (text) return text
   }
   return undefined
+}
+
+function collectGalleryImages(record: Record<string, unknown> | undefined): string[] {
+  if (!record) return []
+  const buckets = [
+    record.images,
+    record.gallery,
+    record.photos,
+    record.media,
+    record.event_images,
+  ]
+  const out: string[] = []
+  for (const bucket of buckets) {
+    if (!Array.isArray(bucket)) continue
+    for (const item of bucket) {
+      if (typeof item === 'string' && item.trim()) {
+        out.push(item.trim())
+        continue
+      }
+      if (item && typeof item === 'object') {
+        const row = item as Record<string, unknown>
+        const src = localizedString(row.url ?? row.src ?? row.image ?? row.path)
+        if (src) out.push(src)
+      }
+    }
+  }
+  return out
 }
 
 /** Event detail — Figma `207:4797` continuous article + scroll-spy tabs. */
@@ -184,9 +212,9 @@ export function EventDetailPage() {
       rating:
         pickDetailString(apiDetail, ['rating_label', 'reviews_summary']) ??
         (detailCard?.rating && detailCard.rating !== '—'
-          ? `${detailCard.rating} reviews`
+          ? t('detail.reviewsCount', { rating: detailCard.rating })
           : listCard?.rating
-            ? `${listCard.rating} reviews`
+            ? t('detail.reviewsCount', { rating: listCard.rating })
             : EVENT_DETAIL.rating),
       when:
         pickDetailString(apiDetail, ['when', 'date_label', 'starts_at', 'datetime']) ??
@@ -201,11 +229,31 @@ export function EventDetailPage() {
         listCard?.attendance ||
         EVENT_DETAIL.attendance,
       fromPrice: detailCard?.price ?? listCard?.price ?? EVENT_DETAIL.fromPrice,
+      about:
+        pickDetailString(apiDetail, ['description', 'about', 'summary', 'overview']) ??
+        t('detail.fixtureAbout'),
     }),
-    [apiDetail, detailCard, listCard],
+    [apiDetail, detailCard, listCard, t],
   )
 
   const title = display.title
+
+  const galleryImages = useMemo(() => {
+    const apiImages = collectGalleryImages(apiDetail)
+    const main = detailCard?.image ?? listCard?.image ?? EVENT_DETAIL_GALLERY.main
+    return [
+      ...apiImages,
+      main,
+      EVENT_DETAIL_GALLERY.main,
+      ...EVENT_DETAIL_GALLERY.thumbs,
+    ].filter((src): src is string => Boolean(src))
+  }, [apiDetail, detailCard?.image, listCard?.image])
+
+  const galleryThumbs = useMemo(() => {
+    const apiImages = collectGalleryImages(apiDetail)
+    if (apiImages.length >= 3) return apiImages.slice(1, 4)
+    return [...EVENT_DETAIL_GALLERY.thumbs]
+  }, [apiDetail])
 
   useEffect(() => {
     const ticketTypeId =
@@ -247,8 +295,8 @@ export function EventDetailPage() {
     if (seatingType !== 'free' || apiTicketTypes.length === 0) return undefined
     return apiTicketTypes.map((tier) => ({
       name: tier.name,
-      detail: tier.detail || (seatingType === 'free' ? 'Free seating' : ''),
-      price: tier.price <= 0 ? 'Free' : formatMoneySar(tier.price),
+      detail: tier.detail || (seatingType === 'free' ? t('detail.freeSeating') : ''),
+      price: tier.price <= 0 ? t('common:currency.free') : formatMoneySar(tier.price),
       left: '',
       maxLabel: t('stickyCta.maxPerOrder'),
       selected: tier.id === selectedTicket?.id,
@@ -266,21 +314,21 @@ export function EventDetailPage() {
     return {
       lines: [
         {
-          label: `${ticketQty} ticket${ticketQty === 1 ? '' : 's'}`,
-          value: unit <= 0 ? 'Free' : formatMoneySar(subtotal),
+          label: t('detail.ticketCount', { count: ticketQty }),
+          value: unit <= 0 ? t('common:currency.free') : formatMoneySar(subtotal),
         },
         ...(unit > 0
           ? [
-              { label: 'Service fee', value: formatMoneySar(serviceFee) },
-              { label: 'VAT 15%', value: formatMoneySar(vat) },
+              { label: t('detail.serviceFee'), value: formatMoneySar(serviceFee) },
+              { label: t('detail.vat'), value: formatMoneySar(vat) },
             ]
           : []),
       ],
-      total: unit <= 0 ? 'Free' : formatMoneySar(total),
+      total: unit <= 0 ? t('common:currency.free') : formatMoneySar(total),
       unitPrice: unit,
       orderTotal: total,
     }
-  }, [seatingType, selectedTicket, ticketQty])
+  }, [seatingType, selectedTicket, t, ticketQty])
 
   async function claimFreeTicket(): Promise<boolean> {
     if (!resolvedId || !selectedTicket) {
@@ -430,9 +478,9 @@ export function EventDetailPage() {
       <PageSection padTop={26} padBottom={0}>
         <Breadcrumbs
           items={[
-            { label: 'Home', href: '/' },
-            { label: 'Events', href: '/events' },
-            { label: 'Concerts', href: '/events' },
+            { label: t('detail.crumbHome'), href: '/' },
+            { label: t('detail.crumbEvents'), href: '/events' },
+            { label: catalogLabel(t, display.category), href: '/events' },
             { label: title },
           ]}
         />
@@ -444,7 +492,8 @@ export function EventDetailPage() {
             category={display.category}
             flag={display.flag}
             mainImage={detailCard?.image ?? listCard?.image ?? EVENT_DETAIL_GALLERY.main}
-            thumbs={EVENT_DETAIL_GALLERY.thumbs}
+            thumbs={galleryThumbs}
+            images={galleryImages}
           />
         </FadeUp>
       </PageSection>
@@ -486,7 +535,7 @@ export function EventDetailPage() {
                 className="h-[44px] w-full rounded-[20px] border px-lg sm:h-[40px] sm:w-auto"
                 icon={<ArrowUpRightIcon size={16} />}
                 disabled
-                title="Share not available yet"
+                title={t('detail.shareUnavailable')}
               >
                 {t('detail.share')}
               </Button>
@@ -496,7 +545,7 @@ export function EventDetailPage() {
           <StickyCtaCard
             className="w-full min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1"
             fromPrice={display.fromPrice}
-            note={EVENT_DETAIL.salesClose}
+            note={t('detail.fixtureSalesClose')}
             tiers={freeSeatingTiers ?? EVENT_DETAIL.tiers}
             totals={freeSeatingTotals?.lines ?? EVENT_DETAIL.totals}
             total={freeSeatingTotals?.total ?? EVENT_DETAIL.total}
@@ -517,8 +566,16 @@ export function EventDetailPage() {
               setTicketQty(Math.max(0, qty))
             }}
             onPrimaryClick={() => handlePrimaryClick()}
-            footerNote={EVENT_DETAIL.footerNote}
-            aside={<StickyCtaAssurances items={EVENT_DETAIL.assurances} />}
+            footerNote={t('detail.fixtureFooterNote')}
+            aside={
+              <StickyCtaAssurances
+                items={[
+                  t('detail.fixtureAssurance1'),
+                  t('detail.fixtureAssurance2'),
+                  t('detail.fixtureAssurance3'),
+                ]}
+              />
+            }
           />
 
           <article className="min-w-0 lg:col-start-1 lg:row-start-2">
@@ -542,7 +599,7 @@ export function EventDetailPage() {
 
             <section id="about" className="scroll-mt-[calc(var(--spacing-header)+72px)]">
               <p className="mt-2xl max-w-[720px] text-pretty text-[15px] leading-[1.6] text-ink-body sm:mt-[28px] sm:text-[16px]">
-                {EVENT_DETAIL.about}
+                {display.about}
               </p>
             </section>
 
@@ -551,19 +608,19 @@ export function EventDetailPage() {
               className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-3xl sm:mt-[44px]"
             >
               <h2 className="text-balance text-heading-h2-section text-ink-primary">
-                Venue & getting there
+                {t('detail.venueGettingThere')}
               </h2>
               <div className="mt-[18px] overflow-hidden rounded-[18px] border border-border-default bg-surface-default">
                 <div className="relative h-[200px] w-full overflow-hidden bg-bg-skeleton sm:h-[260px]">
                   <img
                     src={EVENT_DETAIL_VENUE_MAP}
-                    alt="Map of King Abdullah Park, Al Malaz, Riyadh"
+                    alt={t('detail.mapAlt', { venue: display.venue })}
                     className="size-full object-cover"
                   />
                 </div>
                 <div className="flex flex-col items-stretch gap-md border-b border-border-divider px-lg py-md sm:flex-row sm:items-center sm:justify-between sm:gap-lg sm:px-3xl">
                   <p className="min-w-0 text-[13px] text-pretty text-ink-secondary sm:text-[14px]">
-                    King Abdullah Park, Al Malaz, Riyadh 12836
+                    {t('detail.venueAddressBody')}
                   </p>
                   <a
                     href={MAPS_URL}
@@ -571,22 +628,22 @@ export function EventDetailPage() {
                     rel="noreferrer"
                     className="inline-flex h-[44px] shrink-0 items-center justify-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand sm:h-[36px]"
                   >
-                    Open in maps
+                    {t('detail.openInMaps')}
                   </a>
                 </div>
                 <div className="flex flex-col gap-2xl px-lg pt-xl pb-2xl sm:flex-row sm:gap-3xl sm:px-3xl sm:pt-[22px] sm:pb-3xl">
                   {[
                     {
-                      label: 'Address',
-                      body: 'King Abdullah Park, Al Malaz, Riyadh 12836',
+                      label: t('detail.venueAddress'),
+                      body: t('detail.venueAddressBody'),
                     },
                     {
-                      label: 'Getting there',
-                      body: 'Metro Line 2 to Al Malaz (7 min walk). Paid parking in lots C and D, SAR 20.',
+                      label: t('detail.venueGettingThereLabel'),
+                      body: t('detail.venueTransitBody'),
                     },
                     {
-                      label: 'Accessibility',
-                      body: 'Step-free entry at Gate 3. Wheelchair bays in the seated tier — book by phone.',
+                      label: t('detail.venueAccessibility'),
+                      body: t('detail.venueAccessBody'),
                     },
                   ].map((fact) => (
                     <div key={fact.label} className="min-w-0 flex-1">
@@ -612,7 +669,7 @@ export function EventDetailPage() {
                 </h2>
                 <div className="flex items-center gap-[5px] text-[14px] text-ink-secondary sm:text-[15px]">
                   <StarFillIcon size={15} />
-                  <span>{EVENT_DETAIL.reviewsSummary}</span>
+                  <span>{t('detail.fixtureReviewsSummary')}</span>
                 </div>
               </div>
               <div className="mt-[18px] grid grid-cols-1 gap-lg lg:grid-cols-3">
@@ -629,7 +686,7 @@ export function EventDetailPage() {
                       />
                       <div className="min-w-0 flex-1">
                         <p className="text-[14px] font-semibold text-ink-primary">{review.name}</p>
-                        <p className="text-[12px] text-ink-muted">{review.date}</p>
+                        <p className="text-[12px] text-ink-muted">{t(review.dateKey)}</p>
                       </div>
                       <StarFillIcon size={13} className="shrink-0" />
                       <span className="shrink-0 text-[13px] font-semibold text-ink-primary">
@@ -637,7 +694,7 @@ export function EventDetailPage() {
                       </span>
                     </div>
                     <p className="text-[14px] leading-[1.55] text-pretty text-ink-secondary">
-                      {review.body}
+                      {t(review.bodyKey)}
                     </p>
                   </div>
                 ))}
@@ -648,9 +705,9 @@ export function EventDetailPage() {
       </PageSection>
 
       <SimilarSection
-        heading="You might also like"
+        heading={t('detail.similar')}
         headingClassName="text-heading-h2-feature"
-        link={{ label: 'All concerts in Riyadh', to: '/events' }}
+        link={{ label: t('detail.similarEventsLink'), to: '/events' }}
       >
         {catalog
           .filter((e) => e.title !== title)
@@ -693,6 +750,9 @@ function SimilarEventCard({
   price: string
   image?: string
 }) {
+  const { t } = useTranslation('catalog')
+  const { t: tCommon } = useTranslation('common')
+  const isFree = parseMoneyDisplay(price).kind === 'free'
   return (
     <Link
       to={`/events/${eventSlug}`}
@@ -714,9 +774,18 @@ function SimilarEventCard({
             <StarFillIcon size={13} />
             {rating}
           </span>
-          <span className="shrink-0 text-[15px] font-semibold tabular-nums text-ink-primary sm:text-[17px]">
-            From {price}
-          </span>
+          {isFree ? (
+            <MoneyAmount
+              value={price}
+              freeLabel={tCommon('currency.freeTickets')}
+              className="shrink-0 text-[15px] font-semibold text-ink-primary sm:text-[17px]"
+            />
+          ) : (
+            <span className="shrink-0 text-[15px] font-semibold text-ink-primary sm:text-[17px]">
+              {t('detail.from')}{' '}
+              <MoneyAmount value={price} className="inline-flex align-baseline" />
+            </span>
+          )}
         </div>
       </div>
     </Link>

@@ -48,7 +48,7 @@ export function BecomeBusinessPage() {
       body: t('becomeBusiness.vendor.body'),
       points: Array.isArray(vendorPoints) ? vendorPoints : [],
       need: t('becomeBusiness.vendor.need'),
-      href: '/apply/vendor',
+      href: '/apply/facilities',
       cta: t('becomeBusiness.submitCta', { role: vendor }),
       icon: <StorefrontIcon size={24} />,
     },
@@ -125,7 +125,7 @@ export function BecomeBusinessPage() {
               <span>
                 <span className="font-bold text-ink-primary">
                   {t('becomeBusiness.vendorTalentTitle', {
-                    defaultValue: 'Vendor or talent?',
+                    defaultValue: 'Facility or talent?',
                   })}
                 </span>{' '}
                 {t('becomeBusiness.vendorTalentBody', {

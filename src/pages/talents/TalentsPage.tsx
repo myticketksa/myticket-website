@@ -101,12 +101,14 @@ export function TalentsPage() {
     )
   }
 
-  const skipPageResetRef = useRef(true)
+  const pageResetSig = `${chip}\0${when}\0${cities.join(',')}\0${rating}\0${sortKey}`
+  const prevPageResetSigRef = useRef<string | null>(null)
   useEffect(() => {
-    if (skipPageResetRef.current) {
-      skipPageResetRef.current = false
-      return
-    }
+    if (prevPageResetSigRef.current === pageResetSig) return
+    const isFirst = prevPageResetSigRef.current === null
+    prevPageResetSigRef.current = pageResetSig
+    if (isFirst) return
+
     setSearchParams(
       (prev) => {
         if (!prev.get('page') || prev.get('page') === '1') return prev
@@ -116,7 +118,7 @@ export function TalentsPage() {
       },
       { replace: true },
     )
-  }, [chip, when, cities, rating, sortKey, setSearchParams])
+  }, [pageResetSig]) // eslint-disable-line react-hooks/exhaustive-deps -- omit setSearchParams on purpose
 
   const talentChips = useMemo(
     () =>

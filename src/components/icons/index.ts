@@ -14,9 +14,18 @@ export { StarIcon } from './StarIcon'
 export { TicketIcon } from './TicketIcon'
 export { UserIcon } from './UserIcon'
 export { VerifiedIcon } from './VerifiedIcon'
+export { SarSymbol } from './SarSymbol'
 
 // Phosphor stand-ins for everything the custom set does not draw.
 export * from './phosphor'
+
+// Horizontal arrows/chevrons with built-in RTL mirroring (override phosphor names).
+export {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from './directional'
 
 // The glyphs the page cards draw from Phosphor at a pinned weight.
 export * from './card-glyphs'

@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { AmountInput, Button, Field, TextInput } from '@/components/ui'
-import { FilterChip } from '@/components/data-display'
+import { FilterChip, MoneyAmount } from '@/components/data-display'
+import { SarSymbol } from '@/components/icons'
 import { TicketActionHeader } from '@/layouts'
 import { MY_TICKETS } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
@@ -65,7 +66,11 @@ export function ResellTicketPage() {
                 <TextInput
                   id="buy-now"
                   className="h-[52px] rounded-[13px] text-[20px] font-bold"
-                  leading={<span className="text-[14px] font-semibold text-ink-secondary">SAR</span>}
+                  leading={
+                    <span className="text-ink-secondary" aria-hidden>
+                      <SarSymbol className="h-[1em] w-auto" />
+                    </span>
+                  }
                   value={buyNow}
                   onChange={(e) => setBuyNow(e.target.value)}
                 />
@@ -93,15 +98,20 @@ export function ResellTicketPage() {
               <div className="flex flex-col gap-[8px] text-[14px]">
                 <div className="flex items-start justify-between gap-md">
                   <span className="min-w-0 flex-1 text-ink-secondary">{t('resell.ifSells')}</span>
-                  <span className="shrink-0 text-end text-ink-primary">SAR {money(bid)}</span>
+                  <MoneyAmount value={money(bid)} className="shrink-0 text-end text-ink-primary" />
                 </div>
                 <div className="flex items-start justify-between gap-md">
                   <span className="min-w-0 flex-1 text-ink-secondary">{t('resell.commission')}</span>
-                  <span className="shrink-0 text-end text-ink-primary">− SAR {money(fee)}</span>
+                  <span className="inline-flex shrink-0 items-center gap-[0.2em] text-end text-ink-primary">
+                    − <MoneyAmount value={money(fee)} />
+                  </span>
                 </div>
                 <div className="flex items-start justify-between gap-md border-t border-border-divider pt-[9px] font-bold">
                   <span className="min-w-0 flex-1 text-ink-primary">{t('resell.youReceiveAtLeast')}</span>
-                  <span className="shrink-0 text-end text-state-success">SAR {money(receive)}</span>
+                  <MoneyAmount
+                    value={money(receive)}
+                    className="shrink-0 text-end text-state-success"
+                  />
                 </div>
               </div>
               <p className="mt-[10px] text-[12.5px] text-ink-muted">
@@ -160,7 +170,9 @@ export function ResellTicketPage() {
                 </div>
                 <div className="flex items-start justify-between gap-md">
                   <dt className="shrink-0 text-ink-secondary">{t('resell.faceValue')}</dt>
-                  <dd className="min-w-0 text-end font-bold text-ink-primary">SAR 280.00</dd>
+                  <dd className="min-w-0 text-end font-bold text-ink-primary">
+                    <MoneyAmount value="280.00" />
+                  </dd>
                 </div>
                 <div className="flex items-start justify-between gap-md">
                   <dt className="shrink-0 text-ink-secondary">{t('resell.soldOut')}</dt>
@@ -175,7 +187,7 @@ export function ResellTicketPage() {
             <dl className="mt-[10px] flex flex-col gap-[8px] text-[13.5px]">
                 {[
                   [t('resell.waitlistPeople'), '312'],
-                  [t('resell.similarSold'), 'SAR 300–360'],
+                  [t('resell.similarSold'), '⃁ 300–360'],
                   [t('resell.activeListings'), '7'],
                 ].map(([label, value]) => (
                 <div key={label} className="flex items-start justify-between gap-md">
@@ -195,9 +207,11 @@ export function ResellTicketPage() {
               cancellation window is open until Mon 5 Oct, 18:30 —{' '}
               <Link
                 to={`/my-tickets/${ticket.id}/refund`}
-                className={cn('text-ink-brand hover:text-ink-brand-mid')}
+                className={cn(
+                  'inline-flex items-center gap-[0.2em] text-ink-brand hover:text-ink-brand-mid',
+                )}
               >
-                SAR 266.00 back to your wallet
+                <MoneyAmount value="266.00" /> back to your wallet
               </Link>
               , no waiting for a buyer.
             </p>

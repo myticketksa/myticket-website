@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FormDialog } from '@/components/feedback/FormDialog'
 import { Button, Field, TextInput, Textarea } from '@/components/ui'
 import { cn } from '@/lib/cn'
@@ -32,6 +33,7 @@ export function TalentRequestModal({
   onSubmit,
   submitting,
 }: TalentRequestModalProps) {
+  const { t } = useTranslation(['catalog', 'common'])
   const [moreThanMonth, setMoreThanMonth] = useState(false)
   const [phone, setPhone] = useState('')
   const [date, setDate] = useState('')
@@ -44,19 +46,19 @@ export function TalentRequestModal({
     setError(null)
     const digits = phone.replace(/\D/g, '').replace(/^966/, '').replace(/^0/, '')
     if (!SA_PHONE.test(digits)) {
-      setError('Enter a Saudi mobile number (5XXXXXXXX).')
+      setError(t('talent.errorPhone'))
       return
     }
     if (!date) {
-      setError('Choose a requested date.')
+      setError(t('talent.errorDate'))
       return
     }
     if (!address.trim()) {
-      setError('Enter an address.')
+      setError(t('talent.errorAddress'))
       return
     }
     if (!reason.trim()) {
-      setError('Add a short reason for your request.')
+      setError(t('talent.errorReason'))
       return
     }
     await onSubmit({
@@ -72,13 +74,15 @@ export function TalentRequestModal({
     <FormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Request this talent"
-      description="Tell us when and where you need them. MyTicket will follow up."
+      title={t('talent.requestTitle')}
+      description={t('talent.requestDescription')}
       size="lg"
     >
       <form className="flex flex-col gap-lg" onSubmit={(e) => void handleSubmit(e)}>
         <div>
-          <p className="mb-[8px] text-[13px] font-semibold text-ink-primary">Duration</p>
+          <p className="mb-[8px] text-[13px] font-semibold text-ink-primary">
+            {t('talent.duration')}
+          </p>
           <div className="flex flex-wrap gap-sm">
             <button
               type="button"
@@ -90,7 +94,7 @@ export function TalentRequestModal({
               )}
               onClick={() => setMoreThanMonth(false)}
             >
-              Less than a month
+              {t('talent.lessThanMonth')}
             </button>
             <button
               type="button"
@@ -102,22 +106,22 @@ export function TalentRequestModal({
               )}
               onClick={() => setMoreThanMonth(true)}
             >
-              More than a month
+              {t('talent.moreThanMonth')}
             </button>
           </div>
         </div>
 
-        <Field label="Saudi mobile" htmlFor="talent-request-phone">
+        <Field label={t('talent.saudiMobile')} htmlFor="talent-request-phone">
           <TextInput
             id="talent-request-phone"
             inputMode="tel"
-            placeholder="5XXXXXXXX"
+            placeholder={t('talent.phonePlaceholder')}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
         </Field>
 
-        <Field label="Requested date" htmlFor="talent-request-date">
+        <Field label={t('talent.requestedDate')} htmlFor="talent-request-date">
           <TextInput
             id="talent-request-date"
             type="date"
@@ -126,22 +130,22 @@ export function TalentRequestModal({
           />
         </Field>
 
-        <Field label="Address" htmlFor="talent-request-address">
+        <Field label={t('talent.address')} htmlFor="talent-request-address">
           <TextInput
             id="talent-request-address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="City, district, venue or full address"
+            placeholder={t('talent.addressPlaceholder')}
           />
         </Field>
 
-        <Field label="Reason" htmlFor="talent-request-reason">
+        <Field label={t('talent.reason')} htmlFor="talent-request-reason">
           <Textarea
             id="talent-request-reason"
             rows={3}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="What are you requesting them for?"
+            placeholder={t('talent.reasonPlaceholder')}
           />
         </Field>
 
@@ -149,7 +153,7 @@ export function TalentRequestModal({
 
         <div className="flex flex-col gap-[10px]">
           <Button type="submit" disabled={submitting} className="w-full">
-            {submitting ? 'Sending…' : 'Submit request'}
+            {submitting ? t('talent.sending') : t('talent.submitRequest')}
           </Button>
           <Button
             type="button"
@@ -157,7 +161,7 @@ export function TalentRequestModal({
             className="w-full"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
         </div>
       </form>

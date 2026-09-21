@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { QRCodeSVG } from 'qrcode.react'
 import checkIcon from '@/assets/checkout/check-26.svg'
-import { DownloadIcon, ShareIcon } from '@/components/icons'
+import { ShareIcon } from '@/components/icons'
 import { Divider, PriceDisplay } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
@@ -14,69 +15,17 @@ import { mapOrderConfirmation } from '@/lib/api/mappers/orders'
 
 const NEXT_STEP_KEYS = ['offline', 'share', 'remind'] as const
 
-/** Dense QR-like matrix — Figma `207:8498` draws a seeded ~105px module grid (no lib in deps). */
-function TicketQr({ seed }: { seed: number }) {
-  const size = 41
-  const cells = Array.from({ length: size * size }, (_, index) => {
-    const x = index % size
-    const y = Math.floor(index / size)
-
-    const inFinder = (ox: number, oy: number) => {
-      const dx = x - ox
-      const dy = y - oy
-      if (dx < 0 || dy < 0 || dx > 6 || dy > 6) return null
-      if (dx === 0 || dy === 0 || dx === 6 || dy === 6) return true
-      if (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4) return true
-      return false
-    }
-
-    const finder =
-      inFinder(0, 0) ??
-      inFinder(size - 7, 0) ??
-      inFinder(0, size - 7)
-    if (finder !== null) return finder
-
-    if (y === 6 && x >= 8 && x <= size - 9) return x % 2 === 0
-    if (x === 6 && y >= 8 && y <= size - 9) return y % 2 === 0
-
-    const ax = size - 9
-    const ay = size - 9
-    if (x >= ax - 2 && x <= ax + 2 && y >= ay - 2 && y <= ay + 2) {
-      const dx = Math.abs(x - ax)
-      const dy = Math.abs(y - ay)
-      if (dx === 2 || dy === 2) return true
-      if (dx === 0 && dy === 0) return true
-      return false
-    }
-
-    if (
-      (x === 7 && y < 8) ||
-      (y === 7 && x < 8) ||
-      (x === size - 8 && y < 8) ||
-      (y === 7 && x > size - 9) ||
-      (y === size - 8 && x < 8) ||
-      (x === 7 && y > size - 9)
-    ) {
-      return false
-    }
-
-    const n = (x * 17 + y * 13 + seed * 31 + x * y * 3) % 7
-    return n > 2
-  })
-
+function TicketQr({ value }: { value: string }) {
   return (
-    <div
-      className="grid size-[105px] gap-px bg-surface-default p-[2px]"
-      style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
-      aria-hidden
-    >
-      {cells.map((on, index) => (
-        <span
-          key={index}
-          className={cn('size-full', on ? 'bg-surface-inverse' : 'bg-surface-default')}
-        />
-      ))}
-    </div>
+    <QRCodeSVG
+      value={value}
+      size={105}
+      level="M"
+      marginSize={0}
+      bgColor="#FFFFFF"
+      fgColor="#0A0A0A"
+      aria-label="Ticket QR code"
+    />
   )
 }
 
@@ -89,6 +38,15 @@ function resolveOrderId(searchParams: URLSearchParams) {
     sessionStorage.getItem('myticket.pendingOrderId') ??
     ''
   )
+}
+
+function paymentLineLabel(
+  label: string,
+  t: (key: string) => string,
+): string {
+  if (label === 'wallet') return t('confirmation.walletBalance')
+  if (label === 'card') return t('confirmation.cardPayment')
+  return label
 }
 
 /**
@@ -126,14 +84,13 @@ export function OrderConfirmationPage() {
       eventMeta: '—',
       tierLabel: t('confirmation.ticketFallback'),
       holder: user?.name ?? t('confirmation.ticketHolder'),
-      tickets: [] as { id: string; seat: string; gate: string }[],
-      subtotal: 'SAR 0.00',
-      serviceFee: 'SAR 0.00',
-      vat: 'SAR 0.00',
-      total: 'SAR 0.00',
-      walletPaid: 'SAR 0.00',
-      cardPaid: 'SAR 0.00',
-      cashback: 'SAR 0.00',
+      tickets: [] as { id: string; seat: string; gate: string; qrValue: string }[],
+      subtotal: '0.00',
+      serviceFee: null as string | null,
+      vat: null as string | null,
+      total: '0.00',
+      paymentLines: [] as { label: string; amount: string }[],
+      cashback: null as string | null,
       apiNote: isError
         ? t('confirmation.loadError')
         : isFetching
@@ -168,7 +125,7 @@ export function OrderConfirmationPage() {
 
       <div className="mx-auto mt-[40px] flex max-w-[1040px] flex-col gap-[32px] lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-lg">
-          {view.tickets.map((ticket, index) => (
+          {view.tickets.map((ticket) => (
             <article
               key={ticket.id}
               className="flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
@@ -204,9 +161,11 @@ export function OrderConfirmationPage() {
               </div>
               <div className="flex shrink-0 flex-col items-center justify-center gap-sm border-t-[1.5px] border-dashed border-border-default bg-bg-page px-[22px] py-[18px] sm:border-t-0 sm:border-l-[1.5px]">
                 <div className="rounded-[10px] border border-border-default bg-surface-default p-sm">
-                  <TicketQr seed={index + 1} />
+                  <TicketQr value={ticket.qrValue} />
                 </div>
-                <p className="text-[12px] font-semibold text-ink-secondary">{ticket.gate}</p>
+                {ticket.gate !== '—' ? (
+                  <p className="text-[12px] font-semibold text-ink-secondary">{ticket.gate}</p>
+                ) : null}
               </div>
             </article>
           ))}
@@ -238,14 +197,18 @@ export function OrderConfirmationPage() {
                 </span>
                 <PriceDisplay context="row">{view.subtotal}</PriceDisplay>
               </div>
-              <div className="flex justify-between gap-md">
-                <span className="text-ink-secondary">{t('confirmation.serviceFee')}</span>
-                <PriceDisplay context="row">{view.serviceFee}</PriceDisplay>
-              </div>
-              <div className="flex justify-between gap-md">
-                <span className="text-ink-secondary">{t('confirmation.vat')}</span>
-                <PriceDisplay context="row">{view.vat}</PriceDisplay>
-              </div>
+              {view.serviceFee != null ? (
+                <div className="flex justify-between gap-md">
+                  <span className="text-ink-secondary">{t('confirmation.serviceFee')}</span>
+                  <PriceDisplay context="row">{view.serviceFee}</PriceDisplay>
+                </div>
+              ) : null}
+              {view.vat != null ? (
+                <div className="flex justify-between gap-md">
+                  <span className="text-ink-secondary">{t('confirmation.vat')}</span>
+                  <PriceDisplay context="row">{view.vat}</PriceDisplay>
+                </div>
+              ) : null}
             </div>
             <Divider tone="divider" className="my-md" />
             <div className="flex items-baseline justify-between">
@@ -254,20 +217,22 @@ export function OrderConfirmationPage() {
               </span>
               <PriceDisplay context="amount">{view.total}</PriceDisplay>
             </div>
-            <div className="mt-md flex flex-col gap-[6px] text-[13px] text-ink-secondary">
-              <div className="flex justify-between">
-                <span>{t('confirmation.walletBalance')}</span>
-                <span>{view.walletPaid}</span>
+            {view.paymentLines.length > 0 ? (
+              <div className="mt-md flex flex-col gap-[6px] text-[13px] text-ink-secondary">
+                {view.paymentLines.map((line) => (
+                  <div key={`${line.label}-${line.amount}`} className="flex justify-between gap-md">
+                    <span>{paymentLineLabel(line.label, t)}</span>
+                    <span>{line.amount}</span>
+                  </div>
+                ))}
               </div>
-              <div className="flex justify-between">
-                <span>Visa ···· 4417</span>
-                <span>{view.cardPaid}</span>
+            ) : null}
+            {view.cashback != null ? (
+              <div className="mt-md flex items-center justify-between rounded-[14px] bg-bg-tint-brand px-lg py-[14px] text-[13px] font-semibold text-ink-brand-strong">
+                <span>{t('confirmation.cashbackEarned')}</span>
+                <span>+ {view.cashback}</span>
               </div>
-            </div>
-            <div className="mt-md flex items-center justify-between rounded-[14px] bg-bg-tint-brand px-lg py-[14px] text-[13px] font-semibold text-ink-brand-strong">
-              <span>{t('confirmation.cashbackEarned')}</span>
-              <span>+ {view.cashback}</span>
-            </div>
+            ) : null}
           </div>
 
           <Button
@@ -280,12 +245,6 @@ export function OrderConfirmationPage() {
           </Button>
 
           <div className="grid grid-cols-2 gap-sm">
-            <Button type="button" variant="secondary" size="sm" icon={<DownloadIcon size={14} />}>
-              {t('confirmation.downloadAll')}
-            </Button>
-            <Button type="button" variant="secondary" size="sm">
-              {t('confirmation.addToWallet')}
-            </Button>
             <Button type="button" variant="secondary" size="sm" icon={<ShareIcon size={14} />}>
               {t('confirmation.shareNight')}
             </Button>

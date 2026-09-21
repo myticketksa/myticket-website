@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import eventThumb from '@/assets/checkout/event-thumb.png'
 import { CheckIcon } from '@/components/icons'
-import { PriceDisplay } from '@/components/data-display'
+import { MoneyAmount, PriceDisplay } from '@/components/data-display'
 import { Button, Checkbox, Field, Radio, RadioGroup, TextInput } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { usePayOrderMutation, useCreateOrderMutation, useApplyPromoCodeMutation } from '@/app/api/ordersApi'
@@ -440,7 +440,7 @@ export function CheckoutPage() {
                           {label}
                         </p>
                         <p className="mt-[5px] text-[15px] font-semibold text-ink-primary">
-                          SAR 314
+                          <MoneyAmount value={314} />
                         </p>
                       </div>
                     ))}
@@ -560,9 +560,7 @@ export function CheckoutPage() {
                         {seat.meta ?? seat.category ?? t('checkout.selectedSeat')}
                       </p>
                     </div>
-                    <PriceDisplay context="row" className="font-semibold">
-                      SAR {seat.price}
-                    </PriceDisplay>
+                    <PriceDisplay context="row" className="font-semibold" value={seat.price} />
                   </li>
                 )
               })}
@@ -595,7 +593,7 @@ export function CheckoutPage() {
                   <span className="text-ink-secondary">
                     {t('checkout.seatsCount', { count: seats.length })}
                   </span>
-                  <PriceDisplay context="row">SAR {subtotal.toLocaleString()}</PriceDisplay>
+                  <PriceDisplay context="row" value={subtotal} />
                 </div>
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">{t('checkout.promoLabel')}</span>
@@ -605,11 +603,11 @@ export function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">{t('checkout.serviceFee')}</span>
-                  <PriceDisplay context="row">SAR {serviceFee.toLocaleString()}</PriceDisplay>
+                  <PriceDisplay context="row" value={serviceFee} />
                 </div>
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">{t('checkout.vat')}</span>
-                  <PriceDisplay context="row">SAR {vat.toLocaleString()}</PriceDisplay>
+                  <PriceDisplay context="row" value={vat} />
                 </div>
               </div>
 
@@ -617,9 +615,11 @@ export function CheckoutPage() {
                 <span className="text-[16px] font-semibold text-ink-primary">
                   {t('checkout.totalDue')}
                 </span>
-                <PriceDisplay context="stat" className="text-[26px] font-extrabold">
-                  SAR {total.toLocaleString()}
-                </PriceDisplay>
+                <PriceDisplay
+                  context="stat"
+                  className="text-[26px] font-extrabold"
+                  value={total}
+                />
               </div>
               <p className="mt-[8px] text-[13px] font-semibold text-ink-brand">
                 {t('checkout.payToday', { amount: Math.round(total / 4).toLocaleString() })}

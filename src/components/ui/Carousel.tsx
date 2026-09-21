@@ -11,8 +11,10 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@/components/icons'
+import { useLocale } from '@/i18n/locale'
 import { cn } from '@/lib/cn'
 import { Button } from './Button'
+import { useTranslation } from 'react-i18next'
 
 type CarouselApi = UseEmblaCarouselType[1]
 
@@ -49,10 +51,12 @@ export function Carousel({
   onKeyDownCapture,
   ...props
 }: CarouselProps) {
+  const { locale } = useLocale()
   const [emblaRef, api] = useEmblaCarousel({
     align: 'start',
     containScroll: 'trimSnaps',
     dragFree: false,
+    direction: locale === 'ar' ? 'rtl' : 'ltr',
     ...opts,
   })
   const [canScrollPrev, setCanScrollPrev] = useState(false)
@@ -72,13 +76,15 @@ export function Carousel({
       if (event.defaultPrevented) return
       if (event.key === 'ArrowLeft') {
         event.preventDefault()
-        scrollPrev()
+        if (locale === 'ar') scrollNext()
+        else scrollPrev()
       } else if (event.key === 'ArrowRight') {
         event.preventDefault()
-        scrollNext()
+        if (locale === 'ar') scrollPrev()
+        else scrollNext()
       }
     },
-    [onKeyDownCapture, scrollNext, scrollPrev],
+    [locale, onKeyDownCapture, scrollNext, scrollPrev],
   )
 
   useEffect(() => {
@@ -92,6 +98,10 @@ export function Carousel({
       api.off('select', onSelect)
     }
   }, [api, onSelect, setApi])
+
+  useEffect(() => {
+    api?.reInit({ direction: locale === 'ar' ? 'rtl' : 'ltr' })
+  }, [api, locale])
 
   return (
     <CarouselContext.Provider
@@ -134,6 +144,7 @@ export function CarouselPrevious({
   ...props
 }: ComponentProps<typeof Button>) {
   const { canScrollPrev, scrollPrev } = useCarousel()
+  const { t } = useTranslation('common')
   return (
     <Button
       type="button"
@@ -147,7 +158,7 @@ export function CarouselPrevious({
       )}
       disabled={!canScrollPrev}
       onClick={scrollPrev}
-      aria-label="Previous slide"
+      aria-label={t('pagination.previous')}
       {...props}
     >
       <ChevronLeftIcon size={18} />
@@ -160,6 +171,7 @@ export function CarouselNext({
   ...props
 }: ComponentProps<typeof Button>) {
   const { canScrollNext, scrollNext } = useCarousel()
+  const { t } = useTranslation('common')
   return (
     <Button
       type="button"
@@ -172,7 +184,7 @@ export function CarouselNext({
       )}
       disabled={!canScrollNext}
       onClick={scrollNext}
-      aria-label="Next slide"
+      aria-label={t('pagination.next')}
       {...props}
     >
       <ChevronRightIcon size={18} />
