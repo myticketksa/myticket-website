@@ -1,56 +1,77 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Checkbox, Field, TextInput } from '@/components/ui'
+import { MoneyAmount } from '@/components/data-display/MoneyAmount'
 import { PageSection } from '@/layouts'
 import { useLocale } from '@/i18n/locale'
 
-type DeletionOutcome =
-  | { kind: 'success' }
-  | { kind: 'invalid_credentials' }
-  | { kind: 'blocked'; blockers: string[] }
-  | { kind: 'error' }
+type Step = 'signIn' | 'confirm' | 'success'
+
+type SessionUser = { email: string; walletBalance?: number }
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000') as string
 
 /**
- * `POST /account-deletion/no-auth` { email, password }. Plain `fetch`, not
- * the RTK Query client: a wrong email/password gets a same-origin redirect
- * back from the API instead of a JSON 4xx, and default follow-redirect
- * fetch would land on the API's 200 HTML root and read that as success.
- * `redirect: 'manual'` surfaces it as an opaque response instead.
+ * Plain `fetch`, not the app's shared RTK Query client: that client treats
+ * any 401 response as an expired session and redirects the whole page to
+ * `/sign-in` — correct for an already-signed-in user's token expiring
+ * mid-session, wrong here, where a 401 just means the password typed into
+ * this page's own form was wrong. Bypassing it keeps a bad attempt on
+ * screen instead of yanking the visitor away to a different page.
  */
-async function requestAccountDeletion(email: string, password: string): Promise<DeletionOutcome> {
-  let response: Response
-  try {
-    response = await fetch(`${API_BASE}/account-deletion/no-auth`, {
-      method: 'POST',
-      redirect: 'manual',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-  } catch {
-    return { kind: 'error' }
+async function signIn(
+  email: string,
+  password: string,
+): Promise<{ ok: true; token: string; user: SessionUser } | { ok: false }> {
+  const response = await fetch(`${API_BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ identifier: email, password }),
+  })
+  if (!response.ok) return { ok: false }
+  const body = (await response.json().catch(() => null)) as {
+    data?: { access_token?: string; user?: { email?: string; walletBalance?: unknown; wallet_balance?: unknown; balance?: unknown } }
+  } | null
+  const token = body?.data?.access_token
+  const rawUser = body?.data?.user
+  if (!token || !rawUser) return { ok: false }
+  const walletRaw = rawUser.walletBalance ?? rawUser.wallet_balance ?? rawUser.balance
+  const walletBalance = walletRaw == null ? undefined : Number(walletRaw)
+  return {
+    ok: true,
+    token,
+    user: {
+      email: String(rawUser.email ?? email),
+      walletBalance: Number.isFinite(walletBalance) ? walletBalance : undefined,
+    },
   }
+}
 
-  if (response.type === 'opaqueredirect' || response.status === 0) {
-    return { kind: 'invalid_credentials' }
-  }
+type DeleteOutcome = { kind: 'success' } | { kind: 'blocked'; blockers: string[] } | { kind: 'error' }
 
+async function deleteAccount(token: string, password: string): Promise<DeleteOutcome> {
+  const response = await fetch(`${API_BASE}/account-deletion`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ password }),
+  })
+  if (response.ok) return { kind: 'success' }
   if (response.status === 400) {
     const body = (await response.json().catch(() => null)) as { data?: unknown } | null
-    const blockers = Array.isArray(body?.data) ? (body.data as string[]) : []
-    return { kind: 'blocked', blockers }
+    return { kind: 'blocked', blockers: Array.isArray(body?.data) ? (body.data as string[]) : [] }
   }
-
-  if (response.ok) return { kind: 'success' }
-
   return { kind: 'error' }
 }
 
 /**
  * Public account-deletion page — required by Google Play's User Data
- * policy. No sign-in: email + password go straight to the no-auth
- * deletion endpoint above.
+ * policy. Signs the person in first so the confirm step can show real
+ * account context — the wallet-balance warning below — before the
+ * irreversible action.
  *
  * Always English: this exact URL is what Google reviews. `setLocale('en')`
  * flips the whole app (header/footer included) since they read the same
@@ -65,47 +86,57 @@ export function DeleteAccountPage() {
     setLocale('en')
   }, [setLocale])
 
+  const [step, setStep] = useState<Step>('signIn')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmed, setConfirmed] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [outcome, setOutcome] = useState<DeletionOutcome | null>(null)
+  const [user, setUser] = useState<SessionUser | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [signingIn, setSigningIn] = useState(false)
+  const [signInFailed, setSignInFailed] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [outcome, setOutcome] = useState<DeleteOutcome | null>(null)
 
-  const canSubmit = email.trim() !== '' && password !== '' && confirmed && !submitting
-
-  async function handleSubmit(event: FormEvent) {
+  async function handleSignIn(event: FormEvent) {
     event.preventDefault()
-    if (!canSubmit) return
-    setSubmitting(true)
-    setOutcome(null)
-    const result = await requestAccountDeletion(email.trim(), password)
-    setSubmitting(false)
-    setOutcome(result)
-    if (result.kind === 'success') {
-      setPassword('')
-      setConfirmed(false)
+    if (!email.trim() || !password) return
+    setSigningIn(true)
+    setSignInFailed(false)
+    const result = await signIn(email.trim(), password)
+    setSigningIn(false)
+    if (!result.ok) {
+      setSignInFailed(true)
+      return
     }
+    setToken(result.token)
+    setUser(result.user)
+    setStep('confirm')
+  }
+
+  async function handleDelete() {
+    if (!confirmed || !token) return
+    setDeleting(true)
+    setOutcome(null)
+    const result = await deleteAccount(token, password)
+    setDeleting(false)
+    setOutcome(result)
+    if (result.kind === 'success') setStep('success')
   }
 
   return (
     <div dir="ltr" lang="en">
       <PageSection padTop={64} padBottom={96}>
-        <div className="mx-auto max-w-[480px]">
+        <div className="mx-auto max-w-[440px]">
           <h1 className="text-[28px] leading-[1.1] font-extrabold tracking-[-1px] text-ink-primary">
             {t('deleteAccount.title', { lng: 'en' })}
           </h1>
 
-          {outcome?.kind === 'success' ? (
-            <div className="mt-[24px] rounded-[14px] border border-border-default bg-bg-tint-brand px-[18px] py-[16px]">
-              <p className="text-[14.5px] font-bold text-ink-primary">
-                {t('deleteAccount.form.successTitle', { lng: 'en' })}
+          {step === 'signIn' && (
+            <form onSubmit={handleSignIn} className="mt-[24px] flex flex-col gap-[14px]">
+              <p className="text-[14px] text-ink-secondary">
+                {t('deleteAccount.form.signInLede', { lng: 'en' })}
               </p>
-              <p className="mt-[4px] text-[13.5px] leading-[1.6] text-ink-secondary">
-                {t('deleteAccount.form.successBody', { lng: 'en' })}
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="mt-[24px] flex flex-col gap-[14px]">
+
               <Field label={t('deleteAccount.form.emailLabel', { lng: 'en' })} htmlFor="delete-email">
                 <TextInput
                   id="delete-email"
@@ -133,18 +164,42 @@ export function DeleteAccountPage() {
                 />
               </Field>
 
+              {signInFailed && (
+                <p className="rounded-[12px] border border-state-danger-border bg-state-danger-tint px-[14px] py-[11px] text-[13.5px] font-medium text-state-danger-deep">
+                  {t('deleteAccount.form.invalidCredentials', { lng: 'en' })}
+                </p>
+              )}
+
+              <Button type="submit" size="lg" loading={signingIn}>
+                {signingIn
+                  ? t('deleteAccount.form.continuing', { lng: 'en' })
+                  : t('deleteAccount.form.continue', { lng: 'en' })}
+              </Button>
+            </form>
+          )}
+
+          {step === 'confirm' && (
+            <div className="mt-[24px] flex flex-col gap-[14px]">
+              <p className="text-[14px] text-ink-secondary">{user?.email}</p>
+
+              {!!user?.walletBalance && user.walletBalance > 0 && (
+                <div className="rounded-[12px] border border-state-danger-border bg-state-danger-tint px-[14px] py-[11px]">
+                  <p className="flex items-center gap-[6px] text-[13.5px] font-bold text-state-danger-deep">
+                    {t('deleteAccount.form.walletBalanceLabel', { lng: 'en' })}
+                    <MoneyAmount value={user.walletBalance} className="text-state-danger-deep" />
+                  </p>
+                  <p className="mt-[2px] text-[13px] leading-[1.6] text-state-danger-deep">
+                    {t('deleteAccount.form.walletWarningBody', { lng: 'en' })}
+                  </p>
+                </div>
+              )}
+
               <Checkbox
                 id="delete-confirm"
                 label={t('deleteAccount.form.confirmLabel', { lng: 'en' })}
                 checked={confirmed}
                 onCheckedChange={(checked) => setConfirmed(checked === true)}
               />
-
-              {outcome?.kind === 'invalid_credentials' && (
-                <p className="rounded-[12px] border border-state-danger-border bg-state-danger-tint px-[14px] py-[11px] text-[13.5px] font-medium text-state-danger-deep">
-                  {t('deleteAccount.form.invalidCredentials', { lng: 'en' })}
-                </p>
-              )}
 
               {outcome?.kind === 'blocked' && (
                 <div className="rounded-[12px] border border-state-danger-border bg-state-danger-tint px-[14px] py-[12px]">
@@ -170,12 +225,23 @@ export function DeleteAccountPage() {
                 </p>
               )}
 
-              <Button type="submit" size="lg" loading={submitting} disabled={!canSubmit}>
-                {submitting
+              <Button size="lg" loading={deleting} disabled={!confirmed || deleting} onClick={handleDelete}>
+                {deleting
                   ? t('deleteAccount.form.submitting', { lng: 'en' })
                   : t('deleteAccount.form.submit', { lng: 'en' })}
               </Button>
-            </form>
+            </div>
+          )}
+
+          {step === 'success' && (
+            <div className="mt-[24px] rounded-[14px] border border-border-default bg-bg-tint-brand px-[18px] py-[16px]">
+              <p className="text-[14.5px] font-bold text-ink-primary">
+                {t('deleteAccount.form.successTitle', { lng: 'en' })}
+              </p>
+              <p className="mt-[4px] text-[13.5px] leading-[1.6] text-ink-secondary">
+                {t('deleteAccount.form.successBody', { lng: 'en' })}
+              </p>
+            </div>
           )}
         </div>
       </PageSection>
