@@ -237,39 +237,94 @@
     "questionsSuffix": "— a person, not a policy.",
     "docs": {
       "terms": {
-        "label": "Terms of service",
+        "label": "Terms and conditions",
         "toc": [
-          "1 · Your account",
-          "2 · Tickets & purchases",
-          "3 · Refunds & cancellations",
-          "4 · Resale & gifting",
-          "5 · Business applications",
-          "6 · Wallet & money"
+          "1 · Who we are",
+          "2 · Introduction and acceptance of terms",
+          "3 · Definitions",
+          "4 · User responsibilities",
+          "5 · Event organizer responsibilities",
+          "6 · Buying and selling tickets",
+          "7 · E-wallet and payments",
+          "8 · Refund and cancellation policy",
+          "9 · Force majeure",
+          "10 · Ratings and reviews",
+          "11 · Anti-fraud and misuse",
+          "12 · Intellectual property",
+          "13 · Limits of the Platform's liability",
+          "14 · Suspending accounts and terminating service",
+          "15 · Governing law",
+          "16 · Amending the Terms",
+          "17 · Contact us"
         ],
         "sections": [
           {
-            "title": "1 · Your account",
-            "body": "One person, one account. You're responsible for keeping your sign-in details private, and for what happens under your account. You must be 18 or older to buy tickets; younger guests attend under a guardian's booking. We may suspend accounts that break these terms, and we'll always tell you why and how to appeal."
+            "title": "1 · Who we are",
+            "body": "MyTicket is your all-in-one platform for discovering and booking event tickets, wherever they are. We bring together in one place the biggest concerts, theatrical and artistic performances, sports matches, and cultural and entertainment events, making your journey from search to booking easy and enjoyable.\nWe believe every exceptional moment deserves to be lived without hassle,"
           },
           {
-            "title": "2 · Tickets & purchases",
-            "body": "A ticket is a licence to attend, issued for the event and delivered by MyTicket as a unique QR code. The price you see at checkout is the price you pay: ticket price plus the MyTicket platform fee, always shown separately. Purchase limits per event exist to keep tickets with real fans and are enforced at checkout."
+            "title": "2 · Introduction and acceptance of terms",
+            "body": "MyTicket (\"the Platform\", \"we\") welcomes you. These Terms and Conditions (\"the Terms\") govern your use of the MyTicket app and website across all its channels: the guest app, the business app, the gate scanner app, and the admin dashboard.\nBy creating an account or using any of our services, you acknowledge that you have read and understood these Terms and agree to be bound by them. Your use is also subject to the Privacy Policy set out in section two of this page."
           },
           {
-            "title": "3 · Refunds & cancellations",
-            "body": "Each event has its own refund policy — it's shown on the event page, at checkout, and on your ticket. Within that policy, MyTicket executes the refund and returns the money to your wallet. If an event is cancelled, the ticket price is refunded automatically regardless of policy. Platform fees are refundable only when an event is cancelled."
+            "title": "3 · Definitions",
+            "body": "The Platform: the MyTicket website and apps across all five of its channels.\nGuest: any user who browses events or books tickets.\nOrganizer: any entity that creates an event and sells its tickets, and may engage talents or service providers\nTalent: any artist, performer, exhibitor, or speaker who lists their profile to be booked by organizers.\nTicket: the digital right that grants its holder access to a specific event.\nWallet: the digital balance linked to an account for completing payments"
           },
           {
-            "title": "4 · Resale & gifting",
-            "body": "Tickets may be resold only through the MyTicket auction, where the transfer is verified and the seller pays a 10% commission. Tickets bought outside MyTicket carry no guarantee and may be refused at the gate. Gifting transfers ownership permanently once the recipient claims; gifted and auction-won tickets cannot be re-gifted or resold."
+            "title": "4 · User responsibilities",
+            "body": "• Comply with the regulations in force in the Kingdom of Saudi Arabia when using the Platform.\n• Do not use multiple accounts or automated programs (bots) to obtain tickets unfairly.\n• Do not resell tickets outside the auction mechanism approved within the Platform.\n• Bear responsibility for any activity carried out through your account, and report any unauthorized use immediately.\n• Comply with the entry and conduct rules specific to each event as set by the organizer.\nThe Platform reserves the right to suspend or close any account, cancel any ticket, or take the necessary legal action in the event of a breach of these Terms."
           },
           {
-            "title": "5 · Business applications",
-            "body": "Facilities and talents may submit a request from a guest account for MyTicket to review. That does not create a separate login role. Business partnership accounts are created only after an office agreement. Guests do not browse facility directories to book services inside the product."
+            "title": "5 · Event organizer responsibilities",
+            "body": "Security and privacy\n• Accuracy of the published event data (date, venue, price, age category if applicable).\n• Obtaining all licences and regulatory permits required to hold the event.\n• Setting the event's entry and refund policy, and notifying the Platform of any change or cancellation as soon as it occurs.\n• Complying with the terms of any contract entered into with talents or service providers through the internal booking marketplace.\nThe Platform acts as a technical intermediary that gives organizers access to talents, and is not a party to the contract concluded between them"
           },
           {
-            "title": "6 · Wallet & money",
-            "body": "Your wallet holds money you've added, refunds, cashback and gift credit. Money you added and refunds can be withdrawn to a Saudi bank account in your name; cashback and gift credit are spend-only. When you pay from the wallet, spend-only credit is used first. Balances never expire while your account is active."
+            "title": "6 · Buying and selling tickets",
+            "body": "A ticket is a personal, revocable licence to enter the specified event, and does not grant any ownership right. All purchases are final, and a refund is not permitted except in the following cases:\n• The event is cancelled by the organizer.\n• The event is postponed and the guest does not wish to attend on the new date.\n• In accordance with the payment gateway's own refund policy\n• As required by the regulations in force in the Kingdom of Saudi Arabia."
+          },
+          {
+            "title": "7 · E-wallet and payments",
+            "body": "What happens when the account is closed\n• Each account has its own digital wallet for managing payments.\n• All payments are processed through approved, encrypted payment gateways, without storing full card data.\n• E-wallet balance: the e-wallet balance is a balance designated for use within the MyTicket platform only, and may not be redeemed for cash or transferred to a bank account or another payment method, and is considered non-refundable and non-recoverable once deposited into the wallet, subject to any rights determined by law or applicable regulations.\n• Wallet balance upon account deletion: the user is responsible for checking their e-wallet balance before requesting account deletion, as deleting the account may result in the loss of the remaining wallet balance, and the user has no right to claim it back after the account deletion process is completed."
+          },
+          {
+            "title": "8 · Refund and cancellation policy",
+            "body": "Refund requests are subject to the event policy set by the organizer, which is shown to the guest before the purchase is completed. If an event is cancelled, the Platform undertakes to return the amount to the guest's wallet or original payment method within a reasonable period\nRefunding payments: where a customer is entitled to a refund of the ticket value under MyTicket's approved cancellation and refund policy, the refund is carried out through the approved electronic payment gateway, HyperPay, to the original payment method used to complete the purchase. MyTicket does not retain bank card data.\nThe time it takes for the refunded amount to appear in the customer's account is subject to the processing and settlement procedures of the payment gateway, the card-issuing bank, and the relevant payment network, and may take several business days. MyTicket is not responsible for any delay resulting from the procedures of banks or payment service providers after the refund request has been carried out by the Platform."
+          },
+          {
+            "title": "9 · Force majeure",
+            "body": "Neither MyTicket nor the organizer is responsible for delay or inability to perform obligations arising from circumstances beyond their control, including natural disasters, epidemics, government decisions, or the interruption of technical or communication services, to the extent permitted by the applicable regulations"
+          },
+          {
+            "title": "10 · Ratings and reviews",
+            "body": "• A guest who attended an event may rate it after it has ended.\n• Reviews must not include offensive or inaccurate content.\n• The Platform reserves the right to remove any review that violates these Terms without prior notice.\nRatings are used to rank the appearance of events, talents, and service providers."
+          },
+          {
+            "title": "11 · Anti-fraud and misuse",
+            "body": "• The use of fake accounts or automated programs (bots) to buy tickets in unusual quantities is prohibited.\n• Any hacking, reverse engineering, or unauthorized modification of the Platform's systems is prohibited.\n• Impersonating a talent, service provider, or organizer is prohibited.\n• The Platform reserves the right to freeze any payment or auction suspected of being fraudulent."
+          },
+          {
+            "title": "12 · Intellectual property",
+            "body": "All trademarks, designs, and content appearing on the Platform are owned by or licensed to MyTicket. Each organizer and talent retains their rights to the content they upload, while granting the Platform a non-exclusive licence to display it within its services."
+          },
+          {
+            "title": "13 · Limits of the Platform's liability",
+            "body": "The Platform acts as a technical intermediary connecting guests with organizers, talents, and service providers. It is not responsible for organizing the event itself, its quality, or the safety of its venue; this responsibility rests with the organizer\nThe Platform may display advertisements or offers submitted by organizers, talents, service providers, or other parties. The advertising party is responsible for the accuracy of the information provided and for the products or services it promotes"
+          },
+          {
+            "title": "14 · Suspending accounts and terminating service",
+            "body": "The Platform may suspend or terminate any account immediately in the event of a breach of these Terms or suspicion of fraudulent activity. The user may close their account at any time through account settings or by contacting support"
+          },
+          {
+            "title": "15 · Governing law",
+            "body": "These Terms are governed by and construed in accordance with the regulations of the Kingdom of Saudi Arabia, and the competent judicial authority in the Kingdom has jurisdiction to settle any dispute"
+          },
+          {
+            "title": "16 · Amending the Terms",
+            "body": "The Platform reserves the right to amend these Terms at any time, and your continued use of the Platform after the amendments are published constitutes implicit consent to them"
+          },
+          {
+            "title": "17 · Contact us",
+            "body": "For any inquiry related to these Terms, you can contact the support team through the communication channels available on the Platform."
           }
         ]
       },

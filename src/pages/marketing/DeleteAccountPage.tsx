@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
+import { useLocale } from '@/i18n/locale'
 
 type DeleteStep = { title: string; body: string }
 
@@ -12,19 +14,30 @@ type DeleteStep = { title: string; body: string }
  * read this page; the deletion itself still happens through Settings
  * (`useDeleteAccountMutation`) since that's the real, working mechanism —
  * this page exists to be linkable, not to duplicate it.
+ *
+ * Always English: this exact URL is what Google reviews, so it can't render
+ * in Arabic from a stored locale preference. `setLocale('en')` flips the
+ * whole app (header/footer included, not just this page's own text) since
+ * those read the same global i18n instance — `{ lng: 'en' }` on this page's
+ * own `t()` calls additionally avoids a one-frame flash of Arabic before
+ * that effect commits.
  */
 export function DeleteAccountPage() {
   const { t } = useTranslation('marketing')
-  const steps = t('deleteAccount.steps', { returnObjects: true }) as DeleteStep[]
+  const { setLocale } = useLocale()
+  useEffect(() => {
+    setLocale('en')
+  }, [setLocale])
+  const steps = t('deleteAccount.steps', { returnObjects: true, lng: 'en' }) as DeleteStep[]
 
   return (
-    <>
+    <div dir="ltr" lang="en">
       <PageSection padTop={64} padBottom={0}>
         <h1 className="max-w-[720px] text-[32px] leading-[1.05] font-extrabold tracking-[-1.5px] text-ink-primary sm:text-[42px]">
-          {t('deleteAccount.title')}
+          {t('deleteAccount.title', { lng: 'en' })}
         </h1>
         <p className="mt-[12px] max-w-[640px] text-[16px] leading-[1.6] text-ink-secondary">
-          {t('deleteAccount.lede')}
+          {t('deleteAccount.lede', { lng: 'en' })}
         </p>
       </PageSection>
 
@@ -47,32 +60,32 @@ export function DeleteAccountPage() {
         </div>
 
         <Link to="/settings" className="mt-[22px] inline-block">
-          <Button size="lg">{t('deleteAccount.cta')}</Button>
+          <Button size="lg">{t('deleteAccount.cta', { lng: 'en' })}</Button>
         </Link>
       </PageSection>
 
       <PageSection padTop={0} padBottom={96}>
         <div className="max-w-[640px] rounded-[18px] border border-border-default bg-bg-page px-[24px] py-[20px]">
           <h2 className="text-[15.5px] font-bold text-ink-primary">
-            {t('deleteAccount.whatGoesTitle')}
+            {t('deleteAccount.whatGoesTitle', { lng: 'en' })}
           </h2>
           <p className="mt-[6px] text-[14px] leading-[1.7] text-ink-secondary">
-            {t('deleteAccount.whatGoesBody')}
+            {t('deleteAccount.whatGoesBody', { lng: 'en' })}
           </p>
         </div>
 
         <div className="mt-[14px] max-w-[640px] rounded-[18px] border border-border-default bg-bg-page px-[24px] py-[20px]">
           <h2 className="text-[15.5px] font-bold text-ink-primary">
-            {t('deleteAccount.noAccessTitle')}
+            {t('deleteAccount.noAccessTitle', { lng: 'en' })}
           </h2>
           <p className="mt-[6px] text-[14px] leading-[1.7] text-ink-secondary">
-            {t('deleteAccount.noAccessBody')}{' '}
+            {t('deleteAccount.noAccessBody', { lng: 'en' })}{' '}
             <a href="mailto:privacy@myticket.sa" className="font-semibold text-ink-brand">
               privacy@myticket.sa
             </a>
           </p>
         </div>
       </PageSection>
-    </>
+    </div>
   )
 }

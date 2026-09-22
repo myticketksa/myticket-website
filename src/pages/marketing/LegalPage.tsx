@@ -111,7 +111,7 @@ export function LegalPage() {
                 className="rounded-[18px] border border-border-default bg-surface-default px-[28px] py-[26px]"
               >
                 <h2 className="text-[18px] font-bold text-ink-primary">{section.title}</h2>
-                <p className="mt-[10px] text-[14.5px] leading-[1.7] text-ink-secondary">
+                <p className="mt-[10px] text-[14.5px] leading-[1.7] whitespace-pre-line text-ink-secondary">
                   {section.body}
                 </p>
               </article>
