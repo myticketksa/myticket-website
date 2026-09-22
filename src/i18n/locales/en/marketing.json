@@ -276,37 +276,72 @@
       "privacy": {
         "label": "Privacy policy",
         "toc": [
-          "1 · What we collect",
-          "2 · How we use it",
-          "3 · Who we share with",
-          "4 · Your choices",
-          "5 · Retention",
-          "6 · Contact"
+          "1 · Introduction",
+          "2 · Data we collect",
+          "3 · How we use the data",
+          "4 · Sharing data with third parties",
+          "5 · PDPL compliance",
+          "6 · Cookies",
+          "7 · Data security",
+          "8 · Data retention periods",
+          "9 · User rights",
+          "10 · Children's privacy",
+          "11 · Policy updates",
+          "12 · Warning",
+          "13 · Contact us"
         ],
         "sections": [
           {
-            "title": "1 · What we collect",
-            "body": "We collect account details, booking history, device and usage data needed to run MyTicket — sign-in, payments, QR delivery, support and fraud prevention."
+            "title": "1 · Introduction",
+            "body": "MyTicket respects its users' privacy and is committed to protecting their personal data in accordance with Saudi Arabia's Personal Data Protection Law (PDPL), issued by the Saudi Data and Artificial Intelligence Authority (SDAIA), and in line with relevant international best practices."
           },
           {
-            "title": "2 · How we use it",
-            "body": "Data powers the product you asked for: tickets, waitlists, wallet, business applications and customer support. We do not sell personal data."
+            "title": "2 · Data we collect",
+            "body": "MyTicket does not collect personal information about a user visiting the site unless the user specifically and knowingly chooses to provide it. Data provided directly by the user: identity data (name, national ID or residency number when required, for identity verification or regulatory compliance), contact data (mobile number, email, address), business account data (commercial registration and event or service details, for organizer and vendor accounts), and payment data (purchase details and wallet balance, without storing full card data). MyTicket does not collect, store, or retain bank card data, including the card number or security code (CVV) — payment data is processed securely and directly through the certified payment gateway, and its handling is governed by that provider's own security and privacy policies. Automatically collected data: device data and approximate location to improve search results, usage data (browsed events and favorited tickets), and cookies and similar technologies."
           },
           {
-            "title": "3 · Who we share with",
-            "body": "Payment processors, SMS/email providers and event partners (limited to what they need for your booking) receive only what is required. Legal requests are handled under Saudi law."
+            "title": "3 · How we use the data",
+            "body": "Completing purchases, issuing tickets, and managing the wallet; personalizing the experience and showing recommendations relevant to your interests; verifying identity, preventing fraud, and protecting platform security; and sending operational notifications and optional marketing messages you can unsubscribe from at any time."
           },
           {
-            "title": "4 · Your choices",
-            "body": "You can update profile details, download your data, or delete your account from Settings. Marketing emails are optional and can be turned off any time."
+            "title": "4 · Sharing data with third parties",
+            "body": "The platform does not sell users' personal data to any third party. Data is shared with the event organizer when a ticket is purchased, only to the extent necessary to manage attendance."
           },
           {
-            "title": "5 · Retention",
-            "body": "We keep booking and payment records as long as the law requires. Optional marketing data is removed when you opt out or delete your account."
+            "title": "5 · PDPL compliance",
+            "body": "Data is only collected to the extent necessary to provide the service, with the purpose of collection clearly defined. Data is not transferred outside the Kingdom except under the controls and exceptions permitted by law."
           },
           {
-            "title": "6 · Contact",
-            "body": "Privacy questions go to privacy@myticket.sa — a person answers, not a form letter."
+            "title": "6 · Cookies",
+            "body": "The platform uses cookies to remember your preferences, analyze platform performance, and show personalized content. They can be controlled or disabled from browser or app settings, though disabling them may affect some functionality."
+          },
+          {
+            "title": "7 · Data security",
+            "body": "Encryption of data in transit and at rest (SSL/TLS); strict access controls limited to authorized staff; periodic security reviews and penetration testing; and an incident response plan that includes notifying users of any breach affecting their data."
+          },
+          {
+            "title": "8 · Data retention periods",
+            "body": "We retain user data for as long as the account is active, plus any additional period required to meet regulatory obligations after the account is closed. Once no longer needed, data is deleted or securely anonymized."
+          },
+          {
+            "title": "9 · User rights",
+            "body": "You may access the personal data we hold about you, request correction of inaccurate data, request deletion of your data (subject to regulatory exceptions), withdraw consent to marketing use at any time, and request your data in a machine-readable format where technically possible."
+          },
+          {
+            "title": "10 · Children's privacy",
+            "body": "The platform does not target children under the legal age set by regulation and does not knowingly collect their data. If we become aware that a minor's data was collected without parental consent, it will be deleted immediately."
+          },
+          {
+            "title": "11 · Policy updates",
+            "body": "This policy may be updated from time to time. Users will be notified of any material change via the platform or email, and continued use after publication constitutes acceptance of the updated version."
+          },
+          {
+            "title": "12 · Warning",
+            "body": "MyTicket will never ask you to share your password, verification code, card PIN, or full bank card details via messages, calls, or any unofficial channel. Make sure any communication about your account or tickets comes only through MyTicket's official channels, and don't follow links or make payments based on requests from untrusted parties. MyTicket is not liable for loss or damage resulting from sharing confidential data with parties impersonating MyTicket, without prejudice to any responsibilities imposed by applicable law."
+          },
+          {
+            "title": "13 · Contact us",
+            "body": "To exercise any of the rights above, contact MyTicket's data protection team through the support channels on the platform, or by email at privacy@myticket.sa."
           }
         ]
       },
