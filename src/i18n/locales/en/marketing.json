@@ -807,7 +807,28 @@
     "cta": "Go to Settings",
     "whatGoesTitle": "What gets deleted",
     "whatGoesBody": "Your name, email, phone number, and password are permanently erased, and your profile, saved favorites, notifications, and follows are removed. Completed orders and payment records are kept as required for accounting and legal purposes, but are no longer linked to an active account. Deletion is blocked if you have an upcoming published event you're organizing, a published experience listing, or an unclaimed gift ticket someone sent you — you'll be told exactly which, and can delete once it's resolved.",
-    "noAccessTitle": "Can't sign in anymore?",
-    "noAccessBody": "If you no longer have access to your account, email us from any address and we'll verify and handle the request manually:"
+    "noAccessTitle": "Can't sign in?",
+    "noAccessBody": "Confirm your email and password below and we'll delete your account right from this page — no app or sign-in needed.",
+    "form": {
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Your MyTicket password",
+      "confirmLabel": "I understand this permanently deletes my account and can't be undone.",
+      "submit": "Delete my account",
+      "submitting": "Deleting…",
+      "successTitle": "Your account has been deleted",
+      "successBody": "Your account and the data tied to it have been permanently removed.",
+      "invalidCredentials": "That email and password don't match an account. Double check them and try again.",
+      "blockedTitle": "We can't delete this account yet",
+      "blockedIntro": "Resolve the following first, then try again:",
+      "blockers": {
+        "has_upcoming_published_events": "You're organizing an upcoming published event. Cancel or complete it first.",
+        "has_published_experiences": "You have a published experience listing. Unpublish or remove it first.",
+        "has_unclaimed_gift_tickets": "Someone sent you a gift ticket you haven't claimed yet. Claim it or let it expire first."
+      },
+      "genericError": "Something went wrong. Please try again in a moment, or email us instead.",
+      "mailFallback": "Still stuck? Email us and we'll handle it manually:"
+    }
   }
 }
