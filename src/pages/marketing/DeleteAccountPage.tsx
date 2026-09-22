@@ -1,11 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import { Button, Checkbox, Field, TextInput } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { useLocale } from '@/i18n/locale'
-
-type DeleteStep = { title: string; body: string }
 
 type DeletionOutcome =
   | { kind: 'success' }
@@ -16,15 +13,11 @@ type DeletionOutcome =
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000') as string
 
 /**
- * `POST /account-deletion/no-auth` { email, password } — the public,
- * no-login deletion endpoint. Called with plain `fetch` (not the RTK Query
- * `baseApi`) because a wrong email/password doesn't get a JSON 4xx: the
- * backend answers it with a same-origin redirect (a web-context `back()`
- * call that leaked into this API-context endpoint). The default
- * follow-redirect fetch behaviour would land on the API's 200 HTML root
- * page and read that as success. `redirect: 'manual'` surfaces the
- * redirect as an opaque response instead, so it can be told apart from an
- * actual successful deletion (200, empty body).
+ * `POST /account-deletion/no-auth` { email, password }. Plain `fetch`, not
+ * the RTK Query client: a wrong email/password gets a same-origin redirect
+ * back from the API instead of a JSON 4xx, and default follow-redirect
+ * fetch would land on the API's 200 HTML root and read that as success.
+ * `redirect: 'manual'` surfaces it as an opaque response instead.
  */
 async function requestAccountDeletion(email: string, password: string): Promise<DeletionOutcome> {
   let response: Response
@@ -55,18 +48,15 @@ async function requestAccountDeletion(email: string, password: string): Promise<
 }
 
 /**
- * Public account/data deletion page — required by Google Play's User Data
- * policy: a web page, reachable without installing the app, describing how
- * to delete an account and what happens to the data. Two real paths: signed
- * in, through Settings (`useDeleteAccountMutation`); or from here directly,
- * via the no-auth endpoint below, for anyone who can't sign in.
+ * Public account-deletion page — required by Google Play's User Data
+ * policy. No sign-in: email + password go straight to the no-auth
+ * deletion endpoint above.
  *
- * Always English: this exact URL is what Google reviews, so it can't render
- * in Arabic from a stored locale preference. `setLocale('en')` flips the
- * whole app (header/footer included, not just this page's own text) since
- * those read the same global i18n instance — `{ lng: 'en' }` on this page's
- * own `t()` calls additionally avoids a one-frame flash of Arabic before
- * that effect commits.
+ * Always English: this exact URL is what Google reviews. `setLocale('en')`
+ * flips the whole app (header/footer included) since they read the same
+ * global i18n instance — `{ lng: 'en' }` on this page's own `t()` calls
+ * additionally avoids a one-frame flash of Arabic before that effect
+ * commits.
  */
 export function DeleteAccountPage() {
   const { t } = useTranslation('marketing')
@@ -74,7 +64,6 @@ export function DeleteAccountPage() {
   useEffect(() => {
     setLocale('en')
   }, [setLocale])
-  const steps = t('deleteAccount.steps', { returnObjects: true, lng: 'en' }) as DeleteStep[]
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -100,58 +89,14 @@ export function DeleteAccountPage() {
 
   return (
     <div dir="ltr" lang="en">
-      <PageSection padTop={64} padBottom={0}>
-        <h1 className="max-w-[720px] text-[32px] leading-[1.05] font-extrabold tracking-[-1.5px] text-ink-primary sm:text-[42px]">
-          {t('deleteAccount.title', { lng: 'en' })}
-        </h1>
-        <p className="mt-[12px] max-w-[640px] text-[16px] leading-[1.6] text-ink-secondary">
-          {t('deleteAccount.lede', { lng: 'en' })}
-        </p>
-      </PageSection>
-
-      <PageSection padTop={36} padBottom={40}>
-        <div className="flex flex-col gap-[14px] sm:max-w-[640px]">
-          {(Array.isArray(steps) ? steps : []).map((step, index) => (
-            <div
-              key={step.title}
-              className="flex gap-[16px] rounded-[16px] border border-border-default bg-surface-default px-[22px] py-[18px]"
-            >
-              <span className="flex size-[28px] shrink-0 items-center justify-center rounded-full bg-bg-tint-brand text-[13px] font-bold text-ink-brand">
-                {index + 1}
-              </span>
-              <div>
-                <h2 className="text-[15.5px] font-bold text-ink-primary">{step.title}</h2>
-                <p className="mt-[4px] text-[14px] leading-[1.6] text-ink-secondary">{step.body}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <Link to="/settings" className="mt-[22px] inline-block">
-          <Button size="lg">{t('deleteAccount.cta', { lng: 'en' })}</Button>
-        </Link>
-      </PageSection>
-
-      <PageSection padTop={0} padBottom={96}>
-        <div className="max-w-[640px] rounded-[18px] border border-border-default bg-bg-page px-[24px] py-[20px]">
-          <h2 className="text-[15.5px] font-bold text-ink-primary">
-            {t('deleteAccount.whatGoesTitle', { lng: 'en' })}
-          </h2>
-          <p className="mt-[6px] text-[14px] leading-[1.7] text-ink-secondary">
-            {t('deleteAccount.whatGoesBody', { lng: 'en' })}
-          </p>
-        </div>
-
-        <div className="mt-[14px] max-w-[640px] rounded-[18px] border border-border-default bg-bg-page px-[24px] py-[24px]">
-          <h2 className="text-[15.5px] font-bold text-ink-primary">
-            {t('deleteAccount.noAccessTitle', { lng: 'en' })}
-          </h2>
-          <p className="mt-[6px] text-[14px] leading-[1.7] text-ink-secondary">
-            {t('deleteAccount.noAccessBody', { lng: 'en' })}
-          </p>
+      <PageSection padTop={64} padBottom={96}>
+        <div className="mx-auto max-w-[480px]">
+          <h1 className="text-[28px] leading-[1.1] font-extrabold tracking-[-1px] text-ink-primary">
+            {t('deleteAccount.title', { lng: 'en' })}
+          </h1>
 
           {outcome?.kind === 'success' ? (
-            <div className="mt-[18px] rounded-[14px] border border-border-default bg-bg-tint-brand px-[18px] py-[16px]">
+            <div className="mt-[24px] rounded-[14px] border border-border-default bg-bg-tint-brand px-[18px] py-[16px]">
               <p className="text-[14.5px] font-bold text-ink-primary">
                 {t('deleteAccount.form.successTitle', { lng: 'en' })}
               </p>
@@ -160,7 +105,7 @@ export function DeleteAccountPage() {
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="mt-[18px] flex flex-col gap-[14px]">
+            <form onSubmit={handleSubmit} className="mt-[24px] flex flex-col gap-[14px]">
               <Field label={t('deleteAccount.form.emailLabel', { lng: 'en' })} htmlFor="delete-email">
                 <TextInput
                   id="delete-email"
@@ -206,9 +151,6 @@ export function DeleteAccountPage() {
                   <p className="text-[13.5px] font-bold text-state-danger-deep">
                     {t('deleteAccount.form.blockedTitle', { lng: 'en' })}
                   </p>
-                  <p className="mt-[2px] text-[13px] text-ink-secondary">
-                    {t('deleteAccount.form.blockedIntro', { lng: 'en' })}
-                  </p>
                   <ul className="mt-[6px] list-disc ps-[18px]">
                     {outcome.blockers.map((code) => (
                       <li key={code} className="text-[13px] leading-[1.6] text-ink-secondary">
@@ -235,13 +177,6 @@ export function DeleteAccountPage() {
               </Button>
             </form>
           )}
-
-          <p className="mt-[16px] text-[13px] text-ink-muted">
-            {t('deleteAccount.form.mailFallback', { lng: 'en' })}{' '}
-            <a href="mailto:privacy@myticket.sa" className="font-semibold text-ink-brand">
-              privacy@myticket.sa
-            </a>
-          </p>
         </div>
       </PageSection>
     </div>
