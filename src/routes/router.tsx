@@ -49,6 +49,8 @@ import {
   ForVendorsPage,
   HelpPage,
   LegalPage,
+  PrivacyPolicyPage,
+  DeleteAccountPage,
   MaintenancePage,
   NotFoundPage,
 } from '@/pages'
@@ -96,6 +98,8 @@ export const router = createBrowserRouter([
           { path: '/about', element: <AboutPage /> },
           { path: '/help', element: <HelpPage /> },
           { path: '/legal', element: <LegalPage /> },
+          { path: '/Privacy_Policy_My_Ticket', element: <PrivacyPolicyPage /> },
+          { path: '/delete-account', element: <DeleteAccountPage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },

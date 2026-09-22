@@ -696,5 +696,28 @@
     "needsTitle": "What the application needs",
     "noteLead": "Review comes first.",
     "faqTitle": "Asked most often"
+  },
+  "deleteAccount": {
+    "title": "Delete your account and data",
+    "lede": "You can delete your MyTicket account and the data tied to it at any time. You don't need the app installed to do this — everything below works from any browser.",
+    "steps": [
+      {
+        "title": "Sign in",
+        "body": "Use your MyTicket email or phone and password — the same ones you use in the app."
+      },
+      {
+        "title": "Open Settings",
+        "body": "Go to your account settings and find \"Delete account\" near the bottom of the page."
+      },
+      {
+        "title": "Confirm with your password",
+        "body": "You'll be asked to type your password once more to confirm — this is permanent and can't be undone."
+      }
+    ],
+    "cta": "Go to Settings",
+    "whatGoesTitle": "What gets deleted",
+    "whatGoesBody": "Your name, email, phone number, and password are permanently erased, and your profile, saved favorites, notifications, and follows are removed. Completed orders and payment records are kept as required for accounting and legal purposes, but are no longer linked to an active account. Deletion is blocked if you have an upcoming published event you're organizing, a published experience listing, or an unclaimed gift ticket someone sent you — you'll be told exactly which, and can delete once it's resolved.",
+    "noAccessTitle": "Can't sign in anymore?",
+    "noAccessBody": "If you no longer have access to your account, email us from any address and we'll verify and handle the request manually:"
   }
 }
