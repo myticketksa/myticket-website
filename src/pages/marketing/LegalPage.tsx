@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
 
@@ -9,10 +9,19 @@ type LegalDoc = { label: string; toc: string[]; sections: LegalSection[] }
 
 const DOC_IDS = ['terms', 'privacy', 'cookies'] as const
 
-/** Legal — Figma `207:12042`. */
+/**
+ * Legal — Figma `207:12042`.
+ *
+ * `?doc=privacy` (etc.) opens straight to that tab.
+ */
 export function LegalPage() {
   const { t } = useTranslation('marketing')
-  const [active, setActive] = useState(0)
+  const [searchParams] = useSearchParams()
+  const requestedDoc = searchParams.get('doc')
+  const [active, setActive] = useState(() => {
+    const index = DOC_IDS.indexOf(requestedDoc as (typeof DOC_IDS)[number])
+    return index === -1 ? 0 : index
+  })
 
   const docs = useMemo(() => {
     const raw = t('legal.docs', { returnObjects: true }) as Record<string, LegalDoc>
@@ -102,7 +111,7 @@ export function LegalPage() {
                 className="rounded-[18px] border border-border-default bg-surface-default px-[28px] py-[26px]"
               >
                 <h2 className="text-[18px] font-bold text-ink-primary">{section.title}</h2>
-                <p className="mt-[10px] text-[14.5px] leading-[1.7] text-ink-secondary">
+                <p className="mt-[10px] text-[14.5px] leading-[1.7] whitespace-pre-line text-ink-secondary">
                   {section.body}
                 </p>
               </article>
