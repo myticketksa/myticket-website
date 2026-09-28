@@ -1,4 +1,5 @@
 {
+  "loginRequired": "يرجى تسجيل الدخول أولاً لإرسال الطلب.",
   "talent": {
     "eyebrow": "طلب {{role}}",
     "title": "قدّم طلب {{role}}.",

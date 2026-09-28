@@ -1,14 +1,14 @@
-import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
+import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import {
   MainLayout,
   AuthLayout,
   AccountLayout,
   PurchaseLayout,
   FunnelLayout,
-} from '@/layouts'
-import { SiteDocumentMeta } from '@/components/navigation'
-import { ProbeRoute } from './ProbeRoute'
-import { RouteErrorPage } from './RouteErrorPage'
+} from "@/layouts";
+import { SiteDocumentMeta } from "@/components/navigation";
+import { ProbeRoute } from "./ProbeRoute";
+import { RouteErrorPage } from "./RouteErrorPage";
 import {
   HomePage,
   EventsPage,
@@ -43,7 +43,6 @@ import {
   ApplyTalentPage,
   ApplicationSubmittedPage,
   MySupportCasesPage,
-  NewSupportCasePage,
   SupportChatPage,
   AboutPage,
   ForVendorsPage,
@@ -53,7 +52,7 @@ import {
   DeleteAccountPage,
   MaintenancePage,
   NotFoundPage,
-} from '@/pages'
+} from "@/pages";
 
 /**
  * Route table from docs/reference/implementation-guide.md §3, wired to the four layout
@@ -67,7 +66,7 @@ function RootDocument() {
       <SiteDocumentMeta />
       <Outlet />
     </>
-  )
+  );
 }
 
 export const router = createBrowserRouter([
@@ -77,88 +76,109 @@ export const router = createBrowserRouter([
     errorElement: <RouteErrorPage />,
     children: [
       {
-        path: '/probe',
+        path: "/probe",
         element: <ProbeRoute />,
       },
       {
         element: <MainLayout />,
         children: [
-          { path: '/', element: <HomePage /> },
-          { path: '/events', element: <EventsPage /> },
-          { path: '/events/:slug', element: <EventDetailPage /> },
-          { path: '/search', element: <SearchResultsPage /> },
-          { path: '/talents', element: <TalentsPage /> },
-          { path: '/talents/:slug', element: <TalentDetailPage /> },
-          { path: '/experiences', element: <ExperiencesPage /> },
-          { path: '/experiences/:slug', element: <ExperienceDetailPage /> },
-          { path: '/order-confirmation', element: <OrderConfirmationPage /> },
-          { path: '/become-business', element: <BecomeBusinessPage /> },
-          { path: '/for-facilities', element: <ForVendorsPage /> },
-          { path: '/for-vendors', element: <Navigate to="/for-facilities" replace /> },
-          { path: '/about', element: <AboutPage /> },
-          { path: '/help', element: <HelpPage /> },
-          { path: '/legal', element: <LegalPage /> },
-          { path: '/Privacy_Policy_My_Ticket', element: <PrivacyPolicyPage /> },
-          { path: '/Delete_Account', element: <DeleteAccountPage /> },
-          { path: '/delete-account', element: <Navigate to="/Delete_Account" replace /> },
-          { path: '*', element: <NotFoundPage /> },
+          { path: "/", element: <HomePage /> },
+          { path: "/events", element: <EventsPage /> },
+          { path: "/events/:slug", element: <EventDetailPage /> },
+          { path: "/search", element: <SearchResultsPage /> },
+          { path: "/talents", element: <TalentsPage /> },
+          { path: "/talents/:slug", element: <TalentDetailPage /> },
+          { path: "/experiences", element: <ExperiencesPage /> },
+          { path: "/experiences/:slug", element: <ExperienceDetailPage /> },
+          { path: "/order-confirmation", element: <OrderConfirmationPage /> },
+          { path: "/become-business", element: <BecomeBusinessPage /> },
+          { path: "/for-facilities", element: <ForVendorsPage /> },
+          {
+            path: "/for-vendors",
+            element: <Navigate to="/for-facilities" replace />,
+          },
+          { path: "/about", element: <AboutPage /> },
+          { path: "/help", element: <HelpPage /> },
+          { path: "/legal", element: <LegalPage /> },
+          { path: "/Privacy_Policy_My_Ticket", element: <PrivacyPolicyPage /> },
+          { path: "/Delete_Account", element: <DeleteAccountPage /> },
+          {
+            path: "/delete-account",
+            element: <Navigate to="/Delete_Account" replace />,
+          },
+          { path: "*", element: <NotFoundPage /> },
         ],
       },
       {
-        path: '/maintenance',
+        path: "/maintenance",
         element: <MaintenancePage />,
       },
       {
         element: <AuthLayout />,
         children: [
-          { path: '/sign-in', element: <SignInPage /> },
-          { path: '/register', element: <RegisterPage /> },
-          { path: '/reset-password', element: <ResetPasswordPage /> },
+          { path: "/sign-in", element: <SignInPage /> },
+          { path: "/register", element: <RegisterPage /> },
+          { path: "/reset-password", element: <ResetPasswordPage /> },
         ],
       },
       {
         element: <AccountLayout />,
         children: [
-          { path: '/profile', element: <ProfilePage /> },
-          { path: '/settings', element: <SettingsPage /> },
-          { path: '/my-tickets', element: <MyTicketsPage /> },
-          { path: '/favorites', element: <FavoritesPage /> },
-          { path: '/saved', element: <FavoritesPage /> },
-          { path: '/notifications', element: <NotificationsPage /> },
-          { path: '/wallet', element: <WalletPage /> },
-          { path: '/my-reviews', element: <MyReviewsPage /> },
-          { path: '/my-submissions', element: <MySubmissionsPage /> },
-          { path: '/my-facilities-application', element: <MyVendorApplicationPage /> },
+          { path: "/profile", element: <ProfilePage /> },
+          { path: "/settings", element: <SettingsPage /> },
+          { path: "/my-tickets", element: <MyTicketsPage /> },
+          { path: "/favorites", element: <FavoritesPage /> },
+          { path: "/saved", element: <FavoritesPage /> },
+          { path: "/notifications", element: <NotificationsPage /> },
+          { path: "/wallet", element: <WalletPage /> },
+          { path: "/my-reviews", element: <MyReviewsPage /> },
+          { path: "/my-submissions", element: <MySubmissionsPage /> },
           {
-            path: '/my-vendor-application',
+            path: "/my-facilities-application",
+            element: <MyVendorApplicationPage />,
+          },
+          {
+            path: "/my-vendor-application",
             element: <Navigate to="/my-facilities-application" replace />,
           },
-          { path: '/my-talent-application', element: <MyTalentApplicationPage /> },
-          { path: '/support', element: <MySupportCasesPage /> },
+          {
+            path: "/my-talent-application",
+            element: <MyTalentApplicationPage />,
+          },
+          { path: "/support", element: <MySupportCasesPage /> },
         ],
       },
       {
         element: <FunnelLayout />,
         children: [
-          { path: '/my-tickets/:id', element: <TicketPage /> },
-          { path: '/my-tickets/:id/gift', element: <GiftTicketPage /> },
-          { path: '/gift/claim/:giftTicketId', element: <ClaimGiftPage /> },
-          { path: '/support/new', element: <NewSupportCasePage /> },
-          { path: '/support/chat', element: <SupportChatPage /> },
-          { path: '/apply/facilities', element: <ApplyVendorPage /> },
-          { path: '/apply/vendor', element: <Navigate to="/apply/facilities" replace /> },
-          { path: '/apply/talent', element: <ApplyTalentPage /> },
-          { path: '/submit-experience', element: <SubmitExperiencePage /> },
-          { path: '/application-submitted', element: <ApplicationSubmittedPage /> },
+          { path: "/my-tickets/:id", element: <TicketPage /> },
+          { path: "/my-tickets/:id/gift", element: <GiftTicketPage /> },
+          { path: "/gift/claim/:giftTicketId", element: <ClaimGiftPage /> },
+          {
+            path: "/support/new",
+            element: <Navigate to="/support/chat" replace />,
+          },
+          { path: "/support/chat", element: <SupportChatPage /> },
+          { path: "/apply/facilities", element: <ApplyVendorPage /> },
+          {
+            path: "/apply/vendor",
+            element: <Navigate to="/apply/facilities" replace />,
+          },
+          { path: "/apply/talent", element: <ApplyTalentPage /> },
+          { path: "/submit-experience", element: <SubmitExperiencePage /> },
+          {
+            path: "/application-submitted",
+            element: <ApplicationSubmittedPage />,
+          },
         ],
       },
       {
         element: <PurchaseLayout />,
         children: [
-          { path: '/events/:slug/seats', element: <SeatSelectionPage /> },
-          { path: '/checkout', element: <CheckoutPage /> },
+          { path: "/events/:slug/seats", element: <SeatSelectionPage /> },
+          { path: "/checkout", element: <CheckoutPage /> },
         ],
       },
     ],
   },
-])
+]);

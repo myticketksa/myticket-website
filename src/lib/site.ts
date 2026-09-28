@@ -29,8 +29,8 @@ export const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.t4l.myticket";
 
 /** Public contact — shown in the site footer. */
-export const SITE_PHONE = "+966 53 829 7873";
-export const SITE_PHONE_HREF = "tel:+966538297873";
+export const SITE_PHONE = "+966 59 347 4747";
+export const SITE_PHONE_HREF = "tel:+966593474747";
 export const SITE_EMAIL = "business@myticket.sa";
 export const SITE_EMAIL_HREF = "mailto:business@myticket.sa";
 

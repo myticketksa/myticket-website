@@ -1,4 +1,5 @@
 {
+  "loginRequired": "Please sign in first to submit a request.",
   "talent": {
     "eyebrow": "{{role}} request",
     "title": "Submit a {{role}} request.",
