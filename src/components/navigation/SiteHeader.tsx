@@ -1,106 +1,117 @@
-import { useEffect, type FormEvent } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Dialog as DialogPrimitive, DropdownMenu } from 'radix-ui'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { selectIsAuthenticated } from '@/features/auth/authSlice'
-import { Avatar, CountBadge, FlagSaudiArabia, FlagUnitedStates } from '@/components/data-display'
+import { useEffect, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
+import { Dialog as DialogPrimitive, DropdownMenu } from "radix-ui";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
+import { selectIsAuthenticated } from "@/features/auth/authSlice";
+import {
+  Avatar,
+  CountBadge,
+  FlagSaudiArabia,
+  FlagUnitedStates,
+} from "@/components/data-display";
 import {
   BellIcon,
   ChevronDownIcon,
   CloseIcon,
   MenuIcon,
   PowerIcon,
-} from '@/components/icons'
-import { Button } from '@/components/ui'
-import { mobileNavToggled, selectMobileNavOpen } from '@/features/ui/uiSlice'
-import { useLocale } from '@/i18n/locale'
-import { useSignOut } from '@/lib/auth/useSignOut'
-import { cn } from '@/lib/cn'
-import { Logo } from './Logo'
-import { NavItem } from './NavItem'
-import { SearchPill } from './SearchPill'
+} from "@/components/icons";
+import { Button } from "@/components/ui";
+import { mobileNavToggled, selectMobileNavOpen } from "@/features/ui/uiSlice";
+import { useLocale } from "@/i18n/locale";
+import { useSignOut } from "@/lib/auth/useSignOut";
+import { cn } from "@/lib/cn";
+import { Logo } from "./Logo";
+import { NavItem } from "./NavItem";
+import { SearchPill } from "./SearchPill";
 
 /**
  * Site header — Logo · nav · search · bell · profile/login · language.
  * Nav: Tickets & offers (dropdown) · Talents · Offers · Institutions.
  */
-export type NavId = 'TicketsAndOffers' | 'Talents' | 'Offers' | 'Institutions'
+export type NavId = "TicketsAndOffers" | "Talents" | "Offers" | "Institutions";
 
 export interface HeaderNavLink {
-  id?: NavId | string
-  label: string
-  href: string
+  id?: NavId | string;
+  label: string;
+  href: string;
 }
 
 export interface SiteHeaderProps {
-  state?: 'signedOut' | 'signedIn'
-  nav?: HeaderNavLink[]
-  activeItem?: NavId | string
-  activeItemState?: 'active' | 'section'
-  showSearch?: boolean
+  state?: "signedOut" | "signedIn";
+  nav?: HeaderNavLink[];
+  activeItem?: NavId | string;
+  activeItemState?: "active" | "section";
+  showSearch?: boolean;
   account?: {
-    name: string
-    initials: string
-    notifications?: number
-  }
-  signInIcon?: boolean
-  className?: string
+    name: string;
+    initials: string;
+    notifications?: number;
+  };
+  signInIcon?: boolean;
+  className?: string;
 }
 
 const TICKETS_OFFERS_LINKS = [
-  { key: 'upcoming' as const, href: '/events' },
-  { key: 'newlyAdded' as const, href: '/events?sort=newest' },
-  { key: 'landmarks' as const, href: '/experiences?type=attraction' },
-  { key: 'activities' as const, href: '/experiences?type=activity' },
-]
+  { key: "upcoming" as const, href: "/events" },
+  { key: "newlyAdded" as const, href: "/events?sort=newest" },
+  { key: "landmarks" as const, href: "/experiences?type=attraction" },
+  { key: "activities" as const, href: "/experiences?type=activity" },
+];
 
 const PROFILE_LINKS = [
-  { key: 'profile' as const, href: '/profile' },
-  { key: 'reservations' as const, href: '/my-tickets' },
-  { key: 'favorites' as const, href: '/favorites' },
-]
+  { key: "profile" as const, href: "/profile" },
+  { key: "reservations" as const, href: "/my-tickets" },
+  { key: "favorites" as const, href: "/favorites" },
+];
 
 function navItemActive(id: string | undefined, activeItem?: string) {
-  if (!activeItem || !id) return false
-  return id === activeItem
+  if (!activeItem || !id) return false;
+  return id === activeItem;
 }
 
 function HeaderLanguagePill({ className }: { className?: string }) {
-  const { t } = useTranslation('common')
-  const { locale, toggleLocale } = useLocale()
+  const { t } = useTranslation("common");
+  const { locale, toggleLocale } = useLocale();
 
   return (
     <button
       type="button"
       onClick={toggleLocale}
       aria-label={
-        locale === 'en' ? t('language.switchToArabic') : t('language.switchToEnglish')
+        locale === "en"
+          ? t("language.switchToArabic")
+          : t("language.switchToEnglish")
       }
       className={cn(
-        'shrink-0 transition-opacity duration-micro ease-micro hover:opacity-80',
+        "shrink-0 transition-opacity duration-micro ease-micro hover:opacity-80",
         className,
       )}
     >
-      {locale === 'en' ? <FlagUnitedStates size={20} /> : <FlagSaudiArabia size={20} />}
+      {locale === "en" ? (
+        <FlagSaudiArabia size={20} />
+      ) : (
+        <FlagUnitedStates size={20} />
+      )}
     </button>
-  )
+  );
 }
 
 function dropdownContentClassName() {
   return cn(
-    'z-[60] min-w-[220px] overflow-hidden rounded-[14px] border border-border-default',
-    'bg-surface-default p-sm shadow-[0px_18px_40px_-24px_rgba(25,16,8,0.35)]',
-    'text-start data-[state=open]:animate-in data-[state=closed]:animate-out',
-  )
+    "z-[60] min-w-[220px] overflow-hidden rounded-[14px] border border-border-default",
+    "bg-surface-default p-sm shadow-[0px_18px_40px_-24px_rgba(25,16,8,0.35)]",
+    "text-start data-[state=open]:animate-in data-[state=closed]:animate-out",
+  );
 }
 
 function dropdownItemClassName() {
   return cn(
-    'flex cursor-pointer select-none items-center rounded-[10px] px-md py-[10px]',
-    'text-[14px] font-semibold text-ink-primary outline-none',
-    'data-[highlighted]:bg-bg-page data-[highlighted]:text-ink-brand-mid',
-  )
+    "flex cursor-pointer select-none items-center rounded-[10px] px-md py-[10px]",
+    "text-[14px] font-semibold text-ink-primary outline-none",
+    "data-[highlighted]:bg-bg-page data-[highlighted]:text-ink-brand-mid",
+  );
 }
 
 function TicketsOffersDropdown({
@@ -108,13 +119,13 @@ function TicketsOffersDropdown({
   activeItemState,
   onNavigate,
 }: {
-  active: boolean
-  activeItemState: 'active' | 'section'
-  onNavigate: (path: string) => void
+  active: boolean;
+  activeItemState: "active" | "section";
+  onNavigate: (path: string) => void;
 }) {
-  const { t } = useTranslation('nav')
-  const { locale } = useLocale()
-  const dir = locale === 'ar' ? 'rtl' : 'ltr'
+  const { t } = useTranslation("nav");
+  const { locale } = useLocale();
+  const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
     <DropdownMenu.Root dir={dir}>
@@ -122,16 +133,16 @@ function TicketsOffersDropdown({
         <button
           type="button"
           className={cn(
-            'inline-flex items-center gap-[6px] text-[15px] leading-[normal] font-semibold whitespace-nowrap',
-            'transition-[color,opacity] duration-micro ease-micro',
-            !active && 'text-ink-primary hover:text-ink-secondary',
+            "inline-flex items-center gap-[6px] text-[15px] leading-[normal] font-semibold whitespace-nowrap",
+            "transition-[color,opacity] duration-micro ease-micro",
+            !active && "text-ink-primary hover:text-ink-secondary",
             active &&
-              activeItemState === 'active' &&
-              'border-b-2 border-border-focus pb-[4px] text-ink-brand-mid',
-            active && activeItemState === 'section' && 'text-brand-primary',
+              activeItemState === "active" &&
+              "border-b-2 border-border-focus pb-[4px] text-ink-brand-mid",
+            active && activeItemState === "section" && "text-brand-primary",
           )}
         >
-          {t('ticketsAndOffers')}
+          {t("ticketsAndOffers")}
           <ChevronDownIcon size={12} className="opacity-70" />
         </button>
       </DropdownMenu.Trigger>
@@ -155,20 +166,20 @@ function TicketsOffersDropdown({
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
-  )
+  );
 }
 
 function ProfileDropdown({
   account,
   onNavigate,
 }: {
-  account?: SiteHeaderProps['account']
-  onNavigate: (path: string) => void
+  account?: SiteHeaderProps["account"];
+  onNavigate: (path: string) => void;
 }) {
-  const { t } = useTranslation(['nav', 'common'])
-  const { locale } = useLocale()
-  const { signOut, isLoading } = useSignOut()
-  const dir = locale === 'ar' ? 'rtl' : 'ltr'
+  const { t } = useTranslation(["nav", "common"]);
+  const { locale } = useLocale();
+  const { signOut, isLoading } = useSignOut();
+  const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
     <DropdownMenu.Root dir={dir}>
@@ -178,11 +189,11 @@ function ProfileDropdown({
           className="flex shrink-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pe-[12px] ps-[5px] transition-[border-color,opacity] duration-micro ease-micro hover:border-border-brand hover:opacity-95"
           aria-label={
             account?.name
-              ? t('nav:profileNamed', { name: account.name })
-              : t('nav:profile')
+              ? t("nav:profileNamed", { name: account.name })
+              : t("nav:profile")
           }
         >
-          <Avatar initials={account?.initials ?? ''} size="md" />
+          <Avatar initials={account?.initials ?? ""} size="md" />
           <span className="hidden max-w-[8rem] truncate text-[14px] font-bold text-ink-primary xl:inline">
             {account?.name}
           </span>
@@ -208,21 +219,24 @@ function ProfileDropdown({
           ))}
           <DropdownMenu.Separator className="my-sm h-px bg-border-divider" />
           <DropdownMenu.Item
-            className={cn(dropdownItemClassName(), 'text-state-danger data-[highlighted]:text-state-danger')}
+            className={cn(
+              dropdownItemClassName(),
+              "text-state-danger data-[highlighted]:text-state-danger",
+            )}
             disabled={isLoading}
             onSelect={() => {
-              void signOut()
+              void signOut();
             }}
           >
             <span className="inline-flex items-center gap-[8px]">
               <PowerIcon size={14} />
-              {t('common:actions.signOut')}
+              {t("common:actions.signOut")}
             </span>
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
-  )
+  );
 }
 
 function DesktopAuthActions({
@@ -230,18 +244,18 @@ function DesktopAuthActions({
   account,
   onNavigate,
 }: {
-  state: 'signedOut' | 'signedIn'
-  account?: SiteHeaderProps['account']
-  onNavigate: (path: string) => void
+  state: "signedOut" | "signedIn";
+  account?: SiteHeaderProps["account"];
+  onNavigate: (path: string) => void;
 }) {
-  const { t } = useTranslation(['nav', 'common'])
+  const { t } = useTranslation(["nav", "common"]);
 
-  if (state === 'signedOut') {
+  if (state === "signedOut") {
     return (
-      <Button size="md" onClick={() => onNavigate('/sign-in')}>
-        {t('common:actions.login')}
+      <Button size="md" onClick={() => onNavigate("/sign-in")}>
+        {t("common:actions.login")}
       </Button>
-    )
+    );
   }
 
   return (
@@ -250,8 +264,8 @@ function DesktopAuthActions({
         <Button
           variant="icon"
           size="sm"
-          aria-label={t('nav:notifications')}
-          onClick={() => onNavigate('/notifications')}
+          aria-label={t("nav:notifications")}
+          onClick={() => onNavigate("/notifications")}
         >
           <BellIcon size={16} />
         </Button>
@@ -266,7 +280,7 @@ function DesktopAuthActions({
       </span>
       <ProfileDropdown account={account} onNavigate={onNavigate} />
     </>
-  )
+  );
 }
 
 function MobileDrawerAuth({
@@ -275,22 +289,26 @@ function MobileDrawerAuth({
   onNavigate,
   onClose,
 }: {
-  state: 'signedOut' | 'signedIn'
-  account?: SiteHeaderProps['account']
-  onNavigate: (path: string) => void
-  onClose: () => void
+  state: "signedOut" | "signedIn";
+  account?: SiteHeaderProps["account"];
+  onNavigate: (path: string) => void;
+  onClose: () => void;
 }) {
-  const { t } = useTranslation(['nav', 'common'])
-  const { signOut, isLoading } = useSignOut()
+  const { t } = useTranslation(["nav", "common"]);
+  const { signOut, isLoading } = useSignOut();
 
-  if (state === 'signedOut') {
+  if (state === "signedOut") {
     return (
       <div className="mb-xl flex flex-col gap-sm">
-        <Button size="md" onClick={() => onNavigate('/sign-in')} className="w-full">
-          {t('common:actions.login')}
+        <Button
+          size="md"
+          onClick={() => onNavigate("/sign-in")}
+          className="w-full"
+        >
+          {t("common:actions.login")}
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -300,8 +318,8 @@ function MobileDrawerAuth({
           <Button
             variant="icon"
             size="sm"
-            aria-label={t('nav:notifications')}
-            onClick={() => onNavigate('/notifications')}
+            aria-label={t("nav:notifications")}
+            onClick={() => onNavigate("/notifications")}
           >
             <BellIcon size={16} />
           </Button>
@@ -315,7 +333,7 @@ function MobileDrawerAuth({
           )}
         </span>
         <div className="ms-auto flex min-w-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pe-[12px] ps-[5px]">
-          <Avatar initials={account?.initials ?? ''} size="md" />
+          <Avatar initials={account?.initials ?? ""} size="md" />
           {account?.name ? (
             <span className="max-w-[7rem] truncate text-[13px] font-bold text-ink-primary">
               {account.name}
@@ -340,15 +358,15 @@ function MobileDrawerAuth({
         className="flex h-[40px] w-full items-center gap-[11px] rounded-[12px] px-[11px] text-[14px] font-semibold text-state-danger hover:bg-bg-page disabled:opacity-60"
         disabled={isLoading}
         onClick={() => {
-          onClose()
-          void signOut()
+          onClose();
+          void signOut();
         }}
       >
         <PowerIcon size={14} />
-        {t('common:actions.signOut')}
+        {t("common:actions.signOut")}
       </button>
     </div>
-  )
+  );
 }
 
 function MainNav({
@@ -357,28 +375,30 @@ function MainNav({
   onNavigate,
   className,
   itemClassName,
-  ticketsMode = 'dropdown',
+  ticketsMode = "dropdown",
 }: {
-  activeItem?: string
-  activeItemState: 'active' | 'section'
-  onNavigate: (path: string) => void
-  className?: string
-  itemClassName?: string
-  ticketsMode?: 'dropdown' | 'flat'
+  activeItem?: string;
+  activeItemState: "active" | "section";
+  onNavigate: (path: string) => void;
+  className?: string;
+  itemClassName?: string;
+  ticketsMode?: "dropdown" | "flat";
 }) {
-  const { t } = useTranslation('nav')
-  const isAuthenticated = useAppSelector(selectIsAuthenticated)
+  const { t } = useTranslation("nav");
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
-  const talentsActive = navItemActive('Talents', activeItem)
-  const offersActive = navItemActive('Offers', activeItem)
-  const institutionsActive = navItemActive('Institutions', activeItem)
-  const ticketsActive = navItemActive('TicketsAndOffers', activeItem)
+  const talentsActive = navItemActive("Talents", activeItem);
+  const offersActive = navItemActive("Offers", activeItem);
+  const institutionsActive = navItemActive("Institutions", activeItem);
+  const ticketsActive = navItemActive("TicketsAndOffers", activeItem);
   // Real auth only — do not follow chrome `signedIn` (e.g. order-confirmation overlay).
-  const institutionsHref = isAuthenticated ? '/apply/facilities' : '/become-business'
+  const institutionsHref = isAuthenticated
+    ? "/apply/facilities"
+    : "/become-business";
 
   return (
-    <nav aria-label={t('main')} className={className}>
-      {ticketsMode === 'dropdown' ? (
+    <nav aria-label={t("main")} className={className}>
+      {ticketsMode === "dropdown" ? (
         <TicketsOffersDropdown
           active={ticketsActive}
           activeItemState={activeItemState}
@@ -387,14 +407,14 @@ function MainNav({
       ) : (
         <>
           <p className="text-[12px] font-bold tracking-[0.06em] text-ink-muted uppercase">
-            {t('ticketsAndOffers')}
+            {t("ticketsAndOffers")}
           </p>
           {TICKETS_OFFERS_LINKS.map((item) => (
             <button
               key={item.key}
               type="button"
               className={cn(
-                'min-h-[44px] text-start text-[14px] font-semibold text-ink-primary',
+                "min-h-[44px] text-start text-[14px] font-semibold text-ink-primary",
                 itemClassName,
               )}
               onClick={() => onNavigate(item.href)}
@@ -405,92 +425,92 @@ function MainNav({
         </>
       )}
       <NavItem
-        label={t('talents')}
+        label={t("talents")}
         href="/talents"
-        state={talentsActive ? activeItemState : 'default'}
+        state={talentsActive ? activeItemState : "default"}
         className={itemClassName}
         onClick={(event) => {
-          event.preventDefault()
-          onNavigate('/talents')
+          event.preventDefault();
+          onNavigate("/talents");
         }}
       />
       <NavItem
-        label={t('offers')}
+        label={t("offers")}
         href="/events"
-        state={offersActive ? activeItemState : 'default'}
+        state={offersActive ? activeItemState : "default"}
         className={itemClassName}
         onClick={(event) => {
-          event.preventDefault()
-          onNavigate('/events')
+          event.preventDefault();
+          onNavigate("/events");
         }}
       />
       <NavItem
-        label={t('institutions')}
+        label={t("institutions")}
         href={institutionsHref}
-        state={institutionsActive ? activeItemState : 'default'}
+        state={institutionsActive ? activeItemState : "default"}
         className={itemClassName}
         onClick={(event) => {
-          event.preventDefault()
-          onNavigate(institutionsHref)
+          event.preventDefault();
+          onNavigate(institutionsHref);
         }}
       />
     </nav>
-  )
+  );
 }
 
 export function SiteHeader({
-  state = 'signedOut',
+  state = "signedOut",
   activeItem,
-  activeItemState = 'active',
+  activeItemState = "active",
   showSearch = true,
   account,
   className,
 }: SiteHeaderProps) {
-  const { t } = useTranslation(['nav', 'common'])
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const dispatch = useAppDispatch()
-  const mobileNavOpen = useAppSelector(selectMobileNavOpen)
+  const { t } = useTranslation(["nav", "common"]);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const dispatch = useAppDispatch();
+  const mobileNavOpen = useAppSelector(selectMobileNavOpen);
 
   useEffect(() => {
-    dispatch(mobileNavToggled(false))
-  }, [pathname, dispatch])
+    dispatch(mobileNavToggled(false));
+  }, [pathname, dispatch]);
 
   useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)')
+    const mql = window.matchMedia("(min-width: 1024px)");
     const onChange = () => {
-      if (mql.matches) dispatch(mobileNavToggled(false))
-    }
-    mql.addEventListener('change', onChange)
-    return () => mql.removeEventListener('change', onChange)
-  }, [dispatch])
+      if (mql.matches) dispatch(mobileNavToggled(false));
+    };
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, [dispatch]);
 
   function onSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    const q = String(data.get('q') ?? '').trim()
-    navigate(q ? `/search?q=${encodeURIComponent(q)}` : '/search')
-    dispatch(mobileNavToggled(false))
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const q = String(data.get("q") ?? "").trim();
+    navigate(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
+    dispatch(mobileNavToggled(false));
   }
 
   function go(path: string) {
-    dispatch(mobileNavToggled(false))
-    navigate(path)
+    dispatch(mobileNavToggled(false));
+    navigate(path);
   }
 
   function closeDrawer() {
-    dispatch(mobileNavToggled(false))
+    dispatch(mobileNavToggled(false));
   }
 
   return (
     <header
       className={cn(
-        'flex h-header w-full items-center justify-center border-b border-border-default bg-bg-page backdrop-blur-[7px]',
+        "flex h-header w-full items-center justify-center border-b border-border-default bg-bg-page backdrop-blur-[7px]",
         className,
       )}
     >
       <div className="flex h-full w-full max-w-[1400px] items-center gap-md px-gutter-desktop lg:gap-[28px]">
-        <Link to="/" aria-label={t('nav:home')} className="shrink-0">
+        <Link to="/" aria-label={t("nav:home")} className="shrink-0">
           <Logo height={40} alt="" />
         </Link>
 
@@ -508,7 +528,11 @@ export function SiteHeader({
             onSubmit={onSearch}
             className="hidden min-w-0 max-w-[300px] flex-1 sm:block lg:min-w-[200px] lg:shrink-0 lg:transition-[max-width] lg:duration-normal lg:ease-standard lg:focus-within:max-w-[320px]"
           >
-            <SearchPill name="q" className="w-full" placeholder={t('nav:searchPlaceholder')} />
+            <SearchPill
+              name="q"
+              className="w-full"
+              placeholder={t("nav:searchPlaceholder")}
+            />
           </form>
         )}
 
@@ -519,13 +543,13 @@ export function SiteHeader({
 
         <div className="flex shrink-0 items-center gap-sm lg:hidden">
           <HeaderLanguagePill />
-          {state === 'signedIn' && (
+          {state === "signedIn" && (
             <span className="relative shrink-0">
               <Button
                 variant="icon"
                 size="sm"
-                aria-label={t('nav:notifications')}
-                onClick={() => go('/notifications')}
+                aria-label={t("nav:notifications")}
+                onClick={() => go("/notifications")}
               >
                 <BellIcon size={16} />
               </Button>
@@ -542,7 +566,7 @@ export function SiteHeader({
           <Button
             variant="icon"
             size="sm"
-            aria-label={mobileNavOpen ? t('nav:closeMenu') : t('nav:openMenu')}
+            aria-label={mobileNavOpen ? t("nav:closeMenu") : t("nav:openMenu")}
             aria-expanded={mobileNavOpen}
             aria-controls="site-mobile-nav"
             onClick={() => dispatch(mobileNavToggled())}
@@ -566,10 +590,14 @@ export function SiteHeader({
             >
               <div className="mb-xl flex items-center justify-between gap-md">
                 <DialogPrimitive.Title className="text-[16px] font-bold text-ink-primary">
-                  {t('nav:menu')}
+                  {t("nav:menu")}
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Close asChild>
-                  <Button variant="icon" size="sm" aria-label={t('nav:closeMenu')}>
+                  <Button
+                    variant="icon"
+                    size="sm"
+                    aria-label={t("nav:closeMenu")}
+                  >
                     <CloseIcon size={18} />
                   </Button>
                 </DialogPrimitive.Close>
@@ -595,7 +623,11 @@ export function SiteHeader({
 
               {showSearch && (
                 <form onSubmit={onSearch} className="mt-xl sm:hidden">
-                  <SearchPill name="q" className="w-full" placeholder={t('nav:searchPlaceholder')} />
+                  <SearchPill
+                    name="q"
+                    className="w-full"
+                    placeholder={t("nav:searchPlaceholder")}
+                  />
                 </form>
               )}
             </DialogPrimitive.Content>
@@ -603,5 +635,5 @@ export function SiteHeader({
         ) : null}
       </DialogPrimitive.Root>
     </header>
-  )
+  );
 }

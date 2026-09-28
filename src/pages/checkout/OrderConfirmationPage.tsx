@@ -1,27 +1,27 @@
-import { useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { QRCodeSVG } from 'qrcode.react'
-import checkIcon from '@/assets/checkout/check-26.svg'
-import { ShareIcon } from '@/components/icons'
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
+import checkIcon from "@/assets/checkout/check-26.svg";
+import { ShareIcon } from "@/components/icons";
 import {
   Divider,
   PriceDisplay,
   StatusBadge,
   type StatusTone,
-} from '@/components/data-display'
-import { Button } from '@/components/ui'
-import { PageSection } from '@/layouts'
-import { cn } from '@/lib/cn'
-import { useGetOrderDetailsQuery } from '@/app/api/ordersApi'
-import { useAppSelector } from '@/app/hooks'
-import { selectAuthUser } from '@/features/auth/authSlice'
+} from "@/components/data-display";
+import { Button } from "@/components/ui";
+import { PageSection } from "@/layouts";
+import { cn } from "@/lib/cn";
+import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
+import { useAppSelector } from "@/app/hooks";
+import { selectAuthUser } from "@/features/auth/authSlice";
 import {
   mapOrderConfirmation,
   type OrderConfirmationView,
-} from '@/lib/api/mappers/orders'
+} from "@/lib/api/mappers/orders";
 
-const NEXT_STEP_KEYS = ['offline', 'share', 'remind'] as const
+const NEXT_STEP_KEYS = ["offline", "share", "remind"] as const;
 
 function TicketQr({ value }: { value: string }) {
   return (
@@ -34,66 +34,77 @@ function TicketQr({ value }: { value: string }) {
       fgColor="#0A0A0A"
       aria-label="Ticket QR code"
     />
-  )
+  );
 }
 
 function resolveOrderId(searchParams: URLSearchParams) {
-  const fromQuery = searchParams.get('orderId')
-  if (fromQuery) return fromQuery
-  if (typeof sessionStorage === 'undefined') return ''
+  const fromQuery = searchParams.get("orderId");
+  if (fromQuery) return fromQuery;
+  if (typeof sessionStorage === "undefined") return "";
   return (
-    sessionStorage.getItem('myticket.lastOrderId') ??
-    sessionStorage.getItem('myticket.pendingOrderId') ??
-    ''
-  )
+    sessionStorage.getItem("myticket.lastOrderId") ??
+    sessionStorage.getItem("myticket.pendingOrderId") ??
+    ""
+  );
 }
 
 function paymentLineLabel(label: string, t: (key: string) => string): string {
-  if (label === 'wallet') return t('confirmation.walletBalance')
-  if (label === 'card') return t('confirmation.cardPayment')
-  return label
+  if (label === "wallet") return t("confirmation.walletBalance");
+  if (label === "card") return t("confirmation.cardPayment");
+  return label;
 }
 
 function statusTone(status: string): StatusTone {
-  const value = status.toLowerCase()
+  const value = status.toLowerCase();
   if (
-    value.includes('success') ||
-    value === 'paid' ||
-    value === 'completed' ||
-    value === 'active'
+    value.includes("success") ||
+    value === "paid" ||
+    value === "completed" ||
+    value === "active"
   ) {
-    return 'successTint'
+    return "successTint";
   }
-  if (value.includes('pending') || value.includes('await')) return 'infoTint'
-  if (value.includes('fail') || value.includes('cancel') || value.includes('reject')) {
-    return 'dangerTint'
+  if (value.includes("pending") || value.includes("await")) return "infoTint";
+  if (
+    value.includes("fail") ||
+    value.includes("cancel") ||
+    value.includes("reject")
+  ) {
+    return "dangerTint";
   }
-  return 'neutralOutline'
+  return "neutralOutline";
 }
 
-function formatStatusLabel(status: string, translate: (key: string) => string): string {
-  if (!status || status === '—') return '—'
-  const key = `confirmation.status.${status}`
-  const translated = translate(key)
-  if (translated !== key) return translated
-  return status.replace(/_/g, ' ')
+function formatStatusLabel(
+  status: string,
+  translate: (key: string) => string,
+): string {
+  if (!status || status === "—") return "—";
+  const key = `confirmation.status.${status}`;
+  const translated = translate(key);
+  if (translated !== key) return translated;
+  return status.replace(/_/g, " ");
 }
 
-type ConfirmationView = OrderConfirmationView & { apiNote: string | null }
+type ConfirmationView = OrderConfirmationView & { apiNote: string | null };
 
 /**
  * Order Confirmation — Figma `207:8462`. Uses `MainLayout` (SiteHeader + SiteFooter).
  * Data from `GET /tickets/orders/:id` (My tickets order details).
  */
 export function OrderConfirmationPage() {
-  const { t } = useTranslation('checkout')
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const user = useAppSelector(selectAuthUser)
-  const orderId = resolveOrderId(searchParams)
-  const { data: order, isFetching, isError } = useGetOrderDetailsQuery(orderId, {
+  const { t } = useTranslation("checkout");
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const user = useAppSelector(selectAuthUser);
+  const orderId = resolveOrderId(searchParams);
+  const {
+    data: order,
+    isFetching,
+    isError,
+  } = useGetOrderDetailsQuery(orderId, {
     skip: !orderId,
-  })
+  });
 
   const view = useMemo((): ConfirmationView => {
     if (order && Object.keys(order).length > 0) {
@@ -104,47 +115,50 @@ export function OrderConfirmationPage() {
           holder: user?.name,
         }),
         apiNote: null,
-      }
+      };
     }
 
     return {
-      email: user?.email ?? '—',
+      email: user?.email ?? "—",
       ticketCount: 0,
-      reference: orderId || '—',
-      placedAt: '—',
-      eventTitle: isFetching ? t('confirmation.loadingTitle') : t('confirmation.unavailableTitle'),
-      eventMeta: '—',
-      eventPlace: '—',
-      eventStart: '—',
-      eventCover: '',
-      eventSlug: '',
-      shortDescription: '',
-      seatingType: 'assigned',
-      tierLabel: t('confirmation.ticketFallback'),
-      unitPrice: '0.00',
-      holder: user?.name ?? t('confirmation.ticketHolder'),
+      reference: orderId || "—",
+      placedAt: "—",
+      eventTitle: isFetching
+        ? t("confirmation.loadingTitle")
+        : t("confirmation.unavailableTitle"),
+      eventMeta: "—",
+      eventPlace: "—",
+      eventStart: "—",
+      eventCover: "",
+      eventSlug: "",
+      shortDescription: "",
+      seatingType: "assigned",
+      tierLabel: t("confirmation.ticketFallback"),
+      unitPrice: "0.00",
+      holder: user?.name ?? t("confirmation.ticketHolder"),
       tickets: [],
       lineItems: [],
-      subtotal: '0.00',
+      subtotal: "0.00",
       serviceFee: null,
       vat: null,
-      total: '0.00',
+      total: "0.00",
       paymentLines: [],
       cashback: null,
-      paymentStatus: '',
-      orderStatus: '',
+      paymentStatus: "",
+      orderStatus: "",
       apiNote: isError
-        ? t('confirmation.loadError')
+        ? t("confirmation.loadError")
         : isFetching
-          ? t('confirmation.loadingNote')
+          ? t("confirmation.loadingNote")
           : orderId
-            ? t('confirmation.notFound')
-            : t('confirmation.completeCheckout'),
-    }
-  }, [isError, isFetching, order, orderId, t, user?.email, user?.name])
+            ? t("confirmation.notFound")
+            : t("confirmation.completeCheckout"),
+    };
+  }, [isError, isFetching, order, orderId, t, user?.email, user?.name]);
 
   const paymentPending =
-    view.paymentStatus.includes('pending') || view.paymentStatus.includes('await')
+    view.paymentStatus.includes("pending") ||
+    view.paymentStatus.includes("await");
 
   return (
     <PageSection padTop={52} padBottom={96}>
@@ -153,34 +167,43 @@ export function OrderConfirmationPage() {
           <img src={checkIcon} alt="" className="size-[26px]" />
         </div>
         <h1 className="mt-[18px] text-[32px] leading-[1.02] font-extrabold tracking-[-1.75px] text-ink-primary sm:text-[40px] lg:text-[50px]">
-          {t('confirmation.title')}
+          {t("confirmation.title")}
         </h1>
         <p className="mt-[10px] max-w-[640px] text-[17px] leading-[1.5] text-ink-secondary">
-          {t('confirmation.subtitle', { count: view.ticketCount, email: view.email })}
+          {t("confirmation.subtitle", {
+            count: view.ticketCount,
+            email: view.email,
+          })}
         </p>
         {view.apiNote ? (
-          <p className="mt-[8px] max-w-[560px] text-[13px] text-ink-muted">{view.apiNote}</p>
+          <p className="mt-[8px] max-w-[560px] text-[13px] text-ink-muted">
+            {view.apiNote}
+          </p>
         ) : null}
         {paymentPending ? (
           <p className="mt-[8px] max-w-[560px] text-[13px] font-semibold text-state-warning">
-            {t('confirmation.paymentPendingNote')}
+            {t("confirmation.paymentPendingNote")}
           </p>
         ) : null}
         <p className="mt-[10px] text-[13.5px] font-bold">
-          <span className="text-ink-muted">{t('confirmation.orderReference')}</span>{' '}
-          <span className="text-ink-primary">{view.reference}</span>{' '}
+          <span className="text-ink-muted">
+            {t("confirmation.orderReference")}
+          </span>{" "}
+          <span className="text-ink-primary">{view.reference}</span>{" "}
           <span className="text-ink-muted">· {view.placedAt}</span>
         </p>
         {(view.paymentStatus || view.orderStatus) && (
           <div className="mt-[12px] flex flex-wrap items-center justify-center gap-sm">
             {view.paymentStatus ? (
               <StatusBadge tone={statusTone(view.paymentStatus)}>
-                {t('confirmation.paymentStatus')}: {formatStatusLabel(view.paymentStatus, t)}
+                {t("confirmation.paymentStatus")}:{" "}
+                {formatStatusLabel(view.paymentStatus, t)}
               </StatusBadge>
             ) : null}
             {view.orderStatus ? (
               <StatusBadge tone={statusTone(view.orderStatus)}>
-                {t('confirmation.orderStatus')}: {formatStatusLabel(view.orderStatus, t)}
+                {t("confirmation.orderStatus")}:{" "}
+                {formatStatusLabel(view.orderStatus, t)}
               </StatusBadge>
             ) : null}
           </div>
@@ -203,7 +226,9 @@ export function OrderConfirmationPage() {
                 <h2 className="mt-[6px] text-[20px] leading-[1.1] font-extrabold tracking-[-0.6px] text-ink-primary sm:text-[24px]">
                   {view.eventTitle}
                 </h2>
-                <p className="mt-[6px] text-[14px] text-ink-secondary">{view.eventMeta}</p>
+                <p className="mt-[6px] text-[14px] text-ink-secondary">
+                  {view.eventMeta}
+                </p>
                 {view.shortDescription ? (
                   <p className="mt-[8px] text-[13px] leading-[1.5] text-ink-muted">
                     {view.shortDescription}
@@ -212,37 +237,47 @@ export function OrderConfirmationPage() {
                 <div className="mt-lg grid gap-[26px] sm:grid-cols-2 lg:grid-cols-3">
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
-                      {t('confirmation.seat')}
+                      {t("confirmation.seat")}
                     </p>
-                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{ticket.seat}</p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">
+                      {ticket.seat}
+                    </p>
                   </div>
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
-                      {t('confirmation.holder')}
+                      {t("confirmation.holder")}
                     </p>
-                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{view.holder}</p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">
+                      {view.holder}
+                    </p>
                   </div>
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
-                      {t('confirmation.ticketNo')}
+                      {t("confirmation.ticketNo")}
                     </p>
-                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{ticket.id}</p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">
+                      {ticket.id}
+                    </p>
                   </div>
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
-                      {t('confirmation.eventStart')}
+                      {t("confirmation.eventStart")}
                     </p>
-                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{view.eventStart}</p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">
+                      {view.eventStart}
+                    </p>
                   </div>
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
-                      {t('confirmation.venue')}
+                      {t("confirmation.venue")}
                     </p>
-                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">{view.eventPlace}</p>
+                    <p className="mt-[2px] text-[15px] font-bold text-ink-primary">
+                      {view.eventPlace}
+                    </p>
                   </div>
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
-                      {t('confirmation.scanStatus')}
+                      {t("confirmation.scanStatus")}
                     </p>
                     <p className="mt-[2px] text-[15px] font-bold text-ink-primary">
                       {formatStatusLabel(ticket.scanStatus, t)}
@@ -250,7 +285,7 @@ export function OrderConfirmationPage() {
                   </div>
                   <div>
                     <p className="text-[11.5px] font-bold tracking-[0.69px] text-ink-muted">
-                      {t('confirmation.seatingType')}
+                      {t("confirmation.seatingType")}
                     </p>
                     <p className="mt-[2px] text-[15px] font-bold text-ink-primary">
                       {t(`confirmation.seating.${view.seatingType}`)}
@@ -261,17 +296,19 @@ export function OrderConfirmationPage() {
               <div className="flex shrink-0 flex-col items-center justify-center gap-sm border-t-[1.5px] border-dashed border-border-default bg-bg-page px-[22px] py-[18px] sm:border-t-0 sm:border-l-[1.5px]">
                 <div
                   className={cn(
-                    'rounded-[10px] border border-border-default bg-surface-default p-sm',
-                    paymentPending && 'opacity-50',
+                    "rounded-[10px] border border-border-default bg-surface-default p-sm",
+                    paymentPending && "opacity-50",
                   )}
                 >
                   <TicketQr value={ticket.qrValue} />
                 </div>
-                {ticket.gate !== '—' ? (
-                  <p className="text-[12px] font-semibold text-ink-secondary">{ticket.gate}</p>
+                {ticket.gate !== "—" ? (
+                  <p className="text-[12px] font-semibold text-ink-secondary">
+                    {ticket.gate}
+                  </p>
                 ) : (
                   <p className="text-[12px] font-semibold text-ink-muted">
-                    {t('confirmation.scanAtEntry')}
+                    {t("confirmation.scanAtEntry")}
                   </p>
                 )}
               </div>
@@ -279,7 +316,9 @@ export function OrderConfirmationPage() {
           ))}
 
           <section className="rounded-[18px] border border-border-default bg-surface-default p-[22px]">
-            <h3 className="text-[17px] font-semibold text-ink-primary">{t('confirmation.whatNext')}</h3>
+            <h3 className="text-[17px] font-semibold text-ink-primary">
+              {t("confirmation.whatNext")}
+            </h3>
             <ol className="mt-lg flex flex-col gap-[14px]">
               {NEXT_STEP_KEYS.map((key, index) => (
                 <li key={key} className="flex items-start gap-[12px]">
@@ -297,37 +336,43 @@ export function OrderConfirmationPage() {
 
         <aside className="flex w-full shrink-0 flex-col gap-md lg:w-[340px]">
           <div className="rounded-[20px] border border-border-default bg-surface-default p-[24px]">
-            <h3 className="text-[15px] font-semibold text-ink-primary">{t('confirmation.whatPaid')}</h3>
+            <h3 className="text-[15px] font-semibold text-ink-primary">
+              {t("confirmation.whatPaid")}
+            </h3>
             <div className="mt-md flex flex-col gap-sm text-[14px]">
-              {view.lineItems.length > 0
-                ? view.lineItems.map((line) => (
-                    <div
-                      key={`${line.label}-${line.quantity}-${line.subtotal}`}
-                      className="flex justify-between gap-md"
-                    >
-                      <span className="text-ink-secondary">
-                        {line.quantity} × {line.label}
-                      </span>
-                      <PriceDisplay context="row">{line.subtotal}</PriceDisplay>
-                    </div>
-                  ))
-                : (
-                    <div className="flex justify-between gap-md">
-                      <span className="text-ink-secondary">
-                        {view.ticketCount} × {view.tierLabel}
-                      </span>
-                      <PriceDisplay context="row">{view.subtotal}</PriceDisplay>
-                    </div>
-                  )}
+              {view.lineItems.length > 0 ? (
+                view.lineItems.map((line) => (
+                  <div
+                    key={`${line.label}-${line.quantity}-${line.subtotal}`}
+                    className="flex justify-between gap-md"
+                  >
+                    <span className="text-ink-secondary">
+                      {line.quantity} × {line.label}
+                    </span>
+                    <PriceDisplay context="row">{line.subtotal}</PriceDisplay>
+                  </div>
+                ))
+              ) : (
+                <div className="flex justify-between gap-md">
+                  <span className="text-ink-secondary">
+                    {view.ticketCount} × {view.tierLabel}
+                  </span>
+                  <PriceDisplay context="row">{view.subtotal}</PriceDisplay>
+                </div>
+              )}
               {view.serviceFee != null ? (
                 <div className="flex justify-between gap-md">
-                  <span className="text-ink-secondary">{t('confirmation.serviceFee')}</span>
+                  <span className="text-ink-secondary">
+                    {t("confirmation.serviceFee")}
+                  </span>
                   <PriceDisplay context="row">{view.serviceFee}</PriceDisplay>
                 </div>
               ) : null}
               {view.vat != null ? (
                 <div className="flex justify-between gap-md">
-                  <span className="text-ink-secondary">{t('confirmation.vat')}</span>
+                  <span className="text-ink-secondary">
+                    {t("confirmation.vat")}
+                  </span>
                   <PriceDisplay context="row">{view.vat}</PriceDisplay>
                 </div>
               ) : null}
@@ -335,14 +380,17 @@ export function OrderConfirmationPage() {
             <Divider tone="divider" className="my-md" />
             <div className="flex items-baseline justify-between">
               <span className="text-[15px] font-semibold text-ink-primary">
-                {t('confirmation.total')}
+                {t("confirmation.total")}
               </span>
               <PriceDisplay context="amount">{view.total}</PriceDisplay>
             </div>
             {view.paymentLines.length > 0 ? (
               <div className="mt-md flex flex-col gap-[6px] text-[13px] text-ink-secondary">
                 {view.paymentLines.map((line) => (
-                  <div key={`${line.label}-${line.amount}`} className="flex justify-between gap-md">
+                  <div
+                    key={`${line.label}-${line.amount}`}
+                    className="flex justify-between gap-md"
+                  >
                     <span>{paymentLineLabel(line.label, t)}</span>
                     <span>{line.amount}</span>
                   </div>
@@ -351,7 +399,7 @@ export function OrderConfirmationPage() {
             ) : null}
             {view.cashback != null ? (
               <div className="mt-md flex items-center justify-between rounded-[14px] bg-bg-tint-brand px-lg py-[14px] text-[13px] font-semibold text-ink-brand-strong">
-                <span>{t('confirmation.cashbackEarned')}</span>
+                <span>{t("confirmation.cashbackEarned")}</span>
                 <span>+ {view.cashback}</span>
               </div>
             ) : null}
@@ -361,33 +409,52 @@ export function OrderConfirmationPage() {
             type="button"
             size="lg"
             className="h-[50px] w-full rounded-[25px] text-[15px] font-bold"
-            onClick={() => navigate('/my-tickets')}
+            onClick={() => navigate("/my-tickets")}
           >
-            {t('confirmation.viewTickets')}
+            {t("confirmation.viewTickets")}
           </Button>
 
           <div className="grid grid-cols-2 gap-sm">
-            <Button type="button" variant="secondary" size="sm" icon={<ShareIcon size={14} />}>
-              {t('confirmation.shareNight')}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              icon={<ShareIcon size={14} />}
+              onClick={() => {
+                const shareData = {
+                  title: view.eventTitle,
+                  text: view.eventTitle,
+                  url: window.location.href,
+                };
+                if (navigator.share) {
+                  void navigator.share(shareData).catch(() => undefined);
+                } else {
+                  void navigator.clipboard
+                    ?.writeText(shareData.url)
+                    .catch(() => undefined);
+                }
+              }}
+            >
+              {t("confirmation.shareNight")}
             </Button>
             <Link
-              to={view.eventSlug ? `/events/${view.eventSlug}` : '/events'}
+              to={view.eventSlug ? `/events/${view.eventSlug}` : "/events"}
               className={cn(
-                'inline-flex h-btn-sm items-center justify-center rounded-btn-sm',
-                'border-[1.5px] border-border-default bg-surface-default px-btn-pad-sm',
-                'text-[13px] font-semibold text-ink-primary',
-                'hover:border-border-brand hover:text-ink-brand',
+                "inline-flex h-btn-sm items-center justify-center rounded-btn-sm",
+                "border-[1.5px] border-border-default bg-surface-default px-btn-pad-sm",
+                "text-[13px] font-semibold text-ink-primary",
+                "hover:border-border-brand hover:text-ink-brand",
               )}
             >
-              {t('confirmation.keepBrowsing')}
+              {t("confirmation.keepBrowsing")}
             </Link>
           </div>
 
           <p className="text-[12px] leading-[1.55] text-ink-muted">
-            {t('confirmation.refundNote')}
+            {t("confirmation.refundNote")}
           </p>
         </aside>
       </div>
     </PageSection>
-  )
+  );
 }

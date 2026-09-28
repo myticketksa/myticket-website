@@ -1,54 +1,59 @@
-import { useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
-import { useGetExperienceCategoriesQuery, useGetExperiencesQuery } from '@/app/api/experiencesApi'
-import { ExperienceCard } from '@/components/cards'
-import { FilterChip } from '@/components/data-display'
-import { ChevronDownIcon, MinusIcon, PlusIcon } from '@/components/icons'
-import { FadeUp, StaggerGroup } from '@/components/motion'
-import { Breadcrumbs } from '@/components/navigation'
-import { Button } from '@/components/ui'
-import { PageSection } from '@/layouts'
-import { mapCategoryLabels } from '@/lib/api/mappers/categories'
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
+import {
+  useGetExperienceCategoriesQuery,
+  useGetExperiencesQuery,
+} from "@/app/api/experiencesApi";
+import { ExperienceCard } from "@/components/cards";
+import { FilterChip } from "@/components/data-display";
+import { ChevronDownIcon, MinusIcon, PlusIcon } from "@/components/icons";
+import { FadeUp, StaggerGroup } from "@/components/motion";
+import { Breadcrumbs } from "@/components/navigation";
+import { Button, TextInput } from "@/components/ui";
+import { PageSection } from "@/layouts";
+import { mapCategoryLabels } from "@/lib/api/mappers/categories";
 import {
   mapApiExperienceToCard,
   type MappedExperience,
-} from '@/lib/api/mappers/experiences'
-import { catalogLabel } from '@/lib/i18n/catalogLabels'
+} from "@/lib/api/mappers/experiences";
+import { catalogLabel } from "@/lib/i18n/catalogLabels";
 import {
   CATALOG_EXPERIENCES,
   CITY_FACETS,
   LinkedCard,
   PromoBand,
   slugify,
-} from '@/pages/_guest'
-import { cn } from '@/lib/cn'
+} from "@/pages/_guest";
+import { cn } from "@/lib/cn";
 
 const CATEGORIES = [
-  'All experiences',
-  'Food & desert',
-  'Culture',
-  'Heritage',
-  'Outdoors',
-  'Workshops',
-  'Music',
-] as const
+  "All experiences",
+  "Food & desert",
+  "Culture",
+  "Heritage",
+  "Outdoors",
+  "Workshops",
+  "Music",
+] as const;
 
 function ExperienceTypeSection({
   heading,
   lede,
   items,
 }: {
-  heading: string
-  lede: string
-  items: MappedExperience[]
+  heading: string;
+  lede: string;
+  items: MappedExperience[];
 }) {
-  if (items.length === 0) return null
+  if (items.length === 0) return null;
   return (
     <PageSection padTop={36} padBottom={0}>
       <FadeUp>
         <div className="mb-[22px]">
-          <h2 className="text-heading-h2-section text-ink-primary">{heading}</h2>
+          <h2 className="text-heading-h2-section text-ink-primary">
+            {heading}
+          </h2>
           <p className="mt-[6px] text-[15px] text-ink-secondary">{lede}</p>
         </div>
       </FadeUp>
@@ -73,80 +78,98 @@ function ExperienceTypeSection({
         ))}
       </StaggerGroup>
     </PageSection>
-  )
+  );
 }
 
 /** Experiences directory — attractions then activities (API `type`). */
 export function ExperiencesPage() {
-  const { t } = useTranslation(['catalog', 'nav', 'common'])
-  const [searchParams] = useSearchParams()
-  const typeFilter = searchParams.get('type')
+  const { t } = useTranslation(["catalog", "nav", "common"]);
+  const [searchParams] = useSearchParams();
+  const typeFilter = searchParams.get("type");
 
   const whereOptions = useMemo(
-    () => ['Anywhere in Saudi Arabia', ...CITY_FACETS.slice(0, 5).map((c) => c.label)] as const,
+    () =>
+      [
+        "Anywhere in Saudi Arabia",
+        ...CITY_FACETS.slice(0, 5).map((c) => c.label),
+      ] as const,
     [],
-  )
-  const [category, setCategory] = useState('All experiences')
-  const [guests, setGuests] = useState(2)
-  const [where, setWhere] = useState<string>('Anywhere in Saudi Arabia')
+  );
+  const [category, setCategory] = useState("All experiences");
+  const [guests, setGuests] = useState(2);
+  const [where, setWhere] = useState<string>("Anywhere in Saudi Arabia");
+  const [searchDraft, setSearchDraft] = useState("");
+  const [search, setSearch] = useState("");
 
-  const { data: apiExperiences, isFetching, isError } = useGetExperiencesQuery()
-  const { data: apiCategories } = useGetExperienceCategoriesQuery()
+  const {
+    data: apiExperiences,
+    isFetching,
+    isError,
+  } = useGetExperiencesQuery();
+  const { data: apiCategories } = useGetExperienceCategoriesQuery();
 
   const categoryChips = useMemo(
     () =>
       mapCategoryLabels(apiCategories, {
-        allLabel: 'All experiences',
+        allLabel: "All experiences",
         fallback: CATEGORIES,
       }),
     [apiCategories],
-  )
+  );
 
   const catalog = useMemo(() => {
     if (apiExperiences && apiExperiences.length > 0) {
-      return apiExperiences.map(mapApiExperienceToCard)
+      return apiExperiences.map(mapApiExperienceToCard);
     }
     return CATALOG_EXPERIENCES.map((exp) => ({
       ...exp,
       slug: slugify(exp.title),
-      experienceType: 'attraction',
-    })) as MappedExperience[]
-  }, [apiExperiences])
+      experienceType: "attraction",
+    })) as MappedExperience[];
+  }, [apiExperiences]);
 
   const filtered = useMemo(() => {
     return catalog.filter((exp) => {
-      if (typeFilter === 'attraction' || typeFilter === 'activity') {
-        const expType = exp.experienceType ?? 'attraction'
-        if (expType !== typeFilter) return false
+      if (typeFilter === "attraction" || typeFilter === "activity") {
+        const expType = exp.experienceType ?? "attraction";
+        if (expType !== typeFilter) return false;
       }
-      if (category !== 'All experiences') {
-        const needle = category.toLowerCase().split(' ')[0]!
-        if (!exp.meta.toLowerCase().includes(needle)) return false
+      if (category !== "All experiences") {
+        const needle = category.toLowerCase().split(" ")[0]!;
+        if (!exp.meta.toLowerCase().includes(needle)) return false;
       }
-      if (where !== 'Anywhere in Saudi Arabia') {
-        const hay = `${exp.location} ${exp.place}`.toLowerCase()
-        if (!hay.includes(where.toLowerCase())) return false
+      if (where !== "Anywhere in Saudi Arabia") {
+        const hay = `${exp.location} ${exp.place}`.toLowerCase();
+        if (!hay.includes(where.toLowerCase())) return false;
       }
-      return true
-    })
-  }, [catalog, category, typeFilter, where])
+      if (search) {
+        const hay =
+          `${exp.title} ${exp.meta} ${exp.location} ${exp.place} ${exp.summary ?? ""}`.toLowerCase();
+        if (!hay.includes(search.toLowerCase())) return false;
+      }
+      return true;
+    });
+  }, [catalog, category, search, typeFilter, where]);
 
   const attractions = filtered.filter(
-    (exp) => (exp.experienceType ?? 'attraction') === 'attraction',
-  )
-  const activities = filtered.filter((exp) => exp.experienceType === 'activity')
+    (exp) => (exp.experienceType ?? "attraction") === "attraction",
+  );
+  const activities = filtered.filter(
+    (exp) => exp.experienceType === "activity",
+  );
 
-  const subtitleParts = [isError ? t('pages.apiPreview') : null, isFetching ? t('pages.updating') : null].filter(
-    Boolean,
-  )
+  const subtitleParts = [
+    isError ? t("pages.apiPreview") : null,
+    isFetching ? t("pages.updating") : null,
+  ].filter(Boolean);
 
   return (
     <>
       <PageSection padTop={26} padBottom={0}>
         <Breadcrumbs
           items={[
-            { label: t('nav:main'), href: '/' },
-            { label: t('nav:experiences') },
+            { label: t("nav:main"), href: "/" },
+            { label: t("nav:experiences") },
           ]}
         />
       </PageSection>
@@ -154,24 +177,26 @@ export function ExperiencesPage() {
       <PageSection padTop={14} padBottom={0}>
         <FadeUp>
           {subtitleParts.length > 0 ? (
-            <p className="mb-lg text-[14px] text-ink-secondary">{subtitleParts.join(' ')}</p>
+            <p className="mb-lg text-[14px] text-ink-secondary">
+              {subtitleParts.join(" ")}
+            </p>
           ) : null}
         </FadeUp>
 
         <div className="mt-3xl flex h-auto w-full flex-col gap-md rounded-[18px] border border-border-default bg-surface-default p-md sm:h-[72px] sm:flex-row sm:items-center sm:gap-0 sm:p-0 sm:px-[14px]">
           <label className="relative min-w-0 flex-1 px-sm">
             <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-              {t('filters.where')}
+              {t("filters.where")}
             </p>
             <div className="mt-[3px] flex items-center gap-sm">
               <select
                 value={where}
                 onChange={(e) => setWhere(e.target.value)}
                 className={cn(
-                  'w-full appearance-none bg-transparent text-[15px] font-semibold text-ink-primary outline-none',
-                  'cursor-pointer pr-lg',
+                  "w-full appearance-none bg-transparent text-[15px] font-semibold text-ink-primary outline-none",
+                  "cursor-pointer pr-lg",
                 )}
-                aria-label={t('filters.where')}
+                aria-label={t("filters.where")}
               >
                 {whereOptions.map((opt) => (
                   <option key={opt} value={opt}>
@@ -186,33 +211,42 @@ export function ExperiencesPage() {
             </div>
           </label>
           <div className="mx-[2px] hidden h-[34px] w-px bg-border-divider sm:block" />
-          <div
-            className="min-w-0 flex-1 cursor-not-allowed border-t border-border-divider px-sm pt-md opacity-55 sm:border-t-0 sm:pt-0"
-            title="Date picker not available yet"
-          >
+          <label className="min-w-0 flex-1 border-t border-border-divider px-sm pt-md sm:border-t-0 sm:pt-0">
             <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-              {t('filters.when')}
+              {t("common:actions.search")}
             </p>
-            <p className="mt-[3px] text-[15px] font-semibold text-ink-disabled">dd/mm/yyyy</p>
-          </div>
+            <TextInput
+              type="search"
+              aria-label={t("home.searchPlaceholderAll")}
+              placeholder={t("home.searchPlaceholderAll")}
+              value={searchDraft}
+              onChange={(event) => setSearchDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") setSearch(searchDraft.trim());
+              }}
+              className="mt-[3px] h-[28px] border-0 bg-transparent px-0 text-[15px] font-semibold shadow-none focus-visible:ring-0"
+            />
+          </label>
           <div className="mx-[2px] hidden h-[34px] w-px bg-border-divider sm:block" />
           <div className="w-full shrink-0 border-t border-border-divider px-sm pt-md sm:w-[200px] sm:border-t-0 sm:pt-0">
             <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-              {t('filters.guests')}
+              {t("filters.guests")}
             </p>
             <div className="mt-[3px] flex items-center gap-[12px]">
               <button
                 type="button"
-                aria-label={t('filters.fewerGuests')}
+                aria-label={t("filters.fewerGuests")}
                 onClick={() => setGuests((g) => Math.max(1, g - 1))}
                 className="flex size-[26px] items-center justify-center rounded-full border border-border-default"
               >
                 <MinusIcon size={14} />
               </button>
-              <span className="text-[15px] font-semibold tabular-nums">{guests}</span>
+              <span className="text-[15px] font-semibold tabular-nums">
+                {guests}
+              </span>
               <button
                 type="button"
-                aria-label={t('filters.moreGuests')}
+                aria-label={t("filters.moreGuests")}
                 onClick={() => setGuests((g) => g + 1)}
                 className="flex size-[26px] items-center justify-center rounded-full border border-border-default"
               >
@@ -222,11 +256,9 @@ export function ExperiencesPage() {
           </div>
           <Button
             className="mt-sm h-[48px] w-full shrink-0 rounded-[24px] sm:mt-0 sm:w-[104px]"
-            onClick={() => {
-              /* Where + category already filter the grid below. */
-            }}
+            onClick={() => setSearch(searchDraft.trim())}
           >
-            {t('common:actions.search')}
+            {t("common:actions.search")}
           </Button>
         </div>
 
@@ -243,35 +275,39 @@ export function ExperiencesPage() {
         </div>
       </PageSection>
 
-      {typeFilter !== 'activity' ? (
+      {typeFilter !== "activity" ? (
         <ExperienceTypeSection
-          heading={t('home.attractionsHeading', { defaultValue: 'Attractions' })}
-          lede={t('home.attractionsLede', {
-            defaultValue: 'Landmarks and destinations open year-round.',
+          heading={t("home.attractionsHeading", {
+            defaultValue: "Attractions",
+          })}
+          lede={t("home.attractionsLede", {
+            defaultValue: "Landmarks and destinations open year-round.",
           })}
           items={attractions}
         />
       ) : null}
 
-      {typeFilter !== 'attraction' ? (
+      {typeFilter !== "attraction" ? (
         <ExperienceTypeSection
-          heading={t('home.activitiesHeading', { defaultValue: 'Activities' })}
-          lede={t('home.activitiesLede', {
-            defaultValue: 'Workshops, tours and hands-on experiences.',
+          heading={t("home.activitiesHeading", { defaultValue: "Activities" })}
+          lede={t("home.activitiesLede", {
+            defaultValue: "Workshops, tours and hands-on experiences.",
           })}
           items={activities}
         />
       ) : null}
 
-      <PageSection padTop={88} padBottom={96}>
-        <PromoBand
-          tone="inverse"
-          heading={t('pages.hostExperienceHeading')}
-          body={t('pages.hostExperienceBody')}
-          ctaLabel={t('pages.hostExperienceCta')}
-          ctaTo="/submit-experience"
-        />
-      </PageSection>
+      {typeFilter !== "attraction" ? (
+        <PageSection padTop={88} padBottom={96}>
+          <PromoBand
+            tone="inverse"
+            heading={t("pages.hostExperienceHeading")}
+            body={t("pages.hostExperienceBody")}
+            ctaLabel={t("pages.hostExperienceCta")}
+            ctaTo="/submit-experience"
+          />
+        </PageSection>
+      ) : null}
     </>
-  )
+  );
 }

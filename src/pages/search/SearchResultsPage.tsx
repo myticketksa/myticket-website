@@ -1,160 +1,170 @@
-import { useId, useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useSearchParams, Link } from 'react-router-dom'
-import { useGetEventsQuery } from '@/app/api/eventsApi'
-import { useGetExperiencesQuery } from '@/app/api/experiencesApi'
-import { useGetTalentsQuery } from '@/app/api/talentsApi'
-import { FilterChip, StatusBadge } from '@/components/data-display'
-import { StarFillIcon } from '@/components/icons'
-import { FadeUp, StaggerGroup } from '@/components/motion'
+import { useId, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useSearchParams, Link } from "react-router-dom";
+import { useGetEventsQuery } from "@/app/api/eventsApi";
+import { useGetExperiencesQuery } from "@/app/api/experiencesApi";
+import { useGetTalentsQuery } from "@/app/api/talentsApi";
+import { FilterChip, StatusBadge } from "@/components/data-display";
+import { StarFillIcon } from "@/components/icons";
+import { FadeUp, StaggerGroup } from "@/components/motion";
 import {
   Breadcrumbs,
   DetailSectionTab,
   DetailSectionTabs,
-} from '@/components/navigation'
-import { Button, Checkbox } from '@/components/ui'
-import { PageSection } from '@/layouts'
-import { mapApiEventToCard } from '@/lib/api/mappers/events'
-import { mapApiExperienceToCard } from '@/lib/api/mappers/experiences'
-import { mapApiTalentToCard } from '@/lib/api/mappers/talents'
+} from "@/components/navigation";
+import { Button, Checkbox } from "@/components/ui";
+import { PageSection } from "@/layouts";
+import { mapApiEventToCard } from "@/lib/api/mappers/events";
+import { mapApiExperienceToCard } from "@/lib/api/mappers/experiences";
+import { mapApiTalentToCard } from "@/lib/api/mappers/talents";
 import {
   CatalogBody,
   FilterSidebar,
   ResultsToolbar,
   SEARCH_RESULT_IMAGES,
   slugify,
-} from '@/pages/_guest'
-import type { TFunction } from 'i18next'
-import { catalogLabel } from '@/lib/i18n/catalogLabels'
+} from "@/pages/_guest";
+import type { TFunction } from "i18next";
+import { catalogLabel } from "@/lib/i18n/catalogLabels";
 
-type SearchResultKind = 'Event' | 'Talent' | 'Experience'
+type SearchResultKind = "Event" | "Talent" | "Experience";
 
 type SearchResult = {
-  kind: SearchResultKind
-  title: string
-  meta: string
-  blurb: string
-  price: string
-  rating: string
-  cta: string
-  to: string
-  image: string
-  mediaRounded: string
-  flag?: string
-}
+  kind: SearchResultKind;
+  title: string;
+  meta: string;
+  blurb: string;
+  price: string;
+  rating: string;
+  cta: string;
+  to: string;
+  image: string;
+  mediaRounded: string;
+  flag?: string;
+};
 
 const TABS = [
-  { label: 'All', kinds: null, labelKey: 'pages.tabAll' },
-  { label: 'Events', kinds: ['Event'] as const, labelKey: 'pages.tabEvents' },
-  { label: 'Talents', kinds: ['Talent'] as const, labelKey: 'pages.tabTalents' },
-  { label: 'Experiences', kinds: ['Experience'] as const, labelKey: 'pages.tabExperiences' },
-] as const
+  { label: "All", kinds: null, labelKey: "pages.tabAll" },
+  { label: "Events", kinds: ["Event"] as const, labelKey: "pages.tabEvents" },
+  {
+    label: "Talents",
+    kinds: ["Talent"] as const,
+    labelKey: "pages.tabTalents",
+  },
+  {
+    label: "Experiences",
+    kinds: ["Experience"] as const,
+    labelKey: "pages.tabExperiences",
+  },
+] as const;
 
 const KIND_LABEL_KEYS: Record<SearchResultKind, string> = {
-  Event: 'pages.kindEvent',
-  Talent: 'pages.kindTalent',
-  Experience: 'pages.kindExperience',
-}
+  Event: "pages.kindEvent",
+  Talent: "pages.kindTalent",
+  Experience: "pages.kindExperience",
+};
 
 const CTA_LABEL_KEYS: Record<string, string> = {
-  'View event': 'pages.viewEvent',
-  'View profile': 'pages.viewProfile',
-  'View experience': 'pages.viewExperience',
-}
+  "View event": "pages.viewEvent",
+  "View profile": "pages.viewProfile",
+  "View experience": "pages.viewExperience",
+};
 
 const SORT_LABEL_KEYS: Record<string, string> = {
-  'Most relevant': 'results.sortMostRelevant',
-  Soonest: 'results.sortSoonest',
-  Price: 'results.sortPrice',
-}
+  "Most relevant": "results.sortMostRelevant",
+  Soonest: "results.sortSoonest",
+  Price: "results.sortPrice",
+};
 
 const FILTER_GROUP_KEYS: Record<string, string> = {
-  When: 'filters.when',
-  'Ticket price': 'filters.ticketPrice',
-  'Good for': 'filters.goodFor',
-}
+  When: "filters.when",
+  "Ticket price": "filters.ticketPrice",
+  "Good for": "filters.goodFor",
+};
 
 const SUGGESTIONS = [
-  'Riyadh Season Opening Night',
-  'Soundstorm Festival',
-  'Boulevard',
-] as const
+  "Riyadh Season Opening Night",
+  "Soundstorm Festival",
+  "Boulevard",
+] as const;
 
 const RESULTS = [
   {
-    kind: 'Event',
-    flag: 'Selling fast',
-    title: 'Winter Nights: Live at King Abdullah Park',
-    meta: 'Thu 8 Oct · King Abdullah Park, Riyadh',
-    blurb: 'Outdoor production with four acts and family seating on the eastern lawn.',
-    price: 'From SAR 180',
-    rating: '4.8',
-    cta: 'View event',
-    to: `/events/${slugify('Winter Nights: Live at King Abdullah Park')}`,
+    kind: "Event",
+    flag: "Selling fast",
+    title: "Winter Nights: Live at King Abdullah Park",
+    meta: "Thu 8 Oct · King Abdullah Park, Riyadh",
+    blurb:
+      "Outdoor production with four acts and family seating on the eastern lawn.",
+    price: "From SAR 180",
+    rating: "4.8",
+    cta: "View event",
+    to: `/events/${slugify("Winter Nights: Live at King Abdullah Park")}`,
     image: SEARCH_RESULT_IMAGES[0],
-    mediaRounded: 'rounded-[12px]',
+    mediaRounded: "rounded-[12px]",
   },
   {
-    kind: 'Talent',
-    title: 'Layal Qasim',
-    meta: 'Singer · Arabic pop · Riyadh',
-    blurb: 'Headline act for Winter Nights with 128 reviews and verified status.',
-    price: 'Next show from SAR 180',
-    rating: '4.9',
-    cta: 'View profile',
-    to: `/talents/${slugify('Layal Qasim')}`,
+    kind: "Talent",
+    title: "Layal Qasim",
+    meta: "Singer · Arabic pop · Riyadh",
+    blurb:
+      "Headline act for Winter Nights with 128 reviews and verified status.",
+    price: "Next show from SAR 180",
+    rating: "4.9",
+    cta: "View profile",
+    to: `/talents/${slugify("Layal Qasim")}`,
     image: SEARCH_RESULT_IMAGES[1],
-    mediaRounded: 'rounded-[59px]',
+    mediaRounded: "rounded-[59px]",
   },
   {
-    kind: 'Event',
-    title: 'Soundstorm Festival — Day 1',
-    meta: 'Thu 22 Oct · Banban, Riyadh',
-    blurb: 'Three-day electronic festival with early-bird and GA passes.',
-    price: 'From SAR 450',
-    rating: '4.9',
-    cta: 'View event',
-    to: `/events/${slugify('Soundstorm Festival — Day 1')}`,
+    kind: "Event",
+    title: "Soundstorm Festival — Day 1",
+    meta: "Thu 22 Oct · Banban, Riyadh",
+    blurb: "Three-day electronic festival with early-bird and GA passes.",
+    price: "From SAR 450",
+    rating: "4.9",
+    cta: "View event",
+    to: `/events/${slugify("Soundstorm Festival — Day 1")}`,
     image: SEARCH_RESULT_IMAGES[2],
-    mediaRounded: 'rounded-[12px]',
+    mediaRounded: "rounded-[12px]",
   },
   {
-    kind: 'Experience',
-    title: 'Edge of the World hike and picnic',
-    meta: 'Riyadh Region · Half day',
-    blurb: 'Guided escarpment hike with sunset picnic and 4x4 transfer.',
-    price: 'SAR 250',
-    rating: '4.9',
-    cta: 'View experience',
-    to: `/experiences/${slugify('Edge of the World hike and picnic')}`,
+    kind: "Experience",
+    title: "Edge of the World hike and picnic",
+    meta: "Riyadh Region · Half day",
+    blurb: "Guided escarpment hike with sunset picnic and 4x4 transfer.",
+    price: "SAR 250",
+    rating: "4.9",
+    cta: "View experience",
+    to: `/experiences/${slugify("Edge of the World hike and picnic")}`,
     image: SEARCH_RESULT_IMAGES[4],
-    mediaRounded: 'rounded-[12px]',
+    mediaRounded: "rounded-[12px]",
   },
-] as const
+] as const;
 
 const RELATED = [
-  'Oud sessions',
-  'Comedy in Riyadh',
-  'Open-air concerts',
-  'Boulevard City',
-  'Jeddah nightlife',
-  'Family shows',
-] as const
+  "Oud sessions",
+  "Comedy in Riyadh",
+  "Open-air concerts",
+  "Boulevard City",
+  "Jeddah nightlife",
+  "Family shows",
+] as const;
 
 const CITY_OPTIONS = [
-  { label: 'Riyadh', count: 5 },
-  { label: 'Jeddah', count: 1 },
-  { label: 'AlUla', count: 1 },
-  { label: 'Dammam', count: 0 },
-] as const
+  { label: "Riyadh", count: 5 },
+  { label: "Jeddah", count: 1 },
+  { label: "AlUla", count: 1 },
+  { label: "Dammam", count: 0 },
+] as const;
 
 function parsePrice(price: string): number {
-  const n = Number.parseFloat(price.replace(/[^\d.]/g, ''))
-  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY
+  const n = Number.parseFloat(price.replace(/[^\d.]/g, ""));
+  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
 }
 
 function matchesQuery(haystack: string, query: string): boolean {
-  return haystack.toLowerCase().includes(query.toLowerCase())
+  return haystack.toLowerCase().includes(query.toLowerCase());
 }
 
 function buildApiResults(
@@ -163,174 +173,204 @@ function buildApiResults(
   apiTalents: Record<string, unknown>[] | undefined,
   apiExperiences: Record<string, unknown>[] | undefined,
 ): SearchResult[] {
-  const items: SearchResult[] = []
-  let imageIdx = 0
-  const nextImage = () => SEARCH_RESULT_IMAGES[imageIdx++ % SEARCH_RESULT_IMAGES.length]
+  const items: SearchResult[] = [];
+  let imageIdx = 0;
+  const nextImage = () =>
+    SEARCH_RESULT_IMAGES[imageIdx++ % SEARCH_RESULT_IMAGES.length];
 
   if (apiEvents?.length) {
     for (const event of apiEvents) {
-      const mapped = mapApiEventToCard(event)
-      const meta = [mapped.date, mapped.venue].filter(Boolean).join(' · ')
-      const haystack = `${mapped.title} ${meta} ${mapped.category ?? ''} ${mapped.venue}`
-      if (!matchesQuery(haystack, query)) continue
+      const mapped = mapApiEventToCard(event);
+      const meta = [mapped.date, mapped.venue].filter(Boolean).join(" · ");
+      const haystack = `${mapped.title} ${meta} ${mapped.category ?? ""} ${mapped.venue}`;
+      if (!matchesQuery(haystack, query)) continue;
 
       items.push({
-        kind: 'Event',
+        kind: "Event",
         flag: mapped.flag,
         title: mapped.title,
         meta,
-        blurb: mapped.attendance || mapped.category || 'Event on MyTicket.',
-        price: mapped.price.toLowerCase().startsWith('from') ? mapped.price : `From ${mapped.price}`,
+        blurb: mapped.attendance || mapped.category || "Event on MyTicket.",
+        price: mapped.price.toLowerCase().startsWith("from")
+          ? mapped.price
+          : `From ${mapped.price}`,
         rating: mapped.rating,
-        cta: 'View event',
+        cta: "View event",
         to: `/events/${mapped.slug}`,
         image: mapped.image ?? nextImage(),
-        mediaRounded: 'rounded-[12px]',
-      })
+        mediaRounded: "rounded-[12px]",
+      });
     }
   }
 
   if (apiTalents?.length) {
     for (const talent of apiTalents) {
-      const mapped = mapApiTalentToCard(talent)
+      const mapped = mapApiTalentToCard(talent);
       const meta =
         mapped.meta ||
-        [mapped.discipline, mapped.city].filter(Boolean).join(' · ')
-      const haystack = `${mapped.name} ${meta} ${mapped.discipline} ${mapped.city}`
-      if (!matchesQuery(haystack, query)) continue
+        [mapped.discipline, mapped.city].filter(Boolean).join(" · ");
+      const haystack = `${mapped.name} ${meta} ${mapped.discipline} ${mapped.city}`;
+      if (!matchesQuery(haystack, query)) continue;
 
-      const price =
-        mapped.nextShow?.detail?.includes('from')
-          ? mapped.nextShow.detail.split('·').pop()?.trim() ?? `Next show from ${mapped.nextShow.detail}`
-          : mapped.nextShow
-            ? `Next show · ${mapped.nextShow.headline}`
-            : 'View upcoming shows'
+      const price = mapped.nextShow?.detail?.includes("from")
+        ? (mapped.nextShow.detail.split("·").pop()?.trim() ??
+          `Next show from ${mapped.nextShow.detail}`)
+        : mapped.nextShow
+          ? `Next show · ${mapped.nextShow.headline}`
+          : "View upcoming shows";
 
       items.push({
-        kind: 'Talent',
+        kind: "Talent",
         title: mapped.name,
         meta,
         blurb:
           mapped.reviews && mapped.city
-            ? `${mapped.reviews} reviews · ${mapped.verified ? 'verified' : mapped.city}`
-            : mapped.meta || 'Performer on MyTicket.',
-        price: price.startsWith('from') || price.startsWith('Next') ? price : `Next show ${price}`,
+            ? `${mapped.reviews} reviews · ${mapped.verified ? "verified" : mapped.city}`
+            : mapped.meta || "Performer on MyTicket.",
+        price:
+          price.startsWith("from") || price.startsWith("Next")
+            ? price
+            : `Next show ${price}`,
         rating: mapped.rating,
-        cta: 'View profile',
+        cta: "View profile",
         to: `/talents/${mapped.slug}`,
         image: mapped.image ?? nextImage(),
-        mediaRounded: 'rounded-[59px]',
-      })
+        mediaRounded: "rounded-[59px]",
+      });
     }
   }
 
   if (apiExperiences?.length) {
     for (const experience of apiExperiences) {
-      const mapped = mapApiExperienceToCard(experience)
-      const meta = mapped.meta || [mapped.location, mapped.place].filter(Boolean).join(' · ')
-      const haystack = `${mapped.title} ${meta} ${mapped.summary ?? ''} ${mapped.location}`
-      if (!matchesQuery(haystack, query)) continue
+      const mapped = mapApiExperienceToCard(experience);
+      const meta =
+        mapped.meta ||
+        [mapped.location, mapped.place].filter(Boolean).join(" · ");
+      const haystack = `${mapped.title} ${meta} ${mapped.summary ?? ""} ${mapped.location}`;
+      if (!matchesQuery(haystack, query)) continue;
 
       items.push({
-        kind: 'Experience',
+        kind: "Experience",
         flag: mapped.flag,
         title: mapped.title,
         meta,
-        blurb: mapped.summary || mapped.guests || 'Guided experience on MyTicket.',
-        price: mapped.price ?? 'SAR —',
-        rating: (mapped.rating ?? '—').split(' ')[0] ?? '—',
-        cta: 'View experience',
+        blurb:
+          mapped.summary || mapped.guests || "Guided experience on MyTicket.",
+        price: mapped.price ?? "SAR —",
+        rating: (mapped.rating ?? "—").split(" ")[0] ?? "—",
+        cta: "View experience",
         to: `/experiences/${mapped.slug}`,
         image: mapped.image ?? nextImage(),
-        mediaRounded: 'rounded-[12px]',
-      })
+        mediaRounded: "rounded-[12px]",
+      });
     }
   }
 
-  return items
+  return items;
 }
 
 function translateCta(t: TFunction, cta: string): string {
-  const key = CTA_LABEL_KEYS[cta]
-  return key ? t(key) : cta
+  const key = CTA_LABEL_KEYS[cta];
+  return key ? t(key) : cta;
 }
 
 /** Search results — Figma `207:5205`. */
 export function SearchResultsPage() {
-  const { t } = useTranslation(['catalog', 'nav'])
-  const baseId = useId()
-  const [params] = useSearchParams()
-  const query = params.get('q') || 'riyadh season'
-  const [tab, setTab] = useState<(typeof TABS)[number]['label']>('All')
-  const [sort, setSort] = useState('Most relevant')
-  const [cities, setCities] = useState<string[]>(['Riyadh'])
+  const { t } = useTranslation(["catalog", "nav"]);
+  const baseId = useId();
+  const [params] = useSearchParams();
+  const query = params.get("q") || "riyadh season";
+  const [tab, setTab] = useState<(typeof TABS)[number]["label"]>("All");
+  const [sort, setSort] = useState("Most relevant");
+  const [cities, setCities] = useState<string[]>([]);
 
-  const { data: eventsResult, isError: eventsError } = useGetEventsQuery({ search: query })
-  const apiEvents = eventsResult?.items
-  const { data: talentsResult, isError: talentsError } = useGetTalentsQuery()
-  const apiTalents = talentsResult?.items
-  const { data: apiExperiences, isError: experiencesError } = useGetExperiencesQuery()
+  const { data: eventsResult, isError: eventsError } = useGetEventsQuery({
+    search: query,
+  });
+  const apiEvents = eventsResult?.items;
+  const { data: talentsResult, isError: talentsError } = useGetTalentsQuery();
+  const apiTalents = talentsResult?.items;
+  const { data: apiExperiences, isError: experiencesError } =
+    useGetExperiencesQuery();
 
   const toggleCity = (label: string) => {
     setCities((prev) =>
       prev.includes(label) ? prev.filter((c) => c !== label) : [...prev, label],
-    )
-  }
+    );
+  };
 
   const results = useMemo((): SearchResult[] => {
     const hasApiData =
       (apiEvents && apiEvents.length > 0) ||
       (apiTalents && apiTalents.length > 0) ||
-      (apiExperiences && apiExperiences.length > 0)
-    const allErrored = eventsError && talentsError && experiencesError
+      (apiExperiences && apiExperiences.length > 0);
+    const allErrored = eventsError && talentsError && experiencesError;
 
     if (!hasApiData || allErrored) {
-      return RESULTS.map((r) => ({ ...r }))
+      return RESULTS.map((r) => ({ ...r }));
     }
 
-    const apiItems = buildApiResults(query, apiEvents, apiTalents, apiExperiences)
-    return apiItems
-  }, [apiEvents, apiTalents, apiExperiences, eventsError, talentsError, experiencesError, query])
+    const apiItems = buildApiResults(
+      query,
+      apiEvents,
+      apiTalents,
+      apiExperiences,
+    );
+    return apiItems;
+  }, [
+    apiEvents,
+    apiTalents,
+    apiExperiences,
+    eventsError,
+    talentsError,
+    experiencesError,
+    query,
+  ]);
 
-  const activeTab = TABS.find((t) => t.label === tab) ?? TABS[0]
+  const activeTab = TABS.find((t) => t.label === tab) ?? TABS[0];
   const filtered = useMemo(() => {
     let list = !activeTab.kinds
       ? [...results]
-      : results.filter((r) => (activeTab.kinds as readonly string[]).includes(r.kind))
+      : results.filter((r) =>
+          (activeTab.kinds as readonly string[]).includes(r.kind),
+        );
 
     if (cities.length > 0) {
       list = list.filter((r) => {
-        const hay = `${r.meta} ${r.title} ${r.blurb}`.toLowerCase()
-        return cities.some((c) => hay.includes(c.toLowerCase()))
-      })
+        const hay = `${r.meta} ${r.title} ${r.blurb}`.toLowerCase();
+        return cities.some((c) => hay.includes(c.toLowerCase()));
+      });
     }
 
-    if (sort === 'Price') {
-      list = [...list].sort((a, b) => parsePrice(a.price) - parsePrice(b.price))
-    } else if (sort === 'Soonest') {
+    if (sort === "Price") {
+      list = [...list].sort(
+        (a, b) => parsePrice(a.price) - parsePrice(b.price),
+      );
+    } else if (sort === "Soonest") {
       // Fixture order already approximates soonest within the set.
-      list = [...list]
+      list = [...list];
     }
 
-    return list
-  }, [activeTab, cities, sort, results])
+    return list;
+  }, [activeTab, cities, sort, results]);
 
   const tabCounts = useMemo(() => {
     return TABS.map((t) => ({
       ...t,
       count: t.kinds
-        ? results.filter((r) => (t.kinds as readonly string[]).includes(r.kind)).length
+        ? results.filter((r) => (t.kinds as readonly string[]).includes(r.kind))
+            .length
         : results.length,
-    }))
-  }, [results])
+    }));
+  }, [results]);
 
   return (
     <>
       <PageSection padTop={26} padBottom={0}>
         <Breadcrumbs
           items={[
-            { label: t('nav:main'), href: '/' },
-            { label: t('search.title'), href: '/search' },
+            { label: t("nav:main"), href: "/" },
+            { label: t("search.title"), href: "/search" },
             { label: query },
           ]}
         />
@@ -338,9 +378,11 @@ export function SearchResultsPage() {
 
       <PageSection padTop={14} padBottom={0}>
         <FadeUp>
-          <h1 className="text-heading-h2 text-ink-primary">{t('search.resultsFor', { query })}</h1>
+          <h1 className="text-heading-h2 text-ink-primary">
+            {t("search.resultsFor", { query })}
+          </h1>
           <p className="mt-[6px] text-[15px] text-ink-secondary">
-            {t('pages.searchMatches', { count: results.length })}
+            {t("pages.searchMatches", { count: results.length })}
           </p>
           <div className="mt-xl flex flex-wrap gap-[8px]">
             {SUGGESTIONS.map((s) => (
@@ -348,7 +390,7 @@ export function SearchResultsPage() {
                 key={s}
                 className="h-[32px] rounded-[16px] px-md text-[13px]"
                 onClick={() => {
-                  window.location.href = `/search?q=${encodeURIComponent(s)}`
+                  window.location.href = `/search?q=${encodeURIComponent(s)}`;
                 }}
               >
                 {s}
@@ -359,7 +401,10 @@ export function SearchResultsPage() {
             Entity tabs match detail-section metrics (15px / ink-brand / muted), not DS
             `Tab` (14.5px / ink-brand-mid). Count badges are local to this frame.
           */}
-          <DetailSectionTabs className="mt-[18px] gap-0 border-border-default" aria-label={t('pages.resultTypes')}>
+          <DetailSectionTabs
+            className="mt-[18px] gap-0 border-border-default"
+            aria-label={t("pages.resultTypes")}
+          >
             {tabCounts.map((tabItem) => (
               <DetailSectionTab
                 key={tabItem.label}
@@ -382,15 +427,15 @@ export function SearchResultsPage() {
           filterWidth={244}
           filters={
             <FilterSidebar
-              title={t('filters.refine')}
-              clearLabel={t('filters.reset')}
+              title={t("filters.refine")}
+              clearLabel={t("filters.reset")}
               width={244}
               interactive
               onClear={() => setCities([])}
             >
               <div>
                 <p className="pt-[15px] text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-                  {t('filters.city')}
+                  {t("filters.city")}
                 </p>
                 <div className="mt-[11px] flex flex-col gap-[9px]">
                   {CITY_OPTIONS.map((opt, i) => (
@@ -409,30 +454,30 @@ export function SearchResultsPage() {
               {(
                 [
                   {
-                    label: 'When',
+                    label: "When",
                     options: [
-                      { label: 'Today', count: 1 },
-                      { label: 'This week', count: 3 },
-                      { label: 'This month', count: 5 },
-                      { label: 'Any time' },
+                      { label: "Today", count: 1 },
+                      { label: "This week", count: 3 },
+                      { label: "This month", count: 5 },
+                      { label: "Any time" },
                     ],
                   },
                   {
-                    label: 'Ticket price',
+                    label: "Ticket price",
                     options: [
-                      { label: 'Free', count: 1 },
-                      { label: 'Under SAR 200', count: 2 },
-                      { label: 'SAR 200–500', count: 3 },
-                      { label: 'SAR 500+', count: 1 },
+                      { label: "Free", count: 1 },
+                      { label: "Under SAR 200", count: 2 },
+                      { label: "SAR 200–500", count: 3 },
+                      { label: "SAR 500+", count: 1 },
                     ],
                   },
                   {
-                    label: 'Good for',
+                    label: "Good for",
                     options: [
-                      { label: 'Families', count: 2 },
-                      { label: 'Date night', count: 2 },
-                      { label: 'Groups', count: 4 },
-                      { label: 'First-timers', count: 3 },
+                      { label: "Families", count: 2 },
+                      { label: "Date night", count: 2 },
+                      { label: "Groups", count: 4 },
+                      { label: "First-timers", count: 3 },
                     ],
                   },
                 ] as const
@@ -447,7 +492,7 @@ export function SearchResultsPage() {
                         key={opt.label}
                         id={`${baseId}-${group.label}-${i}`}
                         label={catalogLabel(t, opt.label)}
-                        count={'count' in opt ? opt.count : undefined}
+                        count={"count" in opt ? opt.count : undefined}
                         fullWidth
                         disabled
                       />
@@ -459,7 +504,7 @@ export function SearchResultsPage() {
           }
         >
           <ResultsToolbar
-            countLabel={t('results.countResults', { count: filtered.length })}
+            countLabel={t("results.countResults", { count: filtered.length })}
             activeFilter={
               cities.length === 1 ? catalogLabel(t, cities[0]!) : undefined
             }
@@ -469,8 +514,10 @@ export function SearchResultsPage() {
             showViewToggle={false}
             trailing={
               <div className="flex flex-wrap items-center gap-[8px]">
-                <span className="text-[13px] text-ink-muted">{t('results.sort')}</span>
-                {(['Most relevant', 'Soonest', 'Price'] as const).map((s) => (
+                <span className="text-[13px] text-ink-muted">
+                  {t("results.sort")}
+                </span>
+                {(["Most relevant", "Soonest", "Price"] as const).map((s) => (
                   <FilterChip
                     key={s}
                     selected={sort === s}
@@ -494,12 +541,18 @@ export function SearchResultsPage() {
                 <div
                   className={`m-[14px] h-[160px] w-[calc(100%-28px)] shrink-0 overflow-hidden sm:h-[118px] sm:w-[168px] ${result.mediaRounded}`}
                 >
-                  <img src={result.image} alt="" className="size-full object-cover" />
+                  <img
+                    src={result.image}
+                    alt=""
+                    className="size-full object-cover"
+                  />
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col justify-center px-[14px] pb-[14px] sm:py-[14px] sm:pe-[14px] sm:ps-0">
                   <div className="flex flex-wrap items-center gap-[8px]">
-                    <StatusBadge tone="neutralOutline">{t(KIND_LABEL_KEYS[result.kind])}</StatusBadge>
-                    {'flag' in result && result.flag && (
+                    <StatusBadge tone="neutralOutline">
+                      {t(KIND_LABEL_KEYS[result.kind])}
+                    </StatusBadge>
+                    {"flag" in result && result.flag && (
                       <span className="text-[12px] font-semibold text-brand-gradient-end">
                         {result.flag}
                       </span>
@@ -508,19 +561,28 @@ export function SearchResultsPage() {
                   <h3 className="mt-[6px] text-[18px] leading-[1.2] font-extrabold tracking-[-0.35px] text-ink-primary sm:text-[20px]">
                     {result.title}
                   </h3>
-                  <p className="mt-[4px] text-[13px] text-ink-secondary">{result.meta}</p>
+                  <p className="mt-[4px] text-[13px] text-ink-secondary">
+                    {result.meta}
+                  </p>
                   <p className="mt-[6px] max-w-[620px] text-[13px] leading-[1.45] text-ink-secondary">
                     {result.blurb}
                   </p>
                   <div className="mt-[10px] flex flex-col items-start gap-sm sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-[14px] text-[13px]">
-                      <span className="font-semibold text-ink-primary">{result.price}</span>
+                      <span className="font-semibold text-ink-primary">
+                        {result.price}
+                      </span>
                       <span className="flex items-center gap-[5px] text-ink-primary">
                         <StarFillIcon size={13} />
                         {result.rating}
                       </span>
                     </div>
-                    <Button size="sm" variant="secondary" tabIndex={-1} className="w-full sm:w-auto">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      tabIndex={-1}
+                      className="w-full sm:w-auto"
+                    >
                       {translateCta(t, result.cta)}
                     </Button>
                   </div>
@@ -535,18 +597,18 @@ export function SearchResultsPage() {
                 variant="secondary"
                 className="h-[44px] rounded-[22px] px-[22px]"
                 onClick={() => {
-                  setTab('All')
-                  setCities([])
+                  setTab("All");
+                  setCities([]);
                 }}
               >
-                {t('pages.showAllResults')}
+                {t("pages.showAllResults")}
               </Button>
             </div>
           )}
 
           <div className="mt-[34px]">
             <p className="text-[14px] font-medium text-ink-secondary">
-              {t('pages.alsoLookedFor')}
+              {t("pages.alsoLookedFor")}
             </p>
             <div className="mt-md flex flex-wrap gap-[9px]">
               {RELATED.map((label) => (
@@ -554,7 +616,7 @@ export function SearchResultsPage() {
                   key={label}
                   className="h-[36px] rounded-[18px] text-[13px]"
                   onClick={() => {
-                    window.location.href = `/search?q=${encodeURIComponent(label)}`
+                    window.location.href = `/search?q=${encodeURIComponent(label)}`;
                   }}
                 >
                   {label}
@@ -565,5 +627,5 @@ export function SearchResultsPage() {
         </CatalogBody>
       </PageSection>
     </>
-  )
+  );
 }

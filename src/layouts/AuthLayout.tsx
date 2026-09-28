@@ -73,7 +73,7 @@ function AuthHeroPanel({
 }
 
 export function AuthLayout({ hero }: AuthLayoutProps) {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation("auth");
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
@@ -84,12 +84,9 @@ export function AuthLayout({ hero }: AuthLayoutProps) {
   useEffect(() => {
     if (!isAuthenticated || !isAuthEntry) return;
 
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate("/", { replace: true });
-    }
-  }, [isAuthEntry, isAuthenticated, navigate]);
+    const nextPath = new URLSearchParams(search).get("next");
+    navigate(nextPath?.startsWith("/") ? nextPath : "/", { replace: true });
+  }, [isAuthEntry, isAuthenticated, navigate, search]);
 
   if (isAuthenticated && isAuthEntry) return null;
 
