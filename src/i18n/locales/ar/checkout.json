@@ -4,6 +4,7 @@
     "backToSeats": "العودة للمقاعد",
     "seatsHeld": "المقاعد محجوزة",
     "stepSeats": "المقاعد",
+    "stepEvent": "الحدث",
     "stepPayment": "الدفع",
     "stepTickets": "التذاكر",
     "completePaymentFirst": "أكمل الدفع لفتح التذاكر"
@@ -13,7 +14,8 @@
     "selectedOf": "{{count}} من {{max}} محدد",
     "loading": "جاري تحميل المقاعد…",
     "holding": "جاري حجز المقاعد…",
-    "continuePayment": "متابعة الدفع · ⃁ {{amount}}",
+    "continuePayment": "متابعة الدفع · {{amount}}",
+    "continuePaymentLabel": "متابعة الدفع",
     "holdNote": "تُحجز المقاعد لمدة 10 دقائق. الحد الأقصى 6 لكل طلب.",
     "needLive": "الدفع يتطلب مخزون مقاعد مباشراً لهذه الفعالية.",
     "unavailableTitle": "خريطة المقاعد غير متاحة",

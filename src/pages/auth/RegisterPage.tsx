@@ -1,95 +1,101 @@
-import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { useTranslation } from 'react-i18next'
-import { yupResolver } from '@hookform/resolvers/yup'
-import { Divider } from '@/components/data-display'
-import { Button, Checkbox, Field, TextInput } from '@/components/ui'
-import { cn } from '@/lib/cn'
-import { useRegisterMutation, useVerifyEmailMutation } from '@/app/api/authApi'
-import { useAppDispatch } from '@/app/hooks'
-import { credentialsSet } from '@/features/auth/authSlice'
-import { toastPushed } from '@/features/ui/uiSlice'
-import { apiErrorMessage } from '@/lib/api/unwrap'
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Divider } from "@/components/data-display";
+import { Button, Checkbox, Field, TextInput } from "@/components/ui";
+import { useRegisterMutation, useVerifyEmailMutation } from "@/app/api/authApi";
+import { useAppDispatch } from "@/app/hooks";
+import { credentialsSet } from "@/features/auth/authSlice";
+import { toastPushed } from "@/features/ui/uiSlice";
+import { apiErrorMessage } from "@/lib/api/unwrap";
 import {
   createOtpVerifySchema,
   createRegisterSchema,
   toRegisterPayload,
   type OtpVerifyValues,
   type RegisterValues,
-} from '@/lib/validation/authSchemas'
+} from "@/lib/validation/authSchemas";
 
 /**
  * Register — customer-only signup.
  * Body matches Postman `POST /auth/register`: name, email, phone, password.
  */
 export function RegisterPage() {
-  const { t } = useTranslation(['auth', 'validation', 'common'])
-  const { t: tv } = useTranslation('validation')
-  const navigate = useNavigate()
-  const dispatch = useAppDispatch()
-  const [step, setStep] = useState<'form' | 'verify'>('form')
-  const [registerUser, registerState] = useRegisterMutation()
-  const [verifyEmail, verifyState] = useVerifyEmailMutation()
+  const { t } = useTranslation(["auth", "validation", "common"]);
+  const { t: tv } = useTranslation("validation");
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [step, setStep] = useState<"form" | "verify">("form");
+  const [registerUser, registerState] = useRegisterMutation();
+  const [verifyEmail, verifyState] = useVerifyEmailMutation();
 
   const registerResolver = useMemo(
     () => yupResolver(createRegisterSchema((key) => tv(key))),
     [tv],
-  )
+  );
   const otpResolver = useMemo(
     () => yupResolver(createOtpVerifySchema((key) => tv(key))),
     [tv],
-  )
+  );
 
   const form = useForm<RegisterValues>({
     resolver: registerResolver,
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      password: '',
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
       acceptedTerms: false,
     },
-  })
+  });
 
   const verifyForm = useForm<OtpVerifyValues>({
     resolver: otpResolver,
-    defaultValues: { identifier: '', code: '' },
-  })
+    defaultValues: { identifier: "", code: "" },
+  });
 
   async function onRegister(values: RegisterValues) {
-    const body = toRegisterPayload(values)
+    const body = toRegisterPayload(values);
     try {
-      await registerUser(body).unwrap()
-      verifyForm.setValue('identifier', body.email)
-      setStep('verify')
-      dispatch(toastPushed('success', t('auth:register.checkEmail')))
+      await registerUser(body).unwrap();
+      verifyForm.setValue("identifier", body.email);
+      setStep("verify");
+      dispatch(toastPushed("success", t("auth:register.checkEmail")));
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, t('auth:register.error'))))
+      dispatch(
+        toastPushed("error", apiErrorMessage(error, t("auth:register.error"))),
+      );
     }
   }
 
   async function onVerify(values: OtpVerifyValues) {
     try {
       const session = await verifyEmail({
-        email: values.identifier.trim() || form.getValues('email').trim(),
+        email: values.identifier.trim() || form.getValues("email").trim(),
         code: values.code,
-      }).unwrap()
+      }).unwrap();
       dispatch(
         credentialsSet({
           token: session.access_token,
           user: session.user,
           persist: true,
         }),
-      )
-      dispatch(toastPushed('success', t('auth:register.success')))
-      navigate('/')
+      );
+      dispatch(toastPushed("success", t("auth:register.success")));
+      navigate("/");
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, t('auth:register.verifyError'))))
+      dispatch(
+        toastPushed(
+          "error",
+          apiErrorMessage(error, t("auth:register.verifyError")),
+        ),
+      );
     }
   }
 
-  const busy = registerState.isLoading || verifyState.isLoading
+  const busy = registerState.isLoading || verifyState.isLoading;
 
   return (
     <div className="flex w-full flex-col">
@@ -98,65 +104,70 @@ export function RegisterPage() {
           to="/sign-in"
           className="flex h-[36px] flex-1 items-center justify-center rounded-[18px] text-[14px] font-semibold text-ink-secondary"
         >
-          {t('auth:register.signIn')}
+          {t("auth:register.signIn")}
         </Link>
         <span className="flex h-[36px] flex-1 items-center justify-center rounded-[18px] bg-brand-gradient text-[14px] font-semibold text-ink-inverse">
-          {t('auth:register.tab')}
+          {t("auth:register.tab")}
         </span>
       </div>
 
       <h1 className="mt-2xl text-[28px] leading-[1.05] font-extrabold tracking-[-1.47px] text-ink-primary sm:text-[36px] lg:text-[42px]">
-        {step === 'form' ? t('auth:register.title') : t('auth:register.verifyTitle')}
+        {step === "form"
+          ? t("auth:register.title")
+          : t("auth:register.verifyTitle")}
       </h1>
       <p className="mt-sm text-[15px] leading-[1.45] text-ink-secondary">
-        {step === 'form' ? (
+        {step === "form" ? (
           <>
-            {t('auth:register.subtitle')}{' '}
+            {t("auth:register.subtitle")}{" "}
             <Link to="/sign-in" className="font-bold text-ink-brand">
-              {t('auth:register.signInInstead')}
+              {t("auth:register.signInInstead")}
             </Link>
             .
           </>
         ) : (
-          <>{t('auth:register.verifySubtitle')}</>
+          <>{t("auth:register.verifySubtitle")}</>
         )}
       </p>
 
-      {step === 'form' ? (
-        <form className="mt-[28px] flex flex-col" onSubmit={form.handleSubmit(onRegister)}>
+      {step === "form" ? (
+        <form
+          className="mt-[28px] flex flex-col"
+          onSubmit={form.handleSubmit(onRegister)}
+        >
           <div className="flex flex-col gap-[14px]">
             <Field
-              label={t('auth:register.name')}
+              label={t("auth:register.name")}
               htmlFor="register-name"
               error={form.formState.errors.name?.message}
             >
               <TextInput
                 id="register-name"
                 type="text"
-                placeholder={t('auth:register.namePlaceholder')}
+                placeholder={t("auth:register.namePlaceholder")}
                 autoComplete="name"
                 className="h-[50px]"
-                {...form.register('name')}
+                {...form.register("name")}
               />
             </Field>
 
             <Field
-              label={t('auth:register.email')}
+              label={t("auth:register.email")}
               htmlFor="register-email"
               error={form.formState.errors.email?.message}
             >
               <TextInput
                 id="register-email"
                 type="email"
-                placeholder={t('auth:register.emailPlaceholder')}
+                placeholder={t("auth:register.emailPlaceholder")}
                 autoComplete="email"
                 className="h-[50px]"
-                {...form.register('email')}
+                {...form.register("email")}
               />
             </Field>
 
             <Field
-              label={t('auth:register.phoneOptional')}
+              label={t("auth:register.phoneOptional")}
               htmlFor="register-phone"
               error={form.formState.errors.phone?.message}
             >
@@ -164,23 +175,27 @@ export function RegisterPage() {
                 id="register-phone"
                 type="tel"
                 inputMode="tel"
-                placeholder={t('auth:register.phonePlaceholder')}
+                placeholder={t("auth:register.phonePlaceholder")}
                 autoComplete="tel"
                 className="h-[50px]"
-                {...form.register('phone')}
+                {...form.register("phone")}
                 leading={
                   <>
                     <span className="shrink-0 text-[14px] font-medium text-ink-secondary">
                       +966
                     </span>
-                    <Divider orientation="vertical" tone="border" className="h-5" />
+                    <Divider
+                      orientation="vertical"
+                      tone="border"
+                      className="h-5"
+                    />
                   </>
                 }
               />
             </Field>
 
             <Field
-              label={t('auth:register.password')}
+              label={t("auth:register.password")}
               htmlFor="register-password"
               error={form.formState.errors.password?.message}
             >
@@ -189,7 +204,7 @@ export function RegisterPage() {
                 type="password"
                 autoComplete="new-password"
                 className="h-[50px]"
-                {...form.register('password')}
+                {...form.register("password")}
               />
             </Field>
           </div>
@@ -197,17 +212,19 @@ export function RegisterPage() {
           <Checkbox
             id="register-terms"
             className="mt-[18px]"
-            checked={form.watch('acceptedTerms')}
-            onCheckedChange={(value) => form.setValue('acceptedTerms', value === true)}
+            checked={form.watch("acceptedTerms")}
+            onCheckedChange={(value) =>
+              form.setValue("acceptedTerms", value === true)
+            }
             label={
               <span>
-                {t('auth:register.termsPrefix')}{' '}
+                {t("auth:register.termsPrefix")}{" "}
                 <Link to="/legal" className="font-semibold text-ink-brand">
-                  {t('auth:register.terms')}
-                </Link>{' '}
-                {t('auth:register.termsAnd')}{' '}
+                  {t("auth:register.terms")}
+                </Link>{" "}
+                {t("auth:register.termsAnd")}{" "}
                 <Link to="/legal" className="font-semibold text-ink-brand">
-                  {t('auth:register.privacy')}
+                  {t("auth:register.privacy")}
                 </Link>
               </span>
             }
@@ -224,13 +241,16 @@ export function RegisterPage() {
             loading={busy}
             className="mt-[22px] h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
           >
-            {t('auth:register.submit')}
+            {t("auth:register.submit")}
           </Button>
         </form>
       ) : (
-        <form className="mt-[28px] flex flex-col" onSubmit={verifyForm.handleSubmit(onVerify)}>
+        <form
+          className="mt-[28px] flex flex-col"
+          onSubmit={verifyForm.handleSubmit(onVerify)}
+        >
           <Field
-            label={t('auth:register.verifyCode')}
+            label={t("auth:register.verifyCode")}
             htmlFor="register-code"
             error={verifyForm.formState.errors.code?.message}
           >
@@ -239,7 +259,7 @@ export function RegisterPage() {
               type="text"
               inputMode="numeric"
               className="h-[50px]"
-              {...verifyForm.register('code')}
+              {...verifyForm.register("code")}
             />
           </Field>
           <Button
@@ -248,20 +268,10 @@ export function RegisterPage() {
             loading={busy}
             className="mt-[22px] h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
           >
-            {t('auth:register.verifySubmit')}
+            {t("auth:register.verifySubmit")}
           </Button>
         </form>
       )}
-
-      <div className="mt-[28px] rounded-[14px] border border-border-default bg-bg-warm px-lg py-[14px]">
-        <p className={cn('text-[13px] leading-[1.5] text-ink-body')}>
-          {t('auth:register.businessLead')}{' '}
-          <Link to="/become-business" className="text-ink-brand underline-offset-2 hover:underline">
-            {t('auth:register.vendorTalentLink')}
-          </Link>
-          .
-        </p>
-      </div>
     </div>
-  )
+  );
 }

@@ -1,56 +1,61 @@
-import type { ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
-import { MoneyAmount, parseMoneyDisplay } from '@/components/data-display'
-import { ArrowRightIcon, CheckGlyphIcon, MinusIcon, PlusIcon } from '@/components/icons'
-import { Button } from '@/components/ui'
-import { cn } from '@/lib/cn'
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useNavigate } from "react-router-dom";
+import { MoneyAmount, parseMoneyDisplay } from "@/components/data-display";
+import {
+  ArrowRightIcon,
+  CheckGlyphIcon,
+  MinusIcon,
+  PlusIcon,
+} from "@/components/icons";
+import { Button } from "@/components/ui";
+import { cn } from "@/lib/cn";
 
 export interface TicketTier {
-  name: string
-  detail: string
-  price: string
-  left: string
-  maxLabel?: string
+  name: string;
+  detail: string;
+  price: string;
+  left: string;
+  maxLabel?: string;
   /** Paint the left count in brand-gradient-end (low stock). */
-  urgent?: boolean
-  selected?: boolean
-  qty?: number
-  soldOutRail?: { note: string; cta: string; to?: string }
+  urgent?: boolean;
+  selected?: boolean;
+  qty?: number;
+  soldOutRail?: { note: string; cta?: string; to?: string };
 }
 
 export interface StickyCtaTotalLine {
-  label: string
-  value: string
+  label: string;
+  value: string;
 }
 
 export interface StickyCtaCardProps {
-  fromLabel?: string
-  fromPrice: string
-  note?: string
-  tiers?: TicketTier[]
-  totals?: StickyCtaTotalLine[]
-  total?: string
-  primaryLabel?: string
+  fromLabel?: string;
+  fromPrice: string;
+  note?: string;
+  tiers?: TicketTier[];
+  totals?: StickyCtaTotalLine[];
+  total?: string;
+  primaryLabel?: string;
   /** Route for the primary CTA (e.g. event seats). Uses navigate when set. */
-  primaryTo?: string
+  primaryTo?: string;
   /** Called on primary click; if it returns false, navigation is skipped. */
-  onPrimaryClick?: () => void | boolean | Promise<void | boolean>
+  onPrimaryClick?: () => void | boolean | Promise<void | boolean>;
   /** When true, tier qty steppers are interactive (free seating). */
-  qtyInteractive?: boolean
-  onSelectTier?: (name: string) => void
-  onChangeQty?: (name: string, qty: number) => void
+  qtyInteractive?: boolean;
+  onSelectTier?: (name: string) => void;
+  onChangeQty?: (name: string, qty: number) => void;
   /** Omit / pass null to hide the secondary button (Events ticket rail). */
-  secondaryLabel?: string | null
+  secondaryLabel?: string | null;
   /** Route for the secondary CTA. Without it, the secondary button looks disabled. */
-  secondaryTo?: string
-  footerNote?: string
+  secondaryTo?: string;
+  footerNote?: string;
   /** Content rendered below the main ticket card (resale / assurances). */
-  aside?: ReactNode
-  children?: ReactNode
-  className?: string
+  aside?: ReactNode;
+  children?: ReactNode;
+  className?: string;
   /** Disable the primary button (e.g. while claiming). */
-  primaryDisabled?: boolean
+  primaryDisabled?: boolean;
 }
 
 /** Sticky booking card for detail asides — Events ticket rail Figma `207:5022`. */
@@ -75,19 +80,19 @@ export function StickyCtaCard({
   className,
   primaryDisabled = false,
 }: StickyCtaCardProps) {
-  const navigate = useNavigate()
-  const { t } = useTranslation('catalog')
-  const { t: tCommon } = useTranslation('common')
-  const resolvedFromLabel = fromLabel ?? t('stickyCta.fromLabel')
-  const resolvedPrimaryLabel = primaryLabel ?? t('stickyCta.chooseSeats')
-  const maxPerOrder = t('stickyCta.maxPerOrder')
-  const canPrimary = Boolean(primaryTo || onPrimaryClick) && !primaryDisabled
-  const isFreeFrom = parseMoneyDisplay(fromPrice).kind === 'free'
+  const navigate = useNavigate();
+  const { t } = useTranslation("catalog");
+  const { t: tCommon } = useTranslation("common");
+  const resolvedFromLabel = fromLabel ?? t("stickyCta.fromLabel");
+  const resolvedPrimaryLabel = primaryLabel ?? t("stickyCta.chooseSeats");
+  const maxPerOrder = t("stickyCta.maxPerOrder");
+  const canPrimary = Boolean(primaryTo || onPrimaryClick) && !primaryDisabled;
+  const isFreeFrom = parseMoneyDisplay(fromPrice).kind === "free";
 
   return (
     <div
       className={cn(
-        'flex w-full flex-col gap-[14px] lg:sticky lg:top-[100px] lg:w-[388px] lg:shrink-0',
+        "flex w-full flex-col gap-[14px] lg:sticky lg:top-[100px] lg:w-[388px] lg:shrink-0",
         className,
       )}
     >
@@ -96,12 +101,14 @@ export function StickyCtaCard({
           {isFreeFrom ? (
             <MoneyAmount
               value={fromPrice}
-              freeLabel={tCommon('currency.freeTickets')}
+              freeLabel={tCommon("currency.freeTickets")}
               className="text-[22px] font-semibold text-ink-primary lg:text-[26px]"
             />
           ) : (
             <>
-              <p className="text-[14px] text-ink-secondary lg:text-[15px]">{resolvedFromLabel}</p>
+              <p className="text-[14px] text-ink-secondary lg:text-[15px]">
+                {resolvedFromLabel}
+              </p>
               <MoneyAmount
                 value={fromPrice}
                 className="text-[22px] font-semibold text-ink-primary lg:text-[26px]"
@@ -110,7 +117,9 @@ export function StickyCtaCard({
           )}
         </div>
         {note && (
-          <p className="mt-xs text-[13px] font-semibold text-brand-gradient-end">{note}</p>
+          <p className="mt-xs text-[13px] font-semibold text-brand-gradient-end">
+            {note}
+          </p>
         )}
 
         {tiers && tiers.length > 0 && (
@@ -118,34 +127,34 @@ export function StickyCtaCard({
             {tiers.map((tier) => (
               <div
                 key={tier.name}
-                role={qtyInteractive ? 'button' : undefined}
+                role={qtyInteractive ? "button" : undefined}
                 tabIndex={qtyInteractive ? 0 : undefined}
                 onClick={
-                  qtyInteractive
-                    ? () => onSelectTier?.(tier.name)
-                    : undefined
+                  qtyInteractive ? () => onSelectTier?.(tier.name) : undefined
                 }
                 onKeyDown={
                   qtyInteractive
                     ? (e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          onSelectTier?.(tier.name)
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          onSelectTier?.(tier.name);
                         }
                       }
                     : undefined
                 }
                 className={cn(
-                  'flex flex-col gap-sm rounded-[14px] border p-[14px]',
+                  "flex flex-col gap-sm rounded-[14px] border p-[14px]",
                   tier.selected
-                    ? 'border-brand-primary bg-bg-tint-brand'
-                    : 'border-border-default bg-surface-default',
-                  qtyInteractive && 'cursor-pointer',
+                    ? "border-brand-primary bg-bg-tint-brand"
+                    : "border-border-default bg-surface-default",
+                  qtyInteractive && "cursor-pointer",
                 )}
               >
                 <div className="flex items-start justify-between gap-md">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-semibold text-ink-primary">{tier.name}</p>
+                    <p className="text-[15px] font-semibold text-ink-primary">
+                      {tier.name}
+                    </p>
                     <p className="mt-[2px] text-[13px] leading-[1.4] text-ink-secondary">
                       {tier.detail}
                     </p>
@@ -157,9 +166,11 @@ export function StickyCtaCard({
                     />
                     <p
                       className={cn(
-                        'text-[12px]',
-                        tier.urgent ? 'text-brand-gradient-end' : 'text-ink-secondary',
-                        tier.left === 'Sold out' && 'text-ink-muted',
+                        "text-[12px]",
+                        tier.urgent
+                          ? "text-brand-gradient-end"
+                          : "text-ink-secondary",
+                        tier.left === "Sold out" && "text-ink-muted",
                       )}
                     >
                       {tier.left}
@@ -172,27 +183,30 @@ export function StickyCtaCard({
                   </p>
                   <div
                     className={cn(
-                      'flex items-center gap-row-gap',
-                      !qtyInteractive && 'opacity-55',
+                      "flex items-center gap-row-gap",
+                      !qtyInteractive && "opacity-55",
                     )}
                     title={
-                      qtyInteractive ? undefined : t('stickyCta.qtyOnMapTitle')
+                      qtyInteractive ? undefined : t("stickyCta.qtyOnMapTitle")
                     }
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
                       type="button"
-                      aria-label={t('stickyCta.decreaseQty')}
+                      aria-label={t("stickyCta.decreaseQty")}
                       disabled={!qtyInteractive || (tier.qty ?? 0) <= 0}
                       onClick={() =>
                         qtyInteractive &&
-                        onChangeQty?.(tier.name, Math.max(0, (tier.qty ?? 0) - 1))
+                        onChangeQty?.(
+                          tier.name,
+                          Math.max(0, (tier.qty ?? 0) - 1),
+                        )
                       }
                       className={cn(
-                        'flex size-[40px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default lg:size-[30px]',
+                        "flex size-[40px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default lg:size-[30px]",
                         qtyInteractive
-                          ? 'text-ink-primary hover:border-border-brand'
-                          : 'cursor-not-allowed text-ink-disabled',
+                          ? "text-ink-primary hover:border-border-brand"
+                          : "cursor-not-allowed text-ink-disabled",
                       )}
                     >
                       <MinusIcon size={16} />
@@ -202,17 +216,20 @@ export function StickyCtaCard({
                     </span>
                     <button
                       type="button"
-                      aria-label={t('stickyCta.increaseQty')}
+                      aria-label={t("stickyCta.increaseQty")}
                       disabled={!qtyInteractive || (tier.qty ?? 0) >= 6}
                       onClick={() =>
                         qtyInteractive &&
-                        onChangeQty?.(tier.name, Math.min(6, (tier.qty ?? 0) + 1))
+                        onChangeQty?.(
+                          tier.name,
+                          Math.min(6, (tier.qty ?? 0) + 1),
+                        )
                       }
                       className={cn(
-                        'flex size-[40px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default text-[16px] lg:size-[30px]',
+                        "flex size-[40px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default text-[16px] lg:size-[30px]",
                         qtyInteractive
-                          ? 'text-ink-primary hover:border-border-brand'
-                          : 'cursor-not-allowed text-ink-disabled',
+                          ? "text-ink-primary hover:border-border-brand"
+                          : "cursor-not-allowed text-ink-disabled",
                       )}
                     >
                       <PlusIcon size={16} />
@@ -226,13 +243,18 @@ export function StickyCtaCard({
                       <p className="text-[12px] font-medium text-ink-secondary">
                         {tier.soldOutRail.note}
                       </p>
-                      <Link
-                        to={tier.soldOutRail.to ?? '/events'}
-                        className="flex shrink-0 items-center gap-[5px] text-[13px] font-semibold text-ink-brand"
-                      >
-                        {tier.soldOutRail.cta}
-                        <ArrowRightIcon size={13} className="rtl:rotate-180" />
-                      </Link>
+                      {tier.soldOutRail.cta ? (
+                        <Link
+                          to={tier.soldOutRail.to ?? "/events"}
+                          className="flex shrink-0 items-center gap-[5px] text-[13px] font-semibold text-ink-brand"
+                        >
+                          {tier.soldOutRail.cta}
+                          <ArrowRightIcon
+                            size={13}
+                            className="rtl:rotate-180"
+                          />
+                        </Link>
+                      ) : null}
                     </div>
                   </div>
                 )}
@@ -256,28 +278,30 @@ export function StickyCtaCard({
             ))}
             {total && (
               <div className="flex w-full items-baseline justify-between border-t border-border-divider pt-sm font-semibold text-ink-primary">
-                <span className="text-[15px]">{t('stickyCta.total')}</span>
+                <span className="text-[15px]">{t("stickyCta.total")}</span>
                 <MoneyAmount value={total} className="text-[22px]" />
               </div>
             )}
           </div>
         )}
 
-        <div className={cn('flex flex-col gap-sm', totals ? 'mt-lg' : 'mt-[18px]')}>
+        <div
+          className={cn("flex flex-col gap-sm", totals ? "mt-lg" : "mt-[18px]")}
+        >
           {/* Figma Choose seats is 52/26 vs Button L 48/24 — literal height wins. */}
           <Button
             size="lg"
             className="h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
             disabled={!canPrimary}
-            title={canPrimary ? undefined : t('stickyCta.actionUnavailable')}
+            title={canPrimary ? undefined : t("stickyCta.actionUnavailable")}
             onClick={
               canPrimary
                 ? () => {
                     void (async () => {
-                      const result = await onPrimaryClick?.()
-                      if (result === false) return
-                      if (primaryTo) navigate(primaryTo)
-                    })()
+                      const result = await onPrimaryClick?.();
+                      if (result === false) return;
+                      if (primaryTo) navigate(primaryTo);
+                    })();
                   }
                 : undefined
             }
@@ -290,7 +314,9 @@ export function StickyCtaCard({
               size="lg"
               className="w-full"
               disabled={!secondaryTo}
-              title={secondaryTo ? undefined : t('stickyCta.secondaryUnavailable')}
+              title={
+                secondaryTo ? undefined : t("stickyCta.secondaryUnavailable")
+              }
               onClick={secondaryTo ? () => navigate(secondaryTo) : undefined}
             >
               {secondaryLabel}
@@ -307,7 +333,7 @@ export function StickyCtaCard({
 
       {aside}
     </div>
-  )
+  );
 }
 
 export function StickyCtaAssurances({ items }: { items: readonly string[] }) {
@@ -315,10 +341,15 @@ export function StickyCtaAssurances({ items }: { items: readonly string[] }) {
     <div className="flex w-full flex-col gap-row-gap rounded-[18px] border border-border-default bg-bg-warm p-lg lg:p-[18px]">
       {items.map((item) => (
         <div key={item} className="flex items-start gap-row-gap">
-          <CheckGlyphIcon size={13} className="mt-[2px] shrink-0 text-ink-brand" />
-          <p className="min-w-0 flex-1 text-[13px] leading-[1.45] text-ink-body">{item}</p>
+          <CheckGlyphIcon
+            size={13}
+            className="mt-[2px] shrink-0 text-ink-brand"
+          />
+          <p className="min-w-0 flex-1 text-[13px] leading-[1.45] text-ink-body">
+            {item}
+          </p>
         </div>
       ))}
     </div>
-  )
+  );
 }

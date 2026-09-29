@@ -4,6 +4,7 @@
     "backToSeats": "Back to seats",
     "seatsHeld": "Seats held",
     "stepSeats": "Seats",
+    "stepEvent": "Event",
     "stepPayment": "Payment",
     "stepTickets": "Tickets",
     "completePaymentFirst": "Complete payment to open tickets"
@@ -13,7 +14,8 @@
     "selectedOf": "{{count}} of {{max}} selected",
     "loading": "Loading seats…",
     "holding": "Holding seats…",
-    "continuePayment": "Continue to payment · ⃁ {{amount}}",
+    "continuePayment": "Continue to payment · {{amount}}",
+    "continuePaymentLabel": "Continue to payment",
     "holdNote": "Seats are held for 10 minutes. Maximum 6 per order.",
     "needLive": "Checkout needs live seat inventory for this event.",
     "unavailableTitle": "Seat map unavailable",
