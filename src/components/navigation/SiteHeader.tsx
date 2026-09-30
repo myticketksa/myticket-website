@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Dialog as DialogPrimitive, DropdownMenu } from "radix-ui";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { selectIsAuthenticated } from "@/features/auth/authSlice";
 import {
   Avatar,
   CountBadge,
@@ -385,16 +384,11 @@ function MainNav({
   ticketsMode?: "dropdown" | "flat";
 }) {
   const { t } = useTranslation("nav");
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
-
   const talentsActive = navItemActive("Talents", activeItem);
   const offersActive = navItemActive("Offers", activeItem);
   const institutionsActive = navItemActive("Institutions", activeItem);
   const ticketsActive = navItemActive("TicketsAndOffers", activeItem);
-  // Real auth only — do not follow chrome `signedIn` (e.g. order-confirmation overlay).
-  const institutionsHref = isAuthenticated
-    ? "/apply/facilities"
-    : "/become-business";
+  const institutionsHref = "/apply/facilities";
 
   return (
     <nav aria-label={t("main")} className={className}>

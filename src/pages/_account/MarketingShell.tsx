@@ -1,11 +1,11 @@
-import { useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { ImagePlaceholder } from '@/components/data-display'
-import { CheckIcon, MinusIcon } from '@/components/icons'
-import { Button } from '@/components/ui'
-import { PageSection } from '@/layouts'
-import { cn } from '@/lib/cn'
+import { useState, type ReactNode } from "react";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { ImagePlaceholder } from "@/components/data-display";
+import { CheckIcon, MinusIcon } from "@/components/icons";
+import { Button } from "@/components/ui";
+import { PageSection } from "@/layouts";
+import { cn } from "@/lib/cn";
 
 export function MarketingHero({
   eyebrow,
@@ -14,12 +14,12 @@ export function MarketingHero({
   actions,
   narrow = false,
 }: {
-  eyebrow: string
-  title: string
-  subtitle: string
-  actions?: ReactNode
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  actions?: ReactNode;
   /** About uses ~820px title column. */
-  narrow?: boolean
+  narrow?: boolean;
 }) {
   return (
     <PageSection padTop={72} padBottom={0} className="text-center">
@@ -28,31 +28,37 @@ export function MarketingHero({
       </p>
       <h1
         className={`mx-auto mt-md text-[34px] leading-[1.03] font-extrabold tracking-[-1.6px] text-ink-primary sm:text-[48px] lg:text-[56px] lg:tracking-[-1.96px] ${
-          narrow ? 'max-w-[820px]' : 'max-w-[900px]'
+          narrow ? "max-w-[820px]" : "max-w-[900px]"
         }`}
       >
         {title}
       </h1>
       <p
         className={`mx-auto mt-[18px] text-[17px] leading-[1.65] text-ink-secondary ${
-          narrow ? 'max-w-[660px]' : 'max-w-[640px]'
+          narrow ? "max-w-[660px]" : "max-w-[640px]"
         }`}
       >
         {subtitle}
       </p>
       {actions && (
-        <div className="mt-xl flex flex-wrap items-center justify-center gap-sm">{actions}</div>
+        <div className="mt-xl flex flex-wrap items-center justify-center gap-sm">
+          {actions}
+        </div>
       )}
     </PageSection>
-  )
+  );
 }
 
 export function MarketingCardGrid({
   items,
   maxWidth = 1040,
 }: {
-  items: { title: string; body: ReactNode; links?: { label: string; href: string }[] }[]
-  maxWidth?: number
+  items: {
+    title: string;
+    body: ReactNode;
+    links?: { label: string; href: string }[];
+  }[];
+  maxWidth?: number;
 }) {
   return (
     <PageSection padTop={64} padBottom={48}>
@@ -63,7 +69,9 @@ export function MarketingCardGrid({
               key={item.title}
               className="rounded-[20px] border border-border-default bg-surface-default p-[28px]"
             >
-              <h2 className="text-[18px] font-bold text-ink-primary">{item.title}</h2>
+              <h2 className="text-[18px] font-bold text-ink-primary">
+                {item.title}
+              </h2>
               <div className="mt-sm text-[14.5px] leading-[1.65] text-ink-secondary">
                 {item.body}
               </div>
@@ -85,7 +93,7 @@ export function MarketingCardGrid({
         </div>
       </div>
     </PageSection>
-  )
+  );
 }
 
 export function MarketingCta({
@@ -93,26 +101,28 @@ export function MarketingCta({
   buttonLabel,
   buttonTo,
 }: {
-  text: string
-  buttonLabel: string
-  buttonTo: string
+  text: string;
+  buttonLabel: string;
+  buttonTo: string;
 }) {
   return (
     <PageSection padTop={24} padBottom={96} className="text-center">
-      <p className="mx-auto max-w-[560px] text-[18px] font-medium text-ink-primary">{text}</p>
+      <p className="mx-auto max-w-[560px] text-[18px] font-medium text-ink-primary">
+        {text}
+      </p>
       <div className="mt-xl flex justify-center">
         <Link to={buttonTo}>
           <Button size="lg">{buttonLabel}</Button>
         </Link>
       </div>
     </PageSection>
-  )
+  );
 }
 
 export function MarketingStats({
   stats,
 }: {
-  stats: { value: string; label: string }[]
+  stats: { value: string; label: string }[];
 }) {
   return (
     <PageSection padTop={44} padBottom={0}>
@@ -120,23 +130,25 @@ export function MarketingStats({
         <div className="grid grid-cols-2 gap-xl rounded-[24px] bg-surface-inverse px-xl py-[28px] text-bg-page sm:px-[44px] sm:py-[36px] md:grid-cols-4 md:gap-[32px]">
           {stats.map((stat) => (
             <div key={stat.label} className="text-start">
-              <p className="text-[32px] font-extrabold tracking-[-0.64px]">{stat.value}</p>
+              <p className="text-[32px] font-extrabold tracking-[-0.64px]">
+                {stat.value}
+              </p>
               <p className="mt-xs text-[13px] text-bg-page/80">{stat.label}</p>
             </div>
           ))}
         </div>
       </div>
     </PageSection>
-  )
+  );
 }
 
 /* ── Role landing (For Facilities / Organizers / Talents) ─────────────────── */
 
-export type RoleLandingStat = { value: string; label: string }
-export type RoleBenefit = { title: string; body: string }
-export type RoleStep = { title: string; body: ReactNode }
-export type RoleMoneyRow = { label: string; value: string }
-export type RoleFaq = { question: string; answer: string }
+export type RoleLandingStat = { value: string; label: string };
+export type RoleBenefit = { title: string; body: string };
+export type RoleStep = { title: string; body: ReactNode };
+export type RoleMoneyRow = { label: string; value: string };
+export type RoleFaq = { question: string; answer: string };
 
 export function RoleLandingHero({
   eyebrow,
@@ -148,19 +160,19 @@ export function RoleLandingHero({
   imageryLabel,
   imagerySrc,
 }: {
-  eyebrow: string
-  title: string
-  subtitle: string
-  primaryCta: { label: string; to: string }
-  secondaryCta: { label: string; to: string }
-  stats: RoleLandingStat[]
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  primaryCta: { label: string; to: string };
+  secondaryCta?: { label: string; to: string };
+  stats: RoleLandingStat[];
   /** Figma ImagePlaceholder caption for the hero slot. */
-  imageryLabel: string
+  imageryLabel: string;
   /**
    * Optional photography override. Figma SOT leaves the slot as ImagePlaceholder;
    * pass a committed asset only when product opts into real imagery.
    */
-  imagerySrc?: string
+  imagerySrc?: string;
 }) {
   return (
     <PageSection padTop={64} padBottom={0}>
@@ -179,11 +191,13 @@ export function RoleLandingHero({
             <Link to={primaryCta.to}>
               <Button size="lg">{primaryCta.label}</Button>
             </Link>
-            <Link to={secondaryCta.to}>
-              <Button variant="secondary" size="lg">
-                {secondaryCta.label}
-              </Button>
-            </Link>
+            {secondaryCta && (
+              <Link to={secondaryCta.to}>
+                <Button variant="secondary" size="lg">
+                  {secondaryCta.label}
+                </Button>
+              </Link>
+            )}
           </div>
           <div className="mt-[28px] flex flex-wrap gap-[28px]">
             {stats.map((stat) => (
@@ -191,7 +205,9 @@ export function RoleLandingHero({
                 <p className="text-[26px] font-extrabold tracking-[-0.52px] text-ink-primary">
                   {stat.value}
                 </p>
-                <p className="mt-[2px] text-[12.5px] text-ink-muted">{stat.label}</p>
+                <p className="mt-[2px] text-[12.5px] text-ink-muted">
+                  {stat.label}
+                </p>
               </div>
             ))}
           </div>
@@ -213,56 +229,68 @@ export function RoleLandingHero({
         </div>
       </div>
     </PageSection>
-  )
+  );
 }
 
 export function RoleBenefitsSection({
   title,
   items,
 }: {
-  title?: string
-  items: RoleBenefit[]
+  title?: string;
+  items: RoleBenefit[];
 }) {
-  const { t } = useTranslation('marketing')
-  const heading = title ?? t('shell.benefitsTitle')
+  const { t } = useTranslation("marketing");
+  const heading = title ?? t("shell.benefitsTitle");
   return (
     <PageSection padTop={72} padBottom={0}>
-      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">{heading}</h2>
+      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">
+        {heading}
+      </h2>
       <div className="mt-[22px] grid gap-[18px] md:grid-cols-3">
         {items.map((item) => (
           <div
             key={item.title}
             className="rounded-[20px] border border-border-default bg-surface-default p-[26px]"
           >
-            <h3 className="text-[17px] font-bold text-ink-primary">{item.title}</h3>
-            <p className="mt-[8px] text-[14px] leading-[1.6] text-ink-secondary">{item.body}</p>
+            <h3 className="text-[17px] font-bold text-ink-primary">
+              {item.title}
+            </h3>
+            <p className="mt-[8px] text-[14px] leading-[1.6] text-ink-secondary">
+              {item.body}
+            </p>
           </div>
         ))}
       </div>
     </PageSection>
-  )
+  );
 }
 
 export function RoleStepsSection({
   title,
   steps,
 }: {
-  title?: string
-  steps: RoleStep[]
+  title?: string;
+  steps: RoleStep[];
 }) {
-  const { t } = useTranslation('marketing')
-  const heading = title ?? t('shell.stepsTitle')
+  const { t } = useTranslation("marketing");
+  const heading = title ?? t("shell.stepsTitle");
   return (
     <PageSection padTop={72} padBottom={0}>
-      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">{heading}</h2>
+      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">
+        {heading}
+      </h2>
       <div className="mt-[22px] grid gap-[14px] sm:grid-cols-2 lg:grid-cols-5">
         {steps.map((step, index) => (
           <div
             key={step.title}
             className="flex min-h-[162px] flex-col rounded-[18px] border border-border-default bg-surface-default p-[20px]"
           >
-            <p className="text-[22px] font-extrabold text-ink-brand">{index + 1}</p>
-            <h3 className="mt-[10px] text-[14.5px] font-bold text-ink-primary">{step.title}</h3>
+            <p className="text-[22px] font-extrabold text-ink-brand">
+              {index + 1}
+            </p>
+            <h3 className="mt-[10px] text-[14.5px] font-bold text-ink-primary">
+              {step.title}
+            </h3>
             <div className="mt-[5px] text-[12.5px] leading-[1.55] text-ink-secondary">
               {step.body}
             </div>
@@ -270,20 +298,22 @@ export function RoleStepsSection({
         ))}
       </div>
     </PageSection>
-  )
+  );
 }
 
 export function RoleMoneyPanel({
   rows,
   footnote,
 }: {
-  rows: RoleMoneyRow[]
-  footnote: string
+  rows: RoleMoneyRow[];
+  footnote: string;
 }) {
-  const { t } = useTranslation('marketing')
+  const { t } = useTranslation("marketing");
   return (
     <div className="rounded-[22px] bg-surface-inverse p-[32px] text-bg-page">
-      <h3 className="text-[26px] font-extrabold tracking-[-0.78px]">{t('shell.moneyTitle')}</h3>
+      <h3 className="text-[26px] font-extrabold tracking-[-0.78px]">
+        {t("shell.moneyTitle")}
+      </h3>
       <div className="mt-[18px] flex flex-col gap-[12px] text-[14.5px] leading-[1.55]">
         {rows.map((row) => (
           <div
@@ -295,9 +325,11 @@ export function RoleMoneyPanel({
           </div>
         ))}
       </div>
-      <p className="mt-[16px] text-[12.5px] leading-[1.55] text-bg-page/90">{footnote}</p>
+      <p className="mt-[16px] text-[12.5px] leading-[1.55] text-bg-page/90">
+        {footnote}
+      </p>
     </div>
-  )
+  );
 }
 
 export function RoleRequirementsPanel({
@@ -305,21 +337,28 @@ export function RoleRequirementsPanel({
   noteLead,
   noteBody,
 }: {
-  items: string[]
-  noteLead?: string
-  noteBody: string
+  items: string[];
+  noteLead?: string;
+  noteBody: string;
 }) {
-  const { t } = useTranslation('marketing')
-  const lead = noteLead ?? t('shell.noteLead')
+  const { t } = useTranslation("marketing");
+  const lead = noteLead ?? t("shell.noteLead");
   return (
     <div className="rounded-[22px] border border-border-default bg-surface-default p-[32px]">
       <h3 className="text-[26px] font-extrabold tracking-[-0.78px] text-ink-primary">
-        {t('shell.needsTitle')}
+        {t("shell.needsTitle")}
       </h3>
       <ul className="mt-[18px] flex flex-col gap-[11px]">
         {items.map((item) => (
-          <li key={item} className="flex gap-[10px] text-[14.5px] leading-[1.5] text-ink-secondary">
-            <CheckIcon size={15} weight="bold" className="mt-[2px] shrink-0 text-ink-muted" />
+          <li
+            key={item}
+            className="flex gap-[10px] text-[14.5px] leading-[1.5] text-ink-secondary"
+          >
+            <CheckIcon
+              size={15}
+              weight="bold"
+              className="mt-[2px] shrink-0 text-ink-muted"
+            />
             <span>{item}</span>
           </li>
         ))}
@@ -329,7 +368,7 @@ export function RoleRequirementsPanel({
         <span className="font-bold text-ink-primary">{lead}</span> {noteBody}
       </p>
     </div>
-  )
+  );
 }
 
 export function RoleMoneyAndNeeds({
@@ -338,10 +377,10 @@ export function RoleMoneyAndNeeds({
   needItems,
   needNoteBody,
 }: {
-  moneyRows: RoleMoneyRow[]
-  moneyFootnote: string
-  needItems: string[]
-  needNoteBody: string
+  moneyRows: RoleMoneyRow[];
+  moneyFootnote: string;
+  needItems: string[];
+  needNoteBody: string;
 }) {
   return (
     <PageSection padTop={72} padBottom={0}>
@@ -350,26 +389,28 @@ export function RoleMoneyAndNeeds({
         <RoleRequirementsPanel items={needItems} noteBody={needNoteBody} />
       </div>
     </PageSection>
-  )
+  );
 }
 
 export function RoleFaqSection({
   title,
   items,
 }: {
-  title?: string
-  items: RoleFaq[]
+  title?: string;
+  items: RoleFaq[];
 }) {
-  const { t } = useTranslation('marketing')
-  const heading = title ?? t('shell.faqTitle')
-  const [open, setOpen] = useState(0)
+  const { t } = useTranslation("marketing");
+  const heading = title ?? t("shell.faqTitle");
+  const [open, setOpen] = useState(0);
 
   return (
     <PageSection padTop={72} padBottom={0}>
-      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">{heading}</h2>
+      <h2 className="text-[34px] font-extrabold tracking-[-1.02px] text-ink-primary">
+        {heading}
+      </h2>
       <div className="mt-[22px] flex max-w-[860px] flex-col gap-[10px]">
         {items.map((item, index) => {
-          const isOpen = open === index
+          const isOpen = open === index;
           return (
             <div
               key={item.question}
@@ -380,7 +421,9 @@ export function RoleFaqSection({
                 onClick={() => setOpen(isOpen ? -1 : index)}
                 className="flex w-full items-center justify-between gap-md px-[22px] py-[18px] text-start"
               >
-                <span className="text-[15.5px] font-bold text-ink-primary">{item.question}</span>
+                <span className="text-[15.5px] font-bold text-ink-primary">
+                  {item.question}
+                </span>
                 {isOpen ? (
                   <MinusIcon size={18} className="shrink-0 text-ink-brand" />
                 ) : (
@@ -400,11 +443,11 @@ export function RoleFaqSection({
                 </div>
               )}
             </div>
-          )
+          );
         })}
       </div>
     </PageSection>
-  )
+  );
 }
 
 export function RoleClosingCta({
@@ -413,10 +456,10 @@ export function RoleClosingCta({
   buttonLabel,
   buttonTo,
 }: {
-  title: string
-  subtitle: string
-  buttonLabel: string
-  buttonTo: string
+  title: string;
+  subtitle: string;
+  buttonLabel: string;
+  buttonTo: string;
 }) {
   return (
     <PageSection padTop={72} padBottom={96}>
@@ -430,15 +473,15 @@ export function RoleClosingCta({
         <Link
           to={buttonTo}
           className={cn(
-            'inline-flex h-[54px] shrink-0 items-center justify-center rounded-[27px]',
-            'bg-bg-page px-[30px] text-[15px] font-extrabold text-ink-primary',
+            "inline-flex h-[54px] shrink-0 items-center justify-center rounded-[27px]",
+            "bg-bg-page px-[30px] text-[15px] font-extrabold text-ink-primary",
           )}
         >
           {buttonLabel}
         </Link>
       </div>
     </PageSection>
-  )
+  );
 }
 
 export function RoleStepCheckLine({ children }: { children: ReactNode }) {
@@ -447,5 +490,5 @@ export function RoleStepCheckLine({ children }: { children: ReactNode }) {
       <CheckIcon size={13} weight="bold" className="shrink-0 text-ink-muted" />
       <span>{children}</span>
     </span>
-  )
+  );
 }

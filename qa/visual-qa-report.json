@@ -254,13 +254,6 @@
       "file": "qa\\browser\\submit-experience.png"
     },
     {
-      "slug": "become-business",
-      "route": "/become-business",
-      "status": 200,
-      "ok": true,
-      "file": "qa\\browser\\become-business.png"
-    },
-    {
       "slug": "apply-vendor",
       "route": "/apply/vendor",
       "status": 200,

@@ -26,13 +26,14 @@
 
 **MyTicket** is a ticketing and events marketplace with three product surfaces:
 
-| Surface | Description | Status |
-|---------|-------------|--------|
-| **MyTicket Guests** | Guest-facing web app (browse, book, manage tickets) | 51 screens designed |
-| **MyTicket Business** | Business/admin dashboard | Planned (no screens yet) |
-| **MyTicket Mobile App** | Native mobile app | Planned (no screens yet) |
+| Surface                 | Description                                         | Status                   |
+| ----------------------- | --------------------------------------------------- | ------------------------ |
+| **MyTicket Guests**     | Guest-facing web app (browse, book, manage tickets) | 51 screens designed      |
+| **MyTicket Business**   | Business/admin dashboard                            | Planned (no screens yet) |
+| **MyTicket Mobile App** | Native mobile app                                   | Planned (no screens yet) |
 
 **Design specs:**
+
 - **Primary viewport:** 1440px desktop
 - **Content width:** 1320px (1440 - 60px padding each side)
 - **Layout system:** Vertical auto-layout, section-based
@@ -49,125 +50,124 @@
 
 #### Core Pages
 
-| # | Screen Name | Figma Link | Size | Sections |
-|---|-------------|------------|------|----------|
-| 1 | Home | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-4362) | 1440×6129 | Header, Hero, Talents, Categories, Events, Featured, Auction, Experiences, Organizers, Vendors, CTA, BusinessStrip, Footer |
-| 2 | Events | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-4600) | 1440×2378 | |
-| 3 | Event Details | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-4797) | 1440×3888 | Header, Breadcrumb, Gallery, Main, Similar, Footer |
-| 4 | Search Results | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-5205) | 1440×2399 | |
-| 5 | Talents | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-5539) | 1440×3236 | |
-| 6 | Talent Detail | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-5726) | 1440×2576 | Header, Hero, Tabs, Body, Similar, Footer |
-| 7 | Experiences | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6795) | 1440×1900 | |
-| 8 | Experience Detail | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-7048) | 1440×3254 | |
-| 9 | Vendors | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-5992) | 1440×2517 | |
-| 10 | Vendor Detail | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6338) | 1440×2446 | |
-| 11 | Organizers | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6112) | 1440×1709 | |
-| 12 | Organizer Detail | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6154) | 1440×1786 | |
-| 13 | Auction | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-10792) | 1440×2218 | |
-| 14 | Auction Event | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11616) | 1440×1596 | |
-| 15 | About | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11984) | 1440×1707 | |
-| 16 | Help | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12147) | 1440×2000 | |
-| 17 | Legal | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12042) | 1440×1999 | |
+| #   | Screen Name       | Figma Link                                                                              | Size      | Sections                                                                                                                   |
+| --- | ----------------- | --------------------------------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Home              | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-4362)  | 1440×6129 | Header, Hero, Talents, Categories, Events, Featured, Auction, Experiences, Organizers, Vendors, CTA, BusinessStrip, Footer |
+| 2   | Events            | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-4600)  | 1440×2378 |                                                                                                                            |
+| 3   | Event Details     | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-4797)  | 1440×3888 | Header, Breadcrumb, Gallery, Main, Similar, Footer                                                                         |
+| 4   | Search Results    | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-5205)  | 1440×2399 |                                                                                                                            |
+| 5   | Talents           | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-5539)  | 1440×3236 |                                                                                                                            |
+| 6   | Talent Detail     | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-5726)  | 1440×2576 | Header, Hero, Tabs, Body, Similar, Footer                                                                                  |
+| 7   | Experiences       | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6795)  | 1440×1900 |                                                                                                                            |
+| 8   | Experience Detail | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-7048)  | 1440×3254 |                                                                                                                            |
+| 9   | Vendors           | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-5992)  | 1440×2517 |                                                                                                                            |
+| 10  | Vendor Detail     | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6338)  | 1440×2446 |                                                                                                                            |
+| 11  | Organizers        | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6112)  | 1440×1709 |                                                                                                                            |
+| 12  | Organizer Detail  | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6154)  | 1440×1786 |                                                                                                                            |
+| 13  | Auction           | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-10792) | 1440×2218 |                                                                                                                            |
+| 14  | Auction Event     | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11616) | 1440×1596 |                                                                                                                            |
+| 15  | About             | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11984) | 1440×1707 |                                                                                                                            |
+| 16  | Help              | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12147) | 1440×2000 |                                                                                                                            |
+| 17  | Legal             | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12042) | 1440×1999 |                                                                                                                            |
 
 #### Booking & Purchase Flow
 
-| # | Screen Name | Figma Link | Size |
-|---|-------------|------------|------|
-| 18 | Seat Selection | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-7446) | 1440×950 |
-| 19 | Checkout | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-8228) | 1440×1446 |
-| 20 | Order Confirmation | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-8462) | 1440×1559 |
+| #   | Screen Name        | Figma Link                                                                             | Size      |
+| --- | ------------------ | -------------------------------------------------------------------------------------- | --------- |
+| 18  | Seat Selection     | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-7446) | 1440×950  |
+| 19  | Checkout           | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-8228) | 1440×1446 |
+| 20  | Order Confirmation | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-8462) | 1440×1559 |
 
 #### Authentication
 
-| # | Screen Name | Figma Link | Size | Layout |
-|---|-------------|------------|------|--------|
-| 21 | Sign In | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11907) | 1440×910 | Split (50/50 horizontal) |
-| 22 | Register | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11849) | 1440×900 | Split (50/50 horizontal) |
-| 23 | Reset Password | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11297) | 1440×900 | |
+| #   | Screen Name    | Figma Link                                                                              | Size     | Layout                   |
+| --- | -------------- | --------------------------------------------------------------------------------------- | -------- | ------------------------ |
+| 21  | Sign In        | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11907) | 1440×910 | Split (50/50 horizontal) |
+| 22  | Register       | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11849) | 1440×900 | Split (50/50 horizontal) |
+| 23  | Reset Password | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11297) | 1440×900 |                          |
 
 #### User Dashboard / Account
 
-| # | Screen Name | Figma Link | Size |
-|---|-------------|------------|------|
-| 24 | Profile | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-10412) | 1440×2544 |
-| 25 | Settings | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-10247) | 1440×1727 |
-| 26 | My Tickets | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9469) | 1440×1807 |
-| 27 | Ticket (single) | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9024) | 1440×1160 |
-| 28 | Saved | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-8057) | 1440×1554 |
-| 29 | Notifications | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-8824) | 1440×2080 |
-| 30 | Wallet | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11086) | 1440×1655 |
-| 31 | My Reviews | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9974) | 1440×1180 |
-| 32 | My Enquiries | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6603) | 1440×1838 |
-| 33 | My Submissions | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-7362) | 1440×1381 |
-| 34 | My Auction Activity | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11538) | 1440×1090 |
+| #   | Screen Name         | Figma Link                                                                              | Size      |
+| --- | ------------------- | --------------------------------------------------------------------------------------- | --------- |
+| 24  | Profile             | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-10412) | 1440×2544 |
+| 25  | Settings            | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-10247) | 1440×1727 |
+| 26  | My Tickets          | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9469)  | 1440×1807 |
+| 27  | Ticket (single)     | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9024)  | 1440×1160 |
+| 28  | Saved               | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-8057)  | 1440×1554 |
+| 29  | Notifications       | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-8824)  | 1440×2080 |
+| 30  | Wallet              | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11086) | 1440×1655 |
+| 31  | My Reviews          | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9974)  | 1440×1180 |
+| 32  | My Enquiries        | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6603)  | 1440×1838 |
+| 33  | My Submissions      | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-7362)  | 1440×1381 |
+| 34  | My Auction Activity | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11538) | 1440×1090 |
 
 #### Ticket Management
 
-| # | Screen Name | Figma Link | Size |
-|---|-------------|------------|------|
-| 35 | Resell Ticket | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9700) | 1440×1448 |
-| 36 | Gift Ticket | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9806) | 1440×1296 |
-| 37 | Refund Request | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9879) | 1440×1409 |
+| #   | Screen Name    | Figma Link                                                                             | Size      |
+| --- | -------------- | -------------------------------------------------------------------------------------- | --------- |
+| 35  | Resell Ticket  | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9700) | 1440×1448 |
+| 36  | Gift Ticket    | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9806) | 1440×1296 |
+| 37  | Refund Request | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-9879) | 1440×1409 |
 
 #### Forms & Applications
 
-| # | Screen Name | Figma Link | Size |
-|---|-------------|------------|------|
-| 38 | Submit Experience | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6961) | 1440×1548 |
-| 39 | Become a Business | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-10047) | 1440×1445 |
-| 40 | Apply Vendor | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11368) | 1440×1064 |
-| 41 | Apply Organizer | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11424) | 1440×1118 |
-| 42 | Apply Talent | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11482) | 1440×1064 |
-| 43 | Application Submitted | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11329) | 1440×1201 |
+| #   | Screen Name           | Figma Link                                                                              | Size      |
+| --- | --------------------- | --------------------------------------------------------------------------------------- | --------- |
+| 38  | Submit Experience     | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-6961)  | 1440×1548 |
+| 40  | Apply Vendor          | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11368) | 1440×1064 |
+| 41  | Apply Organizer       | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11424) | 1440×1118 |
+| 42  | Apply Talent          | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11482) | 1440×1064 |
+| 43  | Application Submitted | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11329) | 1440×1201 |
 
 #### Support
 
-| # | Screen Name | Figma Link | Size |
-|---|-------------|------------|------|
-| 44 | My Support Cases | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-10155) | 1440×1313 |
-| 45 | New Support Case | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11781) | 1440×1409 |
-| 46 | Support Chat | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12302) | 1440×1273 |
+| #   | Screen Name      | Figma Link                                                                              | Size      |
+| --- | ---------------- | --------------------------------------------------------------------------------------- | --------- |
+| 44  | My Support Cases | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-10155) | 1440×1313 |
+| 45  | New Support Case | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-11781) | 1440×1409 |
+| 46  | Support Chat     | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12302) | 1440×1273 |
 
 #### Landing / Marketing Pages
 
-| # | Screen Name | Figma Link | Size |
-|---|-------------|------------|------|
-| 47 | For Facilities | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12388) | 1440×2747 |
-| 48 | For Organizers | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12611) | 1440×2770 |
-| 49 | For Talents | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12768) | 1440×2747 |
+| #   | Screen Name    | Figma Link                                                                              | Size      |
+| --- | -------------- | --------------------------------------------------------------------------------------- | --------- |
+| 47  | For Facilities | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12388) | 1440×2747 |
+| 48  | For Organizers | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12611) | 1440×2770 |
+| 49  | For Talents    | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12768) | 1440×2747 |
 
 #### Error & Utility
 
-| # | Screen Name | Figma Link | Size |
-|---|-------------|------------|------|
-| 50 | Not Found (404) | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12542) | 1440×1084 |
-| 51 | Error (500) | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12122) | 1440×900 |
-| 52 | Maintenance | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12106) | 1440×900 |
+| #   | Screen Name     | Figma Link                                                                              | Size      |
+| --- | --------------- | --------------------------------------------------------------------------------------- | --------- |
+| 50  | Not Found (404) | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12542) | 1440×1084 |
+| 51  | Error (500)     | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12122) | 1440×900  |
+| 52  | Maintenance     | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-12106) | 1440×900  |
 
 ### Design System Page
 
-| # | Element | Figma Link | Type |
-|---|---------|------------|------|
-| DS1 | Icons (Custom) | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1595) | Section |
-| DS2 | Button | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1630) | Component Set |
-| DS3 | TextInput | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1689) | Component Set |
-| DS4 | SearchField | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1708) | Component Set |
-| DS5 | Checkbox | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1717) | Component Set |
-| DS6 | Radio | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1727) | Component Set |
-| DS7 | Toggle | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1734) | Component Set |
-| DS8 | StatusBadge | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1750) | Component Set |
-| DS9 | FilterChip | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1769) | Component Set |
-| DS10 | Avatar | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1800) | Component Set |
-| DS11 | Toast | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-2875) | Component Set |
-| DS12 | SiteHeader | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-2936) | Component Set |
-| DS13 | SiteFooter | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-2977) | Component Set |
-| DS14 | TalentCard | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-3100) | Component Set |
-| DS15 | EventCard | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-3254) | Component Set |
-| DS16 | VendorCard | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-3302) | Component Set |
-| DS17 | Foundations — Colour | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1909) | Documentation |
-| DS18 | Foundations — Typography | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-2279) | Documentation |
+| #    | Element                     | Figma Link                                                                             | Type          |
+| ---- | --------------------------- | -------------------------------------------------------------------------------------- | ------------- |
+| DS1  | Icons (Custom)              | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1595) | Section       |
+| DS2  | Button                      | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1630) | Component Set |
+| DS3  | TextInput                   | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1689) | Component Set |
+| DS4  | SearchField                 | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1708) | Component Set |
+| DS5  | Checkbox                    | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1717) | Component Set |
+| DS6  | Radio                       | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1727) | Component Set |
+| DS7  | Toggle                      | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1734) | Component Set |
+| DS8  | StatusBadge                 | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1750) | Component Set |
+| DS9  | FilterChip                  | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1769) | Component Set |
+| DS10 | Avatar                      | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1800) | Component Set |
+| DS11 | Toast                       | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-2875) | Component Set |
+| DS12 | SiteHeader                  | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-2936) | Component Set |
+| DS13 | SiteFooter                  | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-2977) | Component Set |
+| DS14 | TalentCard                  | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-3100) | Component Set |
+| DS15 | EventCard                   | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-3254) | Component Set |
+| DS16 | VendorCard                  | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-3302) | Component Set |
+| DS17 | Foundations — Colour        | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-1909) | Documentation |
+| DS18 | Foundations — Typography    | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-2279) | Documentation |
 | DS19 | Foundations — Shape & Icons | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-2519) | Documentation |
-| DS20 | Icons — Phosphor | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-3385) | Frame |
+| DS20 | Icons — Phosphor            | [Open in Figma](https://www.figma.com/design/MvbBN5eknD2xUD5LhUBeBS/?node-id=207-3385) | Frame         |
 
 ---
 
@@ -179,75 +179,181 @@ Map each Figma screen to a React Router path:
 // src/routes.tsx
 const routes = [
   // Public / Browse
-  { path: "/",                     component: "HomePage",            figmaNode: "207-4362" },
-  { path: "/events",              component: "EventsPage",           figmaNode: "207-4600" },
-  { path: "/events/:slug",        component: "EventDetailPage",      figmaNode: "207-4797" },
-  { path: "/search",              component: "SearchResultsPage",    figmaNode: "207-5205" },
-  { path: "/talents",             component: "TalentsPage",          figmaNode: "207-5539" },
-  { path: "/talents/:slug",       component: "TalentDetailPage",     figmaNode: "207-5726" },
-  { path: "/experiences",         component: "ExperiencesPage",      figmaNode: "207-6795" },
-  { path: "/experiences/:slug",   component: "ExperienceDetailPage", figmaNode: "207-7048" },
-  { path: "/vendors",             component: "VendorsPage",          figmaNode: "207-5992" },
-  { path: "/vendors/:slug",       component: "VendorDetailPage",     figmaNode: "207-6338" },
-  { path: "/organizers",          component: "OrganizersPage",       figmaNode: "207-6112" },
-  { path: "/organizers/:slug",    component: "OrganizerDetailPage",  figmaNode: "207-6154" },
-  { path: "/auctions",            component: "AuctionPage",          figmaNode: "207-10792" },
-  { path: "/auctions/:slug",      component: "AuctionEventPage",     figmaNode: "207-11616" },
+  { path: "/", component: "HomePage", figmaNode: "207-4362" },
+  { path: "/events", component: "EventsPage", figmaNode: "207-4600" },
+  {
+    path: "/events/:slug",
+    component: "EventDetailPage",
+    figmaNode: "207-4797",
+  },
+  { path: "/search", component: "SearchResultsPage", figmaNode: "207-5205" },
+  { path: "/talents", component: "TalentsPage", figmaNode: "207-5539" },
+  {
+    path: "/talents/:slug",
+    component: "TalentDetailPage",
+    figmaNode: "207-5726",
+  },
+  { path: "/experiences", component: "ExperiencesPage", figmaNode: "207-6795" },
+  {
+    path: "/experiences/:slug",
+    component: "ExperienceDetailPage",
+    figmaNode: "207-7048",
+  },
+  { path: "/vendors", component: "VendorsPage", figmaNode: "207-5992" },
+  {
+    path: "/vendors/:slug",
+    component: "VendorDetailPage",
+    figmaNode: "207-6338",
+  },
+  { path: "/organizers", component: "OrganizersPage", figmaNode: "207-6112" },
+  {
+    path: "/organizers/:slug",
+    component: "OrganizerDetailPage",
+    figmaNode: "207-6154",
+  },
+  { path: "/auctions", component: "AuctionPage", figmaNode: "207-10792" },
+  {
+    path: "/auctions/:slug",
+    component: "AuctionEventPage",
+    figmaNode: "207-11616",
+  },
 
   // Booking Flow
-  { path: "/events/:slug/seats",  component: "SeatSelectionPage",    figmaNode: "207-7446" },
-  { path: "/checkout",            component: "CheckoutPage",         figmaNode: "207-8228" },
-  { path: "/order-confirmation",  component: "OrderConfirmationPage",figmaNode: "207-8462" },
+  {
+    path: "/events/:slug/seats",
+    component: "SeatSelectionPage",
+    figmaNode: "207-7446",
+  },
+  { path: "/checkout", component: "CheckoutPage", figmaNode: "207-8228" },
+  {
+    path: "/order-confirmation",
+    component: "OrderConfirmationPage",
+    figmaNode: "207-8462",
+  },
 
   // Auth
-  { path: "/sign-in",             component: "SignInPage",           figmaNode: "207-11907" },
-  { path: "/register",            component: "RegisterPage",         figmaNode: "207-11849" },
-  { path: "/reset-password",      component: "ResetPasswordPage",    figmaNode: "207-11297" },
+  { path: "/sign-in", component: "SignInPage", figmaNode: "207-11907" },
+  { path: "/register", component: "RegisterPage", figmaNode: "207-11849" },
+  {
+    path: "/reset-password",
+    component: "ResetPasswordPage",
+    figmaNode: "207-11297",
+  },
 
   // User Account
-  { path: "/profile",             component: "ProfilePage",          figmaNode: "207-10412" },
-  { path: "/settings",            component: "SettingsPage",         figmaNode: "207-10247" },
-  { path: "/my-tickets",          component: "MyTicketsPage",        figmaNode: "207-9469" },
-  { path: "/my-tickets/:id",      component: "TicketPage",           figmaNode: "207-9024" },
-  { path: "/saved",               component: "SavedPage",            figmaNode: "207-8057" },
-  { path: "/notifications",       component: "NotificationsPage",    figmaNode: "207-8824" },
-  { path: "/wallet",              component: "WalletPage",           figmaNode: "207-11086" },
-  { path: "/my-reviews",          component: "MyReviewsPage",        figmaNode: "207-9974" },
-  { path: "/my-enquiries",        component: "MyEnquiriesPage",      figmaNode: "207-6603" },
-  { path: "/my-submissions",      component: "MySubmissionsPage",    figmaNode: "207-7362" },
-  { path: "/my-auction-activity", component: "MyAuctionActivityPage",figmaNode: "207-11538" },
+  { path: "/profile", component: "ProfilePage", figmaNode: "207-10412" },
+  { path: "/settings", component: "SettingsPage", figmaNode: "207-10247" },
+  { path: "/my-tickets", component: "MyTicketsPage", figmaNode: "207-9469" },
+  { path: "/my-tickets/:id", component: "TicketPage", figmaNode: "207-9024" },
+  { path: "/saved", component: "SavedPage", figmaNode: "207-8057" },
+  {
+    path: "/notifications",
+    component: "NotificationsPage",
+    figmaNode: "207-8824",
+  },
+  { path: "/wallet", component: "WalletPage", figmaNode: "207-11086" },
+  { path: "/my-reviews", component: "MyReviewsPage", figmaNode: "207-9974" },
+  {
+    path: "/my-enquiries",
+    component: "MyEnquiriesPage",
+    figmaNode: "207-6603",
+  },
+  {
+    path: "/my-submissions",
+    component: "MySubmissionsPage",
+    figmaNode: "207-7362",
+  },
+  {
+    path: "/my-auction-activity",
+    component: "MyAuctionActivityPage",
+    figmaNode: "207-11538",
+  },
 
   // Ticket Actions
-  { path: "/my-tickets/:id/resell",  component: "ResellTicketPage",  figmaNode: "207-9700" },
-  { path: "/my-tickets/:id/gift",    component: "GiftTicketPage",    figmaNode: "207-9806" },
-  { path: "/my-tickets/:id/refund",  component: "RefundRequestPage", figmaNode: "207-9879" },
+  {
+    path: "/my-tickets/:id/resell",
+    component: "ResellTicketPage",
+    figmaNode: "207-9700",
+  },
+  {
+    path: "/my-tickets/:id/gift",
+    component: "GiftTicketPage",
+    figmaNode: "207-9806",
+  },
+  {
+    path: "/my-tickets/:id/refund",
+    component: "RefundRequestPage",
+    figmaNode: "207-9879",
+  },
 
   // Forms
-  { path: "/submit-experience",   component: "SubmitExperiencePage", figmaNode: "207-6961" },
-  { path: "/become-business",     component: "BecomeBusinessPage",   figmaNode: "207-10047" },
-  { path: "/apply/facilities",    component: "ApplyVendorPage",      figmaNode: "207-11368" },
-  { path: "/apply/vendor",        component: "→ /apply/facilities",  figmaNode: "207-11368" },
-  { path: "/apply/organizer",     component: "ApplyOrganizerPage",   figmaNode: "207-11424" },
-  { path: "/apply/talent",        component: "ApplyTalentPage",      figmaNode: "207-11482" },
-  { path: "/application-submitted",component: "ApplicationSubmittedPage", figmaNode: "207-11329" },
+  {
+    path: "/submit-experience",
+    component: "SubmitExperiencePage",
+    figmaNode: "207-6961",
+  },
+  {
+    path: "/apply/facilities",
+    component: "ApplyVendorPage",
+    figmaNode: "207-11368",
+  },
+  {
+    path: "/apply/vendor",
+    component: "→ /apply/facilities",
+    figmaNode: "207-11368",
+  },
+  {
+    path: "/apply/organizer",
+    component: "ApplyOrganizerPage",
+    figmaNode: "207-11424",
+  },
+  {
+    path: "/apply/talent",
+    component: "ApplyTalentPage",
+    figmaNode: "207-11482",
+  },
+  {
+    path: "/application-submitted",
+    component: "ApplicationSubmittedPage",
+    figmaNode: "207-11329",
+  },
 
   // Support
-  { path: "/support",             component: "MySupportCasesPage",   figmaNode: "207-10155" },
-  { path: "/support/new",         component: "NewSupportCasePage",   figmaNode: "207-11781" },
-  { path: "/support/chat",        component: "SupportChatPage",      figmaNode: "207-12302" },
+  { path: "/support", component: "MySupportCasesPage", figmaNode: "207-10155" },
+  {
+    path: "/support/new",
+    component: "NewSupportCasePage",
+    figmaNode: "207-11781",
+  },
+  {
+    path: "/support/chat",
+    component: "SupportChatPage",
+    figmaNode: "207-12302",
+  },
 
   // Marketing / Info
-  { path: "/about",               component: "AboutPage",            figmaNode: "207-11984" },
-  { path: "/help",                component: "HelpPage",             figmaNode: "207-12147" },
-  { path: "/legal",               component: "LegalPage",            figmaNode: "207-12042" },
-  { path: "/for-facilities",      component: "ForVendorsPage",       figmaNode: "207-12388" },
-  { path: "/for-vendors",         component: "→ /for-facilities",    figmaNode: "207-12388" },
-  { path: "/for-organizers",      component: "ForOrganizersPage",    figmaNode: "207-12611" },
-  { path: "/for-talents",         component: "ForTalentsPage",       figmaNode: "207-12768" },
+  { path: "/about", component: "AboutPage", figmaNode: "207-11984" },
+  { path: "/help", component: "HelpPage", figmaNode: "207-12147" },
+  { path: "/legal", component: "LegalPage", figmaNode: "207-12042" },
+  {
+    path: "/for-vendors",
+    component: "→ /apply/facilities",
+    figmaNode: "207-11368",
+  },
+  {
+    path: "/for-organizers",
+    component: "ForOrganizersPage",
+    figmaNode: "207-12611",
+  },
+  { path: "/for-talents", component: "ForTalentsPage", figmaNode: "207-12768" },
 
   // Error / Utility
-  { path: "/maintenance",         component: "MaintenancePage",      figmaNode: "207-12106" },
-  { path: "*",                    component: "NotFoundPage",         figmaNode: "207-12542" },
+  {
+    path: "/maintenance",
+    component: "MaintenancePage",
+    figmaNode: "207-12106",
+  },
+  { path: "*", component: "NotFoundPage", figmaNode: "207-12542" },
 ];
 ```
 
@@ -260,84 +366,84 @@ const routes = [
 ```css
 :root {
   /* Surface */
-  --surface-canvas: #FFF7F3;
-  --surface-card: #FFFFFF;
-  --surface-footer: #FFF1E9;
-  --surface-chip: #FFF1E9;
-  --surface-skeleton: #FFE2D0;
-  --surface-skeleton-alt: #FFC0A0;
+  --surface-canvas: #fff7f3;
+  --surface-card: #ffffff;
+  --surface-footer: #fff1e9;
+  --surface-chip: #fff1e9;
+  --surface-skeleton: #ffe2d0;
+  --surface-skeleton-alt: #ffc0a0;
   --surface-inverse: #191008;
-  --surface-tint: #FFF8F4;
-  --surface-sold: #F7E9E1;
-  --surface-brand-wash: #FFF0E9;
-  --surface-featured-from: #FFF2EA;
-  --surface-featured-mid: #FFE6D8;
-  --surface-featured-to: #F4E9FF;
+  --surface-tint: #fff8f4;
+  --surface-sold: #f7e9e1;
+  --surface-brand-wash: #fff0e9;
+  --surface-featured-from: #fff2ea;
+  --surface-featured-mid: #ffe6d8;
+  --surface-featured-to: #f4e9ff;
 
   /* Ink (text) */
   --ink-primary: #191008;
-  --ink-body: #3A2418;
-  --ink-muted: #6B5F58;
-  --ink-faint: #8E8078;
-  --ink-inverse: #FFF7F3;
-  --ink-disabled: #C0AEA4;
+  --ink-body: #3a2418;
+  --ink-muted: #6b5f58;
+  --ink-faint: #8e8078;
+  --ink-inverse: #fff7f3;
+  --ink-disabled: #c0aea4;
 
   /* Border */
-  --border-default: #F3DED2;
-  --border-strong: #F5C9B4;
-  --border-subtle: #F7E9E1;
-  --border-brand: #FFC8AE;
-  --border-featured: #F7DFD3;
+  --border-default: #f3ded2;
+  --border-strong: #f5c9b4;
+  --border-subtle: #f7e9e1;
+  --border-brand: #ffc8ae;
+  --border-featured: #f7dfd3;
 
   /* Brand */
-  --brand-primary: #F25F2C;
-  --brand-deep: #B8320F;
-  --brand-strong: #E0451A;
-  --brand-light: #FF9147;
-  --brand-link: #D8431A;
-  --brand-hover: #B8320F;
-  --brand-gradient-from: #FF9147;
-  --brand-gradient-to: #E0451A;
-  --brand-gradient-deep: #C4330B;
+  --brand-primary: #f25f2c;
+  --brand-deep: #b8320f;
+  --brand-strong: #e0451a;
+  --brand-light: #ff9147;
+  --brand-link: #d8431a;
+  --brand-hover: #b8320f;
+  --brand-gradient-from: #ff9147;
+  --brand-gradient-to: #e0451a;
+  --brand-gradient-deep: #c4330b;
 
   /* Tier */
-  --tier-vip: #5A18C4;
-  --tier-vip-light: #EEDCFF;
-  --tier-gold: #C4330B;
-  --tier-gold-light: #FFE2D0;
-  --tier-gold-ink: #8A2A08;
-  --tier-silver-light: #FFF1E9;
-  --tier-bronze: #4E6C8B;
-  --tier-bronze-light: #E5F0FC;
+  --tier-vip: #5a18c4;
+  --tier-vip-light: #eedcff;
+  --tier-gold: #c4330b;
+  --tier-gold-light: #ffe2d0;
+  --tier-gold-ink: #8a2a08;
+  --tier-silver-light: #fff1e9;
+  --tier-bronze: #4e6c8b;
+  --tier-bronze-light: #e5f0fc;
 
   /* Accent */
-  --accent-amber: #C4330B;
-  --accent-amber-light: #FFC0A0;
+  --accent-amber: #c4330b;
+  --accent-amber-light: #ffc0a0;
 
   /* Tag */
-  --tag-amber-wash: #FFE2D0;
-  --tag-brand-ink: #C4330B;
-  --tag-rose-wash: #FDECE2;
-  --tag-rose-ink: #B8231A;
+  --tag-amber-wash: #ffe2d0;
+  --tag-brand-ink: #c4330b;
+  --tag-rose-wash: #fdece2;
+  --tag-rose-ink: #b8231a;
 
   /* Badge */
-  --badge-rose-wash: #FDECE2;
-  --badge-rose-ink: #C4261B;
+  --badge-rose-wash: #fdece2;
+  --badge-rose-ink: #c4261b;
 
   /* Bar */
-  --bar-brand-wash: #FFF0E9;
-  --bar-brand-line: #FFC8AE;
+  --bar-brand-wash: #fff0e9;
+  --bar-brand-line: #ffc8ae;
 
   /* Zone */
-  --zone-amber-wash: #FFF4EE;
-  --zone-brand-wash: #FFF0E9;
+  --zone-amber-wash: #fff4ee;
+  --zone-brand-wash: #fff0e9;
 
   /* Partners */
-  --brand-tabby: #70F6B5;
-  --brand-tabby-ink: #0A2A20;
-  --brand-tamara: #FFC7C5;
-  --brand-tamara-ink: #3A0E14;
-  --brand-visa: #1A2B7B;
+  --brand-tabby: #70f6b5;
+  --brand-tabby-ink: #0a2a20;
+  --brand-tamara: #ffc7c5;
+  --brand-tamara-ink: #3a0e14;
+  --brand-visa: #1a2b7b;
 }
 ```
 
@@ -372,7 +478,8 @@ const routes = [
 
 ```css
 :root {
-  --elevation-card: 0px 1px 2px rgba(25, 16, 8, 0.06), 0px 8px 32px rgba(25, 16, 8, 0.08);
+  --elevation-card:
+    0px 1px 2px rgba(25, 16, 8, 0.06), 0px 8px 32px rgba(25, 16, 8, 0.08);
 }
 ```
 
@@ -383,10 +490,10 @@ const routes = [
 ### Font Setup
 
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap");
 
 :root {
-  --font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  --font-family: "Manrope", system-ui, -apple-system, sans-serif;
 }
 ```
 
@@ -394,50 +501,202 @@ const routes = [
 
 ```css
 /* Display */
-.text-display-xl    { font-size: 56px; line-height: 64px; font-weight: 800; letter-spacing: -1.68px; }
-.text-display-l     { font-size: 46px; line-height: 48px; font-weight: 800; letter-spacing: -1.61px; }
-.text-display-m     { font-size: 42px; line-height: 44px; font-weight: 800; letter-spacing: -1.47px; }
-.text-display-s     { font-size: 34px; line-height: 36px; font-weight: 800; letter-spacing: -1.02px; }
-.text-display-xs    { font-size: 30px; line-height: 33px; font-weight: 800; letter-spacing: -0.9px; }
-.text-display-2xs   { font-size: 26px; line-height: 28px; font-weight: 700; letter-spacing: -0.52px; }
-.text-display-card  { font-size: 25px; line-height: 28px; font-weight: 700; letter-spacing: -0.5px; }
-.text-display-page  { font-size: 54px; line-height: 55px; font-weight: 800; letter-spacing: -1.89px; }
+.text-display-xl {
+  font-size: 56px;
+  line-height: 64px;
+  font-weight: 800;
+  letter-spacing: -1.68px;
+}
+.text-display-l {
+  font-size: 46px;
+  line-height: 48px;
+  font-weight: 800;
+  letter-spacing: -1.61px;
+}
+.text-display-m {
+  font-size: 42px;
+  line-height: 44px;
+  font-weight: 800;
+  letter-spacing: -1.47px;
+}
+.text-display-s {
+  font-size: 34px;
+  line-height: 36px;
+  font-weight: 800;
+  letter-spacing: -1.02px;
+}
+.text-display-xs {
+  font-size: 30px;
+  line-height: 33px;
+  font-weight: 800;
+  letter-spacing: -0.9px;
+}
+.text-display-2xs {
+  font-size: 26px;
+  line-height: 28px;
+  font-weight: 700;
+  letter-spacing: -0.52px;
+}
+.text-display-card {
+  font-size: 25px;
+  line-height: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.text-display-page {
+  font-size: 54px;
+  line-height: 55px;
+  font-weight: 800;
+  letter-spacing: -1.89px;
+}
 
 /* Title */
-.text-title-xl      { font-size: 19px; line-height: 23px; font-weight: 600; letter-spacing: 0; }
-.text-title-l       { font-size: 17px; line-height: 21px; font-weight: 600; letter-spacing: 0; }
-.text-title-m       { font-size: 16px; line-height: 22px; font-weight: 600; letter-spacing: 0; }
+.text-title-xl {
+  font-size: 19px;
+  line-height: 23px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.text-title-l {
+  font-size: 17px;
+  line-height: 21px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.text-title-m {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
 
 /* Body */
-.text-body-l        { font-size: 18px; line-height: 28px; font-weight: 500; letter-spacing: 0; }
-.text-body-m        { font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: 0; }
-.text-body-s        { font-size: 14px; line-height: 21px; font-weight: 500; letter-spacing: 0; }
-.text-body-xs       { font-size: 13px; line-height: 19px; font-weight: 500; letter-spacing: 0; }
-.text-body-2xs      { font-size: 12px; line-height: 17px; font-weight: 500; letter-spacing: 0; }
+.text-body-l {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.text-body-m {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.text-body-s {
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.text-body-xs {
+  font-size: 13px;
+  line-height: 19px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.text-body-2xs {
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
 
 /* Action (buttons, CTAs) */
-.text-action-m      { font-size: 15px; line-height: 20px; font-weight: 700; letter-spacing: 0; }
-.text-action-s      { font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0; }
-.text-action-xs     { font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: 0; }
+.text-action-m {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.text-action-s {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.text-action-xs {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
 
 /* Link */
-.text-link-m        { font-size: 14px; line-height: 20px; font-weight: 700; letter-spacing: 0; }
-.text-link-s        { font-size: 13px; line-height: 18px; font-weight: 700; letter-spacing: 0; }
+.text-link-m {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.text-link-s {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
 
 /* Tag */
-.text-tag-m         { font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0; }
-.text-tag-s         { font-size: 11px; line-height: 14px; font-weight: 700; letter-spacing: 0; }
+.text-tag-m {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.text-tag-s {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
 
 /* Price */
-.text-price-xl      { font-size: 26px; line-height: 30px; font-weight: 800; letter-spacing: 0; }
-.text-price-l       { font-size: 20px; line-height: 24px; font-weight: 700; letter-spacing: 0; }
-.text-price-m       { font-size: 18px; line-height: 22px; font-weight: 700; letter-spacing: 0; }
+.text-price-xl {
+  font-size: 26px;
+  line-height: 30px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+.text-price-l {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.text-price-m {
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
 
 /* Specialty */
-.text-eyebrow       { font-size: 12px; line-height: 16px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
-.text-eyebrow-wide  { font-size: 13px; line-height: 16px; font-weight: 800; letter-spacing: 3.64px; text-transform: uppercase; }
-.text-meta-date     { font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.48px; }
-.text-nav-m         { font-size: 15px; line-height: 22px; font-weight: 600; letter-spacing: 0; }
+.text-eyebrow {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.text-eyebrow-wide {
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 800;
+  letter-spacing: 3.64px;
+  text-transform: uppercase;
+}
+.text-meta-date {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0.48px;
+}
+.text-nav-m {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
 ```
 
 ---
@@ -545,9 +804,9 @@ src/
 ```tsx
 // Button
 interface ButtonProps {
-  style: 'primary' | 'secondary' | 'ghost' | 'destructive' | 'icon';
-  size: 'l' | 'm' | 's';
-  state?: 'default' | 'hover' | 'disabled' | 'loading';
+  style: "primary" | "secondary" | "ghost" | "destructive" | "icon";
+  size: "l" | "m" | "s";
+  state?: "default" | "hover" | "disabled" | "loading";
   label: string;
   icon?: React.ReactNode;
   showIcon?: boolean;
@@ -556,14 +815,22 @@ interface ButtonProps {
 
 // StatusBadge
 interface StatusBadgeProps {
-  tone: 'brand-tint' | 'urgent-solid' | 'terminal' | 'neutral-outline' |
-        'live-solid' | 'success-tint' | 'inactive' | 'info-tint' | 'danger-tint';
+  tone:
+    | "brand-tint"
+    | "urgent-solid"
+    | "terminal"
+    | "neutral-outline"
+    | "live-solid"
+    | "success-tint"
+    | "inactive"
+    | "info-tint"
+    | "danger-tint";
   label: string;
 }
 
 // TalentCard
 interface TalentCardProps {
-  context: 'catalog' | 'home' | 'directory';
+  context: "catalog" | "home" | "directory";
   name: string;
   category: string;
   rating: number;
@@ -573,7 +840,7 @@ interface TalentCardProps {
 
 // EventCard
 interface EventCardProps {
-  context: 'home' | 'catalog';
+  context: "home" | "catalog";
   title: string;
   date: string;
   location: string;
@@ -584,13 +851,13 @@ interface EventCardProps {
 // FilterChip
 interface FilterChipProps {
   label: string;
-  state: 'default' | 'hover' | 'selected' | 'removable';
+  state: "default" | "hover" | "selected" | "removable";
   onRemove?: () => void;
 }
 
 // Toast
 interface ToastProps {
-  tone: 'success' | 'error' | 'neutral';
+  tone: "success" | "error" | "neutral";
   message: string;
   action?: { label: string; onClick: () => void };
 }
@@ -598,20 +865,20 @@ interface ToastProps {
 // Avatar
 interface AvatarProps {
   size: 28 | 52;
-  shape: 'circle' | 'squircle';
+  shape: "circle" | "squircle";
   src?: string;
   alt: string;
 }
 
 // SiteHeader
 interface SiteHeaderProps {
-  state: 'signed-in' | 'signed-out';
+  state: "signed-in" | "signed-out";
   user?: { name: string; avatarUrl: string };
 }
 
 // EmptyState
 interface EmptyStateProps {
-  variant: 'first-use' | 'filters' | 'gated';
+  variant: "first-use" | "filters" | "gated";
   title: string;
   description: string;
   action?: { label: string; onClick: () => void };
@@ -633,16 +900,57 @@ The design uses **Phosphor Icons** (51 icons from the library). Map Figma names 
 ```tsx
 // src/components/icons/index.tsx
 export {
-  ArrowCounterClockwise, ArrowDown, ArrowUp, ArrowLeft, ArrowRight,
-  ArrowUpRight, Bell, BellSimple, BellRinging, Briefcase, Buildings,
-  CalendarPlus, CaretDown, Check, CheckCircle, Circle, ClipboardText,
-  Clock, ClockCountdown, CreditCard, DeviceMobile, EnvelopeSimple,
-  Gavel, GlobeHemisphereEast, Heart, HeartFill, HourglassMedium,
-  Laptop, List, LockKey, MagnifyingGlass, MapPin, MusicNotes, Play,
-  ShieldCheck, Sparkle, SquaresFour, Star, StarFill, Ticket, User,
-  UserCircle, Wallet, Wrench, X, DownloadSimple, Minus, Plus, Power,
-  Wheelchair
-} from '@phosphor-icons/react';
+  ArrowCounterClockwise,
+  ArrowDown,
+  ArrowUp,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  Bell,
+  BellSimple,
+  BellRinging,
+  Briefcase,
+  Buildings,
+  CalendarPlus,
+  CaretDown,
+  Check,
+  CheckCircle,
+  Circle,
+  ClipboardText,
+  Clock,
+  ClockCountdown,
+  CreditCard,
+  DeviceMobile,
+  EnvelopeSimple,
+  Gavel,
+  GlobeHemisphereEast,
+  Heart,
+  HeartFill,
+  HourglassMedium,
+  Laptop,
+  List,
+  LockKey,
+  MagnifyingGlass,
+  MapPin,
+  MusicNotes,
+  Play,
+  ShieldCheck,
+  Sparkle,
+  SquaresFour,
+  Star,
+  StarFill,
+  Ticket,
+  User,
+  UserCircle,
+  Wallet,
+  Wrench,
+  X,
+  DownloadSimple,
+  Minus,
+  Plus,
+  Power,
+  Wheelchair,
+} from "@phosphor-icons/react";
 ```
 
 All icons render at **24×24px** by default. Use `size={24}` prop.
@@ -674,19 +982,21 @@ These are NOT in Phosphor — create custom SVG components:
 // src/layouts/PageSection.tsx
 interface PageSectionProps {
   children: React.ReactNode;
-  paddingTop?: number;  // Default: 88 (space/section)
+  paddingTop?: number; // Default: 88 (space/section)
   className?: string;
 }
 
-export function PageSection({ children, paddingTop = 88, className }: PageSectionProps) {
+export function PageSection({
+  children,
+  paddingTop = 88,
+  className,
+}: PageSectionProps) {
   return (
     <section
       className={className}
       style={{ paddingTop, paddingLeft: 60, paddingRight: 60 }}
     >
-      <div style={{ maxWidth: 1320, margin: '0 auto' }}>
-        {children}
-      </div>
+      <div style={{ maxWidth: 1320, margin: "0 auto" }}>{children}</div>
     </section>
   );
 }
@@ -716,21 +1026,21 @@ export function PageSection({ children, paddingTop = 88, className }: PageSectio
 
 ### Home Page Section Map (detailed)
 
-| Section | Padding-top | Content Width | Grid |
-|---------|-------------|---------------|------|
-| SiteHeader | 0 | 1400px | Horizontal, gap 38 |
-| Hero | 60px | 1320px | Horizontal, gap 52 |
-| Talents | 84px | 1320px | Row of cards, gap 18 |
-| Categories | 72px | 1320px | Chip row, gap 9 |
-| Events | 60px | 1320px | 2 rows × 4 cards, gap 20 |
-| Featured | 76px | 1320px | Panel + cards |
-| Auction | 88px | 1320px | Row of cards, gap 20 |
-| Experiences | 88px | 1320px | Row of cards, gap 20 |
-| Organizers | 88px | 1320px | Tile grid, gap 16 |
-| Vendors | 88px | 1320px | 2 rows × 3 cards, gap 18 |
-| CTA | 96px | 1320px | Full-width band |
-| BusinessStrip | 72px (top) + 96px (bottom) | 1320px | Link row, gap 16 |
-| SiteFooter | 0 | 1400px | 4-col footer + bottom bar |
+| Section       | Padding-top                | Content Width | Grid                      |
+| ------------- | -------------------------- | ------------- | ------------------------- |
+| SiteHeader    | 0                          | 1400px        | Horizontal, gap 38        |
+| Hero          | 60px                       | 1320px        | Horizontal, gap 52        |
+| Talents       | 84px                       | 1320px        | Row of cards, gap 18      |
+| Categories    | 72px                       | 1320px        | Chip row, gap 9           |
+| Events        | 60px                       | 1320px        | 2 rows × 4 cards, gap 20  |
+| Featured      | 76px                       | 1320px        | Panel + cards             |
+| Auction       | 88px                       | 1320px        | Row of cards, gap 20      |
+| Experiences   | 88px                       | 1320px        | Row of cards, gap 20      |
+| Organizers    | 88px                       | 1320px        | Tile grid, gap 16         |
+| Vendors       | 88px                       | 1320px        | 2 rows × 3 cards, gap 18  |
+| CTA           | 96px                       | 1320px        | Full-width band           |
+| BusinessStrip | 72px (top) + 96px (bottom) | 1320px        | Link row, gap 16          |
+| SiteFooter    | 0                          | 1400px        | 4-col footer + bottom bar |
 
 ---
 
@@ -802,28 +1112,28 @@ nodeId: 207:4362
 
 ```json
 {
-  "Home":             "207:4362",
-  "Events":           "207:4600",
-  "Event Details":    "207:4797",
-  "Search Results":   "207:5205",
-  "Talents":          "207:5539",
-  "Talent Detail":    "207:5726",
-  "Experiences":      "207:6795",
-  "Experience Detail":"207:7048",
-  "Vendors":          "207:5992",
-  "Vendor Detail":    "207:6338",
-  "Organizers":       "207:6112",
+  "Home": "207:4362",
+  "Events": "207:4600",
+  "Event Details": "207:4797",
+  "Search Results": "207:5205",
+  "Talents": "207:5539",
+  "Talent Detail": "207:5726",
+  "Experiences": "207:6795",
+  "Experience Detail": "207:7048",
+  "Vendors": "207:5992",
+  "Vendor Detail": "207:6338",
+  "Organizers": "207:6112",
   "Organizer Detail": "207:6154",
-  "Checkout":         "207:8228",
-  "Sign In":          "207:11907",
-  "Register":         "207:11849",
-  "Profile":          "207:10412",
-  "My Tickets":       "207:9469",
-  "Saved":            "207:8057",
-  "Notifications":    "207:8824",
-  "Wallet":           "207:11086",
-  "Auction":          "207:10792",
-  "Settings":         "207:10247"
+  "Checkout": "207:8228",
+  "Sign In": "207:11907",
+  "Register": "207:11849",
+  "Profile": "207:10412",
+  "My Tickets": "207:9469",
+  "Saved": "207:8057",
+  "Notifications": "207:8824",
+  "Wallet": "207:11086",
+  "Auction": "207:10792",
+  "Settings": "207:10247"
 }
 ```
 
@@ -831,31 +1141,31 @@ nodeId: 207:4362
 
 ```json
 {
-  "Button":           "207:1630",
-  "TextInput":        "207:1689",
-  "SearchField":      "207:1708",
-  "Checkbox":         "207:1717",
-  "Radio":            "207:1727",
-  "Toggle":           "207:1734",
-  "StatusBadge":      "207:1750",
-  "FilterChip":       "207:1769",
-  "Avatar":           "207:1800",
-  "StarRating":       "207:1817",
-  "PriceDisplay":     "207:1827",
-  "Toast":            "207:2875",
-  "EmptyState":       "207:2901",
-  "SiteHeader":       "207:2936",
-  "SiteFooter":       "207:2977",
-  "Modal":            "207:3040",
-  "TalentCard":       "207:3100",
-  "ExperienceCard":   "207:3166",
-  "EventCard":        "207:3254",
-  "VendorCard":       "207:3302",
-  "OrganizerCard":    "207:3347",
-  "Tabs":             "207:2841",
-  "Breadcrumbs":      "207:2835",
-  "Pagination":       "207:2852",
-  "SectionHeader":    "207:2818"
+  "Button": "207:1630",
+  "TextInput": "207:1689",
+  "SearchField": "207:1708",
+  "Checkbox": "207:1717",
+  "Radio": "207:1727",
+  "Toggle": "207:1734",
+  "StatusBadge": "207:1750",
+  "FilterChip": "207:1769",
+  "Avatar": "207:1800",
+  "StarRating": "207:1817",
+  "PriceDisplay": "207:1827",
+  "Toast": "207:2875",
+  "EmptyState": "207:2901",
+  "SiteHeader": "207:2936",
+  "SiteFooter": "207:2977",
+  "Modal": "207:3040",
+  "TalentCard": "207:3100",
+  "ExperienceCard": "207:3166",
+  "EventCard": "207:3254",
+  "VendorCard": "207:3302",
+  "OrganizerCard": "207:3347",
+  "Tabs": "207:2841",
+  "Breadcrumbs": "207:2835",
+  "Pagination": "207:2852",
+  "SectionHeader": "207:2818"
 }
 ```
 
@@ -865,17 +1175,17 @@ nodeId: 207:4362
 
 ### Naming Conventions
 
-| Figma | React | CSS |
-|-------|-------|-----|
-| `surface/canvas` | — | `--surface-canvas` |
-| `ink/primary` | — | `--ink-primary` |
-| `space/gutter` | — | `--space-gutter` |
-| `radius/pill` | — | `--radius-pill` |
-| `Button` (PascalCase) | `<Button />` | `.button` |
-| `Style=Primary` | `style="primary"` | `.button--primary` |
-| `Size=L` | `size="l"` | `.button--l` |
-| `State=Hover` | CSS `:hover` pseudo | `.button:hover` |
-| `Display/XL` | — | `.text-display-xl` |
+| Figma                 | React               | CSS                |
+| --------------------- | ------------------- | ------------------ |
+| `surface/canvas`      | —                   | `--surface-canvas` |
+| `ink/primary`         | —                   | `--ink-primary`    |
+| `space/gutter`        | —                   | `--space-gutter`   |
+| `radius/pill`         | —                   | `--radius-pill`    |
+| `Button` (PascalCase) | `<Button />`        | `.button`          |
+| `Style=Primary`       | `style="primary"`   | `.button--primary` |
+| `Size=L`              | `size="l"`          | `.button--l`       |
+| `State=Hover`         | CSS `:hover` pseudo | `.button:hover`    |
+| `Display/XL`          | —                   | `.text-display-xl` |
 
 ### Key Implementation Rules
 
@@ -900,75 +1210,75 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ["Manrope", "system-ui", "-apple-system", "sans-serif"],
       },
       colors: {
         surface: {
-          canvas: '#FFF7F3',
-          card: '#FFFFFF',
-          footer: '#FFF1E9',
-          chip: '#FFF1E9',
-          skeleton: '#FFE2D0',
-          'skeleton-alt': '#FFC0A0',
-          inverse: '#191008',
-          tint: '#FFF8F4',
-          sold: '#F7E9E1',
-          'brand-wash': '#FFF0E9',
+          canvas: "#FFF7F3",
+          card: "#FFFFFF",
+          footer: "#FFF1E9",
+          chip: "#FFF1E9",
+          skeleton: "#FFE2D0",
+          "skeleton-alt": "#FFC0A0",
+          inverse: "#191008",
+          tint: "#FFF8F4",
+          sold: "#F7E9E1",
+          "brand-wash": "#FFF0E9",
         },
         ink: {
-          primary: '#191008',
-          body: '#3A2418',
-          muted: '#6B5F58',
-          faint: '#8E8078',
-          inverse: '#FFF7F3',
-          disabled: '#C0AEA4',
+          primary: "#191008",
+          body: "#3A2418",
+          muted: "#6B5F58",
+          faint: "#8E8078",
+          inverse: "#FFF7F3",
+          disabled: "#C0AEA4",
         },
         border: {
-          DEFAULT: '#F3DED2',
-          strong: '#F5C9B4',
-          subtle: '#F7E9E1',
-          brand: '#FFC8AE',
+          DEFAULT: "#F3DED2",
+          strong: "#F5C9B4",
+          subtle: "#F7E9E1",
+          brand: "#FFC8AE",
         },
         brand: {
-          primary: '#F25F2C',
-          deep: '#B8320F',
-          strong: '#E0451A',
-          light: '#FF9147',
-          link: '#D8431A',
-          hover: '#B8320F',
+          primary: "#F25F2C",
+          deep: "#B8320F",
+          strong: "#E0451A",
+          light: "#FF9147",
+          link: "#D8431A",
+          hover: "#B8320F",
         },
         tier: {
-          vip: '#5A18C4',
-          'vip-light': '#EEDCFF',
-          gold: '#C4330B',
-          'gold-light': '#FFE2D0',
-          bronze: '#4E6C8B',
-          'bronze-light': '#E5F0FC',
+          vip: "#5A18C4",
+          "vip-light": "#EEDCFF",
+          gold: "#C4330B",
+          "gold-light": "#FFE2D0",
+          bronze: "#4E6C8B",
+          "bronze-light": "#E5F0FC",
         },
       },
       spacing: {
-        '2xs': '8px',
-        'xs': '12px',
-        'sm': '14px',
-        'md': '18px',
-        'lg': '20px',
-        'gutter': '40px',
-        'section': '88px',
+        "2xs": "8px",
+        xs: "12px",
+        sm: "14px",
+        md: "18px",
+        lg: "20px",
+        gutter: "40px",
+        section: "88px",
       },
       borderRadius: {
-        'sm': '12px',
-        'md': '14px',
-        'lg': '18px',
-        'xl': '20px',
-        '2xl': '22px',
-        'pill': '999px',
+        sm: "12px",
+        md: "14px",
+        lg: "18px",
+        xl: "20px",
+        "2xl": "22px",
+        pill: "999px",
       },
       boxShadow: {
-        card: '0px 1px 2px rgba(25, 16, 8, 0.06), 0px 8px 32px rgba(25, 16, 8, 0.08)',
+        card: "0px 1px 2px rgba(25, 16, 8, 0.06), 0px 8px 32px rgba(25, 16, 8, 0.08)",
       },
       maxWidth: {
-        content: '1320px',
-        page: '1440px',
+        content: "1320px",
+        page: "1440px",
       },
     },
   },
@@ -977,32 +1287,32 @@ module.exports = {
 
 ### Recommended Tech Stack
 
-| Concern | Recommended |
-|---------|-------------|
-| Framework | React 18+ with TypeScript |
-| Routing | React Router v6 |
-| Styling | Tailwind CSS or CSS Modules with design tokens |
-| Icons | `@phosphor-icons/react` + 12 custom SVGs |
-| Font | Google Fonts (Manrope 500, 600, 700, 800) |
-| State | React Context + TanStack Query for server state |
-| Forms | React Hook Form + Zod validation |
+| Concern   | Recommended                                          |
+| --------- | ---------------------------------------------------- |
+| Framework | React 18+ with TypeScript                            |
+| Routing   | React Router v6                                      |
+| Styling   | Tailwind CSS or CSS Modules with design tokens       |
+| Icons     | `@phosphor-icons/react` + 12 custom SVGs             |
+| Font      | Google Fonts (Manrope 500, 600, 700, 800)            |
+| State     | React Context + TanStack Query for server state      |
+| Forms     | React Hook Form + Zod validation                     |
 | Animation | Framer Motion (for toasts, modals, page transitions) |
 
 ---
 
 ## Appendix: Figma File Metadata
 
-| Field | Value |
-|-------|-------|
-| File key | `MvbBN5eknD2xUD5LhUBeBS` |
-| Total pages | 5 |
-| Designed screens | 51 (Guest web) |
-| Components | 93 standalone + 28 component sets |
-| Variable tokens | 71 |
-| Text styles | 36 |
-| Effect styles | 1 |
-| Custom icons | 12 |
-| Phosphor icons | 51 |
-| Primary width | 1440px (content: 1320px) |
-| Typeface | Manrope (single family) |
-| Brand colour | #F25F2C |
+| Field            | Value                             |
+| ---------------- | --------------------------------- |
+| File key         | `MvbBN5eknD2xUD5LhUBeBS`          |
+| Total pages      | 5                                 |
+| Designed screens | 51 (Guest web)                    |
+| Components       | 93 standalone + 28 component sets |
+| Variable tokens  | 71                                |
+| Text styles      | 36                                |
+| Effect styles    | 1                                 |
+| Custom icons     | 12                                |
+| Phosphor icons   | 51                                |
+| Primary width    | 1440px (content: 1320px)          |
+| Typeface         | Manrope (single family)           |
+| Brand colour     | #F25F2C                           |

@@ -5,8 +5,6 @@
     "lede": "MyTicket is where people across the Kingdom find live experiences — concerts, sports, festivals, theatre, family days, and places worth the drive — and buy their way in with one tap. Behind the curtain we partner with organizers through our office, and review facility and talent requests from guest accounts.",
     "ctaText": "The best way to understand MyTicket is to find your next night out.",
     "ctaLabel": "Browse what's on",
-    "buildingSomething": "Building something?",
-    "becomeBusiness": "Become a business",
     "stats": [
       {
         "value": "2.1M",
@@ -77,10 +75,6 @@
       {
         "label": "Check a refund",
         "href": "/my-tickets"
-      },
-      {
-        "label": "Track a business request",
-        "href": "/become-business"
       },
       {
         "label": "Change my notifications",
@@ -217,10 +211,10 @@
         "faqs": [
           {
             "q": "How do I become a facility or talent?",
-            "a": "Sign in as a guest, open Become a business, and submit a request. Our team reviews it in 2–5 working days. Acceptance does not change your login — we contact you outside the platform if needed."
+            "a": "Sign in as a guest, then submit a request from the facility or talent application form. Our team reviews it in 2–5 working days. Acceptance does not change your login — we contact you outside the platform if needed."
           },
           {
-            "q": "How do I become a business partner?",
+            "q": "How does an organizer partnership work?",
             "a": "Organizer accounts are created after an office contract. Contact partnerships from the help or support flow — there is no self-serve apply form."
           }
         ]
@@ -443,7 +437,6 @@
     "title": "MyTicket for {{role}}",
     "lede": "Partner with MyTicket — applications are reviewed by our team.",
     "submitRequest": "Submit a request",
-    "seeBusinessPaths": "See all business paths",
     "contactPartnerships": "Contact partnerships",
     "howOnboarding": "How onboarding works"
   },
@@ -746,38 +739,6 @@
     "closingTitle": "Ready to submit?",
     "closingSubtitle": "A few minutes to apply, 2–5 days to review — then we contact you if there's a fit.",
     "closingCta": "Submit your request"
-  },
-  "becomeBusiness": {
-    "eyebrow": "Your account · Business request",
-    "title": "Submit a request. Stay a guest.",
-    "lede": "{{vendor}} and {{talent}} paths are request forms only. Our team reviews each submission — typically 2–5 working days — and you keep buying tickets as a guest either way.",
-    "youllNeed": "You'll need:",
-    "submitCta": "Submit {{role}} request",
-    "talent": {
-      "body": "Singer, band, comedian, speaker, DJ — submit your details for our team to review.",
-      "points": [
-        "Fill a short request form from your guest account",
-        "Admin reviews and accepts or rejects — no login role change",
-        "If accepted, we contact you outside the platform when needed"
-      ],
-      "need": "ID, at least one portfolio piece, and a short bio."
-    },
-    "vendor": {
-      "body": "Sound, light, catering, security, staging — tell us what you provide.",
-      "points": [
-        "Fill a short request form from your guest account",
-        "Admin reviews and accepts or rejects — no login role change",
-        "If accepted, we contact you outside the platform when needed"
-      ],
-      "need": "ID, business licence, and photos of previous work."
-    },
-    "adminReviewTitle": "Admin review only.",
-    "adminReviewBody": "Accepted requests do not unlock a separate login — contact happens outside MyTicket.",
-    "organizingTitle": "Organizing events?",
-    "organizingBody": "Partnerships are arranged through our office — see",
-    "forOrganizersLink": "for organizers",
-    "alreadyAccount": "Already have an account?",
-    "signIn": "Sign in"
   },
   "shell": {
     "benefitsTitle": "What the role unlocks",

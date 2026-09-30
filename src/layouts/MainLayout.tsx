@@ -1,9 +1,9 @@
-import { Outlet, useLocation } from 'react-router-dom'
-import { SiteFooter, SiteHeader } from '@/components/navigation'
-import { PageFade } from '@/components/motion'
-import { useAppSelector } from '@/app/hooks'
-import { selectIsAuthenticated } from '@/features/auth/authSlice'
-import { useHeaderAccount } from '@/lib/auth/accountChip'
+import { Outlet, useLocation } from "react-router-dom";
+import { SiteFooter, SiteHeader } from "@/components/navigation";
+import { PageFade } from "@/components/motion";
+import { useAppSelector } from "@/app/hooks";
+import { selectIsAuthenticated } from "@/features/auth/authSlice";
+import { useHeaderAccount } from "@/lib/auth/accountChip";
 
 /**
  * Pattern A — MainLayout.
@@ -14,71 +14,69 @@ function resolveNav(
   pathname: string,
   search: string,
 ): {
-  activeItem?: string
-  activeItemState?: 'active' | 'section'
+  activeItem?: string;
+  activeItemState?: "active" | "section";
 } {
-  const segments = pathname.split('/').filter(Boolean)
-  const root = segments[0]
-  if (!root) return {}
+  const segments = pathname.split("/").filter(Boolean);
+  const root = segments[0];
+  if (!root) return {};
 
-  if (root === 'search') return {}
+  if (root === "search") return {};
 
   // Institutions → public chooser; apply funnels stay marked while in progress.
   if (
-    pathname.startsWith('/become-business') ||
-    pathname.startsWith('/for-facilities') ||
-    pathname.startsWith('/for-vendors') ||
-    pathname.startsWith('/apply/facilities') ||
-    pathname.startsWith('/apply/vendor') ||
-    pathname.startsWith('/apply/talent') ||
-    pathname.startsWith('/my-facilities-application') ||
-    pathname.startsWith('/my-vendor-application')
+    pathname.startsWith("/for-vendors") ||
+    pathname.startsWith("/apply/facilities") ||
+    pathname.startsWith("/apply/vendor") ||
+    pathname.startsWith("/apply/talent") ||
+    pathname.startsWith("/my-facilities-application") ||
+    pathname.startsWith("/my-vendor-application")
   ) {
-    return { activeItem: 'Institutions', activeItemState: 'active' }
+    return { activeItem: "Institutions", activeItemState: "active" };
   }
 
-  if (root === 'talents') {
+  if (root === "talents") {
     return {
-      activeItem: 'Talents',
-      activeItemState: segments.length === 1 ? 'active' : 'section',
-    }
+      activeItem: "Talents",
+      activeItemState: segments.length === 1 ? "active" : "section",
+    };
   }
 
-  if (root === 'events') {
-    const params = new URLSearchParams(search)
-    if (params.get('sort') === 'newest') {
+  if (root === "events") {
+    const params = new URLSearchParams(search);
+    if (params.get("sort") === "newest") {
       return {
-        activeItem: 'TicketsAndOffers',
-        activeItemState: segments.length === 1 ? 'active' : 'section',
-      }
+        activeItem: "TicketsAndOffers",
+        activeItemState: segments.length === 1 ? "active" : "section",
+      };
     }
     return {
-      activeItem: 'Offers',
-      activeItemState: segments.length === 1 ? 'active' : 'section',
-    }
+      activeItem: "Offers",
+      activeItemState: segments.length === 1 ? "active" : "section",
+    };
   }
 
-  if (root === 'experiences') {
+  if (root === "experiences") {
     return {
-      activeItem: 'TicketsAndOffers',
-      activeItemState: segments.length === 1 ? 'active' : 'section',
-    }
+      activeItem: "TicketsAndOffers",
+      activeItemState: segments.length === 1 ? "active" : "section",
+    };
   }
 
-  return {}
+  return {};
 }
 
 export function MainLayout() {
-  const { pathname, search } = useLocation()
-  const nav = resolveNav(pathname, search)
-  const isAuthenticated = useAppSelector(selectIsAuthenticated)
-  const account = useHeaderAccount()
-  const signedIn = isAuthenticated || pathname === '/order-confirmation'
+  const { pathname, search } = useLocation();
+  const nav = resolveNav(pathname, search);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const account = useHeaderAccount();
+  const signedIn = isAuthenticated || pathname === "/order-confirmation";
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg-page">
       <SiteHeader
-        state={signedIn ? 'signedIn' : 'signedOut'}
+        state={signedIn ? "signedIn" : "signedOut"}
         activeItem={nav.activeItem}
         activeItemState={nav.activeItemState}
         account={signedIn ? account : undefined}
@@ -90,5 +88,5 @@ export function MainLayout() {
       </main>
       <SiteFooter />
     </div>
-  )
+  );
 }
