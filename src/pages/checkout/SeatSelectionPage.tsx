@@ -1,21 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  CheckIcon,
-  CloseIcon,
-  InfoIcon,
-  MinusIcon,
-  PlusIcon,
-  SarSymbol,
-  SparkleIcon,
-} from "@/components/icons";
-import {
-  Divider,
-  FilterChip,
-  MoneyAmount,
-  PriceDisplay,
-} from "@/components/data-display";
+import { CloseIcon, SarSymbol } from "@/components/icons";
+import { Divider, FilterChip, PriceDisplay } from "@/components/data-display";
 import { EmptyState } from "@/components/feedback";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/cn";
@@ -36,93 +23,76 @@ import {
   resolveEventId,
   resolveSeatingType,
 } from "@/lib/api/mappers/events";
-import { mapApiSeatsToRows, type SeatMapStatus } from "@/lib/api/mappers/seats";
+import {
+  mapApiSeatsToRows,
+  type MappedSeat,
+  type MappedSeatRow,
+  type SeatMapStatus,
+} from "@/lib/api/mappers/seats";
 import { apiErrorMessage } from "@/lib/api/unwrap";
 import {
   writeFreeSeatingSession,
   writeHoldSession,
 } from "@/lib/purchase/holdSession";
 
-type SeatStatus = SeatMapStatus | "selected";
-type Zone = "all" | "vip" | "gold" | "silver" | "bronze";
+type Zone = string;
 
 interface SelectedSeat {
   id: string;
   label: string;
-  category: string;
-  price: number;
+  category?: string;
+  price?: number;
 }
 
-const ZONE_IDS: Zone[] = ["all", "vip", "gold", "silver", "bronze"];
-
-const PRICE_TIER_DEFS = [
-  { tone: "bg-seat-vip", key: "vip" as const, left: 34, price: "680+" },
-  {
-    tone: "bg-brand-identity-end",
-    key: "gold" as const,
-    left: 32,
-    price: "480+",
-  },
-  { tone: "bg-ink-brand", key: "silver" as const, left: 117, price: "260+" },
-  { tone: "bg-ink-secondary", key: "bronze" as const, left: 73, price: "180+" },
-] as const;
-
-const ZOOM_MIN = 75;
-const ZOOM_MAX = 150;
-const ZOOM_STEP = 25;
-
-/**
- * Live seat maps are resolved from GET /seats/event/{id} only.
- * We do not generate a static mock hall in the UI anymore.
- */
-const EMPTY_SEAT_ROWS: {
-  row: string;
-  seats: { id: string; status: SeatStatus }[];
-}[] = [];
-
-function seatMeta(status: SeatStatus): { price: number; category: string } {
-  if (status === "vip")
-    return { price: 680, category: "VIP · Floor – Block A" };
-  if (status === "silver")
-    return { price: 260, category: "Silver · Mezzanine – Block B" };
-  if (status === "bronze")
-    return { price: 180, category: "Bronze · Upper Tier – Block C" };
-  return { price: 520, category: "Gold · Floor – Block A" };
+function seatClass(
+  status: SeatMapStatus | "selected",
+  zoneId?: string,
+  accessible = false,
+) {
+  if (status === "selected")
+    return "border-transparent bg-brand-gradient text-ink-inverse";
+  if (status === "sold")
+    return accessible
+      ? "border-border-default bg-seat-sold"
+      : "border-border-default bg-seat-sold";
+  if (status === "held")
+    return accessible
+      ? "border-border-default bg-seat-sold"
+      : "border-neutral-scrollbar bg-[repeating-linear-gradient(135deg,var(--color-border-divider)_0_3px,var(--color-neutral-scrollbar)_3px_6px)]";
+  if (zoneId === "vip") return "border-seat-vip bg-seat-vip-tint";
+  if (zoneId === "gold") return "border-ink-brand bg-bg-tint-brand";
+  if (zoneId === "silver") return "border-seat-silver bg-seat-silver-tint";
+  if (zoneId === "bronze") return "border-ink-secondary bg-border-divider";
+  return "border-border-default bg-border-divider";
 }
 
-function seatClass(status: SeatStatus) {
-  switch (status) {
-    case "vip":
-      return "border-seat-vip bg-seat-vip-tint";
-    case "gold":
-      return "border-ink-brand bg-bg-tint-brand";
-    case "silver":
-      return "border-seat-silver bg-seat-silver-tint";
-    case "bronze":
-      return "border-ink-secondary bg-border-divider";
-    case "sold":
-      return "border-border-default bg-seat-sold";
-    case "held":
-      return "border-neutral-scrollbar bg-[repeating-linear-gradient(135deg,var(--color-border-divider)_0_3px,var(--color-neutral-scrollbar)_3px_6px)]";
-    case "selected":
-      return "border-transparent bg-brand-gradient text-ink-inverse";
-    case "accessible":
-      return "border-ink-brand bg-bg-tint-brand";
-    default:
-      return "border-border-default bg-border-divider";
-  }
+function zoneTone(zoneId: string) {
+  if (zoneId === "vip") return "bg-seat-vip";
+  if (zoneId === "gold") return "bg-ink-brand";
+  if (zoneId === "silver") return "bg-seat-silver";
+  if (zoneId === "bronze") return "bg-ink-secondary";
+  return "bg-border-divider";
 }
 
 function SeatButton({
-  status,
+  seat,
+  selected,
   onClick,
   label,
 }: {
-  status: SeatStatus;
+  seat: MappedSeat;
+  selected: boolean;
   onClick?: () => void;
   label: string;
 }) {
-  const interactive = status !== "sold" && status !== "held";
+  const interactive = seat.status !== "sold" && seat.status !== "held";
+  const visualStatus = selected ? "selected" : seat.status;
+  const seatIcon =
+    visualStatus === "selected"
+      ? "/icons/seats/black-seat.svg"
+      : visualStatus === "sold" || visualStatus === "held"
+        ? "/icons/seats/orange-seat.svg"
+        : "/icons/seats/gray-seat.svg";
 
   return (
     <button
@@ -130,94 +100,139 @@ function SeatButton({
       aria-label={label}
       disabled={!interactive}
       onClick={onClick}
+      aria-pressed={selected}
       className={cn(
-        "flex size-[15px] items-center justify-center rounded-[4px] border",
-        seatClass(status),
+        "flex size-10 items-center justify-center rounded-[8px] border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-brand",
+        seatClass(visualStatus, seat.zoneId, seat.accessible),
         !interactive && "cursor-not-allowed",
+        seat.accessible && !interactive && "opacity-55",
       )}
     >
-      {status === "selected" && (
-        <CheckIcon size={9} className="text-ink-inverse" />
+      {seat.accessible ? (
+        <span className="flex h-[34px] flex-col items-center justify-center leading-none">
+          <img
+            src="/icons/seats/special-needs.svg"
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="h-[23px] w-[22px] object-contain"
+          />
+          <span
+            className={cn(
+              "text-[9px] font-bold",
+              selected ? "text-white" : "text-black",
+            )}
+          >
+            {seat.number}
+          </span>
+        </span>
+      ) : (
+        <span className="relative flex h-[22px] w-[23px] items-center justify-center">
+          <img
+            src={seatIcon}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className={cn(
+              "h-[23px] w-[22px] object-contain",
+              !interactive && "grayscale opacity-60",
+            )}
+          />
+          <span
+            className={cn(
+              "absolute inset-0 flex items-center justify-center text-[9px] font-bold",
+              selected ? "text-white" : "text-ink-primary",
+            )}
+          >
+            {seat.number}
+          </span>
+        </span>
       )}
     </button>
   );
 }
 
 function SeatBlock({
-  title,
-  range,
   rows,
   zone,
   selectedIds,
   onToggle,
+  getSeatLabel,
 }: {
-  title: string;
-  range: string;
-  rows: { row: string; seats: { id: string; status: SeatStatus }[] }[];
+  rows: MappedSeatRow[];
   zone: Zone;
   selectedIds: Set<string>;
-  onToggle: (
-    id: string,
-    row: string,
-    index: number,
-    status: SeatStatus,
-  ) => void;
+  onToggle: (seat: MappedSeat) => void;
+  getSeatLabel: (seat: MappedSeat) => string;
 }) {
   return (
-    <div className="w-full">
-      <div className="flex items-center gap-[10px]">
-        <p className="text-[12px] font-bold tracking-[0.96px] text-ink-muted">
-          {title}
-        </p>
-        <Divider tone="divider" className="flex-1" />
-        <p className="text-[12px] text-ink-muted">{range}</p>
-      </div>
-      <div className="mt-md flex flex-col items-center gap-[5px]">
-        {rows.map(({ row, seats }) => {
-          const aisle = Math.floor(seats.length / 2);
-          return (
-            <div key={row} className="flex items-center gap-[8px]">
-              <span className="w-[16px] text-end text-[10px] font-semibold text-ink-muted">
-                {row}
-              </span>
-              <div className="flex gap-[3px]">
-                {seats.map((seat, index) => {
-                  const status = selectedIds.has(seat.id)
-                    ? "selected"
-                    : seat.status;
-                  const zoneMatch =
-                    zone === "all" ||
-                    status === "selected" ||
-                    status === zone ||
-                    (status !== "vip" &&
-                      status !== "gold" &&
-                      status !== "silver" &&
-                      status !== "bronze");
-                  return (
-                    <span
-                      key={seat.id}
-                      className={cn(
-                        !zoneMatch && "opacity-30",
-                        index === aisle && "ms-[10px]",
-                      )}
-                    >
-                      <SeatButton
-                        status={status}
-                        label={`${row}${index + 1}`}
-                        onClick={() =>
-                          onToggle(seat.id, row, index + 1, seat.status)
-                        }
-                      />
-                    </span>
-                  );
-                })}
-              </div>
-              <span className="w-[16px] text-[10px] font-semibold text-ink-muted">
-                {row}
-              </span>
-            </div>
-          );
-        })}
+    <div className="flex flex-col gap-md">
+      {rows.map(({ row, seats }) => (
+        <div key={row} className="flex items-center justify-center gap-sm">
+          <span className="w-[22px] shrink-0 text-center text-[12px] font-bold text-ink-secondary">
+            {row}
+          </span>
+          <div className="grid min-w-0 max-w-[820px] flex-1 grid-cols-[repeat(auto-fit,minmax(40px,1fr))] gap-x-[4px] gap-y-sm">
+            {seats.map((seat) => {
+              const selected = selectedIds.has(seat.id);
+              const zoneMatch =
+                zone === "all" || selected || seat.zoneId === zone;
+              return (
+                <span key={seat.id} className={cn(!zoneMatch && "opacity-25")}>
+                  <SeatButton
+                    seat={seat}
+                    selected={selected}
+                    label={getSeatLabel(seat)}
+                    onClick={() => onToggle(seat)}
+                  />
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SeatLegend({
+  available,
+  selected,
+  sold,
+  accessible,
+}: {
+  available: string;
+  selected: string;
+  sold: string;
+  accessible: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-x-lg gap-y-sm border-t border-border-divider px-md py-md">
+      {[
+        { src: "/icons/seats/orange-seat.svg", label: sold },
+        { src: "/icons/seats/black-seat.svg", label: selected },
+        { src: "/icons/seats/gray-seat.svg", label: available },
+      ].map((item) => (
+        <div key={item.label} className="flex items-center gap-sm">
+          <img
+            src={item.src}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="h-[22px] w-[23px] object-contain"
+          />
+          <span className="text-[12px] text-ink-secondary">{item.label}</span>
+        </div>
+      ))}
+      <div className="flex items-center gap-sm text-ink-secondary">
+        <img
+          src="/icons/seats/special-needs.svg"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          className="h-[24px] w-[22px] object-contain"
+        />
+        <span className="text-[12px]">{accessible}</span>
       </div>
     </div>
   );
@@ -232,12 +247,6 @@ export function SeatSelectionPage() {
   const dispatch = useAppDispatch();
   const { slug } = useParams();
   const [zone, setZone] = useState<Zone>("all");
-  const [zoom, setZoom] = useState(() =>
-    typeof window !== "undefined" &&
-    window.matchMedia("(max-width: 1023px)").matches
-      ? 70
-      : 100,
-  );
   const [selected, setSelected] = useState<SelectedSeat[]>([]);
   const [holding, setHolding] = useState(false);
   const selectedIds = useMemo(
@@ -309,21 +318,20 @@ export function SeatSelectionPage() {
       (seatsLoading || (seatsFetching && !usingLiveMap)));
   const seatsUnavailable = !waitingForSeats && !usingLiveMap;
 
-  const floorRows = usingLiveMap
-    ? liveRows!.slice(0, Math.ceil(liveRows!.length / 3))
-    : EMPTY_SEAT_ROWS;
-  const mezzRows = usingLiveMap
-    ? liveRows!.slice(
-        Math.ceil(liveRows!.length / 3),
-        Math.ceil((liveRows!.length * 2) / 3),
-      )
-    : EMPTY_SEAT_ROWS;
-  const upperRows = usingLiveMap
-    ? liveRows!.slice(Math.ceil((liveRows!.length * 2) / 3))
-    : EMPTY_SEAT_ROWS;
+  const zoneOptions = useMemo(() => {
+    const options = new Map<string, string>();
+    liveRows?.forEach(({ seats }) =>
+      seats.forEach((seat) => {
+        if (seat.zoneId)
+          options.set(seat.zoneId, seat.zoneLabel ?? seat.zoneId);
+      }),
+    );
+    return [...options.entries()].map(([id, label]) => ({ id, label }));
+  }, [liveRows]);
 
   useEffect(() => {
     setSelected([]);
+    setZone("all");
   }, [usingLiveMap, resolvedEventId]);
 
   useEffect(() => {
@@ -360,17 +368,33 @@ export function SeatSelectionPage() {
     return () => window.removeEventListener("pagehide", releaseOnUnload);
   }, [releaseHold, resolvedEventId]);
 
-  const subtotal = selected.reduce((sum, seat) => sum + seat.price, 0);
-  const serviceFee = Math.round(subtotal * 0.05);
-  const vat = Math.round((subtotal + serviceFee) * 0.15);
-  const total = subtotal + serviceFee + vat;
+  const hasCompletePrices =
+    selected.length > 0 && selected.every((seat) => seat.price != null);
+  const subtotal = hasCompletePrices
+    ? selected.reduce((sum, seat) => sum + (seat.price ?? 0), 0)
+    : null;
+  const serviceFee = subtotal == null ? null : Math.round(subtotal * 0.05);
+  const vat =
+    subtotal == null || serviceFee == null
+      ? null
+      : Math.round((subtotal + serviceFee) * 0.15);
+  const total =
+    subtotal == null || serviceFee == null || vat == null
+      ? null
+      : subtotal + serviceFee + vat;
 
   /**
    * Seated checkout requires a real API soft-hold (`holdId` + numeric `seatIds`).
    * Fixture labels like `C11` cannot create an order on the live API.
    */
   async function continueToCheckout() {
-    if (selected.length === 0 || waitingForSeats || seatsUnavailable) return;
+    if (
+      selected.length === 0 ||
+      !hasCompletePrices ||
+      waitingForSeats ||
+      seatsUnavailable
+    )
+      return;
 
     if (resolvedEventId)
       sessionStorage.setItem("myticket.eventId", resolvedEventId);
@@ -413,10 +437,10 @@ export function SeatSelectionPage() {
         ticketId,
         holdId: String(holdId),
         eventId: resolvedEventId,
-        total,
-        subtotal,
-        serviceFee,
-        vat,
+        total: total ?? 0,
+        subtotal: subtotal ?? 0,
+        serviceFee: serviceFee ?? 0,
+        vat: vat ?? 0,
         heldAt: Date.now(),
         slug: slug ?? undefined,
       });
@@ -431,148 +455,80 @@ export function SeatSelectionPage() {
     }
   }
 
-  function toggleSeat(
-    id: string,
-    row: string,
-    number: number,
-    status: SeatStatus,
-  ) {
-    if (!usingLiveMap || status === "sold" || status === "held") return;
+  function toggleSeat(seat: MappedSeat) {
+    if (!usingLiveMap || seat.status === "sold" || seat.status === "held")
+      return;
 
     setSelected((current) => {
-      if (current.some((seat) => seat.id === id)) {
-        return current.filter((seat) => seat.id !== id);
+      if (current.some((item) => item.id === seat.id)) {
+        return current.filter((item) => item.id !== seat.id);
       }
       if (current.length >= 6) return current;
-
-      const liveSeat = liveRows
-        ?.flatMap((r) => r.seats)
-        .find((seat) => seat.id === id);
-      const meta = seatMeta(status === "selected" ? "gold" : status);
 
       return [
         ...current,
         {
-          id,
-          label: t("seats.rowSeat", { row, number }),
-          category: liveSeat?.category ?? meta.category,
-          price: liveSeat?.price ?? meta.price,
+          id: seat.id,
+          label: t("seats.rowSeat", { row: seat.row, number: seat.number }),
+          category: seat.category,
+          price: seat.price,
         },
       ];
     });
   }
 
-  function pickBestAvailable() {
-    if (!usingLiveMap) return;
-    const preferred: SeatStatus[] =
-      zone === "all" ? ["gold", "vip", "silver", "bronze"] : [zone];
-    const need = 2;
-    const picks: SelectedSeat[] = [];
-    const sourceRows = usingLiveMap
-      ? [...floorRows, ...mezzRows, ...upperRows]
-      : EMPTY_SEAT_ROWS;
-
-    for (const status of preferred) {
-      for (const { row, seats } of sourceRows) {
-        for (let i = 0; i < seats.length; i++) {
-          const run: { id: string; index: number; status: SeatStatus }[] = [];
-          for (let j = i; j < seats.length && run.length < need; j++) {
-            const seat = seats[j];
-            if (seat.status !== status) break;
-            run.push({ id: seat.id, index: j + 1, status: seat.status });
-          }
-          if (run.length === need) {
-            for (const seat of run) {
-              const liveSeat = liveRows
-                ?.flatMap((r) => r.seats)
-                .find((item) => item.id === seat.id);
-              const meta = seatMeta(seat.status);
-              picks.push({
-                id: seat.id,
-                label: t("seats.rowSeat", { row, number: seat.index }),
-                category: liveSeat?.category ?? meta.category,
-                price: liveSeat?.price ?? meta.price,
-              });
-            }
-            setSelected(picks);
-            return;
-          }
-        }
-      }
-    }
+  function zoneLabel(id: string, label: string) {
+    if (["vip", "gold", "silver", "bronze"].includes(id))
+      return t(`seats.zones.${id}`);
+    return label;
   }
 
   return (
-    <div className="flex flex-col gap-[28px] lg:flex-row lg:items-start">
+    <div className="grid min-w-0 grid-cols-1 gap-lg pb-32 lg:grid-cols-[minmax(0,1fr)_400px] lg:pb-0">
       <section className="min-w-0 flex-1 overflow-hidden rounded-[20px] border border-border-default bg-surface-default">
-        <div className="flex flex-wrap items-center justify-between gap-md border-b border-border-divider px-xl py-lg">
-          <div className="flex flex-wrap items-center gap-sm">
+        <div className="flex flex-col gap-md border-b border-border-divider px-md py-md sm:px-xl sm:py-lg">
+          <div className="flex flex-wrap items-center justify-between gap-sm">
             <p className="text-[15px] font-semibold text-ink-primary">
               {t("seats.hall")}
             </p>
-            {usingLiveMap ? (
-              <div className="flex flex-wrap gap-sm">
-                {ZONE_IDS.map((id) => (
-                  <FilterChip
-                    key={id}
-                    selected={zone === id}
-                    onClick={() => setZone(id)}
-                    className="h-8 rounded-pill px-md text-[13px] font-semibold"
-                  >
-                    {t(`seats.zones.${id}`)}
-                  </FilterChip>
-                ))}
-              </div>
+            {waitingForSeats ? (
+              <p className="text-[13px] font-semibold text-ink-secondary">
+                {t("seats.loading")}
+              </p>
             ) : null}
           </div>
           {usingLiveMap ? (
-            <div className="flex items-center gap-sm">
-              <Button
-                size="sm"
-                variant="secondary"
-                icon={<SparkleIcon size={16} />}
-                className="h-[34px] rounded-[17px] bg-bg-page px-[14px]"
-                onClick={pickBestAvailable}
-                disabled={waitingForSeats}
+            <div className="flex flex-wrap gap-sm">
+              <FilterChip
+                selected={zone === "all"}
+                onClick={() => setZone("all")}
+                className="h-9 rounded-pill px-md text-[13px] font-semibold"
               >
-                {t("seats.pickBest")}
-              </Button>
-              <div className="flex items-center gap-[4px] rounded-[17px] border border-border-default p-[4px]">
-                <button
-                  type="button"
-                  className="flex h-[26px] w-[28px] items-center justify-center rounded-[13px] text-ink-primary disabled:cursor-not-allowed disabled:text-ink-disabled"
-                  aria-label={t("seats.zoomOut")}
-                  disabled={zoom <= ZOOM_MIN}
-                  onClick={() =>
-                    setZoom((z) => Math.max(ZOOM_MIN, z - ZOOM_STEP))
-                  }
+                {t("seats.zones.all")}
+              </FilterChip>
+              {zoneOptions.map((item) => (
+                <FilterChip
+                  key={item.id}
+                  selected={zone === item.id}
+                  onClick={() => setZone(item.id)}
+                  className="h-9 rounded-pill px-md text-[13px] font-semibold"
                 >
-                  <MinusIcon size={15} />
-                </button>
-                <span className="w-[34px] text-center text-[12px] font-semibold text-ink-secondary">
-                  {zoom}%
-                </span>
-                <button
-                  type="button"
-                  className="flex h-[26px] w-[28px] items-center justify-center rounded-[13px] text-ink-primary disabled:cursor-not-allowed disabled:text-ink-disabled"
-                  aria-label={t("seats.zoomIn")}
-                  disabled={zoom >= ZOOM_MAX}
-                  onClick={() =>
-                    setZoom((z) => Math.min(ZOOM_MAX, z + ZOOM_STEP))
-                  }
-                >
-                  <PlusIcon size={15} />
-                </button>
-              </div>
+                  <span className="inline-flex items-center gap-[7px]">
+                    <span
+                      className={cn(
+                        "size-[9px] rounded-full",
+                        zoneTone(item.id),
+                      )}
+                    />
+                    {zoneLabel(item.id, item.label)}
+                  </span>
+                </FilterChip>
+              ))}
             </div>
-          ) : waitingForSeats ? (
-            <p className="text-[13px] font-semibold text-ink-secondary">
-              {t("seats.loading")}
-            </p>
           ) : null}
         </div>
 
-        <div className="overflow-auto bg-gradient-to-b from-bg-page via-surface-default via-[55%] to-surface-default px-md pt-[30px] pb-[26px] sm:px-2xl">
+        <div className="bg-gradient-to-b from-bg-page via-surface-default via-[55%] to-surface-default px-sm py-lg sm:px-lg sm:py-xl">
           {waitingForSeats ? (
             <p className="py-3xl text-center text-[14px] font-semibold text-ink-secondary">
               {t("seats.loading")}
@@ -587,128 +543,34 @@ export function SeatSelectionPage() {
               onCtaClick={() => navigate(slug ? `/events/${slug}` : "/events")}
             />
           ) : (
-            <>
-              <p className="mb-md text-center text-[12px] text-ink-muted lg:hidden">
-                {t("seats.mapHint")}
-              </p>
-              <div
-                className="mx-auto flex w-full max-w-[980px] origin-top flex-col items-center transition-transform duration-normal ease-standard"
-                style={{ transform: `scale(${zoom / 100})` }}
-              >
-                <div className="flex h-[46px] w-full items-center justify-center rounded-b-[46px] bg-surface-inverse">
-                  <p className="text-[13px] font-bold tracking-[3.64px] text-bg-page">
-                    {t("seats.stage")}
-                  </p>
-                </div>
-
-                <div className="mt-[34px] w-full">
-                  <SeatBlock
-                    title={t("seats.blocks.floor")}
-                    range={t("seats.blocks.floorRange")}
-                    rows={floorRows}
-                    zone={zone}
-                    selectedIds={selectedIds}
-                    onToggle={toggleSeat}
-                  />
-                </div>
-
-                <div className="mt-2xl w-full">
-                  <SeatBlock
-                    title={t("seats.blocks.mezzanine")}
-                    range={t("seats.blocks.mezzRange")}
-                    rows={mezzRows}
-                    zone={zone}
-                    selectedIds={selectedIds}
-                    onToggle={toggleSeat}
-                  />
-                </div>
-
-                <div className="mt-2xl w-full">
-                  <SeatBlock
-                    title={t("seats.blocks.upper")}
-                    range={t("seats.blocks.upperRange")}
-                    rows={upperRows}
-                    zone={zone}
-                    selectedIds={selectedIds}
-                    onToggle={toggleSeat}
-                  />
-                </div>
-
-                <div className="mt-2xl grid w-full gap-sm md:grid-cols-3">
-                  {[
-                    {
-                      title: t("seats.extras.standingPit"),
-                      meta: t("seats.extras.standingPitMeta"),
-                    },
-                    {
-                      title: t("seats.extras.familyLawn"),
-                      meta: t("seats.extras.familyLawnMeta"),
-                    },
-                    {
-                      title: t("seats.extras.accessibleBay"),
-                      meta: t("seats.extras.accessibleBayMeta"),
-                    },
-                  ].map((block) => (
-                    <button
-                      key={block.title}
-                      type="button"
-                      className="rounded-[14px] border border-border-default bg-bg-page px-lg py-md text-start"
-                    >
-                      <p className="text-[14px] font-semibold text-ink-primary">
-                        {block.title}
-                      </p>
-                      <p className="mt-[2px] text-[12px] text-ink-secondary">
-                        {block.meta}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
+            <SeatBlock
+              rows={liveRows ?? []}
+              zone={zone}
+              selectedIds={selectedIds}
+              onToggle={toggleSeat}
+              getSeatLabel={(seat) => {
+                const label = t("seats.rowSeat", {
+                  row: seat.row,
+                  number: seat.number,
+                });
+                return seat.accessible
+                  ? `${t("seats.legend.accessible")} · ${label}`
+                  : label;
+              }}
+            />
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-lg border-t border-border-divider px-xl py-md">
-          {[
-            {
-              className: "border-border-default bg-surface-default",
-              label: t("seats.legend.available"),
-            },
-            {
-              className: "border-transparent bg-brand-gradient",
-              label: t("seats.legend.selected"),
-            },
-            {
-              className: "border-border-default bg-seat-sold",
-              label: t("seats.legend.sold"),
-            },
-            {
-              className:
-                "border-neutral-scrollbar bg-[repeating-linear-gradient(135deg,var(--color-border-divider)_0_3px,var(--color-neutral-scrollbar)_3px_6px)]",
-              label: t("seats.legend.held"),
-            },
-            {
-              className: "border-ink-brand bg-bg-tint-brand",
-              label: t("seats.legend.accessible"),
-            },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center gap-sm">
-              <span
-                className={cn(
-                  "size-[14px] rounded-[4px] border",
-                  item.className,
-                )}
-              />
-              <span className="text-[12px] text-ink-secondary">
-                {item.label}
-              </span>
-            </div>
-          ))}
-        </div>
+        <SeatLegend
+          available={t("seats.legend.available")}
+          selected={t("seats.legend.selected")}
+          sold={t("seats.legend.sold")}
+          accessible={t("seats.legend.accessible")}
+        />
       </section>
 
-      <aside className="flex w-full shrink-0 flex-col gap-md lg:w-[400px]">
-        <div className="rounded-[20px] border border-border-default bg-surface-default p-[20px] shadow-[0px_18px_40px_-26px_rgba(25,16,8,0.3),0px_1px_2px_0px_rgba(25,16,8,0.04)]">
+      <aside className="min-w-0 lg:sticky lg:top-lg">
+        <div className="rounded-[20px] border border-border-default bg-surface-default p-md sm:p-[20px]">
           <div className="flex items-baseline justify-between gap-md">
             <h2 className="text-[17px] font-semibold text-ink-primary">
               {t("seats.yourSeats")}
@@ -718,54 +580,76 @@ export function SeatSelectionPage() {
             </p>
           </div>
 
-          <ul className="mt-lg flex flex-col gap-[12px]">
-            {selected.map((seat) => (
-              <li key={seat.id} className="flex items-start gap-[10px]">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold text-ink-primary">
-                    {seat.label}
-                  </p>
-                  <p className="text-[12px] text-ink-secondary">
-                    {seat.category}
-                  </p>
-                </div>
-                <PriceDisplay
-                  context="row"
-                  className="text-[14px] font-semibold"
-                  value={seat.price}
-                />
-                <button
-                  type="button"
-                  aria-label={t("seats.removeSeat", { label: seat.label })}
-                  className="text-ink-muted hover:text-ink-primary"
-                  onClick={() =>
-                    setSelected((current) =>
-                      current.filter((item) => item.id !== seat.id),
-                    )
-                  }
-                >
-                  <CloseIcon size={13} />
-                </button>
-              </li>
-            ))}
-          </ul>
+          {selected.length ? (
+            <ul className="mt-lg flex flex-col gap-[12px]">
+              {selected.map((seat) => (
+                <li key={seat.id} className="flex items-start gap-[10px]">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-semibold text-ink-primary">
+                      {seat.label}
+                    </p>
+                    {seat.category ? (
+                      <p className="text-[12px] text-ink-secondary">
+                        {seat.category}
+                      </p>
+                    ) : null}
+                  </div>
+                  {seat.price != null ? (
+                    <PriceDisplay
+                      context="row"
+                      className="text-[14px] font-semibold"
+                      value={seat.price}
+                    />
+                  ) : null}
+                  <button
+                    type="button"
+                    aria-label={t("seats.removeSeat", { label: seat.label })}
+                    className="text-ink-muted hover:text-ink-primary"
+                    onClick={() =>
+                      setSelected((current) =>
+                        current.filter((item) => item.id !== seat.id),
+                      )
+                    }
+                  >
+                    <CloseIcon size={13} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-lg text-[13px] text-ink-muted">
+              {t("seats.mapHint")}
+            </p>
+          )}
 
           <Divider tone="divider" className="my-lg" />
 
           <div className="flex flex-col gap-sm text-[14px]">
             <div className="flex justify-between">
               <span className="text-ink-secondary">{t("seats.subtotal")}</span>
-              <PriceDisplay context="row" value={subtotal} />
+              {subtotal != null ? (
+                <PriceDisplay context="row" value={subtotal} />
+              ) : (
+                <span className="text-ink-muted">—</span>
+              )}
             </div>
             <div className="flex justify-between">
               <span className="text-ink-secondary">
                 {t("seats.serviceFee")}
               </span>
-              <PriceDisplay context="row" value={serviceFee} />
+              {serviceFee != null ? (
+                <PriceDisplay context="row" value={serviceFee} />
+              ) : (
+                <span className="text-ink-muted">—</span>
+              )}
             </div>
             <div className="flex justify-between">
               <span className="text-ink-secondary">{t("seats.vat")}</span>
-              <PriceDisplay context="row" value={vat} />
+              {vat != null ? (
+                <PriceDisplay context="row" value={vat} />
+              ) : (
+                <span className="text-ink-muted">—</span>
+              )}
             </div>
           </div>
 
@@ -773,72 +657,73 @@ export function SeatSelectionPage() {
             <span className="text-[16px] font-semibold text-ink-primary">
               {t("seats.total")}
             </span>
-            <PriceDisplay context="stat" value={total} />
+            {total != null ? (
+              <PriceDisplay context="stat" value={total} />
+            ) : (
+              <span className="text-[18px] font-bold text-ink-muted">—</span>
+            )}
           </div>
 
           <Button
             type="button"
             size="lg"
-            className="mt-lg h-[52px] w-full rounded-[26px] text-[16px] font-semibold"
+            className="mt-lg hidden h-[52px] w-full rounded-[26px] text-[16px] font-semibold lg:flex"
             disabled={
               holding ||
               waitingForSeats ||
               seatsUnavailable ||
               selected.length === 0 ||
+              !hasCompletePrices ||
               !usingLiveMap
             }
             onClick={() => void continueToCheckout()}
           >
-            {waitingForSeats ? (
-              t("seats.loading")
-            ) : holding ? (
-              t("seats.holding")
-            ) : (
-              <span className="inline-flex items-center justify-center gap-[0.35em]">
-                <span>{t("seats.continuePaymentLabel")}</span>
+            {holding ? t("seats.holding") : t("seats.continuePaymentLabel")}
+            {total != null ? (
+              <span className="ms-2 inline-flex items-center justify-center gap-[0.35em]">
                 <SarSymbol size={16} />
                 <span>{total.toLocaleString("en-US")}</span>
               </span>
-            )}
+            ) : null}
           </Button>
-          <p className="mt-md text-center text-[12px] leading-[1.5] text-ink-muted">
+          <p className="mt-md hidden text-center text-[12px] leading-[1.5] text-ink-muted lg:block">
             {seatsUnavailable ? t("seats.needLive") : t("seats.holdNote")}
           </p>
         </div>
-
-        <div className="rounded-[18px] border border-border-default bg-surface-default p-[18px]">
-          <h3 className="text-[14px] font-semibold text-ink-primary">
-            {t("seats.pricesTitle")}
-          </h3>
-          <ul className="mt-md flex flex-col gap-[10px]">
-            {PRICE_TIER_DEFS.map((tier) => (
-              <li key={tier.key} className="flex items-center gap-[10px]">
-                <span className={cn("size-[13px] rounded-[4px]", tier.tone)} />
-                <span className="flex-1 text-[13px] text-ink-primary">
-                  {t(`seats.tiers.${tier.key}`)}
-                </span>
-                <span className="text-[13px] text-ink-secondary">
-                  {t("seats.tiers.left", { count: tier.left })}
-                </span>
-                <MoneyAmount
-                  value={tier.price}
-                  className="text-[13px] font-semibold text-ink-primary"
-                />
-              </li>
-            ))}
-          </ul>
-          <p className="mt-md border-t border-border-divider pt-md text-[12px] leading-[1.5] text-ink-secondary">
-            {t("seats.pricesNote")}
-          </p>
-        </div>
-
-        <div className="flex gap-[10px] rounded-[18px] border border-border-default bg-bg-warm px-lg py-md">
-          <InfoIcon size={16} className="mt-[2px] shrink-0 text-ink-brand" />
-          <p className="text-[13px] leading-[1.5] text-ink-primary">
-            {t("seats.accessibleNote")}
-          </p>
-        </div>
       </aside>
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border-divider bg-surface-default px-page-gutter pt-sm pb-3 shadow-[0_-8px_24px_rgba(25,16,8,0.08)] lg:hidden"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+      >
+        <div className="mx-auto flex w-full max-w-[var(--container-page)] items-center gap-md">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold text-ink-muted">
+              {t("seats.total")}
+            </p>
+            {total != null ? (
+              <PriceDisplay context="row" className="font-bold" value={total} />
+            ) : (
+              <span className="text-[16px] font-bold text-ink-muted">—</span>
+            )}
+          </div>
+          <Button
+            type="button"
+            size="lg"
+            className="h-[48px] min-w-[180px] rounded-[24px] px-lg text-[15px] font-semibold"
+            disabled={
+              holding ||
+              waitingForSeats ||
+              seatsUnavailable ||
+              selected.length === 0 ||
+              !hasCompletePrices ||
+              !usingLiveMap
+            }
+            onClick={() => void continueToCheckout()}
+          >
+            {holding ? t("seats.holding") : t("seats.continuePaymentLabel")}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

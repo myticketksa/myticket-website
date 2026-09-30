@@ -296,7 +296,6 @@ const pages = [
     layout: "main",
   },
   {
-  {
     name: "ForOrganizersPage",
     file: "marketing/ForOrganizersPage.tsx",
     title: "For organizers",

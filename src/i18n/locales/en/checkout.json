@@ -21,24 +21,17 @@
     "unavailableTitle": "Seat map unavailable",
     "unavailableBody": "Live seat inventory isn’t ready for this event yet. Go back to the event page and try again later.",
     "backToEvent": "Back to event",
-    "pickBest": "Pick best available",
     "hall": "Hall 1 — Main Arena",
-    "mapHint": "Pinch or use zoom controls — scroll sideways to see the full map",
+    "mapHint": "Choose up to 6 seats. Seat numbers follow each row.",
     "liveRequired": "Those seats are not available for checkout yet. Select seats from the live map once inventory loads.",
     "ticketMissing": "Ticket type is missing for this event. Open the event page again, then return to seats.",
     "holdFailed": "Could not hold these seats",
-    "pricesTitle": "Seat prices in this hall",
-    "pricesNote": "Prices are per seat and vary by row — front rows cost more than the same tier further back.",
-    "accessibleNote": "Need accessible seating? Choose an accessible bay on the map or contact support after checkout — companion seats are held at the same price.",
     "rowSeat": "Row {{row}}, seat {{number}}",
     "removeSeat": "Remove {{label}}",
     "subtotal": "Seats subtotal",
     "serviceFee": "Service fee",
     "vat": "VAT 15%",
     "total": "Total",
-    "stage": "STAGE",
-    "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out",
     "zones": {
       "all": "All zones",
       "vip": "VIP",
@@ -46,34 +39,10 @@
       "silver": "Silver",
       "bronze": "Bronze"
     },
-    "blocks": {
-      "floor": "FLOOR — BLOCK A",
-      "mezzanine": "MEZZANINE — BLOCK B",
-      "upper": "UPPER TIER — BLOCK C",
-      "floorRange": "SAR 340 – SAR 720",
-      "mezzRange": "SAR 220 – SAR 380",
-      "upperRange": "SAR 140 – SAR 220"
-    },
-    "extras": {
-      "standingPit": "Standing pit",
-      "standingPitMeta": "Unreserved · SAR 240",
-      "familyLawn": "Family lawn",
-      "familyLawnMeta": "Seated on grass · SAR 120",
-      "accessibleBay": "Accessible bay",
-      "accessibleBayMeta": "Wheelchair + companion"
-    },
-    "tiers": {
-      "vip": "VIP front rows",
-      "gold": "Gold",
-      "silver": "Silver",
-      "bronze": "Bronze rear",
-      "left": "{{count}} left"
-    },
     "legend": {
       "available": "Available",
       "selected": "Selected",
       "sold": "Sold",
-      "held": "Held by others",
       "accessible": "Accessible"
     }
   },

@@ -1,20 +1,15 @@
-import { asList } from "@/lib/api/unwrap";
+import { asList, unwrapData } from "@/lib/api/unwrap";
 
 export type ApiRecord = Record<string, unknown>;
 
-export type SeatMapStatus =
-  | "available"
-  | "vip"
-  | "gold"
-  | "silver"
-  | "bronze"
-  | "sold"
-  | "held"
-  | "accessible";
+export type SeatMapStatus = "available" | "sold" | "held";
 
 export interface MappedSeat {
   id: string;
   status: SeatMapStatus;
+  zoneId?: string;
+  zoneLabel?: string;
+  accessible?: boolean;
   price?: number;
   category?: string;
   row: string;
@@ -26,25 +21,113 @@ export interface MappedSeatRow {
   seats: MappedSeat[];
 }
 
-function tierFrom(raw: unknown): SeatMapStatus | null {
-  const value = String(raw ?? "").toLowerCase();
-  if (!value) return null;
-  if (value.includes("vip") || value.includes("premium")) return "vip";
-  if (value.includes("gold")) return "gold";
-  if (value.includes("silver")) return "silver";
-  if (value.includes("bronze")) return "bronze";
-  if (value.includes("access")) return "accessible";
-  return null;
+function textValue(raw: unknown): string | undefined {
+  if (typeof raw === "string" || typeof raw === "number") {
+    const value = String(raw).trim();
+    return value || undefined;
+  }
+  if (!raw || typeof raw !== "object") return undefined;
+
+  const record = raw as ApiRecord;
+  for (const key of [
+    "name",
+    "label",
+    "title",
+    "slug",
+    "name_en",
+    "en",
+    "name_ar",
+    "ar",
+    "id",
+  ]) {
+    const value = textValue(record[key]);
+    if (value) return value;
+  }
+  return undefined;
+}
+
+function zoneFrom(
+  record: ApiRecord,
+): { id: string; label: string } | undefined {
+  const candidates = [
+    record.zone_name,
+    record.zoneName,
+    record.zone_label,
+    record.zoneLabel,
+    record.zone,
+    record.tier,
+    record.category_name,
+    record.categoryName,
+    record.category,
+    record.ticket_type,
+    record.ticketType,
+    record.type,
+    record.zone_id,
+    record.status,
+  ];
+
+  for (const candidate of candidates) {
+    const label = textValue(candidate);
+    if (!label) continue;
+    const normalized = label.toLowerCase().trim();
+    if (
+      ["available", "sold", "held", "reserved", "accessible"].includes(
+        normalized,
+      )
+    )
+      continue;
+    const id =
+      normalized.includes("vip") || normalized.includes("premium")
+        ? "vip"
+        : normalized.includes("gold")
+          ? "gold"
+          : normalized.includes("silver")
+            ? "silver"
+            : normalized.includes("bronze")
+              ? "bronze"
+              : normalized.replace(/\s+/g, "-");
+    return { id, label };
+  }
+
+  return undefined;
+}
+
+function isTruthy(raw: unknown): boolean {
+  return (
+    raw === true ||
+    raw === 1 ||
+    ["true", "1", "yes"].includes(String(raw).toLowerCase())
+  );
+}
+
+function accessibleFrom(record: ApiRecord): boolean {
+  const fields = [
+    record.accessible,
+    record.is_accessible,
+    record.isAccessible,
+    record.accessibility,
+    record.special_needs,
+    record.specialNeeds,
+    record.seat_type,
+    record.status,
+  ];
+  if (fields.some(isTruthy)) return true;
+  return fields.some((value) =>
+    String(value ?? "")
+      .toLowerCase()
+      .includes("access"),
+  );
 }
 
 function statusFrom(record: ApiRecord): SeatMapStatus {
-  const raw = String(
-    record.status ??
-      record.state ??
-      record.availability ??
-      record.seat_status ??
-      "available",
-  ).toLowerCase();
+  const raw =
+    textValue(
+      record.status ??
+        record.state ??
+        record.availability ??
+        record.seat_status ??
+        "available",
+    )?.toLowerCase() ?? "available";
   if (
     raw === "sold" ||
     raw === "reserved" ||
@@ -53,21 +136,7 @@ function statusFrom(record: ApiRecord): SeatMapStatus {
   )
     return "sold";
   if (raw === "held" || raw === "hold" || raw === "pending") return "held";
-  if (
-    raw === "available" ||
-    raw === "free" ||
-    raw === "open" ||
-    raw === "vacant"
-  ) {
-    return (
-      tierFrom(record.tier ?? record.category ?? record.zone ?? record.type) ??
-      "gold"
-    );
-  }
-  return (
-    tierFrom(record.tier ?? record.category ?? record.zone ?? record.type) ??
-    "gold"
-  );
+  return "available";
 }
 
 function rowLabel(record: ApiRecord, index: number): string {
@@ -79,8 +148,8 @@ function rowLabel(record: ApiRecord, index: number): string {
     record.row_label ??
     record.section ??
     record.block;
-  if (raw != null && String(raw).trim())
-    return String(raw).trim().toUpperCase();
+  const label = textValue(raw);
+  if (label) return label.toUpperCase();
   return String.fromCharCode(65 + (index % 26));
 }
 
@@ -113,31 +182,55 @@ function seatId(record: ApiRecord, row: string, number: number): string {
  * Returns `null` when the live seat list is empty.
  */
 export function mapApiSeatsToRows(payload: unknown): MappedSeatRow[] | null {
-  const candidates = Array.isArray(payload)
-    ? (payload as ApiRecord[])
+  const root = unwrapData<unknown>(payload);
+  const direct = Array.isArray(root)
+    ? (root as ApiRecord[])
     : asList<ApiRecord>(payload);
+  const containers = ["seats", "rows", "zones", "sections", "blocks", "items"];
+  const records = direct.length
+    ? direct
+    : root && typeof root === "object"
+      ? containers.reduce<ApiRecord[]>((found, key) => {
+          const value = (root as ApiRecord)[key];
+          return found.length || !Array.isArray(value)
+            ? found
+            : (value as ApiRecord[]);
+        }, [])
+      : [];
+  if (!records.length) return null;
 
-  const list = candidates.length > 0 ? candidates : [];
-  if (list.length === 0) {
-    const root =
-      payload && typeof payload === "object"
-        ? (payload as Record<string, unknown>)
-        : {};
-    const nested =
-      root &&
-      typeof root.data === "object" &&
-      root.data &&
-      !Array.isArray(root.data)
-        ? (root.data as Record<string, unknown>)
-        : root;
-    const nestedSeats = Array.isArray(nested.seats)
-      ? (nested.seats as ApiRecord[])
-      : Array.isArray(nested.rows)
-        ? (nested.rows as ApiRecord[])
-        : [];
-    if (nestedSeats.length === 0) return null;
-    return mapApiSeatsToRows(nestedSeats);
-  }
+  const flatten = (
+    items: ApiRecord[],
+    inheritedZone?: unknown,
+    inheritedRow?: unknown,
+  ): ApiRecord[] =>
+    items.flatMap((record) => {
+      const nestedKey = containers.find((key) => Array.isArray(record[key]));
+      const nested = nestedKey ? (record[nestedKey] as ApiRecord[]) : undefined;
+      const zone =
+        record.zone ??
+        record.zone_name ??
+        record.zoneName ??
+        record.tier ??
+        record.category ??
+        inheritedZone ??
+        (nestedKey === "rows" || nestedKey === "seats"
+          ? (record.name ?? record.label ?? record.title ?? record.slug)
+          : undefined);
+      const row =
+        record.row ??
+        record.seat_row ??
+        record.seatRow ??
+        record.row_label ??
+        record.rowLabel ??
+        (nestedKey === "seats"
+          ? (record.row_name ?? record.rowName ?? record.name ?? record.label)
+          : undefined) ??
+        inheritedRow;
+      if (nested) return flatten(nested, zone, row);
+      return [{ ...record, zone: record.zone ?? zone, row: record.row ?? row }];
+    });
+  const list = flatten(records);
 
   const grouped = new Map<string, MappedSeat[]>();
 
@@ -145,21 +238,31 @@ export function mapApiSeatsToRows(payload: unknown): MappedSeatRow[] | null {
     const row = rowLabel(record, index);
     const existing = grouped.get(row) ?? [];
     const number = seatNumber(record, existing.length);
-    const priceRaw = record.price ?? record.amount ?? record.ticket_price;
+    const priceRaw =
+      record.price ??
+      record.amount ??
+      record.ticket_price ??
+      record.price_amount;
     const price =
       priceRaw != null && Number.isFinite(Number(priceRaw))
         ? Number(priceRaw)
         : undefined;
-    const category =
-      record.category != null || record.tier != null || record.zone != null
-        ? String(record.category ?? record.tier ?? record.zone)
-        : undefined;
+    const zone = zoneFrom(record);
+    const category = textValue(
+      record.category_name ??
+        record.categoryName ??
+        record.category ??
+        record.tier,
+    );
 
     existing.push({
       id: seatId(record, row, number),
       status: statusFrom(record),
+      zoneId: zone?.id,
+      zoneLabel: zone?.label,
+      accessible: accessibleFrom(record),
       price,
-      category,
+      category: category ?? zone?.label,
       row,
       number,
     });

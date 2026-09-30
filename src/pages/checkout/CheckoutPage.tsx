@@ -546,11 +546,13 @@ export function CheckoutPage() {
                           t("checkout.selectedSeat")}
                       </p>
                     </div>
-                    <PriceDisplay
-                      context="row"
-                      className="font-semibold"
-                      value={seat.price}
-                    />
+                    {seat.price != null ? (
+                      <PriceDisplay
+                        context="row"
+                        className="font-semibold"
+                        value={seat.price}
+                      />
+                    ) : null}
                   </li>
                 );
               })}
