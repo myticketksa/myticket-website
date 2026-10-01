@@ -12,10 +12,15 @@ import { Button } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
 export interface TicketTier {
+  id?: string | number;
   name: string;
   detail: string;
   price: string;
   left: string;
+  disabled?: boolean;
+  specialNeeds?: boolean;
+  minQty?: number;
+  maxQty?: number;
   maxLabel?: string;
   /** Paint the left count in brand-gradient-end (low stock). */
   urgent?: boolean;
@@ -41,10 +46,10 @@ export interface StickyCtaCardProps {
   primaryTo?: string;
   /** Called on primary click; if it returns false, navigation is skipped. */
   onPrimaryClick?: () => void | boolean | Promise<void | boolean>;
-  /** When true, tier qty steppers are interactive (free seating). */
+  /** When true, tier rows and quantity steppers are interactive. */
   qtyInteractive?: boolean;
-  onSelectTier?: (name: string) => void;
-  onChangeQty?: (name: string, qty: number) => void;
+  onSelectTier?: (tier: TicketTier) => void;
+  onChangeQty?: (tier: TicketTier, qty: number) => void;
   /** Omit / pass null to hide the secondary button (Events ticket rail). */
   secondaryLabel?: string | null;
   /** Route for the secondary CTA. Without it, the secondary button looks disabled. */
@@ -126,18 +131,23 @@ export function StickyCtaCard({
           <div className="mt-[18px] flex flex-col gap-row-gap">
             {tiers.map((tier) => (
               <div
-                key={tier.name}
-                role={qtyInteractive ? "button" : undefined}
-                tabIndex={qtyInteractive ? 0 : undefined}
+                key={tier.id ?? tier.name}
+                role={!tier.disabled && qtyInteractive ? "button" : undefined}
+                tabIndex={!tier.disabled && qtyInteractive ? 0 : undefined}
+                aria-pressed={
+                  !tier.disabled && qtyInteractive ? tier.selected : undefined
+                }
                 onClick={
-                  qtyInteractive ? () => onSelectTier?.(tier.name) : undefined
+                  !tier.disabled && qtyInteractive
+                    ? () => onSelectTier?.(tier)
+                    : undefined
                 }
                 onKeyDown={
-                  qtyInteractive
+                  !tier.disabled && qtyInteractive
                     ? (e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          onSelectTier?.(tier.name);
+                          onSelectTier?.(tier);
                         }
                       }
                     : undefined
@@ -147,12 +157,22 @@ export function StickyCtaCard({
                   tier.selected
                     ? "border-brand-primary bg-bg-tint-brand"
                     : "border-border-default bg-surface-default",
-                  qtyInteractive && "cursor-pointer",
+                  !tier.disabled && qtyInteractive && "cursor-pointer",
+                  tier.disabled && "opacity-60",
                 )}
               >
                 <div className="flex items-start justify-between gap-md">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-semibold text-ink-primary">
+                    <p className="flex items-center gap-sm text-[15px] font-semibold text-ink-primary">
+                      {tier.specialNeeds ? (
+                        <img
+                          src="/icons/seats/special-needs.svg"
+                          alt=""
+                          aria-hidden="true"
+                          draggable={false}
+                          className="size-[20px] shrink-0 object-contain"
+                        />
+                      ) : null}
                       {tier.name}
                     </p>
                     <p className="mt-[2px] text-[13px] leading-[1.4] text-ink-secondary">
@@ -170,7 +190,7 @@ export function StickyCtaCard({
                         tier.urgent
                           ? "text-brand-gradient-end"
                           : "text-ink-secondary",
-                        tier.left === "Sold out" && "text-ink-muted",
+                        tier.disabled && "text-ink-muted",
                       )}
                     >
                       {tier.left}
@@ -194,17 +214,20 @@ export function StickyCtaCard({
                     <button
                       type="button"
                       aria-label={t("stickyCta.decreaseQty")}
-                      disabled={!qtyInteractive || (tier.qty ?? 0) <= 0}
+                      disabled={
+                        !qtyInteractive ||
+                        tier.disabled ||
+                        (tier.qty ?? 0) <= 0 ||
+                        (tier.qty ?? 0) <= (tier.minQty ?? 0)
+                      }
                       onClick={() =>
                         qtyInteractive &&
-                        onChangeQty?.(
-                          tier.name,
-                          Math.max(0, (tier.qty ?? 0) - 1),
-                        )
+                        !tier.disabled &&
+                        onChangeQty?.(tier, Math.max(0, (tier.qty ?? 0) - 1))
                       }
                       className={cn(
                         "flex size-[40px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default lg:size-[30px]",
-                        qtyInteractive
+                        qtyInteractive && !tier.disabled
                           ? "text-ink-primary hover:border-border-brand"
                           : "cursor-not-allowed text-ink-disabled",
                       )}
@@ -217,17 +240,19 @@ export function StickyCtaCard({
                     <button
                       type="button"
                       aria-label={t("stickyCta.increaseQty")}
-                      disabled={!qtyInteractive || (tier.qty ?? 0) >= 6}
+                      disabled={
+                        !qtyInteractive ||
+                        tier.disabled ||
+                        (tier.qty ?? 0) >= (tier.maxQty ?? 6)
+                      }
                       onClick={() =>
                         qtyInteractive &&
-                        onChangeQty?.(
-                          tier.name,
-                          Math.min(6, (tier.qty ?? 0) + 1),
-                        )
+                        !tier.disabled &&
+                        onChangeQty?.(tier, Math.min(6, (tier.qty ?? 0) + 1))
                       }
                       className={cn(
                         "flex size-[40px] items-center justify-center rounded-[15px] border border-border-default bg-surface-default text-[16px] lg:size-[30px]",
-                        qtyInteractive
+                        qtyInteractive && !tier.disabled
                           ? "text-ink-primary hover:border-border-brand"
                           : "cursor-not-allowed text-ink-disabled",
                       )}

@@ -249,6 +249,12 @@ export function SeatSelectionPage() {
   const [zone, setZone] = useState<Zone>("all");
   const [selected, setSelected] = useState<SelectedSeat[]>([]);
   const [holding, setHolding] = useState(false);
+  const [requestedQuantity] = useState<number | undefined>(() => {
+    const stored = Number(sessionStorage.getItem("myticket.ticketQty"));
+    return Number.isInteger(stored) && stored > 0 && stored <= 6
+      ? stored
+      : undefined;
+  });
   const selectedIds = useMemo(
     () => new Set(selected.map((seat) => seat.id)),
     [selected],
@@ -336,7 +342,13 @@ export function SeatSelectionPage() {
 
   useEffect(() => {
     const eventRecord = resolveEventFromList(apiEvents, slug ?? "");
-    const ticketTypeId = firstTicketTypeId(eventRecord);
+    const storedTicketId = Number(sessionStorage.getItem("myticket.ticketId"));
+    const availableTicketTypes = listTicketTypes(eventRecord);
+    const ticketTypeId = availableTicketTypes.some(
+      (ticket) => ticket.id === storedTicketId,
+    )
+      ? storedTicketId
+      : firstTicketTypeId(eventRecord);
     if (ticketTypeId)
       sessionStorage.setItem("myticket.ticketId", String(ticketTypeId));
     if (resolvedEventId)
@@ -390,6 +402,7 @@ export function SeatSelectionPage() {
   async function continueToCheckout() {
     if (
       selected.length === 0 ||
+      (requestedQuantity != null && selected.length !== requestedQuantity) ||
       !hasCompletePrices ||
       waitingForSeats ||
       seatsUnavailable
@@ -463,7 +476,7 @@ export function SeatSelectionPage() {
       if (current.some((item) => item.id === seat.id)) {
         return current.filter((item) => item.id !== seat.id);
       }
-      if (current.length >= 6) return current;
+      if (current.length >= (requestedQuantity ?? 6)) return current;
 
       return [
         ...current,
@@ -577,7 +590,10 @@ export function SeatSelectionPage() {
               {t("seats.yourSeats")}
             </h2>
             <p className="text-[13px] text-ink-secondary">
-              {t("seats.selectedOf", { count: selected.length, max: 6 })}
+              {t("seats.selectedOf", {
+                count: selected.length,
+                max: requestedQuantity ?? 6,
+              })}
             </p>
           </div>
 
@@ -619,7 +635,9 @@ export function SeatSelectionPage() {
             </ul>
           ) : (
             <p className="mt-lg text-[13px] text-ink-muted">
-              {t("seats.mapHint")}
+              {requestedQuantity != null
+                ? t("seats.mapHintQuantity", { count: requestedQuantity })
+                : t("seats.mapHint")}
             </p>
           )}
 
@@ -674,6 +692,8 @@ export function SeatSelectionPage() {
               waitingForSeats ||
               seatsUnavailable ||
               selected.length === 0 ||
+              (requestedQuantity != null &&
+                selected.length !== requestedQuantity) ||
               !hasCompletePrices ||
               !usingLiveMap
             }
@@ -716,6 +736,8 @@ export function SeatSelectionPage() {
               waitingForSeats ||
               seatsUnavailable ||
               selected.length === 0 ||
+              (requestedQuantity != null &&
+                selected.length !== requestedQuantity) ||
               !hasCompletePrices ||
               !usingLiveMap
             }

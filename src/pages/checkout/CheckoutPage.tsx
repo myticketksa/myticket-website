@@ -88,7 +88,6 @@ export function CheckoutPage() {
   const [releaseHold] = useReleaseHoldMutation();
   const paidRef = useRef(false);
   const [method, setMethod] = useState<PaymentMethod>("card");
-  const [assignGuests, setAssignGuests] = useState(false);
   const [acceptRefund, setAcceptRefund] = useState(true);
 
   const hold = useMemo(() => readHoldSession(), []);
@@ -185,11 +184,7 @@ export function CheckoutPage() {
       const assigned = guestNames[index]?.trim();
       return {
         quantity_id: index + 1,
-        // API requires one beneficiary per ticket. When guests aren't assigned,
-        // every seat is named for the buyer.
-        name: assignGuests
-          ? assigned || `${buyerName} (${index + 1})`
-          : buyerName,
+        name: assigned || buyerName,
       };
     });
   }
@@ -242,18 +237,6 @@ export function CheckoutPage() {
     if (!ticketId) {
       dispatch(toastPushed("error", t("checkout.ticketMissing")));
       return null;
-    }
-
-    if (assignGuests) {
-      const missing = guestNames
-        .slice(0, count)
-        .findIndex((name) => !name.trim());
-      if (missing >= 0) {
-        dispatch(
-          toastPushed("error", t("checkout.guestName", { n: missing + 1 })),
-        );
-        return null;
-      }
     }
 
     const body = freeSeating
@@ -388,36 +371,27 @@ export function CheckoutPage() {
             </Field>
           </div>
 
-          <Checkbox
-            id="assign-guests"
-            className="mt-[14px]"
-            checked={assignGuests}
-            onCheckedChange={(value) => setAssignGuests(value === true)}
-            label={t("checkout.assignGuests")}
-          />
-          {assignGuests && (
-            <div className="mt-[14px] grid gap-[14px] md:grid-cols-2">
-              {guestNames.map((name, index) => (
-                <Field
-                  key={index}
-                  label={t("checkout.guestLabel", { n: index + 1 })}
-                  htmlFor={`guest-${index}`}
-                >
-                  <TextInput
-                    id={`guest-${index}`}
-                    value={name}
-                    onChange={(event) => {
-                      const next = [...guestNames];
-                      next[index] = event.target.value;
-                      setGuestNames(next);
-                    }}
-                    placeholder={user?.name ?? t("checkout.guestPlaceholder")}
-                    className="bg-bg-page"
-                  />
-                </Field>
-              ))}
-            </div>
-          )}
+          <div className="mt-[14px] grid gap-[14px] md:grid-cols-2">
+            {guestNames.map((name, index) => (
+              <Field
+                key={index}
+                label={t("checkout.guestLabel", { n: index + 1 })}
+                htmlFor={`guest-${index}`}
+              >
+                <TextInput
+                  id={`guest-${index}`}
+                  value={name}
+                  onChange={(event) => {
+                    const next = [...guestNames];
+                    next[index] = event.target.value;
+                    setGuestNames(next);
+                  }}
+                  placeholder={t("checkout.guestPlaceholder")}
+                  className="bg-bg-page"
+                />
+              </Field>
+            ))}
+          </div>
         </section>
 
         <section className="mt-[18px] rounded-[18px] border border-border-default bg-surface-default p-[22px]">

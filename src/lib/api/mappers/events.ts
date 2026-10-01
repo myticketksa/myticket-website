@@ -1,5 +1,5 @@
-import { slugify } from '@/pages/_guest/slugify'
-import type { EventCardProps } from '@/components/cards'
+import { slugify } from "@/pages/_guest/slugify";
+import type { EventCardProps } from "@/components/cards";
 import {
   firstTicketTypeId,
   formatApiDate,
@@ -7,65 +7,111 @@ import {
   localizedString,
   nestedValue,
   pickLocalized,
-} from '@/lib/api/locale'
+} from "@/lib/api/locale";
 
-type ApiRecord = Record<string, unknown>
+type ApiRecord = Record<string, unknown>;
 
-export type EventSeatingType = 'free' | 'assigned'
+export type EventSeatingType = "free" | "assigned";
 
-export function resolveSeatingType(event: ApiRecord | undefined): EventSeatingType {
-  const raw = String(event?.seatingType ?? event?.seating_type ?? 'assigned').toLowerCase()
-  return raw === 'free' ? 'free' : 'assigned'
+export function resolveSeatingType(
+  event: ApiRecord | undefined,
+): EventSeatingType {
+  const raw = String(
+    event?.seatingType ?? event?.seating_type ?? "assigned",
+  ).toLowerCase();
+  return raw === "free" ? "free" : "assigned";
 }
 
 export function listTicketTypes(event: ApiRecord | undefined): Array<{
-  id: number
-  name: string
-  price: number
-  detail?: string
+  id: number;
+  name: string;
+  price: number;
+  detail?: string;
+  remaining?: number;
+  isSpecialNeeds: boolean;
 }> {
-  if (!event) return []
-  const types = event.ticketTypes ?? event.ticket_types ?? event.tickets
-  if (!Array.isArray(types)) return []
+  if (!event) return [];
+  const types = event.ticketTypes ?? event.ticket_types ?? event.tickets;
+  if (!Array.isArray(types)) return [];
+  const remainingByType = new Map<number, number>();
+  const sessions = event.sessions;
+  if (Array.isArray(sessions)) {
+    for (const session of sessions) {
+      if (!session || typeof session !== "object") continue;
+      const sessionTickets = (session as ApiRecord).tickets;
+      if (!Array.isArray(sessionTickets)) continue;
+      for (const sessionTicket of sessionTickets) {
+        if (!sessionTicket || typeof sessionTicket !== "object") continue;
+        const ticket = sessionTicket as ApiRecord;
+        const ticketTypeId = Number(
+          ticket.ticketTypeId ?? ticket.ticket_type_id ?? ticket.ticketId,
+        );
+        const remaining = Number(ticket.remaining ?? ticket.available);
+        if (
+          Number.isInteger(ticketTypeId) &&
+          Number.isFinite(remaining) &&
+          remaining >= 0
+        ) {
+          remainingByType.set(
+            ticketTypeId,
+            (remainingByType.get(ticketTypeId) ?? 0) + remaining,
+          );
+        }
+      }
+    }
+  }
+
   return types.flatMap((row) => {
-    if (!row || typeof row !== 'object') return []
-    const record = row as ApiRecord
-    const idRaw = record.id ?? record.ticket_id ?? record.ticketId
-    if (idRaw == null || !/^\d+$/.test(String(idRaw))) return []
-    const price = Number(record.price ?? record.amount ?? 0)
+    if (!row || typeof row !== "object") return [];
+    const record = row as ApiRecord;
+    const idRaw = record.id ?? record.ticket_id ?? record.ticketId;
+    if (idRaw == null || !/^\d+$/.test(String(idRaw))) return [];
+    const price = Number(record.price ?? record.amount ?? 0);
     return [
       {
         id: Number(idRaw),
         name: localizedString(record.name ?? record.title, `Ticket ${idRaw}`),
         price: Number.isFinite(price) ? price : 0,
-        detail: localizedString(record.description ?? record.detail ?? record.zone),
+        detail: localizedString(
+          record.description ?? record.detail ?? record.zone,
+        ),
+        remaining: remainingByType.get(Number(idRaw)),
+        isSpecialNeeds:
+          record.isSpecialNeeds === true ||
+          record.is_special_needs === true ||
+          record.isSpecialNeeds === 1 ||
+          record.is_special_needs === 1 ||
+          String(
+            record.isSpecialNeeds ?? record.is_special_needs,
+          ).toLowerCase() === "true",
       },
-    ]
-  })
+    ];
+  });
 }
 
 /** Map flexible event API rows into EventCard props; keep fixtures usable as fallback. */
 export function mapApiEventToCard(event: ApiRecord): EventCardProps & {
-  id?: string
-  slug: string
-  ticketTypeId?: number
-  isFree?: boolean
-  seatingType?: EventSeatingType
-  startTime?: string
+  id?: string;
+  slug: string;
+  ticketTypeId?: number;
+  isFree?: boolean;
+  seatingType?: EventSeatingType;
+  startTime?: string;
 } {
   const title =
-    pickLocalized(event, ['title', 'name', 'name_en'], '') ||
-    localizedString(nestedValue(event, ['translations', '0', 'title']), 'Untitled event')
+    pickLocalized(event, ["title", "name", "name_en"], "") ||
+    localizedString(
+      nestedValue(event, ["translations", "0", "title"]),
+      "Untitled event",
+    );
 
   const slug =
-    pickLocalized(event, ['slug']) ||
-    slugify(title) ||
-    String(event.id ?? '')
+    pickLocalized(event, ["slug"]) || slugify(title) || String(event.id ?? "");
 
   const venue =
-    pickLocalized(event, ['place', 'venue', 'venue_name', 'location']) ||
-    localizedString(nestedValue(event, ['venue', 'name'])) ||
-    localizedString(nestedValue(event, ['place', 'name']))
+    pickLocalized(event, ["place", "venue", "venue_name", "location"]) ||
+    localizedString(nestedValue(event, ["venue", "name"])) ||
+    localizedString(nestedValue(event, ["place", "name"]));
 
   const priceRaw =
     event.priceFrom ??
@@ -73,52 +119,70 @@ export function mapApiEventToCard(event: ApiRecord): EventCardProps & {
     event.from_price ??
     event.discountedPrice ??
     event.price ??
-    nestedValue(event, ['ticketTypes', '0', 'price'])
+    nestedValue(event, ["ticketTypes", "0", "price"]);
 
   const price =
     event.isFree === true || Number(priceRaw) === 0
-      ? 'Free'
-      : formatMoneySar(priceRaw)
+      ? "Free"
+      : formatMoneySar(priceRaw);
 
   const image =
-    pickLocalized(event, ['cover', 'banner', 'image', 'cover_image', 'banner_image', 'thumbnail']) ||
-    undefined
+    pickLocalized(event, [
+      "cover",
+      "banner",
+      "image",
+      "cover_image",
+      "banner_image",
+      "thumbnail",
+    ]) || undefined;
 
   const date =
-    formatApiDate(event.startTime ?? event.starts_at ?? event.start_at ?? event.datetime ?? event.date) ||
-    pickLocalized(event, ['date', 'starts_at', 'start_at', 'datetime', 'startTime'], '')
+    formatApiDate(
+      event.startTime ??
+        event.starts_at ??
+        event.start_at ??
+        event.datetime ??
+        event.date,
+    ) ||
+    pickLocalized(
+      event,
+      ["date", "starts_at", "start_at", "datetime", "startTime"],
+      "",
+    );
 
-  const ratingRaw = event.rating ?? event.average_rating
+  const ratingRaw = event.rating ?? event.average_rating;
   const rating =
-    ratingRaw == null || ratingRaw === '' || Number(ratingRaw) === 0
-      ? '—'
-      : String(Number(ratingRaw).toFixed(1))
+    ratingRaw == null || ratingRaw === "" || Number(ratingRaw) === 0
+      ? "—"
+      : String(Number(ratingRaw).toFixed(1));
 
-  const attendees = event.attendees ?? event.attendance ?? event.attending_label
+  const attendees =
+    event.attendees ?? event.attendance ?? event.attending_label;
   const attendance =
-    attendees == null || attendees === ''
-      ? ''
-      : typeof attendees === 'number'
-        ? `${attendees.toLocaleString('en-US')} going`
-        : localizedString(attendees)
+    attendees == null || attendees === ""
+      ? ""
+      : typeof attendees === "number"
+        ? `${attendees.toLocaleString("en-US")} going`
+        : localizedString(attendees);
 
   const category =
-    pickLocalized(event, ['category', 'category_name']) ||
-    localizedString(nestedValue(event, ['category', 'name']))
+    pickLocalized(event, ["category", "category_name"]) ||
+    localizedString(nestedValue(event, ["category", "name"]));
 
   const flag =
     event.isFeatured === true
-      ? 'Featured'
-      : pickLocalized(event, ['flag', 'badge', 'status_label']) || undefined
+      ? "Featured"
+      : pickLocalized(event, ["flag", "badge", "status_label"]) || undefined;
 
-  const ticketTypeId = firstTicketTypeId(event)
-  const startRaw = event.startTime ?? event.starts_at ?? event.start_at ?? event.datetime
+  const ticketTypeId = firstTicketTypeId(event);
+  const startRaw =
+    event.startTime ?? event.starts_at ?? event.start_at ?? event.datetime;
   const startTime =
-    typeof startRaw === 'string' && startRaw.trim()
+    typeof startRaw === "string" && startRaw.trim()
       ? startRaw
       : startRaw instanceof Date
         ? startRaw.toISOString()
-        : undefined
+        : undefined;
 
   return {
     id: event.id != null ? String(event.id) : undefined,
@@ -129,32 +193,36 @@ export function mapApiEventToCard(event: ApiRecord): EventCardProps & {
     rating,
     attendance,
     price,
-    isFree: event.isFree === true || event.is_free === true || Number(priceRaw) === 0,
+    isFree:
+      event.isFree === true || event.is_free === true || Number(priceRaw) === 0,
     seatingType: resolveSeatingType(event),
     startTime,
     category: category || undefined,
     flag: flag || undefined,
     image,
     ticketTypeId,
-  }
+  };
 }
 
 export function resolveEventFromList(
   events: ApiRecord[] | undefined,
   slugOrId: string,
 ): ApiRecord | undefined {
-  if (!events?.length) return undefined
+  if (!events?.length) return undefined;
   if (/^\d+$/.test(slugOrId)) {
-    return events.find((e) => String(e.id) === slugOrId)
+    return events.find((e) => String(e.id) === slugOrId);
   }
   return events.find((e) => {
-    const mapped = mapApiEventToCard(e)
-    return mapped.slug === slugOrId || slugify(mapped.title) === slugOrId
-  })
+    const mapped = mapApiEventToCard(e);
+    return mapped.slug === slugOrId || slugify(mapped.title) === slugOrId;
+  });
 }
 
-export function resolveEventId(events: ApiRecord[] | undefined, slugOrId: string): string | undefined {
-  if (/^\d+$/.test(slugOrId)) return slugOrId
-  const match = resolveEventFromList(events, slugOrId)
-  return match?.id != null ? String(match.id) : undefined
+export function resolveEventId(
+  events: ApiRecord[] | undefined,
+  slugOrId: string,
+): string | undefined {
+  if (/^\d+$/.test(slugOrId)) return slugOrId;
+  const match = resolveEventFromList(events, slugOrId);
+  return match?.id != null ? String(match.id) : undefined;
 }

@@ -15,11 +15,7 @@ import { toastPushed } from "@/features/ui/uiSlice";
 import { apiErrorMessage } from "@/lib/api/unwrap";
 import { useRequireAuth } from "@/lib/auth/useRequireAuth";
 import { useEventFavorites } from "@/lib/favorites/useEventFavorites";
-import {
-  firstTicketTypeId,
-  formatMoneySar,
-  localizedString,
-} from "@/lib/api/locale";
+import { formatMoneySar, localizedString } from "@/lib/api/locale";
 import {
   listTicketTypes,
   mapApiEventToCard,
@@ -29,11 +25,7 @@ import {
 } from "@/lib/api/mappers/events";
 import { writeFreeSeatingSession } from "@/lib/purchase/holdSession";
 import { catalogLabel } from "@/lib/i18n/catalogLabels";
-import {
-  Avatar,
-  MoneyAmount,
-  parseMoneyDisplay,
-} from "@/components/data-display";
+import { MoneyAmount, parseMoneyDisplay } from "@/components/data-display";
 import {
   ArrowUpRightIcon,
   HeartGlyphIcon,
@@ -60,47 +52,19 @@ import {
   type TicketTier,
 } from "@/pages/_guest";
 
-/**
- * Figma `207:4797` tab rail — About · Venue · Reviews.
- */
-const TABS = ["About", "Venue", "Reviews"] as const;
+/** Event detail tab rail — About · Venue. */
+const TABS = ["About", "Venue"] as const;
 type Tab = (typeof TABS)[number];
 
 const TAB_IDS: Record<Tab, string> = {
   About: "about",
   Venue: "venue",
-  Reviews: "reviews",
 };
 
 const TAB_LABEL_KEYS: Record<Tab, string> = {
   About: "detail.about",
   Venue: "detail.venue",
-  Reviews: "detail.reviews",
 };
-
-const REVIEWS = [
-  {
-    initials: "MA",
-    name: "Mohammed A.",
-    dateKey: "detail.reviewMohammedDate",
-    rating: "5.0",
-    bodyKey: "detail.reviewMohammedBody",
-  },
-  {
-    initials: "HS",
-    name: "Hala S.",
-    dateKey: "detail.reviewHalaDate",
-    rating: "4.5",
-    bodyKey: "detail.reviewHalaBody",
-  },
-  {
-    initials: "KR",
-    name: "Khalid R.",
-    dateKey: "detail.reviewKhalidDate",
-    rating: "4.0",
-    bodyKey: "detail.reviewKhalidBody",
-  },
-] as const;
 
 const MAPS_URL =
   "https://www.google.com/maps/search/?api=1&query=King+Abdullah+Park,+Al+Malaz,+Riyadh+12836";
@@ -163,7 +127,9 @@ export function EventDetailPage() {
   const scrollingToRef = useRef<string | null>(null);
   const { isFavourite, toggleFavourite } = useEventFavorites();
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
-  const [ticketQty, setTicketQty] = useState(1);
+  const [ticketQuantities, setTicketQuantities] = useState<
+    Record<number, number>
+  >({});
 
   const { data: eventsResult } = useGetEventsQuery();
   const apiEvents = eventsResult?.items;
@@ -240,12 +206,11 @@ export function EventDetailPage() {
         (listCard && "flag" in listCard ? listCard.flag : undefined) ??
         EVENT_DETAIL.flag,
       rating:
-        pickDetailString(apiDetail, ["rating_label", "reviews_summary"]) ??
-        (detailCard?.rating && detailCard.rating !== "—"
-          ? t("detail.reviewsCount", { rating: detailCard.rating })
-          : listCard?.rating
-            ? t("detail.reviewsCount", { rating: listCard.rating })
-            : EVENT_DETAIL.rating),
+        detailCard?.rating && detailCard.rating !== "—"
+          ? detailCard.rating
+          : listCard?.rating && listCard.rating !== "—"
+            ? listCard.rating
+            : undefined,
       when:
         pickDetailString(apiDetail, [
           "when",
@@ -293,16 +258,9 @@ export function EventDetailPage() {
   }, [apiDetail]);
 
   useEffect(() => {
-    const ticketTypeId =
-      firstTicketTypeId(apiDetail) ??
-      (listCard && "ticketTypeId" in listCard
-        ? listCard.ticketTypeId
-        : undefined);
-    if (ticketTypeId)
-      sessionStorage.setItem("myticket.ticketId", String(ticketTypeId));
     if (resolvedId)
       sessionStorage.setItem("myticket.eventId", String(resolvedId));
-  }, [apiDetail, listCard, resolvedId]);
+  }, [resolvedId]);
 
   const eventSource =
     apiDetail && Object.keys(apiDetail).length > 0 ? apiDetail : undefined;
@@ -319,24 +277,65 @@ export function EventDetailPage() {
       listTicketTypes(eventSource ?? resolveEventFromList(apiEvents, slugOrId)),
     [apiEvents, eventSource, slugOrId],
   );
+  const ticketQuantitiesStorageKey = `myticket.ticketQuantities.${resolvedId ?? slugOrId}`;
 
   useEffect(() => {
     if (apiTicketTypes.length === 0) return;
-    setSelectedTicketId((current) => {
-      if (
-        current != null &&
-        apiTicketTypes.some((tier) => tier.id === current)
-      ) {
-        return current;
+    let storedQuantities: Record<string, unknown> = {};
+    try {
+      const parsed: unknown = JSON.parse(
+        sessionStorage.getItem(ticketQuantitiesStorageKey) ?? "{}",
+      );
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        storedQuantities = parsed as Record<string, unknown>;
       }
-      return apiTicketTypes[0]!.id;
-    });
-    if (apiTicketTypes.length === 1) setTicketQty(1);
-  }, [apiTicketTypes]);
+    } catch {
+      storedQuantities = {};
+    }
+
+    const hasStoredQuantities = Object.keys(storedQuantities).length > 0;
+    const nextQuantities = Object.fromEntries(
+      apiTicketTypes.map((tier) => {
+        const rawQuantity = Number(storedQuantities[String(tier.id)] ?? 0);
+        const quantity = Number.isFinite(rawQuantity)
+          ? Math.max(0, Math.floor(rawQuantity))
+          : 0;
+        return [tier.id, Math.min(6, tier.remaining ?? 6, quantity)];
+      }),
+    );
+    const firstAvailable =
+      apiTicketTypes.find((tier) => tier.remaining !== 0) ?? apiTicketTypes[0]!;
+    if (!hasStoredQuantities && firstAvailable.remaining !== 0) {
+      nextQuantities[firstAvailable.id] = 1;
+    }
+
+    const storedActiveId = Number(sessionStorage.getItem("myticket.ticketId"));
+    const nextId = apiTicketTypes.some(
+      (tier) =>
+        tier.id === storedActiveId &&
+        tier.remaining !== 0 &&
+        nextQuantities[tier.id] > 0,
+    )
+      ? storedActiveId
+      : (apiTicketTypes.find(
+          (tier) => tier.remaining !== 0 && nextQuantities[tier.id] > 0,
+        )?.id ?? firstAvailable.id);
+
+    setTicketQuantities(nextQuantities);
+    setSelectedTicketId(nextId);
+    sessionStorage.setItem("myticket.ticketId", String(nextId));
+    sessionStorage.setItem(
+      ticketQuantitiesStorageKey,
+      JSON.stringify(nextQuantities),
+    );
+  }, [apiTicketTypes, ticketQuantitiesStorageKey]);
 
   const selectedTicket =
     apiTicketTypes.find((tier) => tier.id === selectedTicketId) ??
     apiTicketTypes[0];
+  const ticketQty = selectedTicket
+    ? (ticketQuantities[selectedTicket.id] ?? 0)
+    : 0;
   const eventStartRaw =
     apiDetail?.startTime ??
     apiDetail?.starts_at ??
@@ -350,22 +349,39 @@ export function EventDetailPage() {
     eventStart.getTime() <= Date.now(),
   );
 
-  const freeSeatingTiers: TicketTier[] | undefined = useMemo(() => {
-    if (seatingType !== "free" || apiTicketTypes.length === 0) return undefined;
+  const apiDisplayTiers: TicketTier[] | undefined = useMemo(() => {
+    if (apiTicketTypes.length === 0) return undefined;
     return apiTicketTypes.map((tier) => ({
+      id: tier.id,
       name: tier.name,
-      detail:
-        tier.detail || (seatingType === "free" ? t("detail.freeSeating") : ""),
+      detail: [
+        tier.detail,
+        tier.isSpecialNeeds ? t("detail.specialNeedsTicket") : "",
+        seatingType === "free" && !tier.detail ? t("detail.freeSeating") : "",
+      ]
+        .filter(Boolean)
+        .join(" · "),
       price:
         tier.price <= 0
           ? t("common:currency.free")
           : formatMoneySar(tier.price),
-      left: "",
+      left:
+        tier.remaining === 0
+          ? t("stickyCta.soldOut")
+          : tier.remaining != null
+            ? t("stickyCta.remaining", { count: tier.remaining })
+            : "",
       maxLabel: t("stickyCta.maxPerOrder"),
-      selected: tier.id === selectedTicket?.id,
-      qty: tier.id === selectedTicket?.id ? ticketQty : 0,
+      disabled: tier.remaining === 0,
+      specialNeeds: tier.isSpecialNeeds,
+      minQty: 0,
+      maxQty: Math.min(6, tier.remaining ?? 6),
+      urgent:
+        tier.remaining != null && tier.remaining > 0 && tier.remaining <= 10,
+      selected: (ticketQuantities[tier.id] ?? 0) > 0,
+      qty: ticketQuantities[tier.id] ?? 0,
     }));
-  }, [apiTicketTypes, seatingType, selectedTicket?.id, t, ticketQty]);
+  }, [apiTicketTypes, seatingType, t, ticketQuantities]);
 
   const freeSeatingTotals = useMemo(() => {
     if (seatingType !== "free" || !selectedTicket) return undefined;
@@ -502,12 +518,16 @@ export function EventDetailPage() {
     }
     const ticketTypeId =
       selectedTicket?.id ??
-      firstTicketTypeId(apiDetail) ??
       (listCard && "ticketTypeId" in listCard
         ? listCard.ticketTypeId
         : undefined);
     if (ticketTypeId)
       sessionStorage.setItem("myticket.ticketId", String(ticketTypeId));
+    if (selectedTicket && ticketQty > 0) {
+      sessionStorage.setItem("myticket.ticketQty", String(ticketQty));
+    } else {
+      sessionStorage.removeItem("myticket.ticketQty");
+    }
     if (resolvedId)
       sessionStorage.setItem("myticket.eventId", String(resolvedId));
     return true;
@@ -591,10 +611,12 @@ export function EventDetailPage() {
               </h1>
 
               <div className="mt-[14px] flex flex-col gap-sm text-[14px] sm:flex-row sm:flex-wrap sm:items-center sm:gap-[18px] sm:text-[15px]">
-                <span className="inline-flex items-center gap-[5px] font-semibold text-ink-primary">
-                  <StarFillIcon size={15} />
-                  {display.rating}
-                </span>
+                {display.rating ? (
+                  <span className="inline-flex items-center gap-[5px] font-semibold text-ink-primary">
+                    <StarFillIcon size={15} />
+                    {display.rating}
+                  </span>
+                ) : null}
                 <span className="text-ink-secondary">{display.when}</span>
                 <span className="text-ink-secondary">{display.venue}</span>
                 {display.attendance ? (
@@ -630,26 +652,59 @@ export function EventDetailPage() {
             className="w-full min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1"
             fromPrice={display.fromPrice}
             note={t("detail.fixtureSalesClose")}
-            tiers={freeSeatingTiers ?? EVENT_DETAIL.tiers}
+            tiers={apiDisplayTiers ?? EVENT_DETAIL.tiers}
             totals={freeSeatingTotals?.lines ?? EVENT_DETAIL.totals}
             total={freeSeatingTotals?.total ?? EVENT_DETAIL.total}
             primaryLabel={isPastEvent ? t("detail.eventEnded") : primaryLabel}
             primaryTo={primaryTo}
             primaryDisabled={
-              isPastEvent || createState.isLoading || payState.isLoading
+              isPastEvent ||
+              createState.isLoading ||
+              payState.isLoading ||
+              (apiTicketTypes.length > 0 && (!selectedTicket || ticketQty < 1))
             }
-            qtyInteractive={seatingType === "free" && apiTicketTypes.length > 0}
-            onSelectTier={(name) => {
-              const match = apiTicketTypes.find((tier) => tier.name === name);
+            qtyInteractive={apiTicketTypes.length > 0}
+            onSelectTier={(selectedTier) => {
+              const match = apiTicketTypes.find(
+                (tier) => tier.id === selectedTier.id,
+              );
               if (!match) return;
               setSelectedTicketId(match.id);
-              setTicketQty((qty) => Math.max(1, qty));
+              sessionStorage.setItem("myticket.ticketId", String(match.id));
+              const nextQuantity = Math.min(
+                match.remaining ?? 6,
+                Math.max(1, ticketQuantities[match.id] ?? 0),
+              );
+              const nextQuantities = {
+                ...ticketQuantities,
+                [match.id]: nextQuantity,
+              };
+              setTicketQuantities(nextQuantities);
+              sessionStorage.setItem(
+                ticketQuantitiesStorageKey,
+                JSON.stringify(nextQuantities),
+              );
             }}
-            onChangeQty={(name, qty) => {
-              const match = apiTicketTypes.find((tier) => tier.name === name);
+            onChangeQty={(selectedTier, qty) => {
+              const match = apiTicketTypes.find(
+                (tier) => tier.id === selectedTier.id,
+              );
               if (!match) return;
               setSelectedTicketId(match.id);
-              setTicketQty(Math.max(0, qty));
+              sessionStorage.setItem("myticket.ticketId", String(match.id));
+              const nextQty = Math.max(0, Math.min(match.remaining ?? 6, qty));
+              const nextQuantities = {
+                ...ticketQuantities,
+                [match.id]: nextQty,
+              };
+              setTicketQuantities(nextQuantities);
+              sessionStorage.setItem(
+                ticketQuantitiesStorageKey,
+                JSON.stringify(nextQuantities),
+              );
+              if (seatingType === "assigned") {
+                sessionStorage.setItem("myticket.ticketQty", String(nextQty));
+              }
             }}
             onPrimaryClick={() => handlePrimaryClick()}
             footerNote={t("detail.fixtureFooterNote")}
@@ -745,52 +800,6 @@ export function EventDetailPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-            </section>
-
-            <section
-              id="reviews"
-              className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-3xl pb-2xl sm:mt-[44px]"
-            >
-              <div className="flex flex-col gap-sm sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-md">
-                <h2 className="min-w-0 text-balance text-heading-h2-section text-ink-primary">
-                  {t("detail.reviews")}
-                </h2>
-                <div className="flex items-center gap-[5px] text-[14px] text-ink-secondary sm:text-[15px]">
-                  <StarFillIcon size={15} />
-                  <span>{t("detail.fixtureReviewsSummary")}</span>
-                </div>
-              </div>
-              <div className="mt-[18px] grid grid-cols-1 gap-lg lg:grid-cols-3">
-                {REVIEWS.map((review) => (
-                  <div
-                    key={review.name}
-                    className="flex flex-col gap-[11px] rounded-[16px] border border-border-default bg-surface-default p-lg sm:p-[18px]"
-                  >
-                    <div className="flex items-center gap-[11px]">
-                      <Avatar
-                        initials={review.initials}
-                        size="md"
-                        className="!size-[36px] !bg-border-divider !bg-none text-[14px] font-semibold text-ink-secondary"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[14px] font-semibold text-ink-primary">
-                          {review.name}
-                        </p>
-                        <p className="text-[12px] text-ink-muted">
-                          {t(review.dateKey)}
-                        </p>
-                      </div>
-                      <StarFillIcon size={13} className="shrink-0" />
-                      <span className="shrink-0 text-[13px] font-semibold text-ink-primary">
-                        {review.rating}
-                      </span>
-                    </div>
-                    <p className="text-[14px] leading-[1.55] text-pretty text-ink-secondary">
-                      {t(review.bodyKey)}
-                    </p>
-                  </div>
-                ))}
               </div>
             </section>
           </article>
