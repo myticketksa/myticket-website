@@ -725,6 +725,14 @@
     "agentName": "{{name}} · MyTicket Support",
     "unknown": "Unknown",
     "agentOnline": "Online — replies in about a minute",
+    "socket": {
+      "idle": "Waiting for chat…",
+      "connecting": "Connecting to live support…",
+      "connected": "Joining chat…",
+      "subscribed": "Live connection",
+      "disconnected": "Reconnecting…",
+      "error": "Live connection unavailable"
+    },
     "guestBanner": "Today · {{time}} — you're chatting as a guest of MyTicket",
     "you": "You",
     "agent": "Support",

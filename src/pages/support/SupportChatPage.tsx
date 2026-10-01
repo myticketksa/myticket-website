@@ -1,7 +1,14 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { ArrowRightIcon, PlusIcon } from "@/components/icons";
+import { ArrowRightIcon } from "@/components/icons";
 import { Button, TextInput } from "@/components/ui";
 import { FunnelHeader, PageSection } from "@/layouts";
 import {
@@ -11,8 +18,11 @@ import {
   useSendChatMessageMutation,
 } from "@/app/api/accountApis";
 import { useRequireAuth } from "@/lib/auth/useRequireAuth";
-import { useSupportChatRealtime } from "@/lib/supportChatRealtime";
-import { localizedString } from "@/lib/api/locale";
+import {
+  useSupportChatRealtime,
+  type SupportChatConnectionState,
+} from "@/lib/supportChatRealtime";
+import { formatHumanDateTime, localizedString } from "@/lib/api/locale";
 
 const FALLBACK_FROM = ["you", "agent", "you", "agent"] as const;
 
@@ -23,6 +33,23 @@ type ChatMessage = {
   body: string;
   meta: string;
 };
+
+function formatChatTimestamp(value: unknown): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+
+  const timeOnly = /^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i.exec(raw);
+  if (timeOnly) {
+    const date = new Date();
+    let hours = Number(timeOnly[1]);
+    if (timeOnly[3]?.toUpperCase() === "PM" && hours < 12) hours += 12;
+    if (timeOnly[3]?.toUpperCase() === "AM" && hours === 12) hours = 0;
+    date.setHours(hours, Number(timeOnly[2]), 0, 0);
+    return formatHumanDateTime(date);
+  }
+
+  return formatHumanDateTime(raw);
+}
 
 function mapChatMessage(
   record: Record<string, unknown>,
@@ -43,7 +70,9 @@ function mapChatMessage(
       record.agent_name ??
       (from === "you" ? labels.you : labels.agent),
   );
-  const time = String(record.time ?? record.created_at ?? "");
+  const time = formatChatTimestamp(
+    record.created_at ?? record.createdAt ?? record.time,
+  );
   return {
     from,
     body: String(
@@ -110,6 +139,8 @@ export function SupportChatPage() {
   const { t } = useTranslation("account");
   const { isAuthenticated, requireAuth } = useRequireAuth();
   const [draft, setDraft] = useState("");
+  const messageViewportRef = useRef<HTMLDivElement>(null);
+  const followLatestMessageRef = useRef(true);
   const { data: chats } = useGetChatsQuery(undefined, {
     skip: !isAuthenticated,
   });
@@ -119,10 +150,13 @@ export function SupportChatPage() {
   );
   const chatId = getChatId(supportChat);
   const agentName = getChatAgentName(supportChat) ?? t("support.unknown");
+  const [socketState, setSocketState] =
+    useState<SupportChatConnectionState>("idle");
   const { data: apiMessages } = useGetChatMessagesQuery(chatId ?? "", {
     skip: !isAuthenticated || chatId == null,
+    pollingInterval: socketState === "subscribed" ? 0 : 5000,
   });
-  useSupportChatRealtime(chatId, apiMessages !== undefined);
+  useSupportChatRealtime(chatId, apiMessages !== undefined, setSocketState);
   const [sendMessage, sendState] = useSendChatMessageMutation();
   const [markRead] = useMarkChatsReadMutation();
 
@@ -151,7 +185,7 @@ export function SupportChatPage() {
       return {
         from,
         body: row.body,
-        meta: `${author} · ${row.time}`,
+        meta: `${author} · ${formatChatTimestamp(row.time)}`,
       } satisfies ChatMessage;
     });
   }, [agentName, labels.you, t]);
@@ -173,10 +207,25 @@ export function SupportChatPage() {
     return fallbackMessages;
   }, [apiMessages, fallbackMessages, labels]);
 
+  useLayoutEffect(() => {
+    const viewport = messageViewportRef.current;
+    if (viewport && followLatestMessageRef.current) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  }, [messages]);
+
+  function handleMessageScroll() {
+    const viewport = messageViewportRef.current;
+    if (!viewport) return;
+    followLatestMessageRef.current =
+      viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop < 80;
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const message = draft.trim();
     if (!message) return;
+    followLatestMessageRef.current = true;
 
     try {
       await sendMessage({
@@ -202,7 +251,7 @@ export function SupportChatPage() {
 
       <PageSection padTop={40} padBottom={96}>
         <div className="flex flex-col items-start gap-[28px] lg:flex-row">
-          <div className="flex min-h-[420px] w-full flex-col overflow-hidden rounded-[22px] border border-border-default bg-surface-default sm:min-h-[560px] lg:max-w-[672px]">
+          <div className="flex h-[min(70vh,720px)] min-h-[420px] w-full min-w-0 flex-col overflow-hidden rounded-[22px] border border-border-default bg-surface-default sm:min-h-[560px] lg:flex-1">
             <div className="flex items-center gap-[14px] border-b border-border-divider px-[24px] py-[18px]">
               <div className="relative flex size-[44px] items-center justify-center rounded-[22px] bg-brand-gradient text-[15px] font-extrabold text-ink-inverse">
                 {[...agentName.trim()].slice(0, 2).join("").toUpperCase()}
@@ -212,18 +261,24 @@ export function SupportChatPage() {
                 <p className="text-[15.5px] font-bold text-ink-primary">
                   {t("support.agentName", { name: agentName })}
                 </p>
-                <p className="text-[12.5px] font-semibold text-state-success">
-                  {t("support.agentOnline")}
+                <p
+                  className={`text-[12.5px] font-semibold ${socketState === "subscribed" ? "text-state-success" : "text-ink-muted"}`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {t(`support.socket.${socketState}`)}
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-1 flex-col gap-[16px] overflow-y-auto bg-bg-page p-[24px]">
-              <div className="flex justify-center">
-                <span className="rounded-[12px] border border-border-default bg-surface-default px-[12px] py-[5px] text-[11.5px] font-semibold text-ink-muted">
-                  {t("support.guestBanner", { time: "21:32" })}
-                </span>
-              </div>
+            <div
+              ref={messageViewportRef}
+              onScroll={handleMessageScroll}
+              className="flex min-h-0 flex-1 flex-col gap-[16px] overflow-y-auto overscroll-contain bg-bg-page p-[24px]"
+              role="log"
+              aria-live="polite"
+              aria-relevant="additions"
+            >
               {messages.map((msg) => (
                 <div
                   key={msg.meta + msg.body}
@@ -243,23 +298,12 @@ export function SupportChatPage() {
                   </p>
                 </div>
               ))}
-              <p className="text-[11.5px] text-ink-muted">
-                {t("support.typing", { name: agentName })}
-              </p>
             </div>
 
             <form
               className="flex items-center gap-[10px] border-t border-border-divider px-[24px] py-[16px]"
               onSubmit={(event) => void handleSubmit(event)}
             >
-              <Button
-                variant="icon"
-                size="md"
-                aria-label={t("support.attachAria")}
-                type="button"
-              >
-                <PlusIcon size={16} />
-              </Button>
               <TextInput
                 className="flex-1 !rounded-[22px]"
                 placeholder={t("support.chatPlaceholder")}
@@ -276,7 +320,7 @@ export function SupportChatPage() {
             </form>
           </div>
 
-          <aside className="flex w-full flex-col gap-[14px] lg:w-[340px]">
+          <aside className="flex w-full flex-col gap-[14px] lg:w-[340px] lg:shrink-0">
             <div className="rounded-[20px] border border-border-default bg-surface-default p-[20px]">
               <p className="text-[15px] font-semibold text-ink-primary">
                 {t("support.keepTitle")}

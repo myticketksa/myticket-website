@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_SITE_URL?: string;
   readonly VITE_REVERB_HOST?: string;
   readonly VITE_REVERB_PORT?: string;
+  readonly VITE_REVERB_WSS_HOST?: string;
+  readonly VITE_REVERB_WSS_PORT?: string;
   readonly VITE_REVERB_APP_KEY?: string;
   readonly VITE_REVERB_AUTH_ENDPOINT?: string;
   readonly VITE_REVERB_FORCE_TLS?: string;

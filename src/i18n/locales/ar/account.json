@@ -725,6 +725,14 @@
     "agentName": "{{name}} · دعم MyTicket",
     "unknown": "غير معروف",
     "agentOnline": "متصل — يرد خلال دقيقة تقريباً",
+    "socket": {
+      "idle": "بانتظار المحادثة…",
+      "connecting": "جارٍ الاتصال بالدعم المباشر…",
+      "connected": "جارٍ الانضمام إلى المحادثة…",
+      "subscribed": "الاتصال المباشر نشط",
+      "disconnected": "جارٍ إعادة الاتصال…",
+      "error": "الاتصال المباشر غير متاح"
+    },
     "guestBanner": "اليوم · {{time}} — تتحدث كضيف في MyTicket",
     "you": "أنت",
     "agent": "الدعم",

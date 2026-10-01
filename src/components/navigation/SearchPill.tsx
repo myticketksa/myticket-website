@@ -1,7 +1,7 @@
-import type { InputHTMLAttributes } from 'react'
-import { useTranslation } from 'react-i18next'
-import { MagnifyingGlassIcon } from '@/components/icons'
-import { cn } from '@/lib/cn'
+import type { InputHTMLAttributes } from "react";
+import { useTranslation } from "react-i18next";
+import { MagnifyingGlassIcon } from "@/components/icons";
+import { cn } from "@/lib/cn";
 
 /**
  * Figma `SearchPill` — node 207:2933. The header's search entry point.
@@ -28,7 +28,7 @@ import { cn } from '@/lib/cn'
  * would be a dead control.
  */
 export interface SearchPillProps extends InputHTMLAttributes<HTMLInputElement> {
-  className?: string
+  className?: string;
 }
 
 export function SearchPill({
@@ -36,23 +36,29 @@ export function SearchPill({
   placeholder,
   ...props
 }: SearchPillProps) {
-  const { t } = useTranslation('nav')
+  const { t } = useTranslation(["nav", "common"]);
   return (
     <div
       className={cn(
-        'flex h-search items-center gap-control-gap rounded-search border-[1.5px] border-border-default',
-        'bg-surface-default px-lg transition-colors duration-normal ease-standard',
-        'focus-within:border-border-focus',
+        "flex h-search items-center gap-control-gap rounded-search border-[1.5px] border-border-default",
+        "bg-surface-default px-lg transition-colors duration-normal ease-standard",
+        "focus-within:border-border-focus",
         className,
       )}
     >
-      <MagnifyingGlassIcon size={15} className="shrink-0 text-brand-primary" />
+      <button
+        type="submit"
+        aria-label={t("common:actions.search")}
+        className="flex size-10 shrink-0 items-center justify-center rounded-full text-brand-primary transition-colors hover:bg-bg-page focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
+      >
+        <MagnifyingGlassIcon size={15} aria-hidden="true" />
+      </button>
       <input
         type="search"
-        placeholder={placeholder ?? t('searchPlaceholder')}
+        placeholder={placeholder ?? t("searchPlaceholder")}
         className="min-w-0 flex-1 bg-transparent text-[14px] leading-[1.5] font-medium text-ink-primary outline-none placeholder:text-ink-muted"
         {...props}
       />
     </div>
-  )
+  );
 }

@@ -7,7 +7,7 @@ import {
 } from "@/app/api/experiencesApi";
 import { ExperienceCard } from "@/components/cards";
 import { FilterChip } from "@/components/data-display";
-import { ChevronDownIcon, MinusIcon, PlusIcon } from "@/components/icons";
+import { ChevronDownIcon } from "@/components/icons";
 import { FadeUp, StaggerGroup } from "@/components/motion";
 import { Breadcrumbs } from "@/components/navigation";
 import { Button, TextInput } from "@/components/ui";
@@ -96,7 +96,6 @@ export function ExperiencesPage() {
     [],
   );
   const [category, setCategory] = useState("All experiences");
-  const [guests, setGuests] = useState(2);
   const [where, setWhere] = useState<string>("Anywhere in Saudi Arabia");
   const [searchDraft, setSearchDraft] = useState("");
   const [search, setSearch] = useState("");
@@ -215,45 +214,21 @@ export function ExperiencesPage() {
             <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
               {t("common:actions.search")}
             </p>
-            <TextInput
-              type="search"
-              aria-label={t("home.searchPlaceholderAll")}
-              placeholder={t("home.searchPlaceholderAll")}
-              value={searchDraft}
-              onChange={(event) => setSearchDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") setSearch(searchDraft.trim());
-              }}
-              className="mt-[3px] h-[28px] border-0 bg-transparent px-0 text-[15px] font-semibold shadow-none focus-visible:ring-0"
-            />
+            <div className="mt-[3px]">
+              <TextInput
+                type="search"
+                aria-label={t("home.searchPlaceholderAll")}
+                placeholder={t("home.searchPlaceholderAll")}
+                value={searchDraft}
+                onChange={(event) => setSearchDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") setSearch(searchDraft.trim());
+                }}
+                className="h-[28px] border-0 bg-transparent px-0 text-[15px] font-semibold shadow-none focus-visible:ring-0"
+              />
+            </div>
           </label>
           <div className="mx-[2px] hidden h-[34px] w-px bg-border-divider sm:block" />
-          <div className="w-full shrink-0 border-t border-border-divider px-sm pt-md sm:w-[200px] sm:border-t-0 sm:pt-0">
-            <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-              {t("filters.guests")}
-            </p>
-            <div className="mt-[3px] flex items-center gap-[12px]">
-              <button
-                type="button"
-                aria-label={t("filters.fewerGuests")}
-                onClick={() => setGuests((g) => Math.max(1, g - 1))}
-                className="flex size-[26px] items-center justify-center rounded-full border border-border-default"
-              >
-                <MinusIcon size={14} />
-              </button>
-              <span className="text-[15px] font-semibold tabular-nums">
-                {guests}
-              </span>
-              <button
-                type="button"
-                aria-label={t("filters.moreGuests")}
-                onClick={() => setGuests((g) => g + 1)}
-                className="flex size-[26px] items-center justify-center rounded-full border border-border-default"
-              >
-                <PlusIcon size={14} />
-              </button>
-            </div>
-          </div>
           <Button
             className="mt-sm h-[48px] w-full shrink-0 rounded-[24px] sm:mt-0 sm:w-[104px]"
             onClick={() => setSearch(searchDraft.trim())}

@@ -7,6 +7,14 @@ import { selectAuthToken } from "@/features/auth/authSlice";
 
 const EVENT_NAME = ".message.sent";
 
+export type SupportChatConnectionState =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "subscribed"
+  | "disconnected"
+  | "error";
+
 function asRecord(value: unknown): ApiRecord | undefined {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as ApiRecord)
@@ -93,13 +101,14 @@ function reverbSettings() {
     tlsOverride === "true" ||
     (tlsOverride !== "false" && window.location.protocol === "https:");
   const port = Number(import.meta.env.VITE_REVERB_PORT || 8080);
+  const host = import.meta.env.VITE_REVERB_HOST || "72.62.58.90";
 
   return {
     broadcaster: "reverb" as const,
     key: import.meta.env.VITE_REVERB_APP_KEY || "sry9zdwkcpgoysehvozr",
-    wsHost: import.meta.env.VITE_REVERB_HOST || "72.62.58.90",
+    wsHost: forceTLS ? import.meta.env.VITE_REVERB_WSS_HOST || host : host,
     wsPort: port,
-    wssPort: port,
+    wssPort: Number(import.meta.env.VITE_REVERB_WSS_PORT || 443),
     forceTLS,
     enabledTransports: ["ws", "wss"] as ("ws" | "wss")[],
     authEndpoint:
@@ -112,12 +121,18 @@ function reverbSettings() {
 export function useSupportChatRealtime(
   chatId: string | number | undefined,
   historyReady: boolean,
+  onStatusChange: (state: SupportChatConnectionState) => void,
 ) {
   const dispatch = useAppDispatch();
   const token = useAppSelector(selectAuthToken);
 
   useEffect(() => {
-    if (chatId == null || !token || !historyReady) return;
+    if (chatId == null || !token || !historyReady) {
+      onStatusChange("idle");
+      return;
+    }
+
+    onStatusChange("connecting");
 
     const echo = new Echo({
       ...reverbSettings(),
@@ -129,8 +144,18 @@ export function useSupportChatRealtime(
         },
       },
     });
+    const connection = echo.connector.pusher.connection;
     const channelName = `chat.${chatId}`;
     const channel = echo.private(channelName);
+    const onConnectionStateChange = ({ current }: { current: string }) => {
+      if (current === "connected") onStatusChange("connected");
+      else if (current === "failed") onStatusChange("error");
+      else if (current === "disconnected") onStatusChange("disconnected");
+      else onStatusChange("connecting");
+    };
+    const onConnectionError = () => onStatusChange("error");
+    const onSubscribed = () => onStatusChange("subscribed");
+    const onSubscriptionError = () => onStatusChange("error");
     const onMessage = (payload: unknown) => {
       const incoming = normalizeMessage(payload, chatId);
       if (!incoming) return;
@@ -147,12 +172,18 @@ export function useSupportChatRealtime(
       );
     };
 
+    connection.bind("state_change", onConnectionStateChange);
+    connection.bind("error", onConnectionError);
+    channel.subscribed(onSubscribed);
+    channel.error(onSubscriptionError);
     channel.listen(EVENT_NAME, onMessage);
 
     return () => {
       channel.stopListening(EVENT_NAME, onMessage);
+      connection.unbind("state_change", onConnectionStateChange);
+      connection.unbind("error", onConnectionError);
       echo.leave(channelName);
       echo.disconnect();
     };
-  }, [chatId, dispatch, historyReady, token]);
+  }, [chatId, dispatch, historyReady, onStatusChange, token]);
 }
