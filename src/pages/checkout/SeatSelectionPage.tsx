@@ -528,7 +528,8 @@ export function SeatSelectionPage() {
           ) : null}
         </div>
 
-        <div className="bg-gradient-to-b from-bg-page via-surface-default via-[55%] to-surface-default px-sm py-lg sm:px-lg sm:py-xl">
+        {/* <div className="bg-gradient-to-b from-bg-page via-surface-default via-[55%] to-surface-default px-sm py-lg sm:px-lg sm:py-xl"> */}
+        <div className="px-sm py-lg sm:px-lg sm:py-xl">
           {waitingForSeats ? (
             <p className="py-3xl text-center text-[14px] font-semibold text-ink-secondary">
               {t("seats.loading")}
