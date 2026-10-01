@@ -224,7 +224,7 @@ export function ExperiencesPage() {
                 onKeyDown={(event) => {
                   if (event.key === "Enter") setSearch(searchDraft.trim());
                 }}
-                className="h-[28px] border-0 bg-transparent px-0 text-[15px] font-semibold shadow-none focus-visible:ring-0"
+                className="!h-auto border-0 bg-transparent py-0 !px-0 text-[15px] font-semibold shadow-none focus-visible:ring-0"
               />
             </div>
           </label>
