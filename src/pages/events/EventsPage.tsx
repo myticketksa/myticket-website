@@ -308,10 +308,6 @@ export function EventsPage() {
     ? (pagination?.total ?? shown.length)
     : shown.length;
   const subtitleParts = [
-    t("pages.eventsSubtitle", {
-      count: resultCount,
-      category: categoryDisplay.toLowerCase(),
-    }),
     isError ? t("pages.apiPreview") : null,
     isFetching ? t("pages.updating") : null,
   ].filter(Boolean);

@@ -10,7 +10,9 @@ import { useGetWalletQuery, useTopUpWalletMutation } from '@/app/api/accountApis
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
+import { getActiveLocale } from '@/i18n/config'
 import { apiErrorMessage } from '@/lib/api/unwrap'
+import { localizedString } from '@/lib/api/locale'
 
 type TxnTone = WalletTxnFixture['tone']
 type AccountT = TFunction<'account'>
@@ -31,6 +33,27 @@ function translateWalletStatus(t: AccountT, raw: string, tone: TxnTone): string 
   if (key === 'available') return t('wallet.statusAvailable')
   if (key === 'spent') return t('wallet.statusSpent')
   return raw
+}
+
+/** Activity timestamps: "09:08 AM September 02, 2026". */
+function formatWalletDate(value: unknown): string {
+  const raw = localizedString(value)
+  if (!raw) return ''
+  const date = new Date(raw)
+  if (Number.isNaN(date.getTime())) return raw
+  const locale = getActiveLocale() === 'ar' ? 'ar-SA' : 'en-US'
+  const parts = new Intl.DateTimeFormat(locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    month: 'long',
+    day: '2-digit',
+    year: 'numeric',
+    numberingSystem: 'latn',
+  }).formatToParts(date)
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((item) => item.type === type)?.value ?? ''
+  return `${part('hour')}:${part('minute')} ${part('dayPeriod')} ${part('month')} ${part('day')}, ${part('year')}`
 }
 
 function translateWalletType(t: AccountT, typeRaw: string): string {
@@ -88,7 +111,8 @@ function mapWalletTxn(
   return {
     label: title || typeLabel || fallback.label,
     detail,
-    date: String(record.date ?? record.created_at ?? fallback.date),
+    date: formatWalletDate(record.date ?? record.created_at) ||
+      String(record.date ?? record.created_at ?? fallback.date),
     amount,
     status: translateWalletStatus(t, statusRaw, tone),
     tone,
@@ -117,7 +141,7 @@ const FILTER_IDS = ['all', 'moneyIn', 'moneyOut', 'pending'] as const
 export function WalletPage() {
   const { t } = useTranslation('account')
   const [filter, setFilter] = useState(0)
-  const [topUpAmount, setTopUpAmount] = useState('100')
+  const [topUpAmount, setTopUpAmount] = useState('')
   const [showTopUp, setShowTopUp] = useState(false)
   const dispatch = useAppDispatch()
   const user = useAppSelector(selectAuthUser)
@@ -148,14 +172,16 @@ export function WalletPage() {
     return transactions.filter((txn) => txn.tone === 'pending')
   }, [filter, transactions])
 
+  const topUpValue = Number(topUpAmount)
+  const topUpReady = Number.isFinite(topUpValue) && topUpValue > 0
+
   async function handleTopUp() {
-    const amount = Number(topUpAmount)
-    if (!Number.isFinite(amount) || amount <= 0) {
+    if (!topUpReady) {
       dispatch(toastPushed('error', t('wallet.invalidAmount')))
       return
     }
     try {
-      await topUp({ amount, paymentMethod: 'CREDIT' }).unwrap()
+      await topUp({ amount: topUpValue, paymentMethod: 'CREDIT' }).unwrap()
       dispatch(toastPushed('success', t('wallet.topUpSuccess')))
       setShowTopUp(false)
     } catch (error) {
@@ -183,56 +209,64 @@ export function WalletPage() {
               <div className="mt-[18px]">
                 <Button
                   size="md"
-                  className="h-[42px] rounded-[21px] bg-bg-page px-[18px] text-ink-primary hover:bg-bg-page hover:text-ink-brand"
+                  className="h-[42px] rounded-[21px] bg-bg-page px-[18px] text-ink-primary hover:bg-bg-page hover:text-ink-inverse"
                   onClick={() => setShowTopUp((open) => !open)}
                   disabled={topUpState.isLoading}
+                  aria-expanded={showTopUp}
                 >
                   {t('wallet.addFunds')}
                 </Button>
               </div>
-              {showTopUp && (
-                <div className="mt-[16px] rounded-[14px] border border-bg-page/20 bg-bg-page/10 p-[14px]">
-                  <p className="text-[12px] font-bold tracking-[0.06em] text-bg-page/70 uppercase">
-                    {t('wallet.topUpAmount')}
-                  </p>
-                  <div className="mt-[10px] flex flex-wrap gap-[8px]">
-                    {['50', '100', '200', '500'].map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => setTopUpAmount(preset)}
-                        className={`h-[34px] rounded-[17px] px-[14px] text-[13px] font-semibold ${
-                          topUpAmount === preset
-                            ? 'bg-bg-page text-ink-primary'
-                            : 'border border-bg-page/30 text-bg-page'
-                        }`}
-                      >
-                        {preset}
-                      </button>
-                    ))}
-                  </div>
-                  <Field className="mt-[12px]" label={t('wallet.customAmount')} htmlFor="topup-amount">
-                    <TextInput
-                      id="topup-amount"
-                      type="number"
-                      min={1}
-                      value={topUpAmount}
-                      onChange={(event) => setTopUpAmount(event.target.value)}
-                      className="h-[42px] border-bg-page/30 bg-bg-page text-ink-primary"
-                    />
-                  </Field>
-                  <Button
-                    size="md"
-                    className="mt-[12px] h-[40px] rounded-[20px] bg-bg-page px-[18px] text-ink-primary"
-                    loading={topUpState.isLoading}
-                    onClick={() => void handleTopUp()}
-                  >
-                    {t('wallet.confirmTopUp', { amount: topUpAmount || '0' })}
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
+
+          {showTopUp && (
+            <div className="rounded-[20px] border border-border-default bg-surface-default p-lg sm:p-xl">
+              <p className="text-[15px] font-semibold text-ink-primary">{t('wallet.topUpAmount')}</p>
+              <div className="mt-md flex flex-wrap gap-sm">
+                {['50', '100', '200', '500'].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setTopUpAmount(preset)}
+                    className={`inline-flex h-[36px] items-center rounded-[18px] px-[14px] text-[13px] font-semibold ${
+                      topUpAmount === preset
+                        ? 'bg-brand-gradient text-ink-inverse'
+                        : 'border border-border-default bg-surface-default text-ink-primary hover:border-border-brand'
+                    }`}
+                  >
+                    <MoneyAmount value={Number(preset)} />
+                  </button>
+                ))}
+              </div>
+              <Field className="mt-lg" label={t('wallet.customAmount')} htmlFor="topup-amount">
+                <TextInput
+                  id="topup-amount"
+                  type="number"
+                  min={1}
+                  value={topUpAmount}
+                  onChange={(event) => setTopUpAmount(event.target.value)}
+                  className="h-[44px]"
+                />
+              </Field>
+              <Button
+                variant="primary"
+                size="md"
+                className="mt-lg h-[44px] w-full sm:w-auto"
+                loading={topUpState.isLoading}
+                disabled={!topUpReady}
+                onClick={() => void handleTopUp()}
+              >
+                {t('wallet.confirmTopUp')}
+                {topUpReady ? (
+                  <>
+                    <span aria-hidden>·</span>
+                    <MoneyAmount value={topUpValue} />
+                  </>
+                ) : null}
+              </Button>
+            </div>
+          )}
 
           <section className="overflow-hidden rounded-[20px] border border-border-default bg-surface-default">
             <div className="flex flex-wrap items-center justify-between gap-md px-[22px] py-[18px]">
@@ -264,31 +298,35 @@ export function WalletPage() {
                   >
                     <div
                       className={`flex size-[34px] items-center justify-center rounded-[17px] ${
-                        txn.tone === 'debit' ? 'bg-border-divider' : 'bg-bg-tint-brand'
+                        txn.tone === 'debit'
+                          ? 'bg-state-danger-tint'
+                          : txn.tone === 'pending'
+                            ? 'bg-bg-skeleton'
+                            : 'bg-state-success-tint'
                       }`}
                     >
                       {txn.tone === 'pending' ? (
-                        <ClockIcon size={14} className="text-ink-brand" />
+                        <ClockIcon size={14} className="text-ink-muted" />
                       ) : txn.tone === 'debit' ? (
-                        <ArrowUpIcon size={14} className="text-ink-secondary" />
+                        <ArrowUpIcon size={14} className="text-state-danger" />
                       ) : (
-                        <ArrowDownIcon size={14} className="text-ink-brand" />
+                        <ArrowDownIcon size={14} className="text-state-success" />
                       )}
                     </div>
-                    <div className="min-w-0 flex-1 basis-[240px]">
+                    <div className="min-w-0 flex-1 basis-[200px]">
                       <p className="text-[15px] font-semibold text-ink-primary">{txn.label}</p>
                       <p className="mt-[2px] text-[13px] text-ink-secondary">{txn.detail}</p>
+                      <p className="mt-[2px] text-[12px] font-medium text-ink-muted">{txn.date}</p>
                     </div>
-                    <p className="w-[120px] text-[13px] text-ink-secondary">{txn.date}</p>
-                    <div className="w-[116px] text-end">
+                    <div className="ms-auto w-[128px] text-end">
                       <MoneyAmount
                         value={txn.amount}
                         className={`text-[15px] font-bold ${
                           txn.tone === 'credit'
-                            ? 'text-ink-link-hover'
-                            : txn.tone === 'pending'
-                              ? 'text-ink-muted'
-                              : 'text-ink-primary'
+                            ? 'text-state-success'
+                            : txn.tone === 'debit'
+                              ? 'text-state-danger'
+                              : 'text-ink-muted'
                         }`}
                       />
                       <p

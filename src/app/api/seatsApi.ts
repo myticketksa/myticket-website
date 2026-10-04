@@ -15,12 +15,22 @@ export const seatsApi = baseApi.injectEndpoints({
     /** Soft-wired from SeatSelection when seat ids are pure numeric + ticketId is known. */
     holdSeats: build.mutation<
       ApiRecord,
-      { eventId: string | number; seatIds: number[]; ticketId: number }
+      {
+        eventId: string | number
+        seatIds: number[]
+        ticketId?: number
+        /** Mixed ticket types: one entry per seat. Omit ticketId in that case. */
+        seats?: { seatId: number; ticketTypeId: number }[]
+      }
     >({
-      query: ({ eventId, seatIds, ticketId }) => ({
+      query: ({ eventId, seatIds, ticketId, seats }) => ({
         url: `/seats/event/${eventId}/hold`,
         method: "POST",
-        body: { seatIds, ticketId },
+        body: {
+          seatIds,
+          ...(ticketId != null ? { ticketId } : {}),
+          ...(seats?.length ? { seats } : {}),
+        },
       }),
       transformResponse: (response: unknown) => {
         const data = unwrapData<ApiRecord>(response) ?? {};

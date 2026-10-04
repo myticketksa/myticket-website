@@ -1,5 +1,5 @@
 import { baseApi } from './baseApi'
-import { asList, unwrapData } from '@/lib/api/unwrap'
+import { asList, extractPagination, unwrapData, type ApiPagination } from '@/lib/api/unwrap'
 import { normalizeWalletResponse } from '@/lib/api/mappers/wallet'
 
 export type ApiRecord = Record<string, unknown>
@@ -36,9 +36,18 @@ export const accountApis = baseApi.injectEndpoints({
       query: () => '/notifications/categories',
       transformResponse: (response: unknown) => asList<ApiRecord>(response),
     }),
-    getNotifications: build.query<ApiRecord[], void>({
-      query: () => '/notifications',
-      transformResponse: (response: unknown) => asList<ApiRecord>(response),
+    getNotifications: build.query<
+      { items: ApiRecord[]; pagination: ApiPagination },
+      number | void
+    >({
+      query: (page) => ({
+        url: '/notifications',
+        params: typeof page === 'number' && page > 1 ? { page } : undefined,
+      }),
+      transformResponse: (response: unknown) => ({
+        items: asList<ApiRecord>(response),
+        pagination: extractPagination(response),
+      }),
       providesTags: ['Notification'],
     }),
     markNotificationRead: build.mutation<unknown, string | number>({

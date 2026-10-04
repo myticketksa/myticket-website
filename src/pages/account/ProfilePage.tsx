@@ -2,8 +2,9 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useGetFavoritesQuery } from '@/app/api/accountApis'
+import { useGetOrdersQuery } from '@/app/api/ordersApi'
 import { useAppSelector } from '@/app/hooks'
-import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
+import { formatAuthWalletBalance, selectAuthUser, selectIsAuthenticated } from '@/features/auth/authSlice'
 import {
   ArrowRightIcon,
   BellRingingIcon,
@@ -14,10 +15,10 @@ import {
 import { Avatar, MoneyAmount, StatusBadge } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
-import { PROFILE_TICKET_COVERS } from '@/pages/_account/account-media'
-import { ACCOUNT_USER, PROFILE_NIGHTS } from '@/pages/_account/fixtures'
+import { ACCOUNT_USER } from '@/pages/_account/fixtures'
 import { AccountWalletCard } from '@/pages/_account/AccountAside'
 import { mapFavoriteRecord } from '@/lib/favorites/mapFavoriteRecord'
+import { mapOrderToMyTicket, type MyTicketCard } from '@/lib/api/mappers/orders'
 import { useSignOut } from '@/lib/auth/useSignOut'
 
 const SETTINGS_TILE_KEYS = [
@@ -57,14 +58,43 @@ function initialsFromName(name: string): string {
   )
 }
 
+function daysUntil(countdown: string | undefined): number | undefined {
+  const match = countdown?.match(/(\d+)/)
+  if (!match) return undefined
+  const days = Number(match[1])
+  return Number.isFinite(days) ? days : undefined
+}
+
+function seatLine(ticket: MyTicketCard): string {
+  const tier = ticket.facts.find((fact) => fact.label === 'TIER')?.value
+  const seats = ticket.facts.find((fact) => fact.label === 'SEATS')?.value
+  return [tier, seats].filter((value) => value && value !== '—').join(' · ')
+}
+function formatMemberSince(value: string | undefined, language: string): string | undefined {
+  if (!value) return undefined
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return undefined
+  const locale = language.startsWith('ar') ? 'ar' : 'en'
+  return new Intl.DateTimeFormat(locale, {
+    month: 'long',
+    year: 'numeric',
+    numberingSystem: 'latn',
+  }).format(date)
+}
+
 export function ProfilePage() {
-  const { t } = useTranslation(['account', 'catalog'])
+  const { t, i18n } = useTranslation(['account', 'catalog'])
   const user = useAppSelector(selectAuthUser)
+  const isAuthenticated = useAppSelector(selectIsAuthenticated)
   const { signOut, isLoading: logoutLoading } = useSignOut()
   const { data: favorites } = useGetFavoritesQuery()
+  const { data: orders, isLoading: ordersLoading } = useGetOrdersQuery(undefined, {
+    skip: !isAuthenticated,
+  })
   const displayName = user?.name ?? ACCOUNT_USER.name
   const initials = user?.name ? initialsFromName(user.name) : ACCOUNT_USER.initials
   const walletLabel = formatAuthWalletBalance(user?.walletBalance, ACCOUNT_USER.wallet)
+  const memberSince = formatMemberSince(user?.created_at, i18n.language)
 
   const savedItems = useMemo(() => {
     if (!favorites?.length) return []
@@ -74,6 +104,19 @@ export function ProfilePage() {
       .slice(0, 4)
   }, [favorites])
   const savedCount = favorites?.length ?? savedItems.length
+
+  const upcomingTickets = useMemo(() => {
+    if (!orders?.length) return []
+    return orders
+      .map(mapOrderToMyTicket)
+      .filter((ticket) => ticket.status === 'UPCOMING' || ticket.status === 'AWAITING SEAT')
+  }, [orders])
+  const nextNights = upcomingTickets.slice(0, 3)
+  const nearestDays = upcomingTickets.reduce<number | undefined>((nearest, ticket) => {
+    const days = daysUntil(ticket.countdown)
+    if (days == null) return nearest
+    return nearest == null ? days : Math.min(nearest, days)
+  }, undefined)
 
   return (
     <>
@@ -92,11 +135,16 @@ export function ProfilePage() {
                   {displayName}
                 </h1>
                 <p className="mt-sm text-[13px] text-pretty text-ink-secondary sm:text-[14px]">
-                  {t('profile.memberMeta', {
-                    city: ACCOUNT_USER.city,
-                    since: ACCOUNT_USER.memberSince,
-                    count: ACCOUNT_USER.eventsAttended,
-                  })}
+                  {memberSince
+                    ? t('profile.memberMeta', {
+                        city: ACCOUNT_USER.city,
+                        since: memberSince,
+                        count: ACCOUNT_USER.eventsAttended,
+                      })
+                    : t('profile.memberMetaNoSince', {
+                        city: ACCOUNT_USER.city,
+                        count: ACCOUNT_USER.eventsAttended,
+                      })}
                 </p>
               </div>
             </div>
@@ -204,6 +252,7 @@ export function ProfilePage() {
         </div>
       </PageSection>
 
+      {!ordersLoading && nextNights.length > 0 && (
       <PageSection padTop={32} padBottom={0}>
         <div className="mb-lg flex flex-col gap-sm sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-lg">
           <div className="min-w-0">
@@ -211,7 +260,12 @@ export function ProfilePage() {
               {t('profile.nextNights')}
             </h2>
             <p className="mt-xs text-[13px] text-pretty text-ink-secondary sm:text-[14px]">
-              {t('profile.nextNightsMeta', { count: 3, days: 12 })}
+              {nearestDays != null
+                ? t('profile.nextNightsMeta', {
+                    count: upcomingTickets.length,
+                    days: nearestDays,
+                  })
+                : t('profile.nextNightsCount', { count: upcomingTickets.length })}
             </p>
           </div>
           <Link
@@ -222,46 +276,54 @@ export function ProfilePage() {
           </Link>
         </div>
         <div className="grid grid-cols-1 gap-lg md:grid-cols-2 lg:grid-cols-3">
-          {PROFILE_NIGHTS.map((ticket, index) => {
-            const days = Number.parseInt(ticket.countdown.replace(/\D/g, ''), 10)
+          {nextNights.map((ticket) => {
+            const days = daysUntil(ticket.countdown)
             const statusKey = `tickets.status.${ticket.status}`
             const statusText = t(statusKey)
+            const seat = seatLine(ticket)
+            const tone =
+              ticket.status === 'UPCOMING'
+                ? 'successTint'
+                : ticket.status === 'AWAITING SEAT'
+                  ? 'brandTint'
+                  : 'infoTint'
             return (
               <article
                 key={ticket.id}
                 className="overflow-hidden rounded-[20px] border border-border-default bg-surface-default"
               >
                 <div className="relative aspect-[16/9] sm:aspect-auto sm:h-[140px]">
-                  <img
-                    src={PROFILE_TICKET_COVERS[index] ?? PROFILE_TICKET_COVERS[0]}
-                    alt=""
-                    className="absolute inset-0 size-full object-cover"
-                    loading="lazy"
-                  />
-                  {ticket.countdown && Number.isFinite(days) && (
+                  {ticket.cover ? (
+                    <img
+                      src={ticket.cover}
+                      alt=""
+                      className="absolute inset-0 size-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-bg-tint-brand" />
+                  )}
+                  {days != null && (
                     <span className="absolute top-md start-md rounded-[12px] bg-surface-inverse px-[10px] py-[5px] text-[11px] font-bold text-bg-page uppercase">
                       {t('profile.inDays', { count: days })}
                     </span>
                   )}
                 </div>
                 <div className="p-lg">
-                  <StatusBadge tone={ticket.statusTone}>
+                  <StatusBadge tone={tone}>
                     {statusText === statusKey ? ticket.status : statusText}
                   </StatusBadge>
                   <p className="mt-md text-[16px] font-bold text-balance text-ink-primary">
                     {ticket.title}
                   </p>
                   <p className="mt-xs text-[13px] text-ink-secondary">{ticket.meta}</p>
-                  <p className="mt-xs text-[13px] font-medium text-ink-muted">{ticket.seat}</p>
-                  <div className="mt-lg flex gap-sm">
-                    <Link to={`/my-tickets/${ticket.id}`} className="min-w-0 flex-1">
-                      <Button size="sm" className="w-full min-h-[44px]">
+                  {seat ? (
+                    <p className="mt-xs text-[13px] font-medium text-ink-muted">{seat}</p>
+                  ) : null}
+                  <div className="mt-lg">
+                    <Link to={`/my-tickets/${ticket.id}`} className="block">
+                      <Button variant="primary" size="sm" className="w-full min-h-[44px]">
                         {t('profile.showQr')}
-                      </Button>
-                    </Link>
-                    <Link to={`/my-tickets/${ticket.id}`} className="min-w-0 flex-1">
-                      <Button variant="secondary" size="sm" className="w-full min-h-[44px] bg-bg-page">
-                        {t('profile.manage')}
                       </Button>
                     </Link>
                   </div>
@@ -271,6 +333,7 @@ export function ProfilePage() {
           })}
         </div>
       </PageSection>
+      )}
 
       <PageSection padTop={32} padBottom={96}>
         <div className="mb-lg flex flex-col gap-sm sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-md">

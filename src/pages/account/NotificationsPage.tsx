@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import {
@@ -11,7 +11,7 @@ import {
 } from '@/components/icons'
 import { FilterChip } from '@/components/data-display'
 import { EmptyState } from '@/components/feedback'
-import { Button } from '@/components/ui'
+import { Button, Spinner } from '@/components/ui'
 import { AccountPageHead, PageSection } from '@/layouts'
 import { type NotificationFixture } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
@@ -140,26 +140,137 @@ function mapNotification(record: Record<string, unknown>): MappedNotification {
   }
 }
 
+function appendNotifications(
+  current: Record<string, unknown>[],
+  incoming: Record<string, unknown>[],
+): Record<string, unknown>[] {
+  if (incoming.length === 0) return current
+  const seen = new Set(
+    current.map((record) => {
+      const id = record.id ?? record.notification_id
+      return id == null ? '' : String(id)
+    }),
+  )
+  const next = incoming.filter((record) => {
+    const id = record.id ?? record.notification_id
+    if (id == null || String(id) === '') return true
+    const key = String(id)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+  return next.length === 0 ? current : [...current, ...next]
+}
+
+/** How many notifications to reveal per scroll. */
+const NOTIFICATION_BATCH = 10
+
 /** Notifications — chips from API `type` with title-cased known labels. */
 export function NotificationsPage() {
   const { t } = useTranslation(['account', 'common'])
   const navigate = useNavigate()
   const [filter, setFilter] = useState('all')
-  const { data: notifications, isLoading } = useGetNotificationsQuery()
+  const [requestPage, setRequestPage] = useState(1)
+  const [olderRecords, setOlderRecords] = useState<Record<string, unknown>[]>([])
+  const [visibleCount, setVisibleCount] = useState(NOTIFICATION_BATCH)
+  const [readIds, setReadIds] = useState<Set<string>>(() => new Set())
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const remoteExhaustedRef = useRef(false)
+  const pagingRef = useRef(false)
+  const firstPage = useGetNotificationsQuery()
+  const olderPage = useGetNotificationsQuery(requestPage, {
+    skip: requestPage <= 1,
+  })
   const [markAllRead, markAllState] = useMarkAllNotificationsReadMutation()
   const [markRead] = useMarkNotificationReadMutation()
 
+  useEffect(() => {
+    if (requestPage <= 1 || !olderPage.data) return
+    const incoming = olderPage.data.items
+    setOlderRecords((current) => {
+      const next = appendNotifications(current, incoming)
+      if (incoming.length === 0 || next.length === current.length) {
+        remoteExhaustedRef.current = true
+      }
+      return next
+    })
+  }, [olderPage.data, requestPage])
+
+  useEffect(() => {
+    setVisibleCount(NOTIFICATION_BATCH)
+  }, [filter])
+
   const allItems = useMemo(() => {
-    if (notifications && notifications.length > 0) {
-      return notifications.map(mapNotification)
-    }
-    return []
-  }, [notifications])
+    const records = appendNotifications(firstPage.data?.items ?? [], olderRecords)
+    if (records.length === 0) return []
+    return records.map((record) => {
+      const item = mapNotification(record)
+      const key = item.id == null ? '' : String(item.id)
+      if (key && readIds.has(key)) return { ...item, unread: false }
+      return item
+    })
+  }, [firstPage.data, olderRecords, readIds])
 
   const items = useMemo(
     () => (filter === 'all' ? allItems : allItems.filter((item) => item.typeKey === filter)),
     [allItems, filter],
   )
+
+  const visibleItems = useMemo(
+    () => items.slice(0, visibleCount),
+    [items, visibleCount],
+  )
+
+  const lastPage = Math.max(
+    firstPage.data?.pagination.lastPage ?? 1,
+    olderPage.data?.pagination.lastPage ?? 1,
+  )
+  const isLoading = firstPage.isLoading
+  const isFetchingOlder = requestPage > 1 && olderPage.isFetching
+  const hasMoreLoaded = visibleCount < items.length
+  const hasMoreRemote = requestPage < lastPage && !olderPage.isError
+  const hasMore = hasMoreLoaded || hasMoreRemote
+  useEffect(() => {
+    if (!isFetchingOlder) pagingRef.current = false
+  }, [isFetchingOlder])
+
+  useEffect(() => {
+    const node = sentinelRef.current
+    if (!node || !hasMore) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return
+        setVisibleCount((count) => {
+          if (count < items.length) {
+            return Math.min(count + NOTIFICATION_BATCH, items.length)
+          }
+          return count
+        })
+        if (
+          visibleCount >= items.length &&
+          requestPage < lastPage &&
+          !remoteExhaustedRef.current &&
+          !pagingRef.current &&
+          !olderPage.isFetching &&
+          !olderPage.isError
+        ) {
+          pagingRef.current = true
+          setRequestPage((page) => page + 1)
+        }
+      },
+      { rootMargin: '280px 0px' },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [
+    hasMore,
+    items.length,
+    lastPage,
+    olderPage.isError,
+    olderPage.isFetching,
+    requestPage,
+    visibleCount,
+  ])
 
   const unreadCount = allItems.filter((item) => item.unread).length
 
@@ -190,6 +301,13 @@ export function NotificationsPage() {
   function markItemRead(item: MappedNotification) {
     if (!item.unread) return
     if (typeof item.id === 'string' || typeof item.id === 'number') {
+      const id = String(item.id)
+      setReadIds((current) => {
+        if (current.has(id)) return current
+        const next = new Set(current)
+        next.add(id)
+        return next
+      })
       void markRead(item.id)
     }
   }
@@ -209,7 +327,16 @@ export function NotificationsPage() {
               variant="secondary"
               size="md"
               disabled={markAllState.isLoading || unreadCount === 0}
-              onClick={() => void markAllRead()}
+              onClick={() => {
+                setReadIds((current) => {
+                  const next = new Set(current)
+                  for (const item of allItems) {
+                    if (item.id != null) next.add(String(item.id))
+                  }
+                  return next
+                })
+                void markAllRead()
+              }}
             >
               {t('account:notifications.markAllRead')}
             </Button>
@@ -263,7 +390,7 @@ export function NotificationsPage() {
             </div>
           )}
           {groups.map((group) => {
-            const groupItems = items.filter((item) => item.group === group)
+            const groupItems = visibleItems.filter((item) => item.group === group)
             if (groupItems.length === 0) return null
             return (
               <section key={group}>
@@ -345,6 +472,23 @@ export function NotificationsPage() {
               </section>
             )
           })}
+          {hasMore && (
+            <div
+              ref={sentinelRef}
+              className={cn(
+                'flex w-full items-center justify-center',
+                isFetchingOlder ? 'h-11' : 'h-px',
+              )}
+              aria-hidden={isFetchingOlder ? undefined : true}
+            >
+              {isFetchingOlder ? (
+                <Spinner
+                  className="text-ink-muted"
+                  label={t('common:states.loading')}
+                />
+              ) : null}
+            </div>
+          )}
         </div>
       </PageSection>
     </>

@@ -363,7 +363,6 @@ export function SettingsPage() {
           <div className="flex min-w-0 flex-1 flex-col gap-lg">
             <section className="rounded-[20px] border border-border-default bg-surface-default p-[26px]">
               <h2 className="text-[19px] font-semibold text-ink-primary">{t('settings.personal')}</h2>
-              <p className="mt-xs text-[14px] text-ink-secondary">{t('settings.personalHint')}</p>
 
               <div className="mt-[22px] flex flex-wrap items-center gap-[18px]">
                 <div className="relative size-[66px] shrink-0 overflow-hidden rounded-[33px]">
@@ -447,10 +446,7 @@ export function SettingsPage() {
               </div>
             </section>
 
-            <div className="mt-[2px] flex flex-wrap items-center justify-between gap-sm rounded-[18px] border border-border-default bg-surface-default px-[22px] py-lg">
-              <p className="text-[13px] text-ink-muted">
-                {t('settings.lastSaved', { date: '22 July 2026' })}
-              </p>
+            <div className="mt-[2px] flex flex-wrap items-center justify-end gap-sm rounded-[18px] border border-border-default bg-surface-default px-[22px] py-lg">
               <div className="flex gap-[9px]">
                 <Button
                   variant="secondary"
@@ -471,7 +467,7 @@ export function SettingsPage() {
             </div>
 
             <section className="rounded-[20px] border border-border-default bg-surface-default p-[26px]">
-              <h2 className="text-[19px] font-semibold text-ink-primary">{t('settings.deleteTitle')}</h2>
+              <h2 className="text-[19px] font-bold text-state-danger">{t('settings.deleteTitle')}</h2>
               <p className="mt-xs text-[14px] text-ink-secondary">{t('settings.deleteBody')}</p>
               <div className="mt-[18px] flex flex-wrap items-end gap-md">
                 <Field

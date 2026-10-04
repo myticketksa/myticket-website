@@ -31,8 +31,10 @@ import {
 } from "@/lib/api/mappers/seats";
 import { apiErrorMessage } from "@/lib/api/unwrap";
 import {
+  readTicketSelection,
   writeFreeSeatingSession,
   writeHoldSession,
+  type TicketSelectionLine,
 } from "@/lib/purchase/holdSession";
 
 type Zone = string;
@@ -42,6 +44,35 @@ interface SelectedSeat {
   label: string;
   category?: string;
   price?: number;
+  ticketId?: number;
+}
+
+function normalizeTypeKey(value: string | undefined): string {
+  return (value ?? "").toLowerCase().replace(/[^a-z0-9\u0600-\u06ff]+/g, "");
+}
+
+function resolveSeatTicket(
+  seat: MappedSeat,
+  lines: TicketSelectionLine[],
+): TicketSelectionLine | undefined {
+  if (seat.ticketTypeId != null) {
+    return lines.find((line) => line.ticketId === seat.ticketTypeId);
+  }
+  const seatKeys = [seat.category, seat.zoneLabel, seat.zoneId]
+    .map(normalizeTypeKey)
+    .filter(Boolean);
+  const byName = lines.filter((line) => {
+    const key = normalizeTypeKey(line.name);
+    return key.length > 0 && seatKeys.includes(key);
+  });
+  if (byName.length === 1) return byName[0];
+  if (seat.price != null) {
+    const byPrice = lines.filter(
+      (line) => line.price != null && line.price === seat.price,
+    );
+    if (byPrice.length === 1) return byPrice[0];
+  }
+  return undefined;
 }
 
 function seatClass(
@@ -77,15 +108,18 @@ function zoneTone(zoneId: string) {
 function SeatButton({
   seat,
   selected,
+  enabled = true,
   onClick,
   label,
 }: {
   seat: MappedSeat;
   selected: boolean;
+  enabled?: boolean;
   onClick?: () => void;
   label: string;
 }) {
-  const interactive = seat.status !== "sold" && seat.status !== "held";
+  const interactive =
+    enabled && seat.status !== "sold" && seat.status !== "held";
   const visualStatus = selected ? "selected" : seat.status;
   const seatIcon =
     visualStatus === "selected"
@@ -105,6 +139,7 @@ function SeatButton({
         "flex size-10 items-center justify-center rounded-[8px] border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-brand",
         seatClass(visualStatus, seat.zoneId, seat.accessible),
         !interactive && "cursor-not-allowed",
+        !enabled && !selected && "opacity-40",
         seat.accessible && !interactive && "opacity-55",
       )}
     >
@@ -158,12 +193,14 @@ function SeatBlock({
   selectedIds,
   onToggle,
   getSeatLabel,
+  isSeatEnabled,
 }: {
   rows: MappedSeatRow[];
   zone: Zone;
   selectedIds: Set<string>;
   onToggle: (seat: MappedSeat) => void;
   getSeatLabel: (seat: MappedSeat) => string;
+  isSeatEnabled?: (seat: MappedSeat) => boolean;
 }) {
   return (
     <div className="flex flex-col gap-md">
@@ -182,6 +219,7 @@ function SeatBlock({
                   <SeatButton
                     seat={seat}
                     selected={selected}
+                    enabled={isSeatEnabled ? isSeatEnabled(seat) : true}
                     label={getSeatLabel(seat)}
                     onClick={() => onToggle(seat)}
                   />
@@ -249,12 +287,21 @@ export function SeatSelectionPage() {
   const [zone, setZone] = useState<Zone>("all");
   const [selected, setSelected] = useState<SelectedSeat[]>([]);
   const [holding, setHolding] = useState(false);
-  const [requestedQuantity] = useState<number | undefined>(() => {
+  const [requests, setRequests] = useState<TicketSelectionLine[]>(() => {
+    const stored = readTicketSelection();
+    if (!stored?.lines.length) return [];
+    if (stored.slug && slug && stored.slug !== slug) return [];
+    return stored.lines;
+  });
+  const [fallbackQuantity] = useState<number | undefined>(() => {
+    if (readTicketSelection()?.lines.length) return undefined;
     const stored = Number(sessionStorage.getItem("myticket.ticketQty"));
     return Number.isInteger(stored) && stored > 0 && stored <= 6
       ? stored
       : undefined;
   });
+  const requestedQuantity =
+    requests.reduce((sum, line) => sum + line.quantity, 0) || fallbackQuantity;
   const selectedIds = useMemo(
     () => new Set(selected.map((seat) => seat.id)),
     [selected],
@@ -271,6 +318,21 @@ export function SeatSelectionPage() {
       (/^\d+$/.test(slug ?? "") ? slug : undefined),
     [apiEvents, slug],
   );
+
+  useEffect(() => {
+    const stored = readTicketSelection();
+    if (!stored?.lines.length) {
+      setRequests([]);
+      return;
+    }
+    const eventMatches =
+      !stored.eventId ||
+      !resolvedEventId ||
+      stored.eventId === String(resolvedEventId) ||
+      stored.eventId === slug;
+    const slugMatches = !stored.slug || !slug || stored.slug === slug;
+    setRequests(eventMatches && slugMatches ? stored.lines : []);
+  }, [resolvedEventId, slug]);
 
   // Free seating never uses the seat map — bounce to checkout or event detail.
   useEffect(() => {
@@ -365,11 +427,19 @@ export function SeatSelectionPage() {
           sessionStorage.getItem("myticket.mockHold") || "null",
         ) as {
           holdId?: string;
+          holdIds?: string[];
           eventId?: string;
         } | null;
         const eventId = mock?.eventId ?? resolvedEventId;
-        if (mock?.holdId && eventId) {
-          void releaseHold({ eventId, holdId: String(mock.holdId) });
+        const holdIds = mock?.holdIds?.length
+          ? mock.holdIds
+          : mock?.holdId
+            ? [String(mock.holdId)]
+            : [];
+        if (holdIds.length > 0 && eventId) {
+          for (const holdId of holdIds) {
+            void releaseHold({ eventId, holdId: String(holdId) });
+          }
           sessionStorage.removeItem("myticket.mockHold");
         }
       } catch {
@@ -399,10 +469,32 @@ export function SeatSelectionPage() {
    * Seated checkout requires a real API soft-hold (`holdId` + numeric `seatIds`).
    * Fixture labels like `C11` cannot create an order on the live API.
    */
+  const selectionReady =
+    requests.length > 0
+      ? requests.every(
+          (line) =>
+            selected.filter((seat) => seat.ticketId === line.ticketId)
+              .length === line.quantity,
+        )
+      : selected.length > 0 &&
+        (requestedQuantity == null || selected.length === requestedQuantity);
+
+  function seatEnabled(seat: MappedSeat): boolean {
+    if (seat.status === "sold" || seat.status === "held") return false;
+    if (selectedIds.has(seat.id)) return true;
+    if (requests.length === 0) {
+      return selected.length < (requestedQuantity ?? 6);
+    }
+    const line = resolveSeatTicket(seat, requests);
+    if (!line) return false;
+    const used = selected.filter((item) => item.ticketId === line.ticketId)
+      .length;
+    return used < line.quantity;
+  }
+
   async function continueToCheckout() {
     if (
-      selected.length === 0 ||
-      (requestedQuantity != null && selected.length !== requestedQuantity) ||
+      !selectionReady ||
       !hasCompletePrices ||
       waitingForSeats ||
       seatsUnavailable
@@ -426,29 +518,80 @@ export function SeatSelectionPage() {
       return;
     }
 
-    if (!resolvedEventId || !ticketId) {
+    if (requests.length > 0) {
+      const missingType = selected.some(
+        (seat) => !requests.some((line) => line.ticketId === seat.ticketId),
+      );
+      if (missingType) {
+        dispatch(toastPushed("error", t("seats.typeMismatch")));
+        return;
+      }
+    }
+
+    const typedSeats = selected.map((seat) => ({
+      seatId: Number(seat.id),
+      ticketTypeId: seat.ticketId ?? ticketId,
+    }));
+    if (
+      !resolvedEventId ||
+      typedSeats.some(
+        (seat) =>
+          !Number.isInteger(seat.seatId) ||
+          seat.ticketTypeId == null ||
+          !Number.isInteger(Number(seat.ticketTypeId)),
+      )
+    ) {
       dispatch(toastPushed("error", t("seats.ticketMissing")));
       return;
     }
 
+    const typeIds = [
+      ...new Set(typedSeats.map((seat) => Number(seat.ticketTypeId))),
+    ];
     setHolding(true);
+    let createdHoldId: string | null = null;
     try {
+      // One ticketId covers a single type. Mixed types must name the type on
+      // each seat (`seats[].ticketTypeId`); a shared ticketId returns
+      // `ticket_mismatch`, and a later per-type hold does not cover the
+      // earlier seats, which the order then rejects as `seat_unavailable`.
       const held = await holdSeats({
         eventId: resolvedEventId,
         seatIds: numericSeatIds,
-        ticketId,
+        ...(typeIds.length === 1
+          ? { ticketId: typeIds[0] }
+          : {
+              seats: typedSeats.map((seat) => ({
+                seatId: seat.seatId,
+                ticketTypeId: Number(seat.ticketTypeId),
+              })),
+            }),
       }).unwrap();
       const holdId = held.holdId ?? held.hold_id ?? held.id;
       if (holdId == null || String(holdId).trim() === "") {
         throw new Error("Hold id missing from seat hold response");
       }
+      createdHoldId = String(holdId);
+
+      const items = typeIds.map((typeId) => {
+        const groupSeatIds = typedSeats
+          .filter((seat) => Number(seat.ticketTypeId) === typeId)
+          .map((seat) => seat.seatId);
+        return {
+          ticketId: typeId,
+          quantity: groupSeatIds.length,
+          seatIds: groupSeatIds,
+        };
+      });
 
       continuingRef.current = true;
       writeHoldSession({
         seatIds: numericSeatIds,
         seats: selected,
-        ticketId,
-        holdId: String(holdId),
+        ticketId: items[0]?.ticketId,
+        items,
+        holdId: createdHoldId,
+        holdIds: [createdHoldId],
         eventId: resolvedEventId,
         total: total ?? 0,
         subtotal: subtotal ?? 0,
@@ -456,12 +599,24 @@ export function SeatSelectionPage() {
         vat: vat ?? 0,
         heldAt: Date.now(),
         slug: slug ?? undefined,
+        seatingType: "assigned",
+        quantity: items.reduce((sum, item) => sum + item.quantity, 0),
       });
-      sessionStorage.setItem("myticket.ticketId", String(ticketId));
+      sessionStorage.setItem(
+        "myticket.ticketId",
+        String(items[0]?.ticketId ?? ""),
+      );
       navigate("/checkout");
     } catch (error) {
+      if (createdHoldId) {
+        void releaseHold({ eventId: resolvedEventId, holdId: createdHoldId });
+      }
+      const message = apiErrorMessage(error, t("seats.holdFailed"));
       dispatch(
-        toastPushed("error", apiErrorMessage(error, t("seats.holdFailed"))),
+        toastPushed(
+          "error",
+          message === "ticket_mismatch" ? t("seats.ticketMismatch") : message,
+        ),
       );
     } finally {
       setHolding(false);
@@ -476,15 +631,26 @@ export function SeatSelectionPage() {
       if (current.some((item) => item.id === seat.id)) {
         return current.filter((item) => item.id !== seat.id);
       }
-      if (current.length >= (requestedQuantity ?? 6)) return current;
+      const line =
+        requests.length > 0 ? resolveSeatTicket(seat, requests) : undefined;
+      if (requests.length > 0 && !line) return current;
+      if (requests.length === 0 && current.length >= (requestedQuantity ?? 6)) {
+        return current;
+      }
+      if (line) {
+        const used = current.filter((item) => item.ticketId === line.ticketId)
+          .length;
+        if (used >= line.quantity) return current;
+      }
 
       return [
         ...current,
         {
           id: seat.id,
           label: t("seats.rowSeat", { row: seat.row, number: seat.number }),
-          category: seat.category,
-          price: seat.price,
+          category: line?.name ?? seat.category,
+          price: seat.price ?? line?.price,
+          ticketId: line?.ticketId,
         },
       ];
     });
@@ -562,6 +728,7 @@ export function SeatSelectionPage() {
               zone={zone}
               selectedIds={selectedIds}
               onToggle={toggleSeat}
+              isSeatEnabled={seatEnabled}
               getSeatLabel={(seat) => {
                 const label = t("seats.rowSeat", {
                   row: seat.row,
@@ -596,6 +763,27 @@ export function SeatSelectionPage() {
               })}
             </p>
           </div>
+          {requests.length > 0 ? (
+            <ul className="mt-sm flex flex-col gap-[4px]">
+              {requests.map((line) => {
+                const count = selected.filter(
+                  (seat) => seat.ticketId === line.ticketId,
+                ).length;
+                return (
+                  <li
+                    key={line.ticketId}
+                    className="text-[13px] text-ink-secondary"
+                  >
+                    {t("seats.typeProgress", {
+                      name: line.name,
+                      count,
+                      max: line.quantity,
+                    })}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
 
           {selected.length ? (
             <ul className="mt-lg flex flex-col gap-[12px]">
@@ -635,9 +823,15 @@ export function SeatSelectionPage() {
             </ul>
           ) : (
             <p className="mt-lg text-[13px] text-ink-muted">
-              {requestedQuantity != null
-                ? t("seats.mapHintQuantity", { count: requestedQuantity })
-                : t("seats.mapHint")}
+              {requests.length > 0
+                ? t("seats.mapHintTypes", {
+                    summary: requests
+                      .map((line) => `${line.quantity} ${line.name}`)
+                      .join(", "),
+                  })
+                : requestedQuantity != null
+                  ? t("seats.mapHintQuantity", { count: requestedQuantity })
+                  : t("seats.mapHint")}
             </p>
           )}
 
@@ -691,9 +885,7 @@ export function SeatSelectionPage() {
               holding ||
               waitingForSeats ||
               seatsUnavailable ||
-              selected.length === 0 ||
-              (requestedQuantity != null &&
-                selected.length !== requestedQuantity) ||
+              !selectionReady ||
               !hasCompletePrices ||
               !usingLiveMap
             }
@@ -708,7 +900,11 @@ export function SeatSelectionPage() {
             ) : null}
           </Button>
           <p className="mt-md hidden text-center text-[12px] leading-[1.5] text-ink-muted lg:block">
-            {seatsUnavailable ? t("seats.needLive") : t("seats.holdNote")}
+            {seatsUnavailable
+              ? t("seats.needLive")
+              : requests.length > 0
+                ? t("seats.holdNoteExact")
+                : t("seats.holdNote")}
           </p>
         </div>
       </aside>
@@ -735,9 +931,7 @@ export function SeatSelectionPage() {
               holding ||
               waitingForSeats ||
               seatsUnavailable ||
-              selected.length === 0 ||
-              (requestedQuantity != null &&
-                selected.length !== requestedQuantity) ||
+              !selectionReady ||
               !hasCompletePrices ||
               !usingLiveMap
             }

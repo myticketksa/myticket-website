@@ -142,15 +142,6 @@ const RESULTS = [
   },
 ] as const;
 
-const RELATED = [
-  "Oud sessions",
-  "Comedy in Riyadh",
-  "Open-air concerts",
-  "Boulevard City",
-  "Jeddah nightlife",
-  "Family shows",
-] as const;
-
 const CITY_OPTIONS = [
   { label: "Riyadh", count: 5 },
   { label: "Jeddah", count: 1 },
@@ -605,25 +596,6 @@ export function SearchResultsPage() {
               </Button>
             </div>
           )}
-
-          <div className="mt-[34px]">
-            <p className="text-[14px] font-medium text-ink-secondary">
-              {t("pages.alsoLookedFor")}
-            </p>
-            <div className="mt-md flex flex-wrap gap-[9px]">
-              {RELATED.map((label) => (
-                <FilterChip
-                  key={label}
-                  className="h-[36px] rounded-[18px] text-[13px]"
-                  onClick={() => {
-                    window.location.href = `/search?q=${encodeURIComponent(label)}`;
-                  }}
-                >
-                  {label}
-                </FilterChip>
-              ))}
-            </div>
-          </div>
         </CatalogBody>
       </PageSection>
     </>

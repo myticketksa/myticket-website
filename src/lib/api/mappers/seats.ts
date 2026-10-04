@@ -12,6 +12,7 @@ export interface MappedSeat {
   accessible?: boolean;
   price?: number;
   category?: string;
+  ticketTypeId?: number;
   row: string;
   number: number;
 }
@@ -165,6 +166,34 @@ function seatNumber(record: ApiRecord, indexInRow: number): number {
   return Number.isFinite(n) && n > 0 ? n : indexInRow + 1;
 }
 
+function numericId(raw: unknown): number | undefined {
+  if (raw && typeof raw === "object") {
+    return numericId((raw as ApiRecord).id);
+  }
+  const value = Number(raw);
+  return Number.isInteger(value) && value > 0 ? value : undefined;
+}
+
+function ticketTypeIdFrom(record: ApiRecord): number | undefined {
+  return (
+    numericId(record.ticketTypeId) ??
+    numericId(record.ticket_type_id) ??
+    numericId(record.typeId) ??
+    numericId(record.type_id) ??
+    numericId(record.ticketType) ??
+    numericId(record.ticket_type)
+  );
+}
+
+function ticketTypeNameFrom(record: ApiRecord): string | undefined {
+  return textValue(
+    record.ticketTypeName ??
+      record.ticket_type_name ??
+      record.ticketType ??
+      record.ticket_type,
+  );
+}
+
 function seatId(record: ApiRecord, row: string, number: number): string {
   const candidates = [record.id, record.seatId, record.seat_id];
   for (const raw of candidates) {
@@ -248,6 +277,7 @@ export function mapApiSeatsToRows(payload: unknown): MappedSeatRow[] | null {
         ? Number(priceRaw)
         : undefined;
     const zone = zoneFrom(record);
+    const ticketTypeName = ticketTypeNameFrom(record);
     const category = textValue(
       record.category_name ??
         record.categoryName ??
@@ -262,7 +292,8 @@ export function mapApiSeatsToRows(payload: unknown): MappedSeatRow[] | null {
       zoneLabel: zone?.label,
       accessible: accessibleFrom(record),
       price,
-      category: category ?? zone?.label,
+      ticketTypeId: ticketTypeIdFrom(record),
+      category: ticketTypeName ?? category ?? zone?.label,
       row,
       number,
     });

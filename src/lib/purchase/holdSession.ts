@@ -14,10 +14,93 @@ export type HeldSeatSnapshot = {
   row?: string;
 };
 
+export type TicketSelectionLine = {
+  ticketId: number;
+  name: string;
+  quantity: number;
+  price?: number;
+};
+
+export type StoredTicketSelection = {
+  eventId?: string;
+  slug?: string;
+  lines: TicketSelectionLine[];
+};
+
+const TICKET_SELECTION_KEY = "myticket.ticketSelection";
+
+export function writeTicketSelection(selection: StoredTicketSelection) {
+  const lines = selection.lines
+    .map((line) => ({
+      ticketId: Number(line.ticketId),
+      name: line.name.trim(),
+      quantity: Math.max(0, Math.floor(Number(line.quantity) || 0)),
+      price:
+        line.price != null && Number.isFinite(Number(line.price))
+          ? Number(line.price)
+          : undefined,
+    }))
+    .filter((line) => Number.isInteger(line.ticketId) && line.quantity > 0);
+
+  if (lines.length === 0) {
+    sessionStorage.removeItem(TICKET_SELECTION_KEY);
+    sessionStorage.removeItem("myticket.ticketQty");
+    return;
+  }
+
+  sessionStorage.setItem(
+    TICKET_SELECTION_KEY,
+    JSON.stringify({
+      eventId: selection.eventId,
+      slug: selection.slug,
+      lines,
+    }),
+  );
+  sessionStorage.setItem(
+    "myticket.ticketQty",
+    String(lines.reduce((sum, line) => sum + line.quantity, 0)),
+  );
+  sessionStorage.setItem("myticket.ticketId", String(lines[0]!.ticketId));
+}
+
+export function readTicketSelection(): StoredTicketSelection | null {
+  try {
+    const raw = JSON.parse(
+      sessionStorage.getItem(TICKET_SELECTION_KEY) ?? "null",
+    ) as StoredTicketSelection | null;
+    if (!raw || !Array.isArray(raw.lines)) return null;
+    const lines = raw.lines.filter(
+      (line) =>
+        Number.isInteger(Number(line.ticketId)) &&
+        Number(line.quantity) > 0 &&
+        Boolean(line.name),
+    );
+    if (lines.length === 0) return null;
+    return {
+      eventId: raw.eventId,
+      slug: raw.slug,
+      lines: lines.map((line) => ({
+        ticketId: Number(line.ticketId),
+        name: String(line.name),
+        quantity: Math.floor(Number(line.quantity)),
+        price:
+          line.price != null && Number.isFinite(Number(line.price))
+            ? Number(line.price)
+            : undefined,
+      })),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export type HoldSession = {
   seatIds?: Array<string | number>;
   seats?: HeldSeatSnapshot[];
   holdId?: string;
+  /** One hold per ticket type when the order mixes types. */
+  holdIds?: string[];
+  items?: { ticketId: number; quantity: number; seatIds?: number[] }[];
   ticketId?: number | string;
   eventId?: string;
   total?: number;

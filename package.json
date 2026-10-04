@@ -24,6 +24,7 @@
     "embla-carousel-react": "^8.6.0",
     "i18next": "^26.4.2",
     "laravel-echo": "^1.16.1",
+    "leaflet": "^1.9.4",
     "motion": "^13.1.0",
     "pusher-js": "^8.2.0",
     "qrcode.react": "^4.2.0",
@@ -32,6 +33,7 @@
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.85.0",
     "react-i18next": "^17.0.14",
+    "react-leaflet": "^5.0.0",
     "react-redux": "^9.3.0",
     "react-router-dom": "^7.18.2",
     "tailwind-merge": "^3.6.0",
@@ -41,6 +43,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",

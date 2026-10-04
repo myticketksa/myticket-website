@@ -10,7 +10,7 @@ export const ordersApi = baseApi.injectEndpoints({
       {
         eventId: string | number
         body: {
-          items?: { ticketId: number; quantity: number }[]
+          items?: { ticketId: number; quantity: number; seatIds?: number[] }[]
           beneficiaries?: { quantity_id: number; name: string }[]
           seatIds?: number[]
           holdId?: string

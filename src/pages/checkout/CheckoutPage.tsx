@@ -137,11 +137,18 @@ export function CheckoutPage() {
     const releaseOnUnload = () => {
       if (paidRef.current) return;
       const current = readHoldSession();
-      if (current?.holdId && current.eventId) {
-        void releaseHold({
-          eventId: current.eventId,
-          holdId: String(current.holdId),
-        });
+      const holdIds = current?.holdIds?.length
+        ? current.holdIds
+        : current?.holdId
+          ? [String(current.holdId)]
+          : [];
+      if (holdIds.length > 0 && current?.eventId) {
+        for (const holdId of holdIds) {
+          void releaseHold({
+            eventId: current.eventId,
+            holdId: String(holdId),
+          });
+        }
         clearHoldSession();
       }
     };
@@ -234,26 +241,43 @@ export function CheckoutPage() {
     if (!ticketId && storedTicketId && /^\d+$/.test(storedTicketId)) {
       ticketId = Number(storedTicketId);
     }
+    const sessionItems = (mock?.items ?? []).filter(
+      (item) =>
+        Number.isInteger(Number(item.ticketId)) && Number(item.quantity) > 0,
+    );
+    if (!ticketId && sessionItems[0]) ticketId = Number(sessionItems[0].ticketId);
     if (!ticketId) {
       dispatch(toastPushed("error", t("checkout.ticketMissing")));
       return null;
     }
 
+    const items =
+      sessionItems.length > 0
+        ? sessionItems.map((item) => ({
+            ticketId: Number(item.ticketId),
+            quantity: Number(item.quantity),
+            ...(item.seatIds?.length
+              ? { seatIds: item.seatIds.map(Number) }
+              : {}),
+          }))
+        : [{ ticketId, quantity: count }];
+    const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
+
     const body = freeSeating
       ? {
-          quantity: count,
-          ticketId,
-          items: [{ ticketId, quantity: count }],
-          beneficiaries: buildBeneficiaries(count),
+          quantity,
+          ticketId: items[0]?.ticketId ?? ticketId,
+          items,
+          beneficiaries: buildBeneficiaries(quantity),
         }
       : {
-          quantity: count,
-          ticketId,
-          items: [{ ticketId, quantity: count }],
+          quantity,
+          ticketId: items[0]?.ticketId ?? ticketId,
+          items,
           // Seated events require both fields — never omit them.
           seatIds,
           holdId,
-          beneficiaries: buildBeneficiaries(count),
+          beneficiaries: buildBeneficiaries(quantity),
         };
 
     const created = await createOrder({

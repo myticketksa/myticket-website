@@ -34,6 +34,6 @@ export function useHeaderAccount() {
   const { data: notifications } = useGetNotificationsQuery(undefined, {
     skip: !isAuthenticated,
   })
-  const unread = countUnreadNotifications(notifications)
+  const unread = countUnreadNotifications(notifications?.items)
   return accountChipFromUser(user, unread)
 }

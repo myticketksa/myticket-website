@@ -1,3 +1,4 @@
+import { Dialog as DialogPrimitive } from 'radix-ui'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -5,7 +6,6 @@ import { useSubmitReviewMutation } from '@/app/api/accountApis'
 import {
   useFollowTalentMutation,
   useGetTalentDetailsQuery,
-  useGetTalentPreviousWorksQuery,
   useGetTalentsQuery,
   useRequestTalentMutation,
   useUnfollowTalentMutation,
@@ -13,8 +13,10 @@ import {
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { TalentDirectoryCard } from '@/components/cards'
 import {
+  CloseIcon,
   HeartGlyphIcon,
   PaperPlaneIcon,
+  PlayIcon,
   StarFillIcon,
   StarOutlineIcon,
   UsersIcon,
@@ -51,26 +53,87 @@ import {
   TALENT_SIMILAR_IMAGES,
 } from '@/pages/_guest'
 
-function workFromApi(
-  work: unknown,
-  index: number,
-  fallbackTitle: (n: number) => string,
-) {
-  if (typeof work === 'string') {
-    return {
-      key: `work-${index}`,
-      title: fallbackTitle(index + 1),
-      meta: '',
-      image: work,
+const VIDEO_URL = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i
+
+function isVideoUrl(value: string): boolean {
+  return VIDEO_URL.test(value.trim())
+}
+
+function pushVideoUrl(urls: string[], value: unknown) {
+  if (typeof value !== 'string') return
+  const url = value.trim()
+  if (!url || !isVideoUrl(url) || urls.includes(url)) return
+  urls.push(url)
+}
+
+/** Portfolio clips from talent detail — video files only. */
+function portfolioVideos(detail: Record<string, unknown> | undefined): string[] {
+  if (!detail) return []
+  const portfolio = detail.portfolio
+  if (!portfolio || typeof portfolio !== 'object') return []
+  const record = portfolio as Record<string, unknown>
+  const urls: string[] = []
+  pushVideoUrl(urls, record.bestVideo ?? record.best_video)
+  const media = record.media
+  if (Array.isArray(media)) {
+    for (const item of media) {
+      if (typeof item === 'string') {
+        pushVideoUrl(urls, item)
+        continue
+      }
+      if (item && typeof item === 'object') {
+        const row = item as Record<string, unknown>
+        pushVideoUrl(urls, row.url ?? row.src ?? row.path ?? row.video)
+      }
     }
   }
-  const row = (work && typeof work === 'object' ? work : {}) as Record<string, unknown>
-  return {
-    key: String(row.id ?? index),
-    title: String(row.title ?? row.name ?? row.event ?? fallbackTitle(index + 1)),
-    meta: String(row.venue ?? row.date ?? row.location ?? ''),
-    image: String(row.image ?? row.cover ?? row.thumbnail ?? row.url ?? '') || undefined,
-  }
+  return urls
+}
+
+function PortfolioVideoDialog({
+  src,
+  title,
+  closeLabel,
+  onOpenChange,
+}: {
+  src: string | null
+  title: string
+  closeLabel: string
+  onOpenChange: (open: boolean) => void
+}) {
+  const open = src != null
+
+  return (
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-surface-inverse/55 backdrop-blur-[1.5px]" />
+        <DialogPrimitive.Content className="fixed top-1/2 left-1/2 z-50 w-[min(920px,calc(100%-32px))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[20px] bg-bg-page shadow-overlay outline-none">
+          <div className="flex items-center justify-between gap-md px-lg py-md">
+            <DialogPrimitive.Title className="text-[16px] font-bold text-ink-primary">
+              {title}
+            </DialogPrimitive.Title>
+            <DialogPrimitive.Close
+              aria-label={closeLabel}
+              className="flex size-[36px] items-center justify-center rounded-full text-ink-muted hover:bg-bg-skeleton hover:text-ink-primary"
+            >
+              <CloseIcon size={18} />
+            </DialogPrimitive.Close>
+          </div>
+          <DialogPrimitive.Description className="sr-only">{title}</DialogPrimitive.Description>
+          {src ? (
+            <video
+              key={src}
+              src={src}
+              controls
+              autoPlay
+              playsInline
+              className="aspect-video w-full bg-ink-primary"
+            />
+          ) : null}
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  )
 }
 
 /**
@@ -89,6 +152,7 @@ export function TalentDetailPage() {
 
   const [requestOpen, setRequestOpen] = useState(false)
   const [reviewOpen, setReviewOpen] = useState(false)
+  const [activeVideo, setActiveVideo] = useState<string | null>(null)
 
   const { data: talentsResult } = useGetTalentsQuery()
   const apiTalents = talentsResult?.items
@@ -118,10 +182,6 @@ export function TalentDetailPage() {
     skip: !resolvedId,
   })
 
-  const { data: previousWorks } = useGetTalentPreviousWorksQuery(resolvedId!, {
-    skip: !resolvedId,
-  })
-
   const [followTalent, followState] = useFollowTalentMutation()
   const [unfollowTalent, unfollowState] = useUnfollowTalentMutation()
   const [requestTalent, requestState] = useRequestTalentMutation()
@@ -143,14 +203,7 @@ export function TalentDetailPage() {
     return fromList
   }, [apiDetail, apiTalents, catalog, slugOrId])
 
-  const works = useMemo(() => {
-    if (!previousWorks?.length) return []
-    return previousWorks
-      .slice(0, 9)
-      .map((work, index) =>
-        workFromApi(work, index, (n) => t('talent.previousWorkFallback', { n })),
-      )
-  }, [previousWorks, t])
+  const videos = useMemo(() => portfolioVideos(apiDetail), [apiDetail])
 
   const following = Boolean(talent.isFollowing)
   const favourited = talent.id ? isFavourite(talent.id) : false
@@ -311,7 +364,7 @@ export function TalentDetailPage() {
           </div>
         </FadeUp>
 
-        {works.length > 0 && (
+        {videos.length > 0 && (
           <div className="mx-auto mt-3xl max-w-[960px] sm:mt-[56px]">
             <h2 className="text-heading-h2-section text-center text-balance text-ink-primary">
               {t('talent.previousWork')}
@@ -320,27 +373,42 @@ export function TalentDetailPage() {
               {t('talent.previousWorkLede')}
             </p>
             <div className="mt-xl grid grid-cols-1 gap-lg sm:mt-[22px] sm:grid-cols-2 lg:grid-cols-3">
-              {works.map((work) => (
-                <div
-                  key={work.key}
-                  className="overflow-hidden rounded-[16px] border border-border-default bg-surface-default"
+              {videos.map((src) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => setActiveVideo(src)}
+                  aria-label={t('talent.playVideo')}
+                  className="group relative overflow-hidden rounded-[16px] border border-border-default bg-bg-skeleton text-start"
                 >
-                  <div className="aspect-[16/10] bg-bg-skeleton sm:aspect-auto sm:h-[140px]">
-                    {work.image ? (
-                      <img src={work.image} alt="" className="size-full object-cover" />
-                    ) : null}
-                  </div>
-                  <div className="px-[14px] py-[14px]">
-                    <p className="text-[15px] font-semibold text-ink-primary">{work.title}</p>
-                    {work.meta ? (
-                      <p className="mt-[4px] text-[13px] text-ink-secondary">{work.meta}</p>
-                    ) : null}
-                  </div>
-                </div>
+                  <video
+                    src={`${src}#t=0.1`}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    tabIndex={-1}
+                    aria-hidden
+                    className="pointer-events-none aspect-[16/10] w-full object-cover"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center bg-ink-primary/25 transition-colors group-hover:bg-ink-primary/35">
+                    <span className="flex size-[52px] items-center justify-center rounded-full bg-bg-page text-ink-brand shadow-lift">
+                      <PlayIcon size={22} weight="fill" />
+                    </span>
+                  </span>
+                </button>
               ))}
             </div>
           </div>
         )}
+
+        <PortfolioVideoDialog
+          src={activeVideo}
+          title={t('talent.previousWork')}
+          closeLabel={t('talent.closeVideo')}
+          onOpenChange={(open) => {
+            if (!open) setActiveVideo(null)
+          }}
+        />
 
         <SimilarSection
           className="mt-3xl sm:mt-[64px]"

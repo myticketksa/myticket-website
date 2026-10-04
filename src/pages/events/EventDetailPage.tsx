@@ -23,12 +23,17 @@ import {
   resolveEventId,
   resolveSeatingType,
 } from "@/lib/api/mappers/events";
-import { writeFreeSeatingSession } from "@/lib/purchase/holdSession";
+import {
+  writeFreeSeatingSession,
+  writeTicketSelection,
+  type TicketSelectionLine,
+} from "@/lib/purchase/holdSession";
 import { catalogLabel } from "@/lib/i18n/catalogLabels";
 import { MoneyAmount, parseMoneyDisplay } from "@/components/data-display";
 import {
   ArrowUpRightIcon,
   HeartGlyphIcon,
+  MapPinIcon,
   StarFillIcon,
 } from "@/components/icons";
 import { FadeUp } from "@/components/motion";
@@ -44,13 +49,17 @@ import {
   DetailGallery,
   EVENT_DETAIL,
   EVENT_DETAIL_GALLERY,
-  EVENT_DETAIL_VENUE_MAP,
   SimilarSection,
   slugify,
-  StickyCtaAssurances,
   StickyCtaCard,
   type TicketTier,
 } from "@/pages/_guest";
+import {
+  EventVenueMap,
+  googleMapsQueryUrl,
+  googleMapsUrl,
+  parseEventCoordinates,
+} from "@/components/maps/EventVenueMap";
 
 /** Event detail tab rail — About · Venue. */
 const TABS = ["About", "Venue"] as const;
@@ -65,9 +74,6 @@ const TAB_LABEL_KEYS: Record<Tab, string> = {
   About: "detail.about",
   Venue: "detail.venue",
 };
-
-const MAPS_URL =
-  "https://www.google.com/maps/search/?api=1&query=King+Abdullah+Park,+Al+Malaz,+Riyadh+12836";
 
 function pickDetailString(
   record: Record<string, unknown> | undefined,
@@ -221,10 +227,6 @@ export function EventDetailPage() {
         listCard?.date ??
         EVENT_DETAIL.when,
       venue: detailCard?.venue || listCard?.venue || EVENT_DETAIL.venue,
-      attendance:
-        detailCard?.attendance ||
-        listCard?.attendance ||
-        EVENT_DETAIL.attendance,
       fromPrice: detailCard?.price ?? listCard?.price ?? EVENT_DETAIL.fromPrice,
       about:
         pickDetailString(apiDetail, [
@@ -238,6 +240,27 @@ export function EventDetailPage() {
   );
 
   const title = display.title;
+
+  const listEvent = useMemo(
+    () => resolveEventFromList(apiEvents, slugOrId),
+    [apiEvents, slugOrId],
+  );
+
+  const coordinates = useMemo(() => {
+    return (
+      parseEventCoordinates(apiDetail) ??
+      parseEventCoordinates(listEvent) ??
+      null
+    );
+  }, [apiDetail, listEvent]);
+
+  const venueFromApi = detailCard?.venue || listCard?.venue || "";
+
+  const mapsHref = coordinates
+    ? googleMapsUrl(coordinates.latitude, coordinates.longitude)
+    : venueFromApi
+      ? googleMapsQueryUrl(venueFromApi)
+      : undefined;
 
   const galleryImages = useMemo(() => {
     const apiImages = collectGalleryImages(apiDetail);
@@ -336,6 +359,25 @@ export function EventDetailPage() {
   const ticketQty = selectedTicket
     ? (ticketQuantities[selectedTicket.id] ?? 0)
     : 0;
+  const assignedSelection = useMemo<TicketSelectionLine[]>(() => {
+    if (seatingType !== "assigned") return [];
+    return apiTicketTypes.flatMap((tier) => {
+      const quantity = ticketQuantities[tier.id] ?? 0;
+      if (quantity < 1) return [];
+      return [
+        {
+          ticketId: tier.id,
+          name: tier.name,
+          quantity,
+          price: tier.price,
+        },
+      ];
+    });
+  }, [apiTicketTypes, seatingType, ticketQuantities]);
+  const assignedQuantity = assignedSelection.reduce(
+    (sum, line) => sum + line.quantity,
+    0,
+  );
   const eventStartRaw =
     apiDetail?.startTime ??
     apiDetail?.starts_at ??
@@ -516,20 +558,18 @@ export function EventDetailPage() {
       }
       return prepareFreeSeatingCheckout();
     }
-    const ticketTypeId =
-      selectedTicket?.id ??
-      (listCard && "ticketTypeId" in listCard
-        ? listCard.ticketTypeId
-        : undefined);
-    if (ticketTypeId)
-      sessionStorage.setItem("myticket.ticketId", String(ticketTypeId));
-    if (selectedTicket && ticketQty > 0) {
-      sessionStorage.setItem("myticket.ticketQty", String(ticketQty));
-    } else {
-      sessionStorage.removeItem("myticket.ticketQty");
+    if (assignedQuantity < 1) {
+      dispatch(toastPushed("error", t("detail.pickTicketType")));
+      return false;
     }
+    writeTicketSelection({
+      eventId: resolvedId ? String(resolvedId) : undefined,
+      slug: slugOrId || detailCard?.slug || listCard?.slug,
+      lines: assignedSelection,
+    });
     if (resolvedId)
       sessionStorage.setItem("myticket.eventId", String(resolvedId));
+    if (slugOrId) sessionStorage.setItem("myticket.eventSlug", slugOrId);
     return true;
   }
 
@@ -619,11 +659,6 @@ export function EventDetailPage() {
                 ) : null}
                 <span className="text-ink-secondary">{display.when}</span>
                 <span className="text-ink-secondary">{display.venue}</span>
-                {display.attendance ? (
-                  <span className="text-ink-secondary">
-                    {display.attendance}
-                  </span>
-                ) : null}
               </div>
             </FadeUp>
 
@@ -661,7 +696,10 @@ export function EventDetailPage() {
               isPastEvent ||
               createState.isLoading ||
               payState.isLoading ||
-              (apiTicketTypes.length > 0 && (!selectedTicket || ticketQty < 1))
+              (apiTicketTypes.length > 0 &&
+                (seatingType === "assigned"
+                  ? assignedQuantity < 1
+                  : !selectedTicket || ticketQty < 1))
             }
             qtyInteractive={apiTicketTypes.length > 0}
             onSelectTier={(selectedTier) => {
@@ -684,6 +722,24 @@ export function EventDetailPage() {
                 ticketQuantitiesStorageKey,
                 JSON.stringify(nextQuantities),
               );
+              if (seatingType === "assigned") {
+                writeTicketSelection({
+                  eventId: resolvedId ? String(resolvedId) : undefined,
+                  slug: slugOrId || detailCard?.slug || listCard?.slug,
+                  lines: apiTicketTypes.flatMap((tier) => {
+                    const quantity = nextQuantities[tier.id] ?? 0;
+                    if (quantity < 1) return [];
+                    return [
+                      {
+                        ticketId: tier.id,
+                        name: tier.name,
+                        quantity,
+                        price: tier.price,
+                      },
+                    ];
+                  }),
+                });
+              }
             }}
             onChangeQty={(selectedTier, qty) => {
               const match = apiTicketTypes.find(
@@ -703,20 +759,26 @@ export function EventDetailPage() {
                 JSON.stringify(nextQuantities),
               );
               if (seatingType === "assigned") {
-                sessionStorage.setItem("myticket.ticketQty", String(nextQty));
+                writeTicketSelection({
+                  eventId: resolvedId ? String(resolvedId) : undefined,
+                  slug: slugOrId || detailCard?.slug || listCard?.slug,
+                  lines: apiTicketTypes.flatMap((tier) => {
+                    const quantity = nextQuantities[tier.id] ?? 0;
+                    if (quantity < 1) return [];
+                    return [
+                      {
+                        ticketId: tier.id,
+                        name: tier.name,
+                        quantity,
+                        price: tier.price,
+                      },
+                    ];
+                  }),
+                });
               }
             }}
             onPrimaryClick={() => handlePrimaryClick()}
             footerNote={t("detail.fixtureFooterNote")}
-            aside={
-              <StickyCtaAssurances
-                items={[
-                  t("detail.fixtureAssurance1"),
-                  t("detail.fixtureAssurance2"),
-                  t("detail.fixtureAssurance3"),
-                ]}
-              />
-            }
           />
 
           <article className="min-w-0 lg:col-start-1 lg:row-start-2">
@@ -752,54 +814,56 @@ export function EventDetailPage() {
               className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-3xl sm:mt-[44px]"
             >
               <h2 className="text-balance text-heading-h2-section text-ink-primary">
-                {t("detail.venueGettingThere")}
+                {t("detail.venue")}
               </h2>
               <div className="mt-[18px] overflow-hidden rounded-[18px] border border-border-default bg-surface-default">
                 <div className="relative h-[200px] w-full overflow-hidden bg-bg-skeleton sm:h-[260px]">
-                  <img
-                    src={EVENT_DETAIL_VENUE_MAP}
-                    alt={t("detail.mapAlt", { venue: display.venue })}
-                    className="size-full object-cover"
-                  />
-                </div>
-                <div className="flex flex-col items-stretch gap-md border-b border-border-divider px-lg py-md sm:flex-row sm:items-center sm:justify-between sm:gap-lg sm:px-3xl">
-                  <p className="min-w-0 text-[13px] text-pretty text-ink-secondary sm:text-[14px]">
-                    {t("detail.venueAddressBody")}
-                  </p>
-                  <a
-                    href={MAPS_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-[44px] shrink-0 items-center justify-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand sm:h-[36px]"
-                  >
-                    {t("detail.openInMaps")}
-                  </a>
-                </div>
-                <div className="flex flex-col gap-2xl px-lg pt-xl pb-2xl sm:flex-row sm:gap-3xl sm:px-3xl sm:pt-[22px] sm:pb-3xl">
-                  {[
-                    {
-                      label: t("detail.venueAddress"),
-                      body: t("detail.venueAddressBody"),
-                    },
-                    {
-                      label: t("detail.venueGettingThereLabel"),
-                      body: t("detail.venueTransitBody"),
-                    },
-                    {
-                      label: t("detail.venueAccessibility"),
-                      body: t("detail.venueAccessBody"),
-                    },
-                  ].map((fact) => (
-                    <div key={fact.label} className="min-w-0 flex-1">
-                      <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-                        {fact.label}
+                  {coordinates ? (
+                    <EventVenueMap
+                      key={`${coordinates.latitude},${coordinates.longitude}`}
+                      latitude={coordinates.latitude}
+                      longitude={coordinates.longitude}
+                      ariaLabel={t("detail.mapAlt", { venue: display.venue })}
+                    />
+                  ) : (
+                    <div className="flex size-full flex-col items-center justify-center gap-sm px-lg text-center">
+                      <span className="flex size-[44px] items-center justify-center rounded-pill bg-bg-tint-brand text-ink-brand">
+                        <MapPinIcon size={20} />
+                      </span>
+                      <p className="text-[14.5px] font-bold text-ink-primary">
+                        {t(
+                          venueFromApi
+                            ? "detail.noMapTitle"
+                            : "detail.noLocationTitle",
+                        )}
                       </p>
-                      <p className="mt-[6px] text-[14px] leading-[1.5] text-pretty text-ink-body">
-                        {fact.body}
+                      <p className="max-w-[320px] text-[12.5px] leading-[1.5] text-ink-secondary">
+                        {t(
+                          venueFromApi
+                            ? "detail.noMapBody"
+                            : "detail.noLocationBody",
+                        )}
                       </p>
                     </div>
-                  ))}
+                  )}
                 </div>
+                {(venueFromApi || mapsHref) && (
+                  <div className="flex flex-col items-stretch gap-md px-lg py-md sm:flex-row sm:items-center sm:justify-between sm:gap-lg sm:px-3xl">
+                    <p className="min-w-0 text-[13px] text-pretty text-ink-secondary sm:text-[14px]">
+                      {venueFromApi}
+                    </p>
+                    {mapsHref ? (
+                      <a
+                        href={mapsHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex h-[44px] shrink-0 items-center justify-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand sm:h-[36px]"
+                      >
+                        {t("detail.openInMaps")}
+                      </a>
+                    ) : null}
+                  </div>
+                )}
               </div>
             </section>
           </article>
