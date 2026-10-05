@@ -217,3 +217,27 @@ export function firstTicketTypeId(event: ApiRecord | undefined): number | undefi
   if (id == null || !/^\d+$/.test(String(id))) return undefined
   return Number(id)
 }
+
+/**
+ * Every language a field carries, for matching rather than display.
+ *
+ * Search used to look only at the title in the current language, so on the
+ * Arabic site "Riyadh Season" found nothing while "موسم الرياض" found the
+ * event. Matching should not depend on which language the page is in.
+ */
+export function allLocaleStrings(value: unknown): string[] {
+  if (value == null) return []
+  if (typeof value === 'string') return value.trim() ? [value] : []
+  if (typeof value === 'number' || typeof value === 'boolean') return [String(value)]
+  if (Array.isArray(value)) return value.flatMap(allLocaleStrings)
+  if (typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>).flatMap(allLocaleStrings)
+  }
+  return []
+}
+
+/** Searchable text for a record, across both languages. */
+export function searchableText(record: ApiRecord | undefined, keys: string[]): string {
+  if (!record) return ''
+  return keys.flatMap((key) => allLocaleStrings(record[key])).join(' ')
+}

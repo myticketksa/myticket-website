@@ -154,6 +154,20 @@ function parsePrice(price: string): number {
   return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
 }
 
+/** Fields searched in every language the API returns them in. */
+const SEARCH_FIELDS: string[] = [
+  "title",
+  "name",
+  "slug",
+  "place",
+  "short_description",
+  "description",
+  "category",
+  "city",
+] as const;
+
+import { searchableText } from "@/lib/api/locale";
+
 function matchesQuery(haystack: string, query: string): boolean {
   return haystack.toLowerCase().includes(query.toLowerCase());
 }
@@ -173,7 +187,7 @@ function buildApiResults(
     for (const event of apiEvents) {
       const mapped = mapApiEventToCard(event);
       const meta = [mapped.date, mapped.venue].filter(Boolean).join(" · ");
-      const haystack = `${mapped.title} ${meta} ${mapped.category ?? ""} ${mapped.venue}`;
+      const haystack = `${mapped.title} ${meta} ${mapped.category ?? ""} ${mapped.venue} ${searchableText(event, SEARCH_FIELDS)}`;
       if (!matchesQuery(haystack, query)) continue;
 
       items.push({
@@ -201,7 +215,8 @@ function buildApiResults(
         mapped.meta ||
         [mapped.discipline, mapped.city].filter(Boolean).join(" · ");
       const haystack = `${mapped.name} ${meta} ${mapped.discipline} ${mapped.city}`;
-      if (!matchesQuery(haystack, query)) continue;
+      if (!matchesQuery(`${haystack} ${searchableText(talent, SEARCH_FIELDS)}`, query))
+        continue;
 
       const price = mapped.nextShow?.detail?.includes("from")
         ? (mapped.nextShow.detail.split("·").pop()?.trim() ??
@@ -237,7 +252,7 @@ function buildApiResults(
       const meta =
         mapped.meta ||
         [mapped.location, mapped.place].filter(Boolean).join(" · ");
-      const haystack = `${mapped.title} ${meta} ${mapped.summary ?? ""} ${mapped.location}`;
+      const haystack = `${mapped.title} ${meta} ${mapped.summary ?? ""} ${mapped.location} ${searchableText(experience, SEARCH_FIELDS)}`;
       if (!matchesQuery(haystack, query)) continue;
 
       items.push({
