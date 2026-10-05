@@ -388,7 +388,14 @@
     "addAtLeastOne": "Add at least one ticket",
     "payNow": "Pay {{total}}",
     "pickShowtime": "Choose a showtime",
-    "vatIncluded": "VAT included"
+    "vatIncluded": "VAT included",
+    "bookNow": "Book now",
+    "reservationType": "Reservation type",
+    "seatNumber": "Seat number",
+    "seatFor": "Seat for ticket {{n}}",
+    "noSeats": "No seats available",
+    "seatRequired": "Choose a seat for every ticket",
+    "seatDuplicate": "Two tickets cannot take the same seat"
   },
   "search": {
     "title": "Search",

@@ -135,7 +135,9 @@
     "freeSeating": "Free seating",
     "nameRequired": "Give every ticket a name",
     "total": "Total",
-    "vatIncluded": "VAT included"
+    "vatIncluded": "VAT included",
+    "originalAmount": "Original amount",
+    "offerDiscount": "Offer discount"
   },
   "confirmation": {
     "title": "You're going.",

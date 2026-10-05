@@ -391,7 +391,14 @@
     "addAtLeastOne": "أضف تذكرة واحدة على الأقل",
     "payNow": "ادفع {{total}}",
     "pickShowtime": "اختر موعد العرض",
-    "vatIncluded": "شامل ضريبة القيمة المضافة"
+    "vatIncluded": "شامل ضريبة القيمة المضافة",
+    "bookNow": "احجز الآن",
+    "reservationType": "نوع الحجز",
+    "seatNumber": "رقم المقعد",
+    "seatFor": "مقعد التذكرة {{n}}",
+    "noSeats": "لا توجد مقاعد متاحة",
+    "seatRequired": "اختر مقعداً لكل تذكرة",
+    "seatDuplicate": "لا يمكن اختيار نفس المقعد لأكثر من تذكرة"
   },
   "search": {
     "title": "بحث",

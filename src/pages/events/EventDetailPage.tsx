@@ -10,6 +10,7 @@ import {
   useGetEventDetailsQuery,
   useGetEventsQuery,
 } from "@/app/api/eventsApi";
+import { useGetEventSeatsQuery } from "@/app/api/seatsApi";
 import { useAppDispatch } from "@/app/hooks";
 import { toastPushed } from "@/features/ui/uiSlice";
 import { apiErrorMessage } from "@/lib/api/unwrap";
@@ -50,11 +51,9 @@ import { PageSection } from "@/layouts";
 import { NotFoundPage } from "@/pages/system/NotFoundPage";
 import {
   DetailGallery,
-  SessionPicker,
-  TicketBookingList,
-  BookingExtras,
-  type BookingTicket,
-  type PaymentMethod,
+  BookingModal,
+  type BookingLine,
+  type SeatOption,
   EVENT_DETAIL_GALLERY,
   SimilarSection,
   slugify,
@@ -323,12 +322,9 @@ export function EventDetailPage() {
       ),
     [apiEvents, eventSource, slugOrId],
   );
-  const [chosenSessionId, setChosenSessionId] = useState<number | undefined>();
-  const selectedSessionId =
-    chosenSessionId != null &&
-    bookableSessions.some((session) => session.id === chosenSessionId)
-      ? chosenSessionId
-      : defaultSessionId;
+  // The modal owns the chosen showtime while booking; the page only needs a
+  // default so prices and stock on the panel reflect the next date on sale.
+  const selectedSessionId = defaultSessionId;
 
   const apiTicketTypes = useMemo(
     () =>
@@ -350,11 +346,41 @@ export function EventDetailPage() {
    * the app and the original website both use. `ticketQuantities` is derived
    * from this so the existing totals and order payload keep working.
    */
-  const [bookingTickets, setBookingTickets] = useState<BookingTicket[]>([]);
-  const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
-  const [applyPromo, promoState] = useApplyPromoCodeMutation();
+  const [bookingOpen, setBookingOpen] = useState(false);
+
+  const { data: apiSeats } = useGetEventSeatsQuery(resolvedId!, {
+    skip: !resolvedId || seatingType !== "assigned",
+  });
+
+  /** Seat rows for the chosen showtime — the endpoint returns the whole event. */
+  const seatOptions = useMemo<SeatOption[]>(() => {
+    const rows = Array.isArray(apiSeats) ? apiSeats : [];
+    return rows
+      .filter((row) => {
+        const rowSession = Number(
+          (row as Record<string, unknown>).sessionId ??
+            (row as Record<string, unknown>).session_id,
+        );
+        return !Number.isFinite(rowSession) || rowSession === selectedSessionId;
+      })
+      .map((row) => {
+        const record = row as Record<string, unknown>;
+        const id = Number(record.id);
+        const label =
+          String(record.label ?? "") ||
+          `${String(record.row ?? "")}${String(record.number ?? "")}`;
+        return {
+          id,
+          label: label || String(id),
+          ticketTypeId: Number(
+            (record.ticket_type as Record<string, unknown> | undefined)?.id,
+          ),
+          taken: String(record.status ?? "").toLowerCase() !== "available",
+        };
+      })
+      .filter((seat) => Number.isInteger(seat.id));
+  }, [apiSeats, selectedSessionId]);
+  const [applyPromo] = useApplyPromoCodeMutation();
 
   const bookingTypeOptions = useMemo(
     () =>
@@ -368,49 +394,8 @@ export function EventDetailPage() {
     [apiTicketTypes],
   );
 
-  const seatsLeftForShowtime = useMemo(() => {
-    const counts = apiTicketTypes
-      .map((tier) => tier.remaining)
-      .filter((value): value is number => value != null);
-    return counts.length ? counts.reduce((sum, value) => sum + value, 0) : undefined;
-  }, [apiTicketTypes]);
 
-  function handleBookingChange(next: BookingTicket[]) {
-    setBookingTickets(next);
-    const quantities: Record<number, number> = {};
-    for (const ticket of next) {
-      quantities[ticket.ticketTypeId] =
-        (quantities[ticket.ticketTypeId] ?? 0) + 1;
-    }
-    setTicketQuantities(quantities);
-    sessionStorage.setItem(
-      ticketQuantitiesStorageKey,
-      JSON.stringify(quantities),
-    );
-    const first = next[0];
-    if (first) {
-      setSelectedTicketId(first.ticketTypeId);
-      sessionStorage.setItem("myticket.ticketId", String(first.ticketTypeId));
-    }
-    sessionStorage.setItem(
-      "myticket.attendeeNames",
-      JSON.stringify(next.map((ticket) => ticket.name)),
-    );
-  }
 
-  /**
-   * Changing the showtime resets what was chosen under the old one — the app
-   * clears the seat the same way, because price and stock differ per date.
-   */
-  function handleSessionChange(sessionId: number) {
-    if (sessionId === selectedSessionId) return;
-    setChosenSessionId(sessionId);
-    setBookingTickets([]);
-    setTicketQuantities({});
-    sessionStorage.removeItem(ticketQuantitiesStorageKey);
-    sessionStorage.setItem("myticket.sessionId", String(sessionId));
-    clearHoldSession();
-  }
 
   useEffect(() => {
     if (apiTicketTypes.length === 0) return;
@@ -567,50 +552,40 @@ export function EventDetailPage() {
    * from. A hall with assigned seats still needs its own step, because seats
    * must be held on a timer.
    */
-  async function payFromPanel(): Promise<boolean> {
-    if (!resolvedId) {
-      dispatch(toastPushed("error", t("detail.pickTicketType")));
-      return false;
-    }
-    if (bookingTickets.length === 0) {
-      dispatch(toastPushed("error", t("detail.addAtLeastOne")));
-      return false;
-    }
-    if (bookingTickets.some((ticket) => !ticket.name.trim())) {
-      dispatch(toastPushed("error", t("detail.nameRequired")));
-      return false;
-    }
-    if (!Number.isInteger(selectedSessionId)) {
-      dispatch(toastPushed("error", t("detail.pickShowtime")));
-      return false;
-    }
+  /** The modal's Pay button. Creates the order, applies any code, pays. */
+  async function confirmBooking(booking: {
+    typeId: number;
+    sessionId: number;
+    lines: BookingLine[];
+    promoCode: string;
+    method: "card" | "apple" | "wallet";
+  }): Promise<void> {
+    if (!resolvedId) return;
 
     let allowed = false;
     requireAuth(() => {
       allowed = true;
     });
-    if (!allowed) return false;
+    if (!allowed) return;
 
-    const byType = new Map<number, number>();
-    for (const ticket of bookingTickets) {
-      byType.set(ticket.ticketTypeId, (byType.get(ticket.ticketTypeId) ?? 0) + 1);
-    }
-    const items = [...byType].map(([ticketId, quantity]) => ({
-      ticketId,
-      quantity,
-    }));
+    const seatIds = booking.lines
+      .map((line) => line.seatId)
+      .filter((id): id is number => Number.isInteger(id));
 
     try {
       const created = await createOrder({
         eventId: resolvedId,
         body: {
-          sessionId: selectedSessionId,
-          ticketId: items[0]!.ticketId,
-          quantity: bookingTickets.length,
-          items,
-          beneficiaries: bookingTickets.map((ticket, index) => ({
+          sessionId: booking.sessionId,
+          ticketId: booking.typeId,
+          quantity: booking.lines.length,
+          items: [
+            { ticketId: booking.typeId, quantity: booking.lines.length },
+          ],
+          ...(seatIds.length ? { seatIds } : {}),
+          beneficiaries: booking.lines.map((line, index) => ({
             quantity_id: index + 1,
-            name: ticket.name.trim(),
+            name: line.name.trim(),
           })),
         },
       }).unwrap();
@@ -618,13 +593,12 @@ export function EventDetailPage() {
       const orderId = Number(created.id ?? created.orderId ?? created.order_id);
       if (!Number.isFinite(orderId) || orderId <= 0) {
         dispatch(toastPushed("error", t("detail.claimFailed")));
-        return false;
+        return;
       }
 
-      const code = promoCode.trim();
-      if (code) {
+      if (booking.promoCode) {
         try {
-          await applyPromo({ orderId, promoCode: code }).unwrap();
+          await applyPromo({ orderId, promoCode: booking.promoCode }).unwrap();
         } catch (error) {
           dispatch(
             toastPushed(
@@ -637,34 +611,21 @@ export function EventDetailPage() {
 
       await payOrder({
         orderId,
-        brand: paymentMethod === "wallet" ? "WALLET" : "CREDIT",
+        brand: booking.method === "wallet" ? "WALLET" : "CREDIT",
       }).unwrap();
 
       sessionStorage.setItem("myticket.lastOrderId", String(orderId));
-      sessionStorage.removeItem("myticket.pendingOrderId");
       clearHoldSession();
+      setBookingOpen(false);
       navigate(`/order-confirmation?orderId=${orderId}`);
-      return false;
     } catch (error) {
       dispatch(
         toastPushed("error", apiErrorMessage(error, t("detail.claimFailed"))),
       );
-      return false;
     }
   }
 
 
-  /**
-   * The original modal applies the code against the open order. We have no
-   * order until the buyer continues, so hold the code and let checkout apply
-   * it; this only confirms it was entered.
-   */
-  async function handleApplyPromo() {
-    const code = promoCode.trim();
-    if (!code) return;
-    sessionStorage.setItem("myticket.promoCode", code);
-    setPromoApplied(true);
-  }
 
   const panelBusy = createState.isLoading || payState.isLoading;
   const primaryLabel =
@@ -688,9 +649,9 @@ export function EventDetailPage() {
   async function handlePrimaryClick(): Promise<boolean> {
     // Free seating completes here. Assigned seating still goes to the seat map,
     // because those seats have to be held on a timer before they are paid for.
-    if (seatingType === "free") {
-      return payFromPanel();
-    }
+    // Everything is booked in the modal now, as the original site does it.
+    setBookingOpen(true);
+    return false;
     if (assignedQuantity < 1) {
       dispatch(toastPushed("error", t("detail.pickTicketType")));
       return false;
@@ -837,47 +798,22 @@ export function EventDetailPage() {
             </div>
           </header>
 
+          <BookingModal
+            open={bookingOpen}
+            onOpenChange={setBookingOpen}
+            eventTitle={title}
+            types={bookingTypeOptions}
+            sessions={bookableSessions}
+            seats={seatOptions}
+            assignedSeating={seatingType === "assigned"}
+            busy={createState.isLoading || payState.isLoading}
+            onConfirm={(booking) => void confirmBooking(booking)}
+          />
+
           <StickyCtaCard
             className="w-full min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1"
             fromPrice={display.fromPrice}
             note={t("detail.fixtureSalesClose")}
-            beforeTiers={
-              <>
-                {bookableSessions.length > 0 && (
-                  <SessionPicker
-                    sessions={bookableSessions}
-                    selectedId={selectedSessionId}
-                    onSelect={handleSessionChange}
-                  />
-                )}
-                {bookingTypeOptions.length > 0 && (
-                  <TicketBookingList
-                    className="mt-[18px]"
-                    tickets={bookingTickets}
-                    types={bookingTypeOptions}
-                    max={seatsLeftForShowtime}
-                    onChange={handleBookingChange}
-                  />
-                )}
-                {bookingTickets.length > 0 && (
-                  <BookingExtras
-                    className="mt-[18px]"
-                    promoCode={promoCode}
-                    onPromoCodeChange={(value) => {
-                      setPromoCode(value);
-                      setPromoApplied(false);
-                    }}
-                    onApplyPromo={() => void handleApplyPromo()}
-                    promoApplied={promoApplied}
-                    promoBusy={promoState.isLoading}
-                    lines={orderTotals.lines}
-                    total={orderTotals.total}
-                    method={paymentMethod}
-                    onMethodChange={setPaymentMethod}
-                  />
-                )}
-              </>
-            }
             tiers={[]}
             totals={orderTotals.lines}
             total={orderTotals.total}

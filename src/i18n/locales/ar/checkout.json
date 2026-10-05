@@ -135,7 +135,9 @@
     "freeSeating": "جلوس حر",
     "nameRequired": "اكتب اسماً لكل تذكرة",
     "total": "الإجمالي",
-    "vatIncluded": "شامل ضريبة القيمة المضافة"
+    "vatIncluded": "شامل ضريبة القيمة المضافة",
+    "originalAmount": "المبلغ الأصلي",
+    "offerDiscount": "خصم العرض"
   },
   "confirmation": {
     "title": "أنت ذاهب.",
