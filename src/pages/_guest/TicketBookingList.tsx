@@ -42,6 +42,139 @@ export interface TicketBookingListProps {
 
 export const MAX_TICKETS_PER_ORDER = 6;
 
+export type PaymentMethod = "card" | "apple" | "wallet";
+
+export interface BookingExtrasProps {
+  promoCode: string;
+  onPromoCodeChange: (value: string) => void;
+  onApplyPromo: () => void;
+  promoApplied?: boolean;
+  promoBusy?: boolean;
+  lines: { label: string; value: string }[];
+  total: string;
+  method: PaymentMethod;
+  onMethodChange: (method: PaymentMethod) => void;
+  walletBalance?: string;
+  className?: string;
+}
+
+/**
+ * Promo code, price breakdown and payment method, in the order the original
+ * booking modal lays them out: apply a code, see original amount then each
+ * discount then the total, choose how to pay, then pay. All of this used to sit
+ * two pages away on a separate checkout screen.
+ */
+export function BookingExtras({
+  promoCode,
+  onPromoCodeChange,
+  onApplyPromo,
+  promoApplied,
+  promoBusy,
+  lines,
+  total,
+  method,
+  onMethodChange,
+  walletBalance,
+  className,
+}: BookingExtrasProps) {
+  const { t } = useTranslation(["catalog", "checkout", "common"]);
+  const methods: { id: PaymentMethod; label: string }[] = [
+    { id: "card", label: t("checkout:checkout.methods.card") },
+    { id: "apple", label: t("checkout:checkout.methods.apple") },
+    { id: "wallet", label: t("checkout:checkout.methods.wallet") },
+  ];
+
+  return (
+    <div className={cn("flex flex-col gap-md", className)}>
+      <div className="flex flex-col gap-xs">
+        <span className="text-[13px] text-ink-secondary">
+          {t("checkout:checkout.promoLabel")}
+        </span>
+        <div className="flex items-center gap-xs">
+          <TextInput
+            value={promoCode}
+            onChange={(event) => onPromoCodeChange(event.target.value)}
+            placeholder={t("checkout:checkout.promoPlaceholder")}
+            aria-label={t("checkout:checkout.promoLabel")}
+            className="bg-bg-page"
+          />
+          <button
+            type="button"
+            onClick={onApplyPromo}
+            disabled={promoBusy || !promoCode.trim()}
+            className={cn(
+              "h-[42px] shrink-0 rounded-[12px] border border-border-default px-[14px] text-[14px] font-medium",
+              promoBusy || !promoCode.trim()
+                ? "cursor-not-allowed text-ink-disabled"
+                : "text-ink-primary hover:border-border-brand",
+            )}
+          >
+            {t("checkout:checkout.promoApply")}
+          </button>
+        </div>
+        {promoApplied && (
+          <span className="text-[13px] text-ink-brand-mid">
+            {t("checkout:checkout.promoApplied")}
+          </span>
+        )}
+      </div>
+
+      {lines.length > 0 && (
+        <div className="flex flex-col gap-[6px] border-t border-border-default pt-md">
+          {lines.map((line) => (
+            <div key={line.label} className="flex items-center justify-between gap-md">
+              <span className="text-[14px] text-ink-secondary">{line.label}</span>
+              <span className="ltr-run text-[14px] text-ink-primary">{line.value}</span>
+            </div>
+          ))}
+          <div className="mt-[4px] flex items-center justify-between gap-md">
+            <span className="text-[15px] font-semibold text-ink-primary">
+              {t("checkout:checkout.total")}
+            </span>
+            <span className="ltr-run text-[18px] font-semibold text-ink-primary">
+              {total}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <fieldset className="flex flex-col gap-xs border-t border-border-default pt-md">
+        <legend className="mb-xs text-[13px] text-ink-secondary">
+          {t("checkout:checkout.paymentMethod")}
+        </legend>
+        <div className="flex flex-col gap-[6px]">
+          {methods.map((option) => (
+            <label
+              key={option.id}
+              className={cn(
+                "flex cursor-pointer items-center justify-between gap-md rounded-[14px] border px-[14px] py-[10px]",
+                method === option.id
+                  ? "border-border-brand bg-bg-tint-brand"
+                  : "border-border-default bg-surface-default",
+              )}
+            >
+              <span className="text-[14px] text-ink-primary">{option.label}</span>
+              <input
+                type="radio"
+                name="booking-payment-method"
+                value={option.id}
+                checked={method === option.id}
+                onChange={() => onMethodChange(option.id)}
+                className="size-[16px] accent-[var(--color-ink-brand-mid)]"
+              />
+            </label>
+          ))}
+        </div>
+        {method === "wallet" && walletBalance && (
+          <span className="ltr-run text-[13px] text-ink-secondary">
+            {walletBalance}
+          </span>
+        )}
+      </fieldset>
+    </div>
+  );
+}
+
 export function TicketBookingList({
   tickets,
   types,

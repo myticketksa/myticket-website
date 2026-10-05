@@ -51,6 +51,9 @@ export {
   MAX_TICKETS_PER_ORDER,
   type BookingTicket,
   type TicketTypeOption,
+  BookingExtras,
+  type BookingExtrasProps,
+  type PaymentMethod,
 } from './TicketBookingList'
 export {
   DetailOrganizerBand,

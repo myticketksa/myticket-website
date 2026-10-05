@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
+  useApplyPromoCodeMutation,
   useCreateOrderMutation,
   usePayOrderMutation,
 } from "@/app/api/ordersApi";
@@ -53,7 +54,9 @@ import {
   DetailGallery,
   SessionPicker,
   TicketBookingList,
+  BookingExtras,
   type BookingTicket,
+  type PaymentMethod,
   EVENT_DETAIL_GALLERY,
   SimilarSection,
   slugify,
@@ -351,6 +354,10 @@ export function EventDetailPage() {
    * from this so the existing totals and order payload keep working.
    */
   const [bookingTickets, setBookingTickets] = useState<BookingTicket[]>([]);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+  const [, promoState] = useApplyPromoCodeMutation();
 
   const bookingTypeOptions = useMemo(
     () =>
@@ -632,6 +639,18 @@ export function EventDetailPage() {
     return true;
   }
 
+  /**
+   * The original modal applies the code against the open order. We have no
+   * order until the buyer continues, so hold the code and let checkout apply
+   * it; this only confirms it was entered.
+   */
+  async function handleApplyPromo() {
+    const code = promoCode.trim();
+    if (!code) return;
+    sessionStorage.setItem("myticket.promoCode", code);
+    setPromoApplied(true);
+  }
+
   const primaryLabel =
     seatingType === "free"
       ? isFreeEvent || (selectedTicket?.price ?? 0) <= 0
@@ -826,6 +845,23 @@ export function EventDetailPage() {
                     types={bookingTypeOptions}
                     max={seatsLeftForShowtime}
                     onChange={handleBookingChange}
+                  />
+                )}
+                {bookingTickets.length > 0 && (
+                  <BookingExtras
+                    className="mt-[18px]"
+                    promoCode={promoCode}
+                    onPromoCodeChange={(value) => {
+                      setPromoCode(value);
+                      setPromoApplied(false);
+                    }}
+                    onApplyPromo={() => void handleApplyPromo()}
+                    promoApplied={promoApplied}
+                    promoBusy={promoState.isLoading}
+                    lines={orderTotals.lines}
+                    total={orderTotals.total}
+                    method={paymentMethod}
+                    onMethodChange={setPaymentMethod}
                   />
                 )}
               </>
