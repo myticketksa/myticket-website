@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
@@ -12,7 +12,6 @@ import {
 } from "@/components/data-display";
 import { Button } from "@/components/ui";
 import { PageSection } from "@/layouts";
-import { WarningIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
 import { useAppSelector } from "@/app/hooks";
@@ -105,6 +104,9 @@ export function OrderConfirmationPage() {
     isError,
   } = useGetOrderDetailsQuery(orderId, {
     skip: !orderId,
+    // While a card payment settles the status flips from pending to paid, so
+    // keep asking rather than deciding on the first answer.
+    pollingInterval: 3000,
   });
 
   const view = useMemo((): ConfirmationView => {
@@ -161,35 +163,60 @@ export function OrderConfirmationPage() {
     view.paymentStatus.includes("pending") ||
     view.paymentStatus.includes("await");
 
+  /**
+   * This page is proof of a completed purchase, so it must never render for an
+   * order nobody has paid for — a green tick over an unpaid order is the worst
+   * thing the site can say. While payment settles we show a neutral waiting
+   * state, and if it never clears we send the buyer to their tickets rather
+   * than congratulating them.
+   */
+  const [waitedOut, setWaitedOut] = useState(false);
+  useEffect(() => {
+    if (!paymentPending) return;
+    const timer = window.setTimeout(() => setWaitedOut(true), 20000);
+    return () => window.clearTimeout(timer);
+  }, [paymentPending]);
+
+  useEffect(() => {
+    if (paymentPending && waitedOut) navigate("/my-tickets", { replace: true });
+  }, [navigate, paymentPending, waitedOut]);
+
+  if (paymentPending) {
+    return (
+      <PageSection padTop={52} padBottom={96}>
+        <div
+          className="mx-auto flex max-w-[520px] flex-col items-center gap-md text-center"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="size-[28px] animate-spin rounded-full border-[3px] border-border-default border-t-ink-brand" />
+          <h1 className="text-[22px] font-bold text-ink-primary">
+            {t("confirmation.settlingTitle")}
+          </h1>
+          <p className="text-[14px] text-ink-secondary">
+            {t("confirmation.settlingBody")}
+          </p>
+        </div>
+      </PageSection>
+    );
+  }
+
   return (
     <PageSection padTop={52} padBottom={96}>
       <div className="mx-auto flex max-w-[1040px] flex-col items-center text-center">
         {/* An unpaid order is not a celebration. Pending payment gets its own
             heading instead of the success tick and "You're going". */}
-        <div
-          className={cn(
-            "flex size-[64px] items-center justify-center rounded-[32px]",
-            paymentPending ? "bg-bg-tint-brand" : "bg-state-success-tint",
-          )}
-        >
-          {paymentPending ? (
-            <WarningIcon size={26} className="text-ink-brand" />
-          ) : (
-            <img src={checkIcon} alt="" className="size-[26px]" />
-          )}
+        <div className="flex size-[64px] items-center justify-center rounded-[32px] bg-state-success-tint">
+          <img src={checkIcon} alt="" className="size-[26px]" />
         </div>
         <h1 className="mt-[18px] text-[32px] leading-[1.02] font-extrabold tracking-[-1.75px] text-ink-primary sm:text-[40px] lg:text-[50px]">
-          {paymentPending
-            ? t("confirmation.pendingTitle")
-            : t("confirmation.title")}
+          {t("confirmation.title")}
         </h1>
         <p className="mt-[10px] max-w-[640px] text-[17px] leading-[1.5] text-ink-secondary">
-          {paymentPending
-            ? t("confirmation.pendingSubtitle")
-            : t("confirmation.subtitle", {
-                count: view.ticketCount,
-                email: view.email,
-              })}
+          {t("confirmation.subtitle", {
+            count: view.ticketCount,
+            email: view.email,
+          })}
         </p>
         {view.apiNote ? (
           <p className="mt-[8px] max-w-[560px] text-[13px] text-ink-muted">

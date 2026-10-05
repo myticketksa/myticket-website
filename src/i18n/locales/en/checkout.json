@@ -196,6 +196,8 @@
       "remind": "We'll remind you an hour before doors with the gate and bag-policy notes."
     },
     "pendingTitle": "Awaiting payment",
-    "pendingSubtitle": "Payment hasn't completed yet. Your tickets are issued as soon as it clears."
+    "pendingSubtitle": "Payment hasn't completed yet. Your tickets are issued as soon as it clears.",
+    "settlingTitle": "Confirming your payment",
+    "settlingBody": "Don't close this page. Your tickets appear as soon as it clears."
   }
 }
