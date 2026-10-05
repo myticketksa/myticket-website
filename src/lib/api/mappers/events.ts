@@ -13,6 +13,85 @@ type ApiRecord = Record<string, unknown>;
 
 export type EventSeatingType = "free" | "assigned";
 
+/**
+ * A showtime. The API nests these under `event.sessions`, and every order must
+ * name one — posting without `sessionId` is rejected with `session_required`.
+ * Price and remaining stock are per session, not per ticket type.
+ */
+export type EventSession = {
+  id: number;
+  startsAt?: string;
+  endsAt?: string;
+  tickets: Array<{
+    ticketTypeId: number;
+    price?: number;
+    discountedPrice?: number;
+    remaining?: number;
+  }>;
+};
+
+export function listSessions(event: ApiRecord | undefined): EventSession[] {
+  const rows = event?.sessions;
+  if (!Array.isArray(rows)) return [];
+  return rows.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const record = row as ApiRecord;
+    const id = Number(record.id);
+    if (!Number.isInteger(id)) return [];
+    const ticketRows = Array.isArray(record.tickets) ? record.tickets : [];
+    const tickets = ticketRows.flatMap((ticketRow) => {
+      if (!ticketRow || typeof ticketRow !== "object") return [];
+      const ticket = ticketRow as ApiRecord;
+      const ticketTypeId = Number(ticket.ticketTypeId ?? ticket.ticket_type_id);
+      if (!Number.isInteger(ticketTypeId)) return [];
+      return [
+        {
+          ticketTypeId,
+          price: numberOrUndefined(ticket.price),
+          discountedPrice: numberOrUndefined(ticket.discountedPrice),
+          remaining: numberOrUndefined(ticket.remaining),
+        },
+      ];
+    });
+    return [
+      {
+        id,
+        startsAt: stringOrUndefined(record.startsAt),
+        endsAt: stringOrUndefined(record.endsAt),
+        tickets,
+      },
+    ];
+  });
+}
+
+/**
+ * The session a buyer lands on by default: the next one that has not started,
+ * falling back to the first listed when every session is in the past.
+ */
+export function resolveDefaultSessionId(
+  event: ApiRecord | undefined,
+): number | undefined {
+  const sessions = listSessions(event);
+  if (sessions.length === 0) return undefined;
+  const now = Date.now();
+  const upcoming = sessions
+    .filter((session) => {
+      const starts = session.startsAt ? Date.parse(session.startsAt) : NaN;
+      return Number.isFinite(starts) && starts >= now;
+    })
+    .sort((a, b) => Date.parse(a.startsAt!) - Date.parse(b.startsAt!));
+  return (upcoming[0] ?? sessions[0])!.id;
+}
+
+function numberOrUndefined(value: unknown): number | undefined {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function stringOrUndefined(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
 export function resolveSeatingType(
   event: ApiRecord | undefined,
 ): EventSeatingType {

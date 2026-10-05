@@ -21,6 +21,7 @@ import {
   mapApiEventToCard,
   resolveEventFromList,
   resolveEventId,
+  resolveDefaultSessionId,
   resolveSeatingType,
 } from "@/lib/api/mappers/events";
 import {
@@ -300,6 +301,18 @@ export function EventDetailPage() {
       listTicketTypes(eventSource ?? resolveEventFromList(apiEvents, slugOrId)),
     [apiEvents, eventSource, slugOrId],
   );
+  /**
+   * Showtime for this purchase. Every order must name one — the API rejects a
+   * body without `sessionId` and answers `session_required`. Until a picker
+   * exists, default to the next session that has not started yet.
+   */
+  const selectedSessionId = useMemo(
+    () =>
+      resolveDefaultSessionId(
+        eventSource ?? resolveEventFromList(apiEvents, slugOrId),
+      ),
+    [apiEvents, eventSource, slugOrId],
+  );
   const ticketQuantitiesStorageKey = `myticket.ticketQuantities.${resolvedId ?? slugOrId}`;
 
   useEffect(() => {
@@ -523,6 +536,7 @@ export function EventDetailPage() {
       unitPrice: selectedTicket.price,
       slug: slugOrId || detailCard?.slug || listCard?.slug,
       label: selectedTicket.name,
+      sessionId: selectedSessionId,
     });
     sessionStorage.setItem("myticket.ticketId", String(selectedTicket.id));
     sessionStorage.setItem("myticket.eventId", String(resolvedId));
@@ -565,6 +579,7 @@ export function EventDetailPage() {
     writeTicketSelection({
       eventId: resolvedId ? String(resolvedId) : undefined,
       slug: slugOrId || detailCard?.slug || listCard?.slug,
+      sessionId: selectedSessionId,
       lines: assignedSelection,
     });
     if (resolvedId)
@@ -726,6 +741,7 @@ export function EventDetailPage() {
                 writeTicketSelection({
                   eventId: resolvedId ? String(resolvedId) : undefined,
                   slug: slugOrId || detailCard?.slug || listCard?.slug,
+                  sessionId: selectedSessionId,
                   lines: apiTicketTypes.flatMap((tier) => {
                     const quantity = nextQuantities[tier.id] ?? 0;
                     if (quantity < 1) return [];
@@ -762,6 +778,7 @@ export function EventDetailPage() {
                 writeTicketSelection({
                   eventId: resolvedId ? String(resolvedId) : undefined,
                   slug: slugOrId || detailCard?.slug || listCard?.slug,
+                  sessionId: selectedSessionId,
                   lines: apiTicketTypes.flatMap((tier) => {
                     const quantity = nextQuantities[tier.id] ?? 0;
                     if (quantity < 1) return [];

@@ -27,3 +27,8 @@ websocket-test.html
 *.njsproj
 *.sln
 *.sw?
+
+# Environment (never commit real keys)
+.env
+.env.local
+.env.*.local

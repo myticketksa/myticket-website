@@ -16,6 +16,8 @@ export const ordersApi = baseApi.injectEndpoints({
           holdId?: string
           ticketId?: number
           quantity?: number
+          /** Required. Omitting it fails with `session_required`. */
+          sessionId?: number
         }
       }
     >({

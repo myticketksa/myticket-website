@@ -24,6 +24,8 @@ export type TicketSelectionLine = {
 export type StoredTicketSelection = {
   eventId?: string;
   slug?: string;
+  /** Chosen showtime. The API rejects an order that does not name one. */
+  sessionId?: number;
   lines: TicketSelectionLine[];
 };
 
@@ -53,9 +55,13 @@ export function writeTicketSelection(selection: StoredTicketSelection) {
     JSON.stringify({
       eventId: selection.eventId,
       slug: selection.slug,
+      sessionId: selection.sessionId,
       lines,
     }),
   );
+  if (Number.isInteger(selection.sessionId)) {
+    sessionStorage.setItem("myticket.sessionId", String(selection.sessionId));
+  }
   sessionStorage.setItem(
     "myticket.ticketQty",
     String(lines.reduce((sum, line) => sum + line.quantity, 0)),
@@ -79,6 +85,9 @@ export function readTicketSelection(): StoredTicketSelection | null {
     return {
       eventId: raw.eventId,
       slug: raw.slug,
+      sessionId: Number.isInteger(Number(raw.sessionId))
+        ? Number(raw.sessionId)
+        : undefined,
       lines: lines.map((line) => ({
         ticketId: Number(line.ticketId),
         name: String(line.name),
@@ -109,10 +118,26 @@ export type HoldSession = {
   vat?: number;
   heldAt?: number;
   slug?: string;
+  /** Chosen showtime. The API rejects an order that does not name one. */
+  sessionId?: number;
   /** Free seating skips the seat map — quantity-only checkout. */
   seatingType?: "free" | "assigned";
   quantity?: number;
 };
+
+/**
+ * The showtime chosen earlier in the flow. Checked on the hold first, then the
+ * ticket selection, then the standalone key, so a buyer who reloads mid-flow
+ * keeps their choice.
+ */
+export function readSelectedSessionId(): number | undefined {
+  const fromHold = Number(readHoldSession()?.sessionId);
+  if (Number.isInteger(fromHold) && fromHold > 0) return fromHold;
+  const fromSelection = Number(readTicketSelection()?.sessionId);
+  if (Number.isInteger(fromSelection) && fromSelection > 0) return fromSelection;
+  const stored = Number(sessionStorage.getItem("myticket.sessionId") ?? "");
+  return Number.isInteger(stored) && stored > 0 ? stored : undefined;
+}
 
 export function readHoldSession(): HoldSession | null {
   try {
@@ -179,6 +204,7 @@ export function writeFreeSeatingSession(input: {
   unitPrice: number;
   slug?: string;
   label?: string;
+  sessionId?: number;
 }) {
   const quantity = Math.max(1, Math.floor(input.quantity));
   const unitPrice = Math.max(0, Number(input.unitPrice) || 0);
@@ -208,5 +234,6 @@ export function writeFreeSeatingSession(input: {
     vat,
     total: subtotal + serviceFee + vat,
     slug: input.slug,
+    sessionId: input.sessionId ?? readSelectedSessionId(),
   });
 }

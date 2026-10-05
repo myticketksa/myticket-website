@@ -31,6 +31,7 @@ import {
   clearHoldSession,
   hasValidApiHold,
   readHoldSession,
+  readSelectedSessionId,
   type HeldSeatSnapshot,
 } from "@/lib/purchase/holdSession";
 
@@ -263,14 +264,26 @@ export function CheckoutPage() {
         : [{ ticketId, quantity: count }];
     const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
 
+    // Every order names a showtime. Without it the API answers
+    // `session_required` and no order is ever created.
+    const sessionId = mock?.sessionId ?? readSelectedSessionId();
+    if (!Number.isInteger(sessionId)) {
+      dispatch(toastPushed("error", t("checkout.sessionMissing")));
+      const slug = mock?.slug || sessionStorage.getItem("myticket.eventSlug");
+      navigate(slug ? `/events/${slug}` : "/", { replace: true });
+      return null;
+    }
+
     const body = freeSeating
       ? {
+          sessionId,
           quantity,
           ticketId: items[0]?.ticketId ?? ticketId,
           items,
           beneficiaries: buildBeneficiaries(quantity),
         }
       : {
+          sessionId,
           quantity,
           ticketId: items[0]?.ticketId ?? ticketId,
           items,

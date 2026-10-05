@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "build:icons": "node scripts/build-icons.mjs",
     "probe:api": "node scripts/probe-guest-api.mjs",
-    "deploy": "npm run build & scp -r dist/* root@72.62.58.90:/var/www/myticket-frontend-prod"
+    "deploy": "npm run build && scp -r dist/* root@72.62.58.90:/var/www/myticket-frontend-prod"
   },
   "dependencies": {
     "@fontsource-variable/cairo": "^5.3.0",

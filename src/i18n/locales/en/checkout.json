@@ -129,7 +129,8 @@
       "issued": "Tickets are issued for the event and verified by MyTicket.",
       "held": "Your money is held safely until the event has taken place.",
       "resell": "Can't make it? Resell through the MyTicket auction in two taps."
-    }
+    },
+    "sessionMissing": "No showtime selected. Pick a date on the event page and try again."
   },
   "confirmation": {
     "title": "You're going.",

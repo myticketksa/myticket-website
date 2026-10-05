@@ -126,11 +126,24 @@ export function apiErrorMessage(
   };
   if (err.status === 413)
     return "Uploaded files are too large. Please choose smaller files and try again.";
-  if (err.data?.message) return err.data.message;
+  if (err.data?.message && !isMachineCode(err.data.message))
+    return err.data.message;
   if (err.data?.errors) {
     const first = Object.values(err.data.errors)[0];
     if (first?.[0]) return first[0];
   }
-  if (typeof err.error === "string") return err.error;
+  if (typeof err.error === "string" && !isMachineCode(err.error))
+    return err.error;
   return fallback;
+}
+
+/**
+ * True for API strings meant for machines, not people — `session_required`,
+ * `application_already_exists`, `UNAUTHORIZED`. Showing these raw was a QA
+ * finding; the caller's own fallback reads better than a code does.
+ */
+export function isMachineCode(message: string): boolean {
+  const text = message.trim();
+  if (!text || /\s/.test(text)) return false;
+  return /^[a-z0-9]+(?:[._-][a-z0-9]+)+$/i.test(text) || /^[A-Z0-9_]+$/.test(text);
 }
