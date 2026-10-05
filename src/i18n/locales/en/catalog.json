@@ -387,7 +387,8 @@
     "nameRequired": "Give every ticket a name",
     "addAtLeastOne": "Add at least one ticket",
     "payNow": "Pay {{total}}",
-    "pickShowtime": "Choose a showtime"
+    "pickShowtime": "Choose a showtime",
+    "vatIncluded": "VAT included"
   },
   "search": {
     "title": "Search",

@@ -243,8 +243,11 @@ export function writeFreeSeatingSession(input: {
   const quantity = Math.max(1, Math.floor(input.quantity));
   const unitPrice = Math.max(0, Number(input.unitPrice) || 0);
   const subtotal = unitPrice * quantity;
-  const serviceFee = Math.round(subtotal * 0.05);
-  const vat = Math.round((subtotal + serviceFee) * 0.15);
+  // The server charges the ticket price as listed; VAT is already inside it and
+  // there is no service fee. Adding either here only shows the buyer a number
+  // larger than the one they are charged.
+  const serviceFee = 0;
+  const vat = 0;
   const seats: HeldSeatSnapshot[] = Array.from(
     { length: quantity },
     (_, index) => ({

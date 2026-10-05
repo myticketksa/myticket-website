@@ -519,9 +519,12 @@ export function EventDetailPage() {
     const count = lines.reduce((sum, line) => sum + line.quantity, 0);
     const subtotal = lines.reduce((sum, line) => sum + line.amount, 0);
     const free = subtotal <= 0;
-    const serviceFee = free ? 0 : Math.round(subtotal * 0.05);
-    const vat = free ? 0 : Math.round((subtotal + serviceFee) * 0.15);
-    const total = subtotal + serviceFee + vat;
+
+    // The server charges exactly the sum of the discounted item prices, with
+    // VAT already inside them (`isVatIncluded`). The 5% service fee and 15% VAT
+    // this used to add on top were invented by the frontend — a two-ticket
+    // order priced 259 was being shown to the buyer as 313.
+    const total = subtotal;
 
     const summaryLines =
       lines.length > 1
@@ -544,13 +547,7 @@ export function EventDetailPage() {
         ...summaryLines,
         ...(free
           ? []
-          : [
-              {
-                label: t("detail.serviceFee"),
-                value: formatMoneySar(serviceFee),
-              },
-              { label: t("detail.vat"), value: formatMoneySar(vat) },
-            ]),
+          : [{ label: t("detail.vatIncluded"), value: "" }]),
       ],
       total: free ? t("common:currency.free") : formatMoneySar(total),
       unitPrice: selectedTicket?.price ?? 0,

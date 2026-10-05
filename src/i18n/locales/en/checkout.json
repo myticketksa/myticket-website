@@ -134,7 +134,8 @@
     "generalAdmission": "General admission {{index}}",
     "freeSeating": "Free seating",
     "nameRequired": "Give every ticket a name",
-    "total": "Total"
+    "total": "Total",
+    "vatIncluded": "VAT included"
   },
   "confirmation": {
     "title": "You're going.",

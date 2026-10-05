@@ -111,8 +111,10 @@ export function CheckoutPage() {
   const subtotal =
     hold?.subtotal ??
     seats.reduce((sum, seat) => sum + Number(seat.price || 0), 0);
-  const serviceFee = hold?.serviceFee ?? Math.round(subtotal * 0.05);
-  const vat = hold?.vat ?? Math.round((subtotal + serviceFee) * 0.15);
+  // VAT is inside the ticket price and there is no service fee — the server
+  // charges exactly the sum of the item subtotals.
+  const serviceFee = hold?.serviceFee ?? 0;
+  const vat = hold?.vat ?? 0;
   const total = hold?.total ?? subtotal + serviceFee + vat;
 
   // Do not release on unmount — Strict Mode remounts were clearing holdId before pay.
@@ -636,17 +638,18 @@ export function CheckoutPage() {
                     </span>
                   </div>
                 )}
+                {serviceFee > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-ink-secondary">
+                      {t("checkout.serviceFee")}
+                    </span>
+                    <PriceDisplay context="row" value={serviceFee} />
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">
-                    {t("checkout.serviceFee")}
+                    {t("checkout.vatIncluded")}
                   </span>
-                  <PriceDisplay context="row" value={serviceFee} />
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-ink-secondary">
-                    {t("checkout.vat")}
-                  </span>
-                  <PriceDisplay context="row" value={vat} />
                 </div>
               </div>
 

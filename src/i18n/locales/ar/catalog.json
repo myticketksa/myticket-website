@@ -390,7 +390,8 @@
     "nameRequired": "اكتب اسماً لكل تذكرة",
     "addAtLeastOne": "أضف تذكرة واحدة على الأقل",
     "payNow": "ادفع {{total}}",
-    "pickShowtime": "اختر موعد العرض"
+    "pickShowtime": "اختر موعد العرض",
+    "vatIncluded": "شامل ضريبة القيمة المضافة"
   },
   "search": {
     "title": "بحث",
