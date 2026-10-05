@@ -208,6 +208,8 @@
     "slowBody": "You haven't been charged twice. The order is saved on your tickets page and you can finish paying there.",
     "refusedTitle": "Payment didn't go through",
     "refusedBody": "Nothing was charged. Your order is saved, so you can try again.",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "frameTitle": "Complete your payment",
+    "frameNote": "Handled by the secure payment gateway. You're not leaving the site."
   }
 }

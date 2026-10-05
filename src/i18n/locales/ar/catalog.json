@@ -407,7 +407,8 @@
     "ticketPrices": "أسعار التذاكر",
     "freeActivity": "دخول مجاني",
     "addToFavourites": "أضف للمفضلة",
-    "removeFromFavourites": "إزالة من المفضلة"
+    "removeFromFavourites": "إزالة من المفضلة",
+    "paymentNotCompleted": "لم يكتمل الدفع ولم يُخصم منك شيء. طلبك محفوظ ويمكنك المحاولة مجدداً."
   },
   "search": {
     "title": "بحث",

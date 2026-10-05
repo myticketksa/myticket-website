@@ -404,7 +404,8 @@
     "ticketPrices": "Ticket prices",
     "freeActivity": "Free entry",
     "addToFavourites": "Add to favourites",
-    "removeFromFavourites": "Remove from favourites"
+    "removeFromFavourites": "Remove from favourites",
+    "paymentNotCompleted": "Payment was not completed and nothing was charged. Your order is saved, so you can try again."
   },
   "search": {
     "title": "Search",

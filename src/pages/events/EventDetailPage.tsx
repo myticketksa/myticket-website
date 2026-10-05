@@ -48,6 +48,7 @@ import { NotFoundPage } from "@/pages/system/NotFoundPage";
 import {
   DetailGallery,
   BookingModal,
+  PaymentFrame,
   type BookingLine,
   type SeatOption,
   EVENT_DETAIL_GALLERY,
@@ -315,6 +316,10 @@ export function EventDetailPage() {
    * from this so the existing totals and order payload keep working.
    */
   const [bookingOpen, setBookingOpen] = useState(false);
+  /** Gateway page shown over the site while a card payment is taken. */
+  const [payment, setPayment] = useState<{ url: string; orderId: number } | null>(
+    null,
+  );
 
   const { data: apiSeats } = useGetEventSeatsQuery(resolvedId!, {
     skip: !resolvedId || seatingType !== "assigned",
@@ -474,13 +479,13 @@ export function EventDetailPage() {
             : undefined;
 
       if (redirectUrl) {
-        // Full-page redirect, not a popup. Popups get blocked, behave badly on
-        // phones, and tell you nothing when the buyer closes them — the
-        // original polled a window handle and lost the result whenever that
-        // went wrong. Remember the order, hand the page over, and decide the
-        // outcome from the order itself when we get control back.
+        // Shown over the site rather than replacing it. The card form is still
+        // the gateway's own page, so card details never touch our code, but the
+        // buyer keeps their place and there is no hand-off to come back from.
+        // The order id is remembered anyway, so a buyer who reloads mid-payment
+        // is still picked up by the return handler.
         sessionStorage.setItem(PAYING_ORDER_KEY, String(orderId));
-        window.location.assign(redirectUrl);
+        setPayment({ url: redirectUrl, orderId });
         return;
       }
 
@@ -677,6 +682,24 @@ export function EventDetailPage() {
               {isPastEvent ? t("detail.eventEnded") : primaryLabel}
             </Button>
           </div>
+
+          <PaymentFrame
+            open={payment != null}
+            url={payment?.url ?? null}
+            orderId={payment?.orderId ?? null}
+            onPaid={(id) => {
+              sessionStorage.removeItem(PAYING_ORDER_KEY);
+              setPayment(null);
+              setBookingOpen(false);
+              navigate(`/order-confirmation?orderId=${id}`);
+            }}
+            onFailed={() => {
+              sessionStorage.removeItem(PAYING_ORDER_KEY);
+              setPayment(null);
+              dispatch(toastPushed("error", t("detail.paymentNotCompleted")));
+            }}
+            onClose={() => setPayment(null)}
+          />
 
           <BookingModal
             open={bookingOpen}

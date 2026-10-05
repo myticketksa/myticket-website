@@ -46,6 +46,7 @@ export {
   type TicketTier,
 } from './StickyCtaCard'
 export { SessionPicker, type SessionPickerProps } from './SessionPicker'
+export { PaymentFrame, type PaymentFrameProps } from './PaymentFrame'
 export {
   BookingModal,
   type BookingModalProps,
