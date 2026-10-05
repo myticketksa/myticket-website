@@ -131,13 +131,12 @@ export function BookingModal({
   );
   const unitPrice =
     types.find((type) => type.id === typeId)?.price ?? types[0]?.price ?? 0;
+  // The price already has the night's offer in it — ticket types are read from
+  // the chosen session, which reports `discountedPrice`. Subtracting the offer
+  // again charged 59 for a ticket priced 84. The offer is shown as information,
+  // never applied twice.
   const subtotal = unitPrice * lines.length;
-  const offerDiscount = (() => {
-    if (!activeSession?.discountValue) return 0;
-    return activeSession.discountType === "percentage"
-      ? Math.round((subtotal * activeSession.discountValue) / 100)
-      : activeSession.discountValue * lines.length;
-  })();
+  const offerDiscount = 0;
 
   const remaining = activeSession ? sessionRemaining(activeSession) : undefined;
   const ceiling = Math.min(MAX_TICKETS, remaining ?? MAX_TICKETS);
@@ -218,7 +217,7 @@ export function BookingModal({
 
           <ol className="mb-lg flex items-center gap-[6px]">
             {STEPS.map((label, index) => (
-              <li key={label} className="flex flex-1 flex-col gap-[6px]">
+              <li key={index} className="flex flex-1 flex-col gap-[6px]">
                 <span
                   className={cn(
                     "h-[3px] rounded-full",

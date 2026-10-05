@@ -479,12 +479,18 @@ export function EventDetailPage() {
             : undefined;
 
       if (redirectUrl) {
-        // Shown over the site rather than replacing it. The card form is still
-        // the gateway's own page, so card details never touch our code, but the
-        // buyer keeps their place and there is no hand-off to come back from.
-        // The order id is remembered anyway, so a buyer who reloads mid-payment
-        // is still picked up by the return handler.
         sessionStorage.setItem(PAYING_ORDER_KEY, String(orderId));
+
+        // Apple Pay will not run in a frame: the payment sheet requires the
+        // top-level browsing context and the merchant domain it was validated
+        // against. Cards have no such rule, so they stay in the overlay where
+        // the buyer keeps their place; Apple Pay takes the whole page and comes
+        // back through the return handler.
+        if (booking.method === "apple") {
+          window.location.assign(redirectUrl);
+          return;
+        }
+
         setPayment({ url: redirectUrl, orderId });
         return;
       }
