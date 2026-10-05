@@ -401,7 +401,13 @@
     "seatDuplicate": "لا يمكن اختيار نفس المقعد لأكثر من تذكرة",
     "stepWhen": "الموعد",
     "stepWho": "التذاكر",
-    "stepPay": "الدفع"
+    "stepPay": "الدفع",
+    "percentOff": "خصم {{value}}%",
+    "amountOff": "خصم {{value}} ر.س",
+    "ticketPrices": "أسعار التذاكر",
+    "freeActivity": "دخول مجاني",
+    "addToFavourites": "أضف للمفضلة",
+    "removeFromFavourites": "إزالة من المفضلة"
   },
   "search": {
     "title": "بحث",

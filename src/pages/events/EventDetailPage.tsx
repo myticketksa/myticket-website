@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
@@ -29,13 +29,10 @@ import {
 import {
   clearHoldSession,
   startPurchaseForEvent,
-  writeTicketSelection,
-  type TicketSelectionLine,
 } from "@/lib/purchase/holdSession";
 import { catalogLabel } from "@/lib/i18n/catalogLabels";
 import { MoneyAmount, parseMoneyDisplay } from "@/components/data-display";
 import {
-  ArrowUpRightIcon,
   HeartGlyphIcon,
   MapPinIcon,
   StarFillIcon,
@@ -43,8 +40,6 @@ import {
 import { FadeUp } from "@/components/motion";
 import {
   Breadcrumbs,
-  DetailSectionTab,
-  DetailSectionTabs,
 } from "@/components/navigation";
 import { Button } from "@/components/ui";
 import { PageSection } from "@/layouts";
@@ -57,27 +52,12 @@ import {
   EVENT_DETAIL_GALLERY,
   SimilarSection,
   slugify,
-  StickyCtaCard,
 } from "@/pages/_guest";
 import {
   googleMapsQueryUrl,
   googleMapsUrl,
   parseEventCoordinates,
 } from "@/components/maps/EventVenueMap";
-
-/** Event detail tab rail — About · Venue. */
-const TABS = ["About", "Venue"] as const;
-type Tab = (typeof TABS)[number];
-
-const TAB_IDS: Record<Tab, string> = {
-  About: "about",
-  Venue: "venue",
-};
-
-const TAB_LABEL_KEYS: Record<Tab, string> = {
-  About: "detail.about",
-  Venue: "detail.venue",
-};
 
 function pickDetailString(
   record: Record<string, unknown> | undefined,
@@ -132,8 +112,6 @@ export function EventDetailPage() {
   const [createOrder, createState] = useCreateOrderMutation();
   const [payOrder, payState] = usePayOrderMutation();
   const slugOrId = slug ?? "";
-  const [tab, setTab] = useState<Tab>("About");
-  const scrollingToRef = useRef<string | null>(null);
   const { isFavourite, toggleFavourite } = useEventFavorites();
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [ticketQuantities, setTicketQuantities] = useState<
@@ -445,28 +423,6 @@ export function EventDetailPage() {
   const selectedTicket =
     apiTicketTypes.find((tier) => tier.id === selectedTicketId) ??
     apiTicketTypes[0];
-  const ticketQty = selectedTicket
-    ? (ticketQuantities[selectedTicket.id] ?? 0)
-    : 0;
-  const assignedSelection = useMemo<TicketSelectionLine[]>(() => {
-    if (seatingType !== "assigned") return [];
-    return apiTicketTypes.flatMap((tier) => {
-      const quantity = ticketQuantities[tier.id] ?? 0;
-      if (quantity < 1) return [];
-      return [
-        {
-          ticketId: tier.id,
-          name: tier.name,
-          quantity,
-          price: tier.price,
-        },
-      ];
-    });
-  }, [apiTicketTypes, seatingType, ticketQuantities]);
-  const assignedQuantity = assignedSelection.reduce(
-    (sum, line) => sum + line.quantity,
-    0,
-  );
   const eventStartRaw =
     apiDetail?.startTime ??
     apiDetail?.starts_at ??
@@ -621,75 +577,24 @@ export function EventDetailPage() {
 
 
 
-  // This button only opens the dialog — paying happens on its last step.
+  /** Offer on the default showtime, shown beside the price list. */
+  const sessionOffer = (() => {
+    const active = bookableSessions.find(
+      (session) => session.id === selectedSessionId,
+    );
+    if (!active?.discountValue) return undefined;
+    return active.discountType === "percentage"
+      ? t("detail.percentOff", { value: active.discountValue })
+      : t("detail.amountOff", { value: active.discountValue });
+  })();
+
   const primaryLabel =
     orderTotals.orderTotal <= 0 && seatingType === "free"
       ? t("detail.claimFreeTicket")
       : t("detail.bookNow");
 
-  // The button only opens the booking dialog. It used to route to a seat map
-  // and to a separate checkout page; neither is part of the flow any more.
-  const primaryTo = undefined;
 
-  async function handlePrimaryClick(): Promise<boolean> {
-    // Free seating completes here. Assigned seating still goes to the seat map,
-    // because those seats have to be held on a timer before they are paid for.
-    // Everything is booked in the modal now, as the original site does it.
-    setBookingOpen(true);
-    return false;
-    if (assignedQuantity < 1) {
-      dispatch(toastPushed("error", t("detail.pickTicketType")));
-      return false;
-    }
-    writeTicketSelection({
-      eventId: resolvedId ? String(resolvedId) : undefined,
-      slug: slugOrId || detailCard?.slug || listCard?.slug,
-      sessionId: selectedSessionId,
-      lines: assignedSelection,
-    });
-    if (resolvedId)
-      sessionStorage.setItem("myticket.eventId", String(resolvedId));
-    if (slugOrId) sessionStorage.setItem("myticket.eventSlug", slugOrId);
-    return true;
-  }
 
-  useEffect(() => {
-    const nodes = TABS.map((item) =>
-      document.getElementById(TAB_IDS[item]),
-    ).filter((el): el is HTMLElement => el != null);
-    if (nodes.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (scrollingToRef.current) return;
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        const top = visible[0];
-        if (!top?.target.id) return;
-        const match = (Object.entries(TAB_IDS) as [Tab, string][]).find(
-          ([, id]) => id === top.target.id,
-        );
-        if (match) setTab(match[0]);
-      },
-      { rootMargin: "-20% 0px -55% 0px", threshold: [0.1, 0.35, 0.6] },
-    );
-
-    for (const node of nodes) observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  const jumpTo = (item: Tab) => {
-    const id = TAB_IDS[item];
-    const el = document.getElementById(id);
-    setTab(item);
-    if (!el) return;
-    scrollingToRef.current = id;
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.setTimeout(() => {
-      if (scrollingToRef.current === id) scrollingToRef.current = null;
-    }, 700);
-  };
 
   const stillLoading = eventsLoading || detailLoading;
   const eventMissing =
@@ -740,48 +645,111 @@ export function EventDetailPage() {
 
       <PageSection padTop={34} padBottom={0}>
         {/*
-          Mobile stack: title → ticket CTA → tabs/content.
-          Desktop: article column + sticky CTA (row-span), same as before.
+          Laid out like the original show-details page: title with rating and a
+          favourite toggle, then the address, date and description, then the
+          ticket-price list, then the actions. No sticky side card, no tab rail.
         */}
-        <div className="grid w-full grid-cols-1 items-start gap-2xl sm:gap-3xl lg:grid-cols-[minmax(0,1fr)_388px] lg:gap-x-[48px] lg:gap-y-0">
-          <header className="min-w-0 lg:col-start-1 lg:row-start-1">
-            <FadeUp>
+        <div className="flex w-full flex-col gap-2xl">
+          <header className="flex flex-col gap-md">
+            <div className="flex flex-wrap items-center justify-between gap-md">
               <h1 className="text-balance text-display-hero text-ink-primary">
                 {title}
               </h1>
-
-              <div className="mt-[14px] flex flex-col gap-sm text-[14px] sm:flex-row sm:flex-wrap sm:items-center sm:gap-[18px] sm:text-[15px]">
+              <div className="flex items-center gap-lg">
                 {display.rating ? (
-                  <span className="inline-flex items-center gap-[5px] font-semibold text-ink-primary">
-                    <StarFillIcon size={15} />
+                  <span className="ltr-run inline-flex items-center gap-[5px] text-[15px] font-semibold text-ink-primary">
+                    <StarFillIcon size={16} />
                     {display.rating}
                   </span>
                 ) : null}
-                <span className="text-ink-secondary">{display.when}</span>
-                <span className="text-ink-secondary">{display.venue}</span>
+                <button
+                  type="button"
+                  onClick={() => void handleSave()}
+                  className="inline-flex items-center gap-sm text-[14px] text-ink-primary hover:text-ink-brand"
+                >
+                  <HeartGlyphIcon size={18} filled={isSaved} />
+                  <span className="max-sm:hidden">
+                    {isSaved
+                      ? t("detail.removeFromFavourites")
+                      : t("detail.addToFavourites")}
+                  </span>
+                </button>
               </div>
-            </FadeUp>
-
-            <div className="mt-xl flex flex-col gap-md sm:mt-[22px] sm:flex-row sm:flex-wrap sm:gap-row-gap">
-              <Button
-                variant="secondary"
-                className="h-[44px] w-full rounded-[20px] border px-lg sm:h-[40px] sm:w-auto"
-                icon={<HeartGlyphIcon size={16} filled={isSaved} />}
-                onClick={() => void handleSave()}
-              >
-                {isSaved ? t("detail.saved") : t("common:actions.save")}
-              </Button>
-              <Button
-                variant="secondary"
-                className="h-[44px] w-full rounded-[20px] border px-lg sm:h-[40px] sm:w-auto"
-                icon={<ArrowUpRightIcon size={16} />}
-                disabled
-                title={t("detail.shareUnavailable")}
-              >
-                {t("detail.share")}
-              </Button>
             </div>
           </header>
+
+          <div className="flex flex-col gap-lg">
+            <div className="flex flex-wrap items-center justify-between gap-md">
+              <p className="flex min-w-0 items-center gap-sm text-[14px] text-ink-secondary">
+                <MapPinIcon size={18} className="shrink-0 text-ink-brand" />
+                {venueFromApi || display.venue}
+              </p>
+              {mapsHref ? (
+                <a
+                  href={mapsHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[13px] font-semibold text-ink-brand hover:underline"
+                >
+                  {t("detail.openInMaps")}
+                </a>
+              ) : null}
+            </div>
+
+            {display.when ? (
+              <p className="ltr-run text-[14px] font-bold text-ink-primary">
+                {display.when}
+              </p>
+            ) : null}
+
+            <p className="max-w-[720px] text-pretty text-[15px] leading-[1.6] text-ink-body sm:text-[16px]">
+              {display.about}
+            </p>
+          </div>
+
+          {apiTicketTypes.length > 0 ? (
+            <section className="overflow-hidden rounded-[18px] border border-border-default bg-surface-default">
+              <div className="flex items-center justify-between gap-md border-b border-border-default px-lg py-md">
+                <h2 className="text-[15px] font-semibold text-ink-primary">
+                  {t("detail.ticketPrices")}
+                </h2>
+                {sessionOffer ? (
+                  <span className="ltr-run text-[13px] font-semibold text-brand-gradient-end">
+                    {sessionOffer}
+                  </span>
+                ) : null}
+              </div>
+              <ul className="max-h-[220px] overflow-y-auto">
+                {apiTicketTypes.map((tier) => (
+                  <li
+                    key={tier.id}
+                    className="flex items-center justify-between gap-md px-lg py-sm odd:bg-bg-warm/60"
+                  >
+                    <span className="text-[14px] text-ink-primary">
+                      {tier.name}
+                    </span>
+                    <span className="ltr-run text-[14px] font-semibold text-ink-brand">
+                      {formatMoneySar(tier.price)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : (
+            <p className="text-[16px] font-semibold text-ink-brand">
+              {t("detail.freeActivity")}
+            </p>
+          )}
+
+          <div className="flex flex-col gap-md sm:flex-row">
+            <Button
+              className="w-full sm:w-auto"
+              disabled={isPastEvent}
+              onClick={() => setBookingOpen(true)}
+            >
+              {isPastEvent ? t("detail.eventEnded") : primaryLabel}
+            </Button>
+          </div>
 
           <BookingModal
             open={bookingOpen}
@@ -794,161 +762,6 @@ export function EventDetailPage() {
             busy={createState.isLoading || payState.isLoading}
             onConfirm={(booking) => void confirmBooking(booking)}
           />
-
-          <StickyCtaCard
-            className="w-full min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1"
-            fromPrice={display.fromPrice}
-            note={t("detail.fixtureSalesClose")}
-            tiers={[]}
-            totals={orderTotals.lines}
-            total={orderTotals.total}
-            primaryLabel={isPastEvent ? t("detail.eventEnded") : primaryLabel}
-            primaryTo={primaryTo}
-            primaryDisabled={
-              isPastEvent ||
-              createState.isLoading ||
-              payState.isLoading ||
-              (apiTicketTypes.length > 0 &&
-                (seatingType === "assigned"
-                  ? assignedQuantity < 1
-                  : !selectedTicket || ticketQty < 1))
-            }
-            qtyInteractive={apiTicketTypes.length > 0}
-            onSelectTier={(selectedTier) => {
-              const match = apiTicketTypes.find(
-                (tier) => tier.id === selectedTier.id,
-              );
-              if (!match) return;
-              setSelectedTicketId(match.id);
-              sessionStorage.setItem("myticket.ticketId", String(match.id));
-              const nextQuantity = Math.min(
-                match.remaining ?? 6,
-                Math.max(1, ticketQuantities[match.id] ?? 0),
-              );
-              const nextQuantities = {
-                ...ticketQuantities,
-                [match.id]: nextQuantity,
-              };
-              setTicketQuantities(nextQuantities);
-              sessionStorage.setItem(
-                ticketQuantitiesStorageKey,
-                JSON.stringify(nextQuantities),
-              );
-              if (seatingType === "assigned") {
-                writeTicketSelection({
-                  eventId: resolvedId ? String(resolvedId) : undefined,
-                  slug: slugOrId || detailCard?.slug || listCard?.slug,
-                  sessionId: selectedSessionId,
-                  lines: apiTicketTypes.flatMap((tier) => {
-                    const quantity = nextQuantities[tier.id] ?? 0;
-                    if (quantity < 1) return [];
-                    return [
-                      {
-                        ticketId: tier.id,
-                        name: tier.name,
-                        quantity,
-                        price: tier.price,
-                      },
-                    ];
-                  }),
-                });
-              }
-            }}
-            onChangeQty={(selectedTier, qty) => {
-              const match = apiTicketTypes.find(
-                (tier) => tier.id === selectedTier.id,
-              );
-              if (!match) return;
-              setSelectedTicketId(match.id);
-              sessionStorage.setItem("myticket.ticketId", String(match.id));
-              const nextQty = Math.max(0, Math.min(match.remaining ?? 6, qty));
-              const nextQuantities = {
-                ...ticketQuantities,
-                [match.id]: nextQty,
-              };
-              setTicketQuantities(nextQuantities);
-              sessionStorage.setItem(
-                ticketQuantitiesStorageKey,
-                JSON.stringify(nextQuantities),
-              );
-              if (seatingType === "assigned") {
-                writeTicketSelection({
-                  eventId: resolvedId ? String(resolvedId) : undefined,
-                  slug: slugOrId || detailCard?.slug || listCard?.slug,
-                  sessionId: selectedSessionId,
-                  lines: apiTicketTypes.flatMap((tier) => {
-                    const quantity = nextQuantities[tier.id] ?? 0;
-                    if (quantity < 1) return [];
-                    return [
-                      {
-                        ticketId: tier.id,
-                        name: tier.name,
-                        quantity,
-                        price: tier.price,
-                      },
-                    ];
-                  }),
-                });
-              }
-            }}
-            onPrimaryClick={() => handlePrimaryClick()}
-            footerNote={t("detail.fixtureFooterNote")}
-          />
-
-          <article className="min-w-0 lg:col-start-1 lg:row-start-2">
-            <div className="sticky top-[var(--spacing-header)] z-10 mt-sm bg-bg-page pt-sm sm:mt-[34px]">
-              <DetailSectionTabs
-                aria-label={t("detail.sectionsAria")}
-                className="gap-xl sm:gap-[26px]"
-              >
-                {TABS.map((item) => (
-                  <DetailSectionTab
-                    key={item}
-                    active={tab === item}
-                    onClick={() => jumpTo(item)}
-                    className="flex min-h-[44px] items-end sm:min-h-0"
-                  >
-                    {t(TAB_LABEL_KEYS[item])}
-                  </DetailSectionTab>
-                ))}
-              </DetailSectionTabs>
-            </div>
-
-            <section
-              id="about"
-              className="scroll-mt-[calc(var(--spacing-header)+72px)]"
-            >
-              <p className="mt-2xl max-w-[720px] text-pretty text-[15px] leading-[1.6] text-ink-body sm:mt-[28px] sm:text-[16px]">
-                {display.about}
-              </p>
-            </section>
-
-            <section
-              id="venue"
-              className="scroll-mt-[calc(var(--spacing-header)+72px)] mt-3xl sm:mt-[44px]"
-            >
-              <h2 className="text-balance text-heading-h2-section text-ink-primary">
-                {t("detail.venue")}
-              </h2>
-              {/* No embedded map — the address and a link out, nothing more. */}
-              <div className="mt-[18px] flex flex-col items-start gap-md rounded-[18px] border border-border-default bg-surface-default px-lg py-md sm:flex-row sm:items-center sm:justify-between sm:px-3xl">
-                <p className="flex min-w-0 items-center gap-sm text-[13px] text-pretty text-ink-secondary sm:text-[14px]">
-                  <MapPinIcon size={18} className="shrink-0 text-ink-brand" />
-                  {venueFromApi || display.venue}
-                </p>
-                {mapsHref ? (
-                  <a
-                    href={mapsHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-[44px] shrink-0 items-center justify-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand sm:h-[36px]"
-                  >
-                    {t("detail.openInMaps")}
-                  </a>
-                ) : null}
-              </div>
-            </section>
-          </article>
         </div>
       </PageSection>
 

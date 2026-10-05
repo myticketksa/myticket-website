@@ -398,7 +398,13 @@
     "seatDuplicate": "Two tickets cannot take the same seat",
     "stepWhen": "When",
     "stepWho": "Tickets",
-    "stepPay": "Payment"
+    "stepPay": "Payment",
+    "percentOff": "{{value}}% off",
+    "amountOff": "SAR {{value}} off",
+    "ticketPrices": "Ticket prices",
+    "freeActivity": "Free entry",
+    "addToFavourites": "Add to favourites",
+    "removeFromFavourites": "Remove from favourites"
   },
   "search": {
     "title": "Search",
