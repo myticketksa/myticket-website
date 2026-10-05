@@ -458,16 +458,23 @@ export function EventDetailPage() {
       clearHoldSession();
       setBookingOpen(false);
 
-      // Card and Apple Pay are not settled here — the API answers with a
-      // hosted payment page to send the buyer to. Jumping straight to the
-      // confirmation screen showed a "you're going" page for an unpaid order.
+      // Card and Apple Pay are not settled here — the API answers with a hosted
+      // payment page. Open it the way the original does, in a window beside the
+      // booking, and watch the order until it clears.
       const redirectUrl =
         typeof paid?.redirectUrl === "string"
           ? paid.redirectUrl
           : typeof (paid as { redirect_url?: unknown })?.redirect_url === "string"
-            ? ((paid as { redirect_url: string }).redirect_url)
+            ? (paid as { redirect_url: string }).redirect_url
             : undefined;
+
       if (redirectUrl) {
+        // Full-page redirect, not a popup. Popups get blocked, behave badly on
+        // phones, and tell you nothing when the buyer closes them — the
+        // original polled a window handle and lost the result whenever that
+        // went wrong. Remember the order, hand the page over, and decide the
+        // outcome from the order itself when we get control back.
+        sessionStorage.setItem("myticket.payingOrderId", String(orderId));
         window.location.assign(redirectUrl);
         return;
       }
@@ -506,6 +513,7 @@ export function EventDetailPage() {
   const primaryLabel = isFreeEntry
     ? t("detail.claimFreeTicket")
     : t("detail.bookNow");
+
 
 
 

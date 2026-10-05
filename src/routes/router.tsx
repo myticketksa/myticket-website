@@ -1,3 +1,4 @@
+import { PaymentReturnPage } from "@/pages/checkout/PaymentReturnPage";
 import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import {
   MainLayout,
@@ -88,6 +89,10 @@ export const router = createBrowserRouter([
           { path: "/talents/:slug", element: <TalentDetailPage /> },
           { path: "/experiences", element: <ExperiencesPage /> },
           { path: "/experiences/:slug", element: <ExperienceDetailPage /> },
+          {
+            path: "/payment-return",
+            element: <PaymentReturnPage />,
+          },
           { path: "/order-confirmation", element: <OrderConfirmationPage /> },
           {
             path: "/for-vendors",

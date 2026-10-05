@@ -199,5 +199,15 @@
     "pendingSubtitle": "Payment hasn't completed yet. Your tickets are issued as soon as it clears.",
     "settlingTitle": "Confirming your payment",
     "settlingBody": "Don't close this page. Your tickets appear as soon as it clears."
+  },
+  "payment": {
+    "unknownTitle": "We couldn't match that payment",
+    "unknownBody": "Nothing was lost — your orders are on your tickets page.",
+    "goToTickets": "Go to my tickets",
+    "slowTitle": "Payment is taking longer than usual",
+    "slowBody": "You haven't been charged twice. The order is saved on your tickets page and you can finish paying there.",
+    "refusedTitle": "Payment didn't go through",
+    "refusedBody": "Nothing was charged. Your order is saved, so you can try again.",
+    "tryAgain": "Try again"
   }
 }

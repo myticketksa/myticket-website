@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
@@ -170,16 +170,15 @@ export function OrderConfirmationPage() {
    * state, and if it never clears we send the buyer to their tickets rather
    * than congratulating them.
    */
-  const [waitedOut, setWaitedOut] = useState(false);
-  useEffect(() => {
-    if (!paymentPending) return;
-    const timer = window.setTimeout(() => setWaitedOut(true), 20000);
-    return () => window.clearTimeout(timer);
-  }, [paymentPending]);
 
+  // A pending order belongs on the payment-return handler, which owns the
+  // waiting, the timeout and the refused case. This page only ever shows a
+  // purchase that actually completed.
   useEffect(() => {
-    if (paymentPending && waitedOut) navigate("/my-tickets", { replace: true });
-  }, [navigate, paymentPending, waitedOut]);
+    if (paymentPending && orderId) {
+      navigate(`/payment-return?orderId=${orderId}`, { replace: true });
+    }
+  }, [navigate, orderId, paymentPending]);
 
   if (paymentPending) {
     return (
