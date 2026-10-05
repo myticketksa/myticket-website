@@ -60,7 +60,6 @@ import {
   StickyCtaCard,
 } from "@/pages/_guest";
 import {
-  EventVenueMap,
   googleMapsQueryUrl,
   googleMapsUrl,
   parseEventCoordinates,
@@ -931,54 +930,22 @@ export function EventDetailPage() {
               <h2 className="text-balance text-heading-h2-section text-ink-primary">
                 {t("detail.venue")}
               </h2>
-              <div className="mt-[18px] overflow-hidden rounded-[18px] border border-border-default bg-surface-default">
-                <div className="relative h-[200px] w-full overflow-hidden bg-bg-skeleton sm:h-[260px]">
-                  {coordinates ? (
-                    <EventVenueMap
-                      key={`${coordinates.latitude},${coordinates.longitude}`}
-                      latitude={coordinates.latitude}
-                      longitude={coordinates.longitude}
-                      ariaLabel={t("detail.mapAlt", { venue: display.venue })}
-                    />
-                  ) : (
-                    <div className="flex size-full flex-col items-center justify-center gap-sm px-lg text-center">
-                      <span className="flex size-[44px] items-center justify-center rounded-pill bg-bg-tint-brand text-ink-brand">
-                        <MapPinIcon size={20} />
-                      </span>
-                      <p className="text-[14.5px] font-bold text-ink-primary">
-                        {t(
-                          venueFromApi
-                            ? "detail.noMapTitle"
-                            : "detail.noLocationTitle",
-                        )}
-                      </p>
-                      <p className="max-w-[320px] text-[12.5px] leading-[1.5] text-ink-secondary">
-                        {t(
-                          venueFromApi
-                            ? "detail.noMapBody"
-                            : "detail.noLocationBody",
-                        )}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                {(venueFromApi || mapsHref) && (
-                  <div className="flex flex-col items-stretch gap-md px-lg py-md sm:flex-row sm:items-center sm:justify-between sm:gap-lg sm:px-3xl">
-                    <p className="min-w-0 text-[13px] text-pretty text-ink-secondary sm:text-[14px]">
-                      {venueFromApi}
-                    </p>
-                    {mapsHref ? (
-                      <a
-                        href={mapsHref}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex h-[44px] shrink-0 items-center justify-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand sm:h-[36px]"
-                      >
-                        {t("detail.openInMaps")}
-                      </a>
-                    ) : null}
-                  </div>
-                )}
+              {/* No embedded map — the address and a link out, nothing more. */}
+              <div className="mt-[18px] flex flex-col items-start gap-md rounded-[18px] border border-border-default bg-surface-default px-lg py-md sm:flex-row sm:items-center sm:justify-between sm:px-3xl">
+                <p className="flex min-w-0 items-center gap-sm text-[13px] text-pretty text-ink-secondary sm:text-[14px]">
+                  <MapPinIcon size={18} className="shrink-0 text-ink-brand" />
+                  {venueFromApi || display.venue}
+                </p>
+                {mapsHref ? (
+                  <a
+                    href={mapsHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-[44px] shrink-0 items-center justify-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand sm:h-[36px]"
+                  >
+                    {t("detail.openInMaps")}
+                  </a>
+                ) : null}
               </div>
             </section>
           </article>
