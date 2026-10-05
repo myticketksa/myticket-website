@@ -388,7 +388,9 @@
     "ticketTypeFor": "نوع التذكرة {{n}}",
     "seatLabel": "المقعد {{seat}}",
     "nameRequired": "اكتب اسماً لكل تذكرة",
-    "addAtLeastOne": "أضف تذكرة واحدة على الأقل"
+    "addAtLeastOne": "أضف تذكرة واحدة على الأقل",
+    "payNow": "ادفع {{total}}",
+    "pickShowtime": "اختر موعد العرض"
   },
   "search": {
     "title": "بحث",

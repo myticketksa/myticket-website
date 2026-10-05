@@ -385,7 +385,9 @@
     "ticketTypeFor": "Ticket type for ticket {{n}}",
     "seatLabel": "Seat {{seat}}",
     "nameRequired": "Give every ticket a name",
-    "addAtLeastOne": "Add at least one ticket"
+    "addAtLeastOne": "Add at least one ticket",
+    "payNow": "Pay {{total}}",
+    "pickShowtime": "Choose a showtime"
   },
   "search": {
     "title": "Search",

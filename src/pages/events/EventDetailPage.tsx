@@ -10,8 +10,7 @@ import {
   useGetEventDetailsQuery,
   useGetEventsQuery,
 } from "@/app/api/eventsApi";
-import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { selectAuthUser } from "@/features/auth/authSlice";
+import { useAppDispatch } from "@/app/hooks";
 import { toastPushed } from "@/features/ui/uiSlice";
 import { apiErrorMessage } from "@/lib/api/unwrap";
 import { useRequireAuth } from "@/lib/auth/useRequireAuth";
@@ -29,7 +28,6 @@ import {
 import {
   clearHoldSession,
   startPurchaseForEvent,
-  writeFreeSeatingSession,
   writeTicketSelection,
   type TicketSelectionLine,
 } from "@/lib/purchase/holdSession";
@@ -128,11 +126,10 @@ function collectGalleryImages(
 
 /** Event detail — Figma `207:4797` continuous article + scroll-spy tabs. */
 export function EventDetailPage() {
-  const { t } = useTranslation(["catalog", "common"]);
+  const { t } = useTranslation(["catalog", "common", "checkout"]);
   const { slug } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const user = useAppSelector(selectAuthUser);
   const { requireAuth } = useRequireAuth();
   const [createOrder, createState] = useCreateOrderMutation();
   const [payOrder, payState] = usePayOrderMutation();
@@ -357,7 +354,7 @@ export function EventDetailPage() {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
-  const [, promoState] = useApplyPromoCodeMutation();
+  const [applyPromo, promoState] = useApplyPromoCodeMutation();
 
   const bookingTypeOptions = useMemo(
     () =>
@@ -563,9 +560,31 @@ export function EventDetailPage() {
 
 
 
-  async function claimFreeTicket(): Promise<boolean> {
-    if (!resolvedId || !selectedTicket) {
-      dispatch(toastPushed("error", t("detail.claimFailed")));
+
+  /**
+   * Free-seating purchase, start to finish, without leaving the page.
+   *
+   * The order endpoint takes the whole booking in one call — showtime, items,
+   * attendee names, promo — so splitting it across pages only invented
+   * intermediate state, which is where the wrong-event and stale-hold bugs came
+   * from. A hall with assigned seats still needs its own step, because seats
+   * must be held on a timer.
+   */
+  async function payFromPanel(): Promise<boolean> {
+    if (!resolvedId) {
+      dispatch(toastPushed("error", t("detail.pickTicketType")));
+      return false;
+    }
+    if (bookingTickets.length === 0) {
+      dispatch(toastPushed("error", t("detail.addAtLeastOne")));
+      return false;
+    }
+    if (bookingTickets.some((ticket) => !ticket.name.trim())) {
+      dispatch(toastPushed("error", t("detail.nameRequired")));
+      return false;
+    }
+    if (!Number.isInteger(selectedSessionId)) {
+      dispatch(toastPushed("error", t("detail.pickShowtime")));
       return false;
     }
 
@@ -575,18 +594,26 @@ export function EventDetailPage() {
     });
     if (!allowed) return false;
 
+    const byType = new Map<number, number>();
+    for (const ticket of bookingTickets) {
+      byType.set(ticket.ticketTypeId, (byType.get(ticket.ticketTypeId) ?? 0) + 1);
+    }
+    const items = [...byType].map(([ticketId, quantity]) => ({
+      ticketId,
+      quantity,
+    }));
+
     try {
-      const quantity = Math.max(1, ticketQty);
-      const buyerName = user?.name?.trim() || "Guest";
       const created = await createOrder({
         eventId: resolvedId,
         body: {
-          ticketId: selectedTicket.id,
-          quantity,
-          items: [{ ticketId: selectedTicket.id, quantity }],
-          beneficiaries: Array.from({ length: quantity }, (_, index) => ({
+          sessionId: selectedSessionId,
+          ticketId: items[0]!.ticketId,
+          quantity: bookingTickets.length,
+          items,
+          beneficiaries: bookingTickets.map((ticket, index) => ({
             quantity_id: index + 1,
-            name: buyerName,
+            name: ticket.name.trim(),
           })),
         },
       }).unwrap();
@@ -597,14 +624,28 @@ export function EventDetailPage() {
         return false;
       }
 
-      try {
-        await payOrder({ orderId, brand: "WALLET" }).unwrap();
-      } catch {
-        // Free orders may already be complete after create — still confirm.
+      const code = promoCode.trim();
+      if (code) {
+        try {
+          await applyPromo({ orderId, promoCode: code }).unwrap();
+        } catch (error) {
+          dispatch(
+            toastPushed(
+              "error",
+              apiErrorMessage(error, t("checkout:checkout.promoFailed")),
+            ),
+          );
+        }
       }
+
+      await payOrder({
+        orderId,
+        brand: paymentMethod === "wallet" ? "WALLET" : "CREDIT",
+      }).unwrap();
 
       sessionStorage.setItem("myticket.lastOrderId", String(orderId));
       sessionStorage.removeItem("myticket.pendingOrderId");
+      clearHoldSession();
       navigate(`/order-confirmation?orderId=${orderId}`);
       return false;
     } catch (error) {
@@ -615,29 +656,6 @@ export function EventDetailPage() {
     }
   }
 
-  function prepareFreeSeatingCheckout(): boolean {
-    if (!resolvedId || !selectedTicket) {
-      dispatch(toastPushed("error", t("detail.pickTicketType")));
-      return false;
-    }
-    if (ticketQty < 1) {
-      dispatch(toastPushed("error", t("detail.pickTicketType")));
-      return false;
-    }
-    writeFreeSeatingSession({
-      eventId: String(resolvedId),
-      ticketId: selectedTicket.id,
-      quantity: ticketQty,
-      unitPrice: selectedTicket.price,
-      slug: slugOrId || detailCard?.slug || listCard?.slug,
-      label: selectedTicket.name,
-      sessionId: selectedSessionId,
-    });
-    sessionStorage.setItem("myticket.ticketId", String(selectedTicket.id));
-    sessionStorage.setItem("myticket.eventId", String(resolvedId));
-    if (slugOrId) sessionStorage.setItem("myticket.eventSlug", slugOrId);
-    return true;
-  }
 
   /**
    * The original modal applies the code against the open order. We have no
@@ -651,13 +669,14 @@ export function EventDetailPage() {
     setPromoApplied(true);
   }
 
+  const panelBusy = createState.isLoading || payState.isLoading;
   const primaryLabel =
     seatingType === "free"
-      ? isFreeEvent || (selectedTicket?.price ?? 0) <= 0
-        ? createState.isLoading || payState.isLoading
-          ? t("detail.claiming")
-          : t("detail.claimFreeTicket")
-        : t("detail.continueCheckout")
+      ? panelBusy
+        ? t("detail.claiming")
+        : orderTotals.orderTotal <= 0
+          ? t("detail.claimFreeTicket")
+          : t("detail.payNow", { total: orderTotals.total })
       : t("detail.chooseSeats");
 
   const primaryTo =
@@ -670,14 +689,10 @@ export function EventDetailPage() {
       : `/events/${slug ?? slugify(title)}/seats`;
 
   async function handlePrimaryClick(): Promise<boolean> {
+    // Free seating completes here. Assigned seating still goes to the seat map,
+    // because those seats have to be held on a timer before they are paid for.
     if (seatingType === "free") {
-      if (isFreeEvent || (selectedTicket?.price ?? 0) <= 0) {
-        if (ticketQty > 1) {
-          return prepareFreeSeatingCheckout();
-        }
-        return claimFreeTicket();
-      }
-      return prepareFreeSeatingCheckout();
+      return payFromPanel();
     }
     if (assignedQuantity < 1) {
       dispatch(toastPushed("error", t("detail.pickTicketType")));
