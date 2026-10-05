@@ -395,7 +395,10 @@
     "seatFor": "Seat for ticket {{n}}",
     "noSeats": "No seats available",
     "seatRequired": "Choose a seat for every ticket",
-    "seatDuplicate": "Two tickets cannot take the same seat"
+    "seatDuplicate": "Two tickets cannot take the same seat",
+    "stepWhen": "When",
+    "stepWho": "Tickets",
+    "stepPay": "Payment"
   },
   "search": {
     "title": "Search",

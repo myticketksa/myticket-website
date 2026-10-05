@@ -24,7 +24,8 @@
     "confirm": "Confirm",
     "remove": "Remove",
     "edit": "Edit",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "next": "Next"
   },
   "states": {
     "loading": "Loading…",

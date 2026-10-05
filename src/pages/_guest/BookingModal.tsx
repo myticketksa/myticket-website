@@ -101,6 +101,7 @@ export function BookingModal({
   const [promoCode, setPromoCode] = useState("");
   const [method, setMethod] = useState<BookingPaymentMethod>("card");
   const [error, setError] = useState("");
+  const [step, setStep] = useState(0);
 
   // Reopening starts clean; a half-filled booking from last time is worse than
   // an empty one.
@@ -111,6 +112,7 @@ export function BookingModal({
     setLines([]);
     setPromoCode("");
     setError("");
+    setStep(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -142,20 +144,56 @@ export function BookingModal({
   const canAdd = Boolean(sessionId) && lines.length < ceiling;
   const canRemove = lines.length > 0;
 
+  const STEPS = [
+    t("detail.stepWhen"),
+    t("detail.stepWho"),
+    t("detail.stepPay"),
+  ];
+
+  /** Each step is checked on its own, in the order the original validates. */
+  function validate(index: number): string {
+    if (index === 0) {
+      if (!typeId) return t("detail.pickTicketType");
+      if (!sessionId) return t("detail.pickShowtime");
+      return "";
+    }
+    if (index === 1) {
+      if (lines.length === 0) return t("detail.addAtLeastOne");
+      if (lines.some((line) => !line.name.trim()))
+        return t("detail.nameRequired");
+      if (assignedSeating) {
+        if (lines.some((line) => line.seatId == null))
+          return t("detail.seatRequired");
+        const seen = new Set(lines.map((line) => line.seatId));
+        if (seen.size !== lines.length) return t("detail.seatDuplicate");
+      }
+      return "";
+    }
+    return "";
+  }
+
+  function next() {
+    const message = validate(step);
+    if (message) return setError(message);
+    setError("");
+    setStep((current) => Math.min(STEPS.length - 1, current + 1));
+  }
+
+  function back() {
+    setError("");
+    setStep((current) => Math.max(0, current - 1));
+  }
+
   function submit() {
-    if (!typeId) return setError(t("detail.pickTicketType"));
-    if (!sessionId) return setError(t("detail.pickShowtime"));
-    if (lines.length === 0) return setError(t("detail.addAtLeastOne"));
-    if (lines.some((line) => !line.name.trim()))
-      return setError(t("detail.nameRequired"));
-    if (assignedSeating) {
-      if (lines.some((line) => line.seatId == null))
-        return setError(t("detail.seatRequired"));
-      const seen = new Set(lines.map((line) => line.seatId));
-      if (seen.size !== lines.length) return setError(t("detail.seatDuplicate"));
+    for (let index = 0; index < STEPS.length; index += 1) {
+      const message = validate(index);
+      if (message) {
+        setStep(index);
+        return setError(message);
+      }
     }
     setError("");
-    onConfirm({ typeId, sessionId, lines, promoCode: promoCode.trim(), method });
+    onConfirm({ typeId: typeId!, sessionId: sessionId!, lines, promoCode: promoCode.trim(), method });
   }
 
   return (
@@ -178,7 +216,30 @@ export function BookingModal({
             </DialogPrimitive.Close>
           </div>
 
-          {selectableTypes.length > 1 && (
+          <ol className="mb-lg flex items-center gap-[6px]">
+            {STEPS.map((label, index) => (
+              <li key={label} className="flex flex-1 flex-col gap-[6px]">
+                <span
+                  className={cn(
+                    "h-[3px] rounded-full",
+                    index <= step ? "bg-ink-brand-mid" : "bg-border-default",
+                  )}
+                />
+                <span
+                  className={cn(
+                    "text-[12px]",
+                    index === step
+                      ? "font-semibold text-ink-primary"
+                      : "text-ink-muted",
+                  )}
+                >
+                  {label}
+                </span>
+              </li>
+            ))}
+          </ol>
+
+          {step === 0 && selectableTypes.length > 1 && (
             <fieldset className="mb-lg flex flex-col gap-xs">
               <legend className="mb-xs text-[13px] font-semibold text-ink-primary">
                 {t("detail.reservationType")}
@@ -213,6 +274,7 @@ export function BookingModal({
             </fieldset>
           )}
 
+          {step === 0 && (
           <label className="mb-lg flex flex-col gap-xs">
             <span className="text-[13px] font-semibold text-ink-primary">
               {t("detail.bookingDate")}
@@ -240,7 +302,9 @@ export function BookingModal({
               })}
             </select>
           </label>
+          )}
 
+          {step === 1 && (
           <div className="mb-lg flex items-center justify-between gap-md">
             <span className="text-[14px] font-semibold text-ink-primary">
               {t("detail.ticketsNumber")}
@@ -276,7 +340,9 @@ export function BookingModal({
             </div>
           </div>
 
-          {lines.map((line, index) => {
+          )}
+
+          {step === 1 && lines.map((line, index) => {
             const takenByOthers = new Set(
               lines.filter((_, i) => i !== index).map((other) => other.seatId),
             );
@@ -339,6 +405,7 @@ export function BookingModal({
             );
           })}
 
+          {step === 2 && (
           <div className="mb-lg mt-sm flex items-center gap-xs">
             <TextInput
               value={promoCode}
@@ -348,8 +415,9 @@ export function BookingModal({
               className="bg-surface-default"
             />
           </div>
+          )}
 
-          {lines.length > 0 && (
+          {step === 2 && lines.length > 0 && (
             <div className="mb-lg flex flex-col gap-[6px] border-t border-border-default pt-md">
               <Row
                 label={t("checkout:checkout.originalAmount")}
@@ -375,6 +443,7 @@ export function BookingModal({
             </div>
           )}
 
+          {step === 2 && (
           <fieldset className="mb-lg flex flex-col gap-xs">
             <legend className="mb-xs text-[13px] font-semibold text-ink-primary">
               {t("checkout:checkout.paymentMethod")}
@@ -408,16 +477,32 @@ export function BookingModal({
               ))}
             </div>
           </fieldset>
+          )}
 
           {error && (
             <p className="mb-sm text-center text-[13px] text-state-danger">{error}</p>
           )}
 
-          <Button onClick={submit} disabled={busy} className="w-full">
-            {busy ? t("detail.claiming") : t("detail.payNow", {
-              total: formatMoneySar(Math.max(0, subtotal - offerDiscount)),
-            })}
-          </Button>
+          <div className="flex items-center gap-sm">
+            {step > 0 && (
+              <Button variant="secondary" onClick={back} className="flex-1">
+                {t("common:actions.back")}
+              </Button>
+            )}
+            {step < STEPS.length - 1 ? (
+              <Button onClick={next} className="flex-1">
+                {t("common:actions.next")}
+              </Button>
+            ) : (
+              <Button onClick={submit} disabled={busy} className="flex-1">
+                {busy
+                  ? t("detail.claiming")
+                  : t("detail.payNow", {
+                      total: formatMoneySar(Math.max(0, subtotal - offerDiscount)),
+                    })}
+              </Button>
+            )}
+          </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

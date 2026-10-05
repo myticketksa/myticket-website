@@ -297,11 +297,6 @@ export function EventDetailPage() {
   const seatingType = resolveSeatingType(
     eventSource ?? resolveEventFromList(apiEvents, slugOrId),
   );
-  const isFreeEvent = Boolean(
-    detailCard?.isFree ??
-    (listCard && "isFree" in listCard ? listCard.isFree : undefined) ??
-    (eventSource?.isFree === true || eventSource?.is_free === true),
-  );
   /**
    * Showtime for this purchase. Every order must name one — the API rejects a
    * body without `sessionId` and answers `session_required`.
@@ -635,16 +630,11 @@ export function EventDetailPage() {
         : orderTotals.orderTotal <= 0
           ? t("detail.claimFreeTicket")
           : t("detail.payNow", { total: orderTotals.total })
-      : t("detail.chooseSeats");
+      : t("detail.bookNow");
 
-  const primaryTo =
-    seatingType === "free"
-      ? isFreeEvent || (selectedTicket?.price ?? 0) <= 0
-        ? ticketQty > 1
-          ? "/checkout"
-          : undefined
-        : "/checkout"
-      : `/events/${slug ?? slugify(title)}/seats`;
+  // The button only opens the booking dialog. It used to route to a seat map
+  // and to a separate checkout page; neither is part of the flow any more.
+  const primaryTo = undefined;
 
   async function handlePrimaryClick(): Promise<boolean> {
     // Free seating completes here. Assigned seating still goes to the seat map,

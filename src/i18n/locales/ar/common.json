@@ -24,7 +24,8 @@
     "confirm": "تأكيد",
     "remove": "إزالة",
     "edit": "تعديل",
-    "viewAll": "عرض الكل"
+    "viewAll": "عرض الكل",
+    "next": "التالي"
   },
   "states": {
     "loading": "جاري التحميل…",
