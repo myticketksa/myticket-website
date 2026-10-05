@@ -36,7 +36,10 @@ export const ordersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Order', 'Ticket'],
     }),
-    payOrder: build.mutation<ApiRecord, { orderId: number; brand: 'CREDIT' | 'WALLET' }>({
+    payOrder: build.mutation<
+      ApiRecord,
+      { orderId: number; brand: 'CREDIT' | 'WALLET'; returnUrl?: string }
+    >({
       query: (body) => ({
         url: '/tickets/orders/pay',
         method: 'POST',

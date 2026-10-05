@@ -453,6 +453,10 @@ export function EventDetailPage() {
       const paid = await payOrder({
         orderId,
         brand: booking.method === "wallet" ? "WALLET" : "CREDIT",
+        // Land the buyer on the handler that reads the outcome, rather than
+        // wherever the gateway's default points. The server only honours hosts
+        // on its own allow-list, so this cannot be pointed anywhere else.
+        returnUrl: `${window.location.origin}/payment-return?orderId=${orderId}`,
       }).unwrap();
 
       sessionStorage.setItem("myticket.lastOrderId", String(orderId));
