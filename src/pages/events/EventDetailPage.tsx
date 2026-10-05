@@ -25,6 +25,7 @@ import {
   resolveSeatingType,
 } from "@/lib/api/mappers/events";
 import {
+  startPurchaseForEvent,
   writeFreeSeatingSession,
   writeTicketSelection,
   type TicketSelectionLine,
@@ -319,6 +320,11 @@ export function EventDetailPage() {
       ),
     [apiEvents, eventSource, selectedSessionId, slugOrId],
   );
+  // Landing on a different event abandons any half-finished purchase.
+  useEffect(() => {
+    startPurchaseForEvent(resolvedId ?? slugOrId);
+  }, [resolvedId, slugOrId]);
+
   const ticketQuantitiesStorageKey = `myticket.ticketQuantities.${resolvedId ?? slugOrId}`;
 
   useEffect(() => {

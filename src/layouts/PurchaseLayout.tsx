@@ -12,6 +12,11 @@ import { Logo } from "@/components/navigation";
 import { PageFade } from "@/components/motion";
 import { Countdown } from "@/components/data-display";
 import { cn } from "@/lib/cn";
+import { useGetEventsQuery } from "@/app/api/eventsApi";
+import {
+  mapApiEventToCard,
+  resolveEventFromList,
+} from "@/lib/api/mappers/events";
 import {
   clearHoldSession,
   formatHoldCountdown,
@@ -189,7 +194,7 @@ export interface PurchaseLayoutProps {
   header?: ReactNode;
 }
 
-const EVENT_SLUG = "winter-nights-live-at-king-abdullah-park";
+
 
 function useHoldCountdown(enabled: boolean) {
   const [remainingMs, setRemainingMs] = useState(() =>
@@ -231,11 +236,27 @@ function useHoldCountdown(enabled: boolean) {
 export function PurchaseLayout({ header }: PurchaseLayoutProps) {
   const { t } = useTranslation("checkout");
   const { pathname } = useLocation();
-  const { slug = EVENT_SLUG } = useParams();
+  const { slug } = useParams();
   const hold = readHoldSession();
   const isFreeSeating = hold?.seatingType === "free";
-  const eventSlug = hold?.slug || slug || EVENT_SLUG;
+  // No placeholder slug — an unknown event shows no title rather than someone
+  // else's.
+  const eventSlug = hold?.slug || slug || "";
   const isSeats = pathname.includes("/seats");
+
+  /**
+   * The event being bought. This header used to hardcode one event's name, so
+   * the seat map and the checkout both announced "Winter Nights" whatever you
+   * had actually chosen.
+   */
+  const { data: eventsResult } = useGetEventsQuery();
+  const headerEvent = (() => {
+    const raw = resolveEventFromList(eventsResult?.items, eventSlug);
+    if (!raw) return undefined;
+    const card = mapApiEventToCard(raw);
+    const meta = [card.date, card.venue].filter(Boolean).join(" · ");
+    return card.title ? { title: card.title, meta } : undefined;
+  })();
   const isCheckout = pathname === "/checkout";
   const lastOrderId =
     typeof sessionStorage !== "undefined"
@@ -280,14 +301,7 @@ export function PurchaseLayout({ header }: PurchaseLayoutProps) {
       ]}
       holdTime={showTimer ? formatHoldCountdown(remainingMs) : undefined}
       holdUrgent={remainingMs > 0 && remainingMs < 60_000}
-      event={
-        isSeats
-          ? {
-              title: "Winter Nights: Live at King Abdullah Park",
-              meta: "Thu 8 Oct 2026 · 20:00 · King Abdullah Park, Riyadh",
-            }
-          : undefined
-      }
+      event={isSeats ? headerEvent : undefined}
       showLogo={!isSeats}
     />
   );

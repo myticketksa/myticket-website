@@ -163,6 +163,40 @@ export function clearHoldSession() {
   sessionStorage.removeItem(HOLD_STORAGE_KEY);
 }
 
+/** Every scratch key a purchase writes, all of them global to the tab. */
+const PURCHASE_SCRATCH_KEYS = [
+  HOLD_STORAGE_KEY,
+  TICKET_SELECTION_KEY,
+  "myticket.ticketQty",
+  "myticket.ticketId",
+  "myticket.sessionId",
+  "myticket.pendingOrderId",
+  "myticket.checkoutEventId",
+] as const;
+
+const ACTIVE_EVENT_KEY = "myticket.activePurchaseEvent";
+
+/**
+ * Drop a half-finished purchase when the buyer moves to a different event.
+ *
+ * These keys are global to the tab, so without this a quantity of six and a
+ * running ten-minute hold followed you from one event to the next — QA saw a
+ * seat map demand "exactly 6" seats carried over from somewhere else, with a
+ * Continue button that could never enable.
+ */
+export function startPurchaseForEvent(eventKey: string | number | undefined) {
+  if (eventKey == null || eventKey === "") return;
+  const key = String(eventKey);
+  const previous = sessionStorage.getItem(ACTIVE_EVENT_KEY);
+  if (previous === key) return;
+  if (previous != null) {
+    for (const scratch of PURCHASE_SCRATCH_KEYS) {
+      sessionStorage.removeItem(scratch);
+    }
+  }
+  sessionStorage.setItem(ACTIVE_EVENT_KEY, key);
+}
+
 export function holdRemainingMs(
   session: HoldSession | null | undefined,
   now = Date.now(),

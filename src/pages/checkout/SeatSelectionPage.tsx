@@ -32,6 +32,7 @@ import {
 import { apiErrorMessage } from "@/lib/api/unwrap";
 import {
   readTicketSelection,
+  startPurchaseForEvent,
   writeFreeSeatingSession,
   writeHoldSession,
   type TicketSelectionLine,
@@ -318,6 +319,11 @@ export function SeatSelectionPage() {
       (/^\d+$/.test(slug ?? "") ? slug : undefined),
     [apiEvents, slug],
   );
+
+  // A direct link to a seat map must not inherit another event's quantity.
+  useEffect(() => {
+    startPurchaseForEvent(resolvedEventId ?? slug);
+  }, [resolvedEventId, slug]);
 
   useEffect(() => {
     const stored = readTicketSelection();
