@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
 import { Button } from "@/components/ui";
 import { PageSection } from "@/layouts";
+import { PAYING_ORDER_KEY } from "@/lib/purchase/useResumePayment";
 
 /**
  * Where the payment gateway drops the buyer back.
@@ -27,7 +28,7 @@ function readOrderId(params: URLSearchParams): number | undefined {
   const fromUrl = Number(params.get("orderId") ?? params.get("order_id") ?? "");
   if (Number.isInteger(fromUrl) && fromUrl > 0) return fromUrl;
   const remembered = Number(
-    sessionStorage.getItem("myticket.payingOrderId") ?? "",
+    sessionStorage.getItem(PAYING_ORDER_KEY) ?? "",
   );
   return Number.isInteger(remembered) && remembered > 0 ? remembered : undefined;
 }
@@ -53,7 +54,7 @@ export function PaymentReturnPage() {
 
   useEffect(() => {
     if (settling) return;
-    sessionStorage.removeItem("myticket.payingOrderId");
+    sessionStorage.removeItem(PAYING_ORDER_KEY);
     if (paid) navigate(`/order-confirmation?orderId=${orderId}`, { replace: true });
   }, [navigate, orderId, paid, settling]);
 

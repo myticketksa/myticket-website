@@ -4,6 +4,7 @@ import { PageFade } from "@/components/motion";
 import { useAppSelector } from "@/app/hooks";
 import { selectIsAuthenticated } from "@/features/auth/authSlice";
 import { useHeaderAccount } from "@/lib/auth/accountChip";
+import { useResumePayment } from "@/lib/purchase/useResumePayment";
 
 /**
  * Pattern A — MainLayout.
@@ -67,6 +68,8 @@ function resolveNav(
 }
 
 export function MainLayout() {
+  // A payment left in flight is picked up wherever the gateway drops the buyer.
+  useResumePayment();
   const { pathname, search } = useLocation();
   const nav = resolveNav(pathname, search);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);

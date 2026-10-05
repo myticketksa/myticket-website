@@ -26,6 +26,7 @@ import {
   resolveDefaultSessionId,
   resolveSeatingType,
 } from "@/lib/api/mappers/events";
+import { PAYING_ORDER_KEY } from "@/lib/purchase/useResumePayment";
 import {
   clearHoldSession,
   startPurchaseForEvent,
@@ -474,7 +475,7 @@ export function EventDetailPage() {
         // original polled a window handle and lost the result whenever that
         // went wrong. Remember the order, hand the page over, and decide the
         // outcome from the order itself when we get control back.
-        sessionStorage.setItem("myticket.payingOrderId", String(orderId));
+        sessionStorage.setItem(PAYING_ORDER_KEY, String(orderId));
         window.location.assign(redirectUrl);
         return;
       }
