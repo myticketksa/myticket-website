@@ -622,14 +622,10 @@ export function EventDetailPage() {
 
 
 
-  const panelBusy = createState.isLoading || payState.isLoading;
+  // This button only opens the dialog — paying happens on its last step.
   const primaryLabel =
-    seatingType === "free"
-      ? panelBusy
-        ? t("detail.claiming")
-        : orderTotals.orderTotal <= 0
-          ? t("detail.claimFreeTicket")
-          : t("detail.payNow", { total: orderTotals.total })
+    orderTotals.orderTotal <= 0 && seatingType === "free"
+      ? t("detail.claimFreeTicket")
       : t("detail.bookNow");
 
   // The button only opens the booking dialog. It used to route to a seat map
