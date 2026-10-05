@@ -113,10 +113,6 @@ export function EventDetailPage() {
   const [payOrder, payState] = usePayOrderMutation();
   const slugOrId = slug ?? "";
   const { isFavourite, toggleFavourite } = useEventFavorites();
-  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
-  const [ticketQuantities, setTicketQuantities] = useState<
-    Record<number, number>
-  >({});
 
   const { data: eventsResult } = useGetEventsQuery();
   const apiEvents = eventsResult?.items;
@@ -311,7 +307,6 @@ export function EventDetailPage() {
     startPurchaseForEvent(resolvedId ?? slugOrId);
   }, [resolvedId, slugOrId]);
 
-  const ticketQuantitiesStorageKey = `myticket.ticketQuantities.${resolvedId ?? slugOrId}`;
 
   /**
    * One entry per ticket being bought, each with its attendee name — the shape
@@ -369,60 +364,7 @@ export function EventDetailPage() {
 
 
 
-  useEffect(() => {
-    if (apiTicketTypes.length === 0) return;
-    let storedQuantities: Record<string, unknown> = {};
-    try {
-      const parsed: unknown = JSON.parse(
-        sessionStorage.getItem(ticketQuantitiesStorageKey) ?? "{}",
-      );
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        storedQuantities = parsed as Record<string, unknown>;
-      }
-    } catch {
-      storedQuantities = {};
-    }
 
-    const hasStoredQuantities = Object.keys(storedQuantities).length > 0;
-    const nextQuantities = Object.fromEntries(
-      apiTicketTypes.map((tier) => {
-        const rawQuantity = Number(storedQuantities[String(tier.id)] ?? 0);
-        const quantity = Number.isFinite(rawQuantity)
-          ? Math.max(0, Math.floor(rawQuantity))
-          : 0;
-        return [tier.id, Math.min(6, tier.remaining ?? 6, quantity)];
-      }),
-    );
-    const firstAvailable =
-      apiTicketTypes.find((tier) => tier.remaining !== 0) ?? apiTicketTypes[0]!;
-    if (!hasStoredQuantities && firstAvailable.remaining !== 0) {
-      nextQuantities[firstAvailable.id] = 1;
-    }
-
-    const storedActiveId = Number(sessionStorage.getItem("myticket.ticketId"));
-    const nextId = apiTicketTypes.some(
-      (tier) =>
-        tier.id === storedActiveId &&
-        tier.remaining !== 0 &&
-        nextQuantities[tier.id] > 0,
-    )
-      ? storedActiveId
-      : (apiTicketTypes.find(
-          (tier) => tier.remaining !== 0 && nextQuantities[tier.id] > 0,
-        )?.id ?? firstAvailable.id);
-
-    setTicketQuantities(nextQuantities);
-    setSelectedTicketId(nextId);
-    sessionStorage.setItem("myticket.ticketId", String(nextId));
-    sessionStorage.setItem(
-      ticketQuantitiesStorageKey,
-      JSON.stringify(nextQuantities),
-    );
-  }, [apiTicketTypes, ticketQuantitiesStorageKey]);
-
-  const selectedTicket =
-    apiTicketTypes.find((tier) => tier.id === selectedTicketId) ??
-    apiTicketTypes[0];
   const eventStartRaw =
     apiDetail?.startTime ??
     apiDetail?.starts_at ??
@@ -437,58 +379,6 @@ export function EventDetailPage() {
   );
 
 
-  /**
-   * Order summary for both seating types, derived from the live selection.
-   *
-   * This used to be computed for free seating only; assigned-seating events
-   * fell through to a hardcoded fixture, which is why the panel read
-   * "2 tickets = 360" at quantity 1 and froze the total at 435. Summing every
-   * selected tier also makes a mixed General + VIP basket add up.
-   */
-  const orderTotals = useMemo(() => {
-    const lines = apiTicketTypes.flatMap((tier) => {
-      const quantity = ticketQuantities[tier.id] ?? 0;
-      if (quantity < 1) return [];
-      return [{ tier, quantity, amount: tier.price * quantity }];
-    });
-    const count = lines.reduce((sum, line) => sum + line.quantity, 0);
-    const subtotal = lines.reduce((sum, line) => sum + line.amount, 0);
-    const free = subtotal <= 0;
-
-    // The server charges exactly the sum of the discounted item prices, with
-    // VAT already inside them (`isVatIncluded`). The 5% service fee and 15% VAT
-    // this used to add on top were invented by the frontend — a two-ticket
-    // order priced 259 was being shown to the buyer as 313.
-    const total = subtotal;
-
-    const summaryLines =
-      lines.length > 1
-        ? lines.map((line) => ({
-            label: `${line.tier.name} × ${line.quantity}`,
-            value: free
-              ? t("common:currency.free")
-              : formatMoneySar(line.amount),
-          }))
-        : [
-            {
-              label: t("detail.ticketCount", { count }),
-              value: free ? t("common:currency.free") : formatMoneySar(subtotal),
-            },
-          ];
-
-    return {
-      count,
-      lines: [
-        ...summaryLines,
-        ...(free
-          ? []
-          : [{ label: t("detail.vatIncluded"), value: "" }]),
-      ],
-      total: free ? t("common:currency.free") : formatMoneySar(total),
-      unitPrice: selectedTicket?.price ?? 0,
-      orderTotal: total,
-    };
-  }, [apiTicketTypes, selectedTicket, t, ticketQuantities]);
 
 
 
@@ -559,7 +449,7 @@ export function EventDetailPage() {
         }
       }
 
-      await payOrder({
+      const paid = await payOrder({
         orderId,
         brand: booking.method === "wallet" ? "WALLET" : "CREDIT",
       }).unwrap();
@@ -567,6 +457,21 @@ export function EventDetailPage() {
       sessionStorage.setItem("myticket.lastOrderId", String(orderId));
       clearHoldSession();
       setBookingOpen(false);
+
+      // Card and Apple Pay are not settled here — the API answers with a
+      // hosted payment page to send the buyer to. Jumping straight to the
+      // confirmation screen showed a "you're going" page for an unpaid order.
+      const redirectUrl =
+        typeof paid?.redirectUrl === "string"
+          ? paid.redirectUrl
+          : typeof (paid as { redirect_url?: unknown })?.redirect_url === "string"
+            ? ((paid as { redirect_url: string }).redirect_url)
+            : undefined;
+      if (redirectUrl) {
+        window.location.assign(redirectUrl);
+        return;
+      }
+
       navigate(`/order-confirmation?orderId=${orderId}`);
     } catch (error) {
       dispatch(
@@ -588,10 +493,19 @@ export function EventDetailPage() {
       : t("detail.amountOff", { value: active.discountValue });
   })();
 
-  const primaryLabel =
-    orderTotals.orderTotal <= 0 && seatingType === "free"
-      ? t("detail.claimFreeTicket")
-      : t("detail.bookNow");
+  /**
+   * Free entry, not free seating. `seatingType: "free"` only means seats are
+   * unreserved — Comedy Nights is "free" seating at 120 a ticket. Entry is free
+   * when the event says so, or when every ticket on sale costs nothing.
+   */
+  const isFreeEntry =
+    eventSource?.isFree === true ||
+    (apiTicketTypes.length > 0 &&
+      apiTicketTypes.every((tier) => tier.price <= 0));
+
+  const primaryLabel = isFreeEntry
+    ? t("detail.claimFreeTicket")
+    : t("detail.bookNow");
 
 
 
@@ -735,11 +649,11 @@ export function EventDetailPage() {
                 ))}
               </ul>
             </section>
-          ) : (
+          ) : isFreeEntry ? (
             <p className="text-[16px] font-semibold text-ink-brand">
               {t("detail.freeActivity")}
             </p>
-          )}
+          ) : null}
 
           <div className="flex flex-col gap-md sm:flex-row">
             <Button

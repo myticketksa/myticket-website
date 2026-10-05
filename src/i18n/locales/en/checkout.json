@@ -194,6 +194,8 @@
       "offline": "Your tickets live in My tickets — offline QR codes work even without signal.",
       "share": "Share a ticket with a friend and they get their own QR the moment they accept.",
       "remind": "We'll remind you an hour before doors with the gate and bag-policy notes."
-    }
+    },
+    "pendingTitle": "Awaiting payment",
+    "pendingSubtitle": "Payment hasn't completed yet. Your tickets are issued as soon as it clears."
   }
 }

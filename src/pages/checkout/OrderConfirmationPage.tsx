@@ -12,6 +12,7 @@ import {
 } from "@/components/data-display";
 import { Button } from "@/components/ui";
 import { PageSection } from "@/layouts";
+import { WarningIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
 import { useAppSelector } from "@/app/hooks";
@@ -163,17 +164,32 @@ export function OrderConfirmationPage() {
   return (
     <PageSection padTop={52} padBottom={96}>
       <div className="mx-auto flex max-w-[1040px] flex-col items-center text-center">
-        <div className="flex size-[64px] items-center justify-center rounded-[32px] bg-state-success-tint">
-          <img src={checkIcon} alt="" className="size-[26px]" />
+        {/* An unpaid order is not a celebration. Pending payment gets its own
+            heading instead of the success tick and "You're going". */}
+        <div
+          className={cn(
+            "flex size-[64px] items-center justify-center rounded-[32px]",
+            paymentPending ? "bg-bg-tint-brand" : "bg-state-success-tint",
+          )}
+        >
+          {paymentPending ? (
+            <WarningIcon size={26} className="text-ink-brand" />
+          ) : (
+            <img src={checkIcon} alt="" className="size-[26px]" />
+          )}
         </div>
         <h1 className="mt-[18px] text-[32px] leading-[1.02] font-extrabold tracking-[-1.75px] text-ink-primary sm:text-[40px] lg:text-[50px]">
-          {t("confirmation.title")}
+          {paymentPending
+            ? t("confirmation.pendingTitle")
+            : t("confirmation.title")}
         </h1>
         <p className="mt-[10px] max-w-[640px] text-[17px] leading-[1.5] text-ink-secondary">
-          {t("confirmation.subtitle", {
-            count: view.ticketCount,
-            email: view.email,
-          })}
+          {paymentPending
+            ? t("confirmation.pendingSubtitle")
+            : t("confirmation.subtitle", {
+                count: view.ticketCount,
+                email: view.email,
+              })}
         </p>
         {view.apiNote ? (
           <p className="mt-[8px] max-w-[560px] text-[13px] text-ink-muted">
@@ -181,7 +197,7 @@ export function OrderConfirmationPage() {
           </p>
         ) : null}
         {paymentPending ? (
-          <p className="mt-[8px] max-w-[560px] text-[13px] font-semibold text-state-warning">
+          <p className="mt-[8px] max-w-[560px] text-[13px] font-semibold text-ink-brand">
             {t("confirmation.paymentPendingNote")}
           </p>
         ) : null}
