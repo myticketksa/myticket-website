@@ -98,3 +98,21 @@
     max-width: 100%;
   }
 }
+
+/* Latin or numeric runs inside Arabic text.
+ *
+ * Without isolation the bidirectional algorithm reorders them against the
+ * surrounding paragraph: the phone number read "4747 347 59 966+", ".summer"
+ * put its full stop first, ratings showed "(0) 0.0" and times ran backwards.
+ * Isolating the run keeps it internally left-to-right while it still sits in
+ * the right place in the Arabic line. */
+@utility ltr-run {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Same, for a run that must keep the paragraph's own direction but not leak
+ * its reordering outward — numbers beside Arabic words. */
+@utility bidi-isolate {
+  unicode-bidi: isolate;
+}

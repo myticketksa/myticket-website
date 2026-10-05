@@ -59,7 +59,8 @@ export function formatAuthWalletBalance(
   if (/sar|ر\.?\s*س|⃁/i.test(raw) && stripped) return stripped
   const num = Number(value)
   if (!Number.isFinite(num)) return stripped || raw
-  return num.toLocaleString(undefined, {
+  return num.toLocaleString('en-SA', {
+    numberingSystem: 'latn',
     minimumFractionDigits: num % 1 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
   })

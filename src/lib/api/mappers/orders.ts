@@ -92,7 +92,8 @@ function money(value: unknown, fallback = '0.00'): string {
   // Keep two-decimal checkout style when formatMoneySar drops cents on whole numbers.
   const n = Number(value)
   if (Number.isFinite(n)) {
-    return n.toLocaleString(undefined, {
+    return n.toLocaleString('en-SA', {
+      numberingSystem: 'latn',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })

@@ -130,8 +130,10 @@ export function TalentCard({
         <div className="mt-[10px] flex w-full items-start justify-between">
           <span className="flex items-start gap-xs text-ink-primary">
             <StarFillIcon className="mt-[1px] shrink-0" />
-            <span className="text-[13px] font-bold">{rating}</span>
-            <span className="text-[13px] font-medium text-ink-muted">({reviews})</span>
+            <span className="ltr-run text-[13px] font-bold">{rating}</span>
+            <span className="ltr-run text-[13px] font-medium text-ink-muted">
+              ({reviews})
+            </span>
           </span>
           <span className="text-[13px] font-medium text-ink-secondary">{city}</span>
         </div>
@@ -206,7 +208,7 @@ export function TalentDirectoryCard({
 
         <span className="absolute top-md end-md flex items-center gap-[6px] rounded-[13px] bg-ink-primary/72 px-[10px] py-[5px] text-bg-page">
           <StarFillIcon size={12} className="shrink-0" />
-          <span className="text-[12px] font-semibold">{rating}</span>
+          <span className="ltr-run text-[12px] font-semibold">{rating}</span>
         </span>
       </div>
 

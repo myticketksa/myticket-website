@@ -98,15 +98,15 @@ export function CheckoutPage() {
     if (isFreeSeating) {
       const qty = Math.max(1, Number(hold?.quantity ?? 1));
       return Array.from({ length: qty }, (_, index) => ({
-        label: `General admission ${index + 1}`,
-        meta: "Free seating",
+        label: t("checkout.generalAdmission", { index: index + 1 }),
+        meta: t("checkout.freeSeating"),
         row: "GA",
-        category: "Free seating",
+        category: t("checkout.freeSeating"),
         price: Number(hold?.subtotal ? hold.subtotal / qty : 0),
       }));
     }
     return FALLBACK_SEATS;
-  }, [hold, isFreeSeating]);
+  }, [hold, isFreeSeating, t]);
   const selectedCount = Math.max(1, seats.length);
   const subtotal =
     hold?.subtotal ??

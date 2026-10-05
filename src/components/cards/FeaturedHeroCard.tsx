@@ -175,7 +175,7 @@ export function FeaturedHeroCard({
         <div className="mt-[6px] flex items-center gap-xs text-ink-inverse">
           <p className="text-[13px] font-medium">{venue} ·</p>
           <StarFillIcon className="shrink-0" />
-          <span className="text-[13px] font-medium">{rating}</span>
+          <span className="ltr-run text-[13px] font-medium">{rating}</span>
         </div>
 
         <div className="mt-[14px] flex w-full items-center justify-between">

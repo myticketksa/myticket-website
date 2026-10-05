@@ -189,9 +189,11 @@ export function ExperienceCard({
           {rating && (
             <div className="mt-auto flex items-start gap-[4px] text-ink-primary">
               <StarFillIcon className="shrink-0" />
-              <span className="text-[13px] font-bold">{rating}</span>
+              <span className="ltr-run text-[13px] font-bold">{rating}</span>
               {reviews && (
-                <span className="text-[13px] font-medium text-ink-muted">({reviews})</span>
+                <span className="ltr-run text-[13px] font-medium text-ink-muted">
+                  ({reviews})
+                </span>
               )}
             </div>
           )}

@@ -89,7 +89,7 @@ export function SiteFooter({ size = "full", className }: SiteFooterProps) {
                 href={SITE_PHONE_HREF}
                 className="inline-flex min-h-[36px] items-center transition-colors duration-micro ease-micro hover:text-ink-brand-mid"
               >
-                {SITE_PHONE}
+                <span className="ltr-run">{SITE_PHONE}</span>
               </a>
               <a
                 href={SITE_EMAIL_HREF}

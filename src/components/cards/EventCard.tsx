@@ -199,7 +199,7 @@ export function EventCard({
           <StarFillIcon className="shrink-0 text-ink-primary" />
           <span
             className={cn(
-              'text-[13px] text-ink-primary',
+              'ltr-run text-[13px] text-ink-primary',
               isHome ? 'font-bold' : 'font-medium',
             )}
           >

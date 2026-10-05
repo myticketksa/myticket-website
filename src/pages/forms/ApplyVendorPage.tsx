@@ -2,6 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
+  isValidCommercialRegistration,
+  isValidEmail,
+  isValidSaudiPhone,
+} from "@/lib/validation/fieldFormats";
+import {
   Field,
   FileDropButton,
   Select,
@@ -153,7 +158,11 @@ export function ApplyVendorPage() {
   function validateStep(current: number): string | null {
     if (current === 0) {
       if (!draft.email.trim()) return t("forms:vendor.validation.email");
+      if (!isValidEmail(draft.email))
+        return t("forms:vendor.validation.emailFormat");
       if (!draft.phone.trim()) return t("forms:vendor.validation.phone");
+      if (!isValidSaudiPhone(draft.phone))
+        return t("forms:vendor.validation.phoneFormat");
       return null;
     }
     if (current === 1) {
@@ -173,6 +182,8 @@ export function ApplyVendorPage() {
     }
     if (current === 3) {
       if (!draft.crNumber.trim()) return t("forms:vendor.validation.cr");
+      if (!isValidCommercialRegistration(draft.crNumber))
+        return t("forms:vendor.validation.crFormat");
       if (!draft.logo) return t("forms:vendor.validation.logo");
       return null;
     }

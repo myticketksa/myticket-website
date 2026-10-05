@@ -56,7 +56,9 @@
       "profilePhoto": "Upload a profile photo",
       "portfolio": "Upload at least one portfolio image or video",
       "categories": "Select at least one performance category",
-      "terms": "Confirm the information before submitting"
+      "terms": "Confirm the information before submitting",
+      "emailFormat": "That email address is not valid",
+      "phoneFormat": "Enter a valid Saudi mobile number (05xxxxxxxx)"
     },
     "categories": {
       "singer": "Singer",
@@ -128,7 +130,10 @@
       "serviceDescription": "Enter a service description",
       "cr": "Enter the CR number",
       "logo": "Upload a business logo",
-      "terms": "Confirm the information before submitting"
+      "terms": "Confirm the information before submitting",
+      "emailFormat": "That email address is not valid",
+      "phoneFormat": "Enter a valid Saudi mobile number (05xxxxxxxx)",
+      "crFormat": "A commercial registration number is 10 digits"
     }
   },
   "organizer": {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { isValidEmail, isValidSaudiPhone } from "@/lib/validation/fieldFormats";
 import {
   ChipMultiSelect,
   Field,
@@ -181,7 +182,11 @@ export function ApplyTalentPage() {
   function validateStep(current: number): string | null {
     if (current === 0) {
       if (!draft.email.trim()) return t("forms:talent.validation.email");
+      if (!isValidEmail(draft.email))
+        return t("forms:talent.validation.emailFormat");
       if (!draft.phone.trim()) return t("forms:talent.validation.phone");
+      if (!isValidSaudiPhone(draft.phone))
+        return t("forms:talent.validation.phoneFormat");
       return null;
     }
     if (current === 1) {
