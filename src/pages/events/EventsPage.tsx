@@ -9,7 +9,6 @@ import { NumberedPagination } from "@/components/navigation";
 import {
   CatalogBody,
   CatalogPageHead,
-  CATALOG_EVENTS,
   EVENT_CATEGORY_CHIPS,
   FilterSidebar,
   type FilterSidebarState,
@@ -208,10 +207,8 @@ export function EventsPage() {
     if (eventsResult !== undefined) {
       return (apiEvents ?? []).map(mapApiEventToCard);
     }
-    return CATALOG_EVENTS.map((event) => ({
-      ...event,
-      slug: slugify(event.title),
-    }));
+    // No sample catalogue behind the API — an empty list stays empty.
+    return [];
   }, [apiEvents, eventsResult]);
 
   const filtered = useMemo(() => {

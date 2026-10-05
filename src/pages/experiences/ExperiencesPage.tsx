@@ -19,7 +19,6 @@ import {
 } from "@/lib/api/mappers/experiences";
 import { catalogLabel } from "@/lib/i18n/catalogLabels";
 import {
-  CATALOG_EXPERIENCES,
   CITY_FACETS,
   LinkedCard,
   PromoBand,
@@ -120,11 +119,8 @@ export function ExperiencesPage() {
     if (apiExperiences && apiExperiences.length > 0) {
       return apiExperiences.map(mapApiExperienceToCard);
     }
-    return CATALOG_EXPERIENCES.map((exp) => ({
-      ...exp,
-      slug: slugify(exp.title),
-      experienceType: "attraction",
-    })) as MappedExperience[];
+    // No sample catalogue behind the API — an empty list stays empty.
+    return [] as MappedExperience[];
   }, [apiExperiences]);
 
   const filtered = useMemo(() => {

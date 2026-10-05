@@ -101,7 +101,19 @@ export function resolveSeatingType(
   return raw === "free" ? "free" : "assigned";
 }
 
-export function listTicketTypes(event: ApiRecord | undefined): Array<{
+/**
+ * Ticket types priced and stocked for one showtime.
+ *
+ * Stock and discounts live on the session, never on the ticket type — the type
+ * itself reports `remaining: null`. Passing no `sessionId` used to sum every
+ * session together, which showed five dates' stock as if it were one date's
+ * (496 seats where the night actually had 97) and drove a bogus urgency badge.
+ * With no session given we fall back to the default one rather than the sum.
+ */
+export function listTicketTypes(
+  event: ApiRecord | undefined,
+  sessionId?: number,
+): Array<{
   id: number;
   name: string;
   price: number;
@@ -112,32 +124,20 @@ export function listTicketTypes(event: ApiRecord | undefined): Array<{
   if (!event) return [];
   const types = event.ticketTypes ?? event.ticket_types ?? event.tickets;
   if (!Array.isArray(types)) return [];
+
+  const sessions = listSessions(event);
+  const activeId = sessionId ?? resolveDefaultSessionId(event);
+  const active =
+    sessions.find((session) => session.id === activeId) ?? sessions[0];
+
   const remainingByType = new Map<number, number>();
-  const sessions = event.sessions;
-  if (Array.isArray(sessions)) {
-    for (const session of sessions) {
-      if (!session || typeof session !== "object") continue;
-      const sessionTickets = (session as ApiRecord).tickets;
-      if (!Array.isArray(sessionTickets)) continue;
-      for (const sessionTicket of sessionTickets) {
-        if (!sessionTicket || typeof sessionTicket !== "object") continue;
-        const ticket = sessionTicket as ApiRecord;
-        const ticketTypeId = Number(
-          ticket.ticketTypeId ?? ticket.ticket_type_id ?? ticket.ticketId,
-        );
-        const remaining = Number(ticket.remaining ?? ticket.available);
-        if (
-          Number.isInteger(ticketTypeId) &&
-          Number.isFinite(remaining) &&
-          remaining >= 0
-        ) {
-          remainingByType.set(
-            ticketTypeId,
-            (remainingByType.get(ticketTypeId) ?? 0) + remaining,
-          );
-        }
-      }
+  const priceByType = new Map<number, number>();
+  for (const ticket of active?.tickets ?? []) {
+    if (ticket.remaining != null) {
+      remainingByType.set(ticket.ticketTypeId, ticket.remaining);
     }
+    const effective = ticket.discountedPrice ?? ticket.price;
+    if (effective != null) priceByType.set(ticket.ticketTypeId, effective);
   }
 
   return types.flatMap((row) => {
@@ -145,7 +145,9 @@ export function listTicketTypes(event: ApiRecord | undefined): Array<{
     const record = row as ApiRecord;
     const idRaw = record.id ?? record.ticket_id ?? record.ticketId;
     if (idRaw == null || !/^\d+$/.test(String(idRaw))) return [];
-    const price = Number(record.price ?? record.amount ?? 0);
+    const listed = Number(record.price ?? record.amount ?? 0);
+    // Session pricing wins — the same tier costs 84 one night and 70 the next.
+    const price = priceByType.get(Number(idRaw)) ?? listed;
     return [
       {
         id: Number(idRaw),

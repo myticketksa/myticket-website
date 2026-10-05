@@ -30,7 +30,6 @@ import {
   type MappedExperience,
 } from '@/lib/api/mappers/experiences'
 import {
-  CATALOG_EXPERIENCES,
   DetailGallery,
   EXPERIENCE_DETAIL_GALLERY,
   EXPERIENCE_DETAIL_MAP,
@@ -61,10 +60,8 @@ export function ExperienceDetailPage() {
     if (apiExperiences && apiExperiences.length > 0) {
       return apiExperiences.map(mapApiExperienceToCard)
     }
-    return CATALOG_EXPERIENCES.map((e) => ({
-      ...e,
-      slug: slugify(e.title),
-    })) as MappedExperience[]
+    // No sample catalogue behind the API — an empty list stays empty.
+    return [] as MappedExperience[]
   }, [apiExperiences])
 
   const resolvedId = useMemo(

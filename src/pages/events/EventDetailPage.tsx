@@ -45,10 +45,9 @@ import {
 } from "@/components/navigation";
 import { Button } from "@/components/ui";
 import { PageSection } from "@/layouts";
+import { NotFoundPage } from "@/pages/system/NotFoundPage";
 import {
-  CATALOG_EVENTS,
   DetailGallery,
-  EVENT_DETAIL,
   EVENT_DETAIL_GALLERY,
   SimilarSection,
   slugify,
@@ -145,10 +144,8 @@ export function EventDetailPage() {
     if (apiEvents && apiEvents.length > 0) {
       return apiEvents.map(mapApiEventToCard);
     }
-    return CATALOG_EVENTS.map((event) => ({
-      ...event,
-      slug: slugify(event.title),
-    }));
+    // No sample catalogue behind the API — an empty list stays empty.
+    return [];
   }, [apiEvents]);
 
   const resolvedId = useMemo(
@@ -156,9 +153,14 @@ export function EventDetailPage() {
     [apiEvents, slugOrId],
   );
 
-  const { data: apiDetail } = useGetEventDetailsQuery(resolvedId!, {
+  const {
+    data: apiDetail,
+    isLoading: detailLoading,
+    isError: detailError,
+  } = useGetEventDetailsQuery(resolvedId!, {
     skip: !resolvedId,
   });
+  const { isLoading: eventsLoading } = useGetEventsQuery();
 
   const isSaved = isFavourite(resolvedId);
 
@@ -205,13 +207,13 @@ export function EventDetailPage() {
 
   const display = useMemo(
     () => ({
-      title: detailCard?.title ?? listCard?.title ?? EVENT_DETAIL.title,
+      title: detailCard?.title ?? listCard?.title ?? "",
       category:
-        detailCard?.category ?? listCard?.category ?? EVENT_DETAIL.category,
+        detailCard?.category ?? listCard?.category ?? "",
       flag:
         detailCard?.flag ??
         (listCard && "flag" in listCard ? listCard.flag : undefined) ??
-        EVENT_DETAIL.flag,
+        undefined,
       rating:
         detailCard?.rating && detailCard.rating !== "—"
           ? detailCard.rating
@@ -226,9 +228,9 @@ export function EventDetailPage() {
           "datetime",
         ]) ??
         listCard?.date ??
-        EVENT_DETAIL.when,
-      venue: detailCard?.venue || listCard?.venue || EVENT_DETAIL.venue,
-      fromPrice: detailCard?.price ?? listCard?.price ?? EVENT_DETAIL.fromPrice,
+        undefined,
+      venue: detailCard?.venue || listCard?.venue || "",
+      fromPrice: detailCard?.price ?? listCard?.price ?? "",
       about:
         pickDetailString(apiDetail, [
           "description",
@@ -296,11 +298,6 @@ export function EventDetailPage() {
     (listCard && "isFree" in listCard ? listCard.isFree : undefined) ??
     (eventSource?.isFree === true || eventSource?.is_free === true),
   );
-  const apiTicketTypes = useMemo(
-    () =>
-      listTicketTypes(eventSource ?? resolveEventFromList(apiEvents, slugOrId)),
-    [apiEvents, eventSource, slugOrId],
-  );
   /**
    * Showtime for this purchase. Every order must name one — the API rejects a
    * body without `sessionId` and answers `session_required`. Until a picker
@@ -312,6 +309,15 @@ export function EventDetailPage() {
         eventSource ?? resolveEventFromList(apiEvents, slugOrId),
       ),
     [apiEvents, eventSource, slugOrId],
+  );
+
+  const apiTicketTypes = useMemo(
+    () =>
+      listTicketTypes(
+        eventSource ?? resolveEventFromList(apiEvents, slugOrId),
+        selectedSessionId,
+      ),
+    [apiEvents, eventSource, selectedSessionId, slugOrId],
   );
   const ticketQuantitiesStorageKey = `myticket.ticketQuantities.${resolvedId ?? slugOrId}`;
 
@@ -438,35 +444,63 @@ export function EventDetailPage() {
     }));
   }, [apiTicketTypes, seatingType, t, ticketQuantities]);
 
-  const freeSeatingTotals = useMemo(() => {
-    if (seatingType !== "free" || !selectedTicket) return undefined;
-    const unit = selectedTicket.price;
-    const subtotal = unit * ticketQty;
-    const serviceFee = Math.round(subtotal * 0.05);
-    const vat = Math.round((subtotal + serviceFee) * 0.15);
+  /**
+   * Order summary for both seating types, derived from the live selection.
+   *
+   * This used to be computed for free seating only; assigned-seating events
+   * fell through to a hardcoded fixture, which is why the panel read
+   * "2 tickets = 360" at quantity 1 and froze the total at 435. Summing every
+   * selected tier also makes a mixed General + VIP basket add up.
+   */
+  const orderTotals = useMemo(() => {
+    const lines = apiTicketTypes.flatMap((tier) => {
+      const quantity = ticketQuantities[tier.id] ?? 0;
+      if (quantity < 1) return [];
+      return [{ tier, quantity, amount: tier.price * quantity }];
+    });
+    const count = lines.reduce((sum, line) => sum + line.quantity, 0);
+    const subtotal = lines.reduce((sum, line) => sum + line.amount, 0);
+    const free = subtotal <= 0;
+    const serviceFee = free ? 0 : Math.round(subtotal * 0.05);
+    const vat = free ? 0 : Math.round((subtotal + serviceFee) * 0.15);
     const total = subtotal + serviceFee + vat;
+
+    const summaryLines =
+      lines.length > 1
+        ? lines.map((line) => ({
+            label: `${line.tier.name} × ${line.quantity}`,
+            value: free
+              ? t("common:currency.free")
+              : formatMoneySar(line.amount),
+          }))
+        : [
+            {
+              label: t("detail.ticketCount", { count }),
+              value: free ? t("common:currency.free") : formatMoneySar(subtotal),
+            },
+          ];
+
     return {
+      count,
       lines: [
-        {
-          label: t("detail.ticketCount", { count: ticketQty }),
-          value:
-            unit <= 0 ? t("common:currency.free") : formatMoneySar(subtotal),
-        },
-        ...(unit > 0
-          ? [
+        ...summaryLines,
+        ...(free
+          ? []
+          : [
               {
                 label: t("detail.serviceFee"),
                 value: formatMoneySar(serviceFee),
               },
               { label: t("detail.vat"), value: formatMoneySar(vat) },
-            ]
-          : []),
+            ]),
       ],
-      total: unit <= 0 ? t("common:currency.free") : formatMoneySar(total),
-      unitPrice: unit,
+      total: free ? t("common:currency.free") : formatMoneySar(total),
+      unitPrice: selectedTicket?.price ?? 0,
       orderTotal: total,
     };
-  }, [seatingType, selectedTicket, t, ticketQty]);
+  }, [apiTicketTypes, selectedTicket, t, ticketQuantities]);
+
+
 
   async function claimFreeTicket(): Promise<boolean> {
     if (!resolvedId || !selectedTicket) {
@@ -626,6 +660,26 @@ export function EventDetailPage() {
     }, 700);
   };
 
+  const stillLoading = eventsLoading || detailLoading;
+  const eventMissing =
+    !stillLoading && !detailCard && !listCard && (detailError || !resolvedId);
+
+  // An unknown slug used to render the fixture event rather than failing. A URL
+  // that names no real event is a 404, the same as any other missing page.
+  if (eventMissing) return <NotFoundPage />;
+
+  if (stillLoading && !detailCard && !listCard) {
+    return (
+      <PageSection padTop={26} padBottom={64}>
+        <div
+          className="h-[420px] w-full animate-pulse rounded-xl bg-bg-skeleton"
+          role="status"
+          aria-label={t("common:states.loading")}
+        />
+      </PageSection>
+    );
+  }
+
   return (
     <>
       <PageSection padTop={26} padBottom={0}>
@@ -702,9 +756,9 @@ export function EventDetailPage() {
             className="w-full min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1"
             fromPrice={display.fromPrice}
             note={t("detail.fixtureSalesClose")}
-            tiers={apiDisplayTiers ?? EVENT_DETAIL.tiers}
-            totals={freeSeatingTotals?.lines ?? EVENT_DETAIL.totals}
-            total={freeSeatingTotals?.total ?? EVENT_DETAIL.total}
+            tiers={apiDisplayTiers ?? []}
+            totals={orderTotals.lines}
+            total={orderTotals.total}
             primaryLabel={isPastEvent ? t("detail.eventEnded") : primaryLabel}
             primaryTo={primaryTo}
             primaryDisabled={

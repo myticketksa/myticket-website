@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { cn } from '@/lib/cn'
+import { useEntranceFailsafe } from './useEntranceFailsafe'
 import { easeEnter, ENTRANCE_Y, motionTokens } from '@/lib/motion'
 
 export interface FadeUpProps {
@@ -31,6 +32,7 @@ export function FadeUp({
   scaleFrom,
 }: FadeUpProps) {
   const reduce = useReducedMotion()
+  const forced = useEntranceFailsafe(!reduce && inView)
   const hidden = reduce
     ? { opacity: 0 }
     : {
@@ -67,7 +69,10 @@ export function FadeUp({
       className={cn(className)}
       initial={hidden}
       whileInView={shown}
-      viewport={{ once: true, amount: 0.2 }}
+      // A fraction of a tall section can never come into view all at once, so
+      // the entrance would never fire and the content would stay hidden.
+      viewport={{ once: true, amount: 'some' }}
+      animate={forced ? shown : undefined}
       transition={transition}
     >
       {children}

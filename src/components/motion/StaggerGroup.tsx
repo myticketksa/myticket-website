@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { cn } from '@/lib/cn'
+import { useEntranceFailsafe } from './useEntranceFailsafe'
 import {
   easeEnter,
   ENTRANCE_Y_CARD,
@@ -35,6 +36,7 @@ export function StaggerGroup({
   distance,
 }: StaggerGroupProps) {
   const reduce = useReducedMotion()
+  const forced = useEntranceFailsafe(!reduce)
   const isMobile =
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
   const y = distance ?? (isMobile ? ENTRANCE_Y_MOBILE : ENTRANCE_Y_CARD)
@@ -51,7 +53,11 @@ export function StaggerGroup({
       className={cn(className)}
       initial="hidden"
       whileInView="show"
-      viewport={{ once: true, amount: 0.15 }}
+      // `amount` is a fraction of THIS element, not of the screen. A results
+      // grid is often several screens tall, so any fraction above a sliver can
+      // never be satisfied and the entrance never runs. Trigger on first pixel.
+      viewport={{ once: true, amount: 'some' }}
+      animate={forced ? 'show' : undefined}
       variants={{
         hidden: {},
         show: {

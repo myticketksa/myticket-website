@@ -45,7 +45,6 @@ import {
 import { useRequireAuth } from '@/lib/auth/useRequireAuth'
 import { useTalentFavorites } from '@/lib/favorites/useTalentFavorites'
 import {
-  CATALOG_TALENTS,
   LinkedCard,
   SimilarSection,
   slugify,
@@ -161,16 +160,8 @@ export function TalentDetailPage() {
     if (apiTalents && apiTalents.length > 0) {
       return apiTalents.map(mapApiTalentToCard)
     }
-    return CATALOG_TALENTS.map((t) => ({
-      ...t,
-      slug: slugify(t.name),
-      reviews: '',
-      city: '',
-      id: undefined as string | undefined,
-      biography: undefined as string | undefined,
-      isFollowing: false,
-      ownDiscovery: undefined as boolean | undefined,
-    }))
+    // No sample catalogue behind the API — an empty list stays empty.
+    return [];
   }, [apiTalents])
 
   const resolvedId = useMemo(

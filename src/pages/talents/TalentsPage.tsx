@@ -18,7 +18,6 @@ import { catalogLabel } from "@/lib/i18n/catalogLabels";
 import {
   CatalogBody,
   CatalogPageHead,
-  CATALOG_TALENTS,
   CITY_FACETS,
   FilterSidebar,
   LinkedCard,
@@ -139,12 +138,8 @@ export function TalentsPage() {
     if (apiTalents && apiTalents.length > 0) {
       return apiTalents.map(mapApiTalentToCard);
     }
-    return CATALOG_TALENTS.map((talent) => ({
-      ...talent,
-      slug: slugify(talent.name),
-      reviews: "",
-      city: "",
-    }));
+    // No sample catalogue behind the API — an empty list stays empty.
+    return [];
   }, [apiTalents]);
 
   const toggleCity = (label: string) => {
