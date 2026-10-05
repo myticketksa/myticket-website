@@ -210,7 +210,15 @@ function seatId(record: ApiRecord, row: string, number: number): string {
  * Map `GET /seats/event/{id}` payloads into row/column UI seats.
  * Returns `null` when the live seat list is empty.
  */
-export function mapApiSeatsToRows(payload: unknown): MappedSeatRow[] | null {
+/**
+ * @param sessionId Showtime to keep. Every seat row carries its own
+ * `sessionId`, and the endpoint returns them for the whole event, so without
+ * this a buyer could pick a seat belonging to a different date.
+ */
+export function mapApiSeatsToRows(
+  payload: unknown,
+  sessionId?: number,
+): MappedSeatRow[] | null {
   const root = unwrapData<unknown>(payload);
   const direct = Array.isArray(root)
     ? (root as ApiRecord[])
@@ -226,6 +234,14 @@ export function mapApiSeatsToRows(payload: unknown): MappedSeatRow[] | null {
             : (value as ApiRecord[]);
         }, [])
       : [];
+
+  const scoped =
+    sessionId == null
+      ? records
+      : records.filter((record) => {
+          const rowSession = Number(record.sessionId ?? record.session_id);
+          return !Number.isFinite(rowSession) || rowSession === sessionId;
+        });
   if (!records.length) return null;
 
   const flatten = (
@@ -259,7 +275,7 @@ export function mapApiSeatsToRows(payload: unknown): MappedSeatRow[] | null {
       if (nested) return flatten(nested, zone, row);
       return [{ ...record, zone: record.zone ?? zone, row: record.row ?? row }];
     });
-  const list = flatten(records);
+  const list = flatten(scoped);
 
   const grouped = new Map<string, MappedSeat[]>();
 

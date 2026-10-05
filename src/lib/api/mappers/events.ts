@@ -22,6 +22,9 @@ export type EventSession = {
   id: number;
   startsAt?: string;
   endsAt?: string;
+  /** "percentage" or "amount", as the app's offer type. */
+  discountType?: string;
+  discountValue?: number;
   tickets: Array<{
     ticketTypeId: number;
     price?: number;
@@ -58,10 +61,50 @@ export function listSessions(event: ApiRecord | undefined): EventSession[] {
         id,
         startsAt: stringOrUndefined(record.startsAt),
         endsAt: stringOrUndefined(record.endsAt),
+        discountType: stringOrUndefined(record.discountType),
+        discountValue: numberOrUndefined(record.discountValue),
         tickets,
       },
     ];
   });
+}
+
+/**
+ * Showtimes a buyer can still book, soonest first.
+ *
+ * The app drops any date that has already started and keeps today if its time
+ * has not passed yet; the web does the same so the two agree on what is on sale.
+ * If every session is in the past we return them all rather than an empty
+ * picker, so the page explains itself instead of looking broken.
+ */
+export function listBookableSessions(
+  event: ApiRecord | undefined,
+  now = Date.now(),
+): EventSession[] {
+  const sessions = listSessions(event);
+  if (sessions.length === 0) return [];
+  const byTime = [...sessions].sort(
+    (a, b) => sessionTime(a) - sessionTime(b),
+  );
+  const upcoming = byTime.filter((session) => {
+    const starts = sessionTime(session);
+    return !Number.isFinite(starts) || starts >= now;
+  });
+  return upcoming.length > 0 ? upcoming : byTime;
+}
+
+function sessionTime(session: EventSession): number {
+  const parsed = session.startsAt ? Date.parse(session.startsAt) : NaN;
+  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+}
+
+/** Total seats left for a showtime, across its ticket types. */
+export function sessionRemaining(session: EventSession): number | undefined {
+  const counts = session.tickets
+    .map((ticket) => ticket.remaining)
+    .filter((value): value is number => value != null);
+  if (counts.length === 0) return undefined;
+  return counts.reduce((sum, value) => sum + value, 0);
 }
 
 /**

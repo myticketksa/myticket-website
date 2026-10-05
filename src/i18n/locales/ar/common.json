@@ -76,7 +76,8 @@
     "freeTickets": "مجانية",
     "sarFallback": "—",
     "sarName": "ريال سعودي",
-    "from": "من"
+    "from": "من",
+    "minusAmount": "− {{amount}} ر.س"
   },
   "language": {
     "switchToArabic": "التبديل إلى العربية",

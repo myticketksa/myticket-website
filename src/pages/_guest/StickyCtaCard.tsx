@@ -57,6 +57,8 @@ export interface StickyCtaCardProps {
   footerNote?: string;
   /** Content rendered below the main ticket card (resale / assurances). */
   aside?: ReactNode;
+  /** Rendered above the ticket tiers — the app picks the date before the seat. */
+  beforeTiers?: ReactNode;
   children?: ReactNode;
   className?: string;
   /** Disable the primary button (e.g. while claiming). */
@@ -81,6 +83,7 @@ export function StickyCtaCard({
   secondaryTo,
   footerNote,
   aside,
+  beforeTiers,
   children,
   className,
   primaryDisabled = false,
@@ -126,6 +129,8 @@ export function StickyCtaCard({
             {note}
           </p>
         )}
+
+        {beforeTiers && <div className="mt-[18px]">{beforeTiers}</div>}
 
         {tiers && tiers.length > 0 && (
           <div className="mt-[18px] flex flex-col gap-row-gap">

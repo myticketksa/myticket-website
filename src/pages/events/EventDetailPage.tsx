@@ -17,6 +17,7 @@ import { useRequireAuth } from "@/lib/auth/useRequireAuth";
 import { useEventFavorites } from "@/lib/favorites/useEventFavorites";
 import { formatMoneySar, localizedString } from "@/lib/api/locale";
 import {
+  listBookableSessions,
   listTicketTypes,
   mapApiEventToCard,
   resolveEventFromList,
@@ -25,6 +26,7 @@ import {
   resolveSeatingType,
 } from "@/lib/api/mappers/events";
 import {
+  clearHoldSession,
   startPurchaseForEvent,
   writeFreeSeatingSession,
   writeTicketSelection,
@@ -49,6 +51,7 @@ import { PageSection } from "@/layouts";
 import { NotFoundPage } from "@/pages/system/NotFoundPage";
 import {
   DetailGallery,
+  SessionPicker,
   EVENT_DETAIL_GALLERY,
   SimilarSection,
   slugify,
@@ -301,16 +304,30 @@ export function EventDetailPage() {
   );
   /**
    * Showtime for this purchase. Every order must name one — the API rejects a
-   * body without `sessionId` and answers `session_required`. Until a picker
-   * exists, default to the next session that has not started yet.
+   * body without `sessionId` and answers `session_required`.
+   *
+   * Following the app's booking-date control: past dates are dropped, the next
+   * one is preselected, and changing it clears the ticket quantities the way the
+   * app clears the chosen seat.
    */
-  const selectedSessionId = useMemo(
+  const bookableSessions = useMemo(
+    () =>
+      listBookableSessions(eventSource ?? resolveEventFromList(apiEvents, slugOrId)),
+    [apiEvents, eventSource, slugOrId],
+  );
+  const defaultSessionId = useMemo(
     () =>
       resolveDefaultSessionId(
         eventSource ?? resolveEventFromList(apiEvents, slugOrId),
       ),
     [apiEvents, eventSource, slugOrId],
   );
+  const [chosenSessionId, setChosenSessionId] = useState<number | undefined>();
+  const selectedSessionId =
+    chosenSessionId != null &&
+    bookableSessions.some((session) => session.id === chosenSessionId)
+      ? chosenSessionId
+      : defaultSessionId;
 
   const apiTicketTypes = useMemo(
     () =>
@@ -326,6 +343,19 @@ export function EventDetailPage() {
   }, [resolvedId, slugOrId]);
 
   const ticketQuantitiesStorageKey = `myticket.ticketQuantities.${resolvedId ?? slugOrId}`;
+
+  /**
+   * Changing the showtime resets what was chosen under the old one — the app
+   * clears the seat the same way, because price and stock differ per date.
+   */
+  function handleSessionChange(sessionId: number) {
+    if (sessionId === selectedSessionId) return;
+    setChosenSessionId(sessionId);
+    setTicketQuantities({});
+    sessionStorage.removeItem(ticketQuantitiesStorageKey);
+    sessionStorage.setItem("myticket.sessionId", String(sessionId));
+    clearHoldSession();
+  }
 
   useEffect(() => {
     if (apiTicketTypes.length === 0) return;
@@ -762,6 +792,15 @@ export function EventDetailPage() {
             className="w-full min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1"
             fromPrice={display.fromPrice}
             note={t("detail.fixtureSalesClose")}
+            beforeTiers={
+              bookableSessions.length > 0 ? (
+                <SessionPicker
+                  sessions={bookableSessions}
+                  selectedId={selectedSessionId}
+                  onSelect={handleSessionChange}
+                />
+              ) : undefined
+            }
             tiers={apiDisplayTiers ?? []}
             totals={orderTotals.lines}
             total={orderTotals.total}

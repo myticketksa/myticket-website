@@ -31,6 +31,7 @@ import {
 } from "@/lib/api/mappers/seats";
 import { apiErrorMessage } from "@/lib/api/unwrap";
 import {
+  readSelectedSessionId,
   readTicketSelection,
   startPurchaseForEvent,
   writeFreeSeatingSession,
@@ -383,7 +384,13 @@ export function SeatSelectionPage() {
     skip: !resolvedEventId,
   });
 
-  const liveRows = useMemo(() => mapApiSeatsToRows(apiSeats ?? []), [apiSeats]);
+  // Seats are returned for the whole event, each tagged with its showtime, so
+  // scope them to the date the buyer chose.
+  const activeSessionId = readSelectedSessionId();
+  const liveRows = useMemo(
+    () => mapApiSeatsToRows(apiSeats ?? [], activeSessionId),
+    [activeSessionId, apiSeats],
+  );
   const usingLiveMap = Boolean(liveRows && liveRows.length > 0);
   const waitingForSeats =
     eventsLoading ||
