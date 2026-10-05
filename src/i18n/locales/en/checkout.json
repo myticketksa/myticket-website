@@ -132,7 +132,8 @@
     },
     "sessionMissing": "No showtime selected. Pick a date on the event page and try again.",
     "generalAdmission": "General admission {{index}}",
-    "freeSeating": "Free seating"
+    "freeSeating": "Free seating",
+    "nameRequired": "Give every ticket a name"
   },
   "confirmation": {
     "title": "You're going.",

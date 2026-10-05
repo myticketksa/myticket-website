@@ -132,7 +132,8 @@
     },
     "sessionMissing": "لم يتم اختيار موعد العرض. اختر الموعد من صفحة الفعالية ثم أعد المحاولة.",
     "generalAdmission": "دخول عام {{index}}",
-    "freeSeating": "جلوس حر"
+    "freeSeating": "جلوس حر",
+    "nameRequired": "اكتب اسماً لكل تذكرة"
   },
   "confirmation": {
     "title": "أنت ذاهب.",

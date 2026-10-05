@@ -47,6 +47,12 @@ export {
 } from './StickyCtaCard'
 export { SessionPicker, type SessionPickerProps } from './SessionPicker'
 export {
+  TicketBookingList,
+  MAX_TICKETS_PER_ORDER,
+  type BookingTicket,
+  type TicketTypeOption,
+} from './TicketBookingList'
+export {
   DetailOrganizerBand,
   type DetailOrganizerBandProps,
 } from './DetailOrganizerBand'

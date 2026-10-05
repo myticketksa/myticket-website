@@ -52,11 +52,12 @@ import { NotFoundPage } from "@/pages/system/NotFoundPage";
 import {
   DetailGallery,
   SessionPicker,
+  TicketBookingList,
+  type BookingTicket,
   EVENT_DETAIL_GALLERY,
   SimilarSection,
   slugify,
   StickyCtaCard,
-  type TicketTier,
 } from "@/pages/_guest";
 import {
   EventVenueMap,
@@ -345,12 +346,62 @@ export function EventDetailPage() {
   const ticketQuantitiesStorageKey = `myticket.ticketQuantities.${resolvedId ?? slugOrId}`;
 
   /**
+   * One entry per ticket being bought, each with its attendee name — the shape
+   * the app and the original website both use. `ticketQuantities` is derived
+   * from this so the existing totals and order payload keep working.
+   */
+  const [bookingTickets, setBookingTickets] = useState<BookingTicket[]>([]);
+
+  const bookingTypeOptions = useMemo(
+    () =>
+      apiTicketTypes.map((tier) => ({
+        id: tier.id,
+        name: tier.name,
+        price: tier.price,
+        remaining: tier.remaining,
+        disabled: tier.remaining === 0,
+      })),
+    [apiTicketTypes],
+  );
+
+  const seatsLeftForShowtime = useMemo(() => {
+    const counts = apiTicketTypes
+      .map((tier) => tier.remaining)
+      .filter((value): value is number => value != null);
+    return counts.length ? counts.reduce((sum, value) => sum + value, 0) : undefined;
+  }, [apiTicketTypes]);
+
+  function handleBookingChange(next: BookingTicket[]) {
+    setBookingTickets(next);
+    const quantities: Record<number, number> = {};
+    for (const ticket of next) {
+      quantities[ticket.ticketTypeId] =
+        (quantities[ticket.ticketTypeId] ?? 0) + 1;
+    }
+    setTicketQuantities(quantities);
+    sessionStorage.setItem(
+      ticketQuantitiesStorageKey,
+      JSON.stringify(quantities),
+    );
+    const first = next[0];
+    if (first) {
+      setSelectedTicketId(first.ticketTypeId);
+      sessionStorage.setItem("myticket.ticketId", String(first.ticketTypeId));
+    }
+    sessionStorage.setItem(
+      "myticket.attendeeNames",
+      JSON.stringify(next.map((ticket) => ticket.name)),
+    );
+  }
+
+  /**
    * Changing the showtime resets what was chosen under the old one — the app
    * clears the seat the same way, because price and stock differ per date.
    */
   function handleSessionChange(sessionId: number) {
     if (sessionId === selectedSessionId) return;
     setChosenSessionId(sessionId);
+    setBookingTickets([]);
     setTicketQuantities({});
     sessionStorage.removeItem(ticketQuantitiesStorageKey);
     sessionStorage.setItem("myticket.sessionId", String(sessionId));
@@ -446,39 +497,6 @@ export function EventDetailPage() {
     eventStart.getTime() <= Date.now(),
   );
 
-  const apiDisplayTiers: TicketTier[] | undefined = useMemo(() => {
-    if (apiTicketTypes.length === 0) return undefined;
-    return apiTicketTypes.map((tier) => ({
-      id: tier.id,
-      name: tier.name,
-      detail: [
-        tier.detail,
-        tier.isSpecialNeeds ? t("detail.specialNeedsTicket") : "",
-        seatingType === "free" && !tier.detail ? t("detail.freeSeating") : "",
-      ]
-        .filter(Boolean)
-        .join(" · "),
-      price:
-        tier.price <= 0
-          ? t("common:currency.free")
-          : formatMoneySar(tier.price),
-      left:
-        tier.remaining === 0
-          ? t("stickyCta.soldOut")
-          : tier.remaining != null
-            ? t("stickyCta.remaining", { count: tier.remaining })
-            : "",
-      maxLabel: t("stickyCta.maxPerOrder"),
-      disabled: tier.remaining === 0,
-      specialNeeds: tier.isSpecialNeeds,
-      minQty: 0,
-      maxQty: Math.min(6, tier.remaining ?? 6),
-      urgent:
-        tier.remaining != null && tier.remaining > 0 && tier.remaining <= 10,
-      selected: (ticketQuantities[tier.id] ?? 0) > 0,
-      qty: ticketQuantities[tier.id] ?? 0,
-    }));
-  }, [apiTicketTypes, seatingType, t, ticketQuantities]);
 
   /**
    * Order summary for both seating types, derived from the live selection.
@@ -793,15 +811,26 @@ export function EventDetailPage() {
             fromPrice={display.fromPrice}
             note={t("detail.fixtureSalesClose")}
             beforeTiers={
-              bookableSessions.length > 0 ? (
-                <SessionPicker
-                  sessions={bookableSessions}
-                  selectedId={selectedSessionId}
-                  onSelect={handleSessionChange}
-                />
-              ) : undefined
+              <>
+                {bookableSessions.length > 0 && (
+                  <SessionPicker
+                    sessions={bookableSessions}
+                    selectedId={selectedSessionId}
+                    onSelect={handleSessionChange}
+                  />
+                )}
+                {bookingTypeOptions.length > 0 && (
+                  <TicketBookingList
+                    className="mt-[18px]"
+                    tickets={bookingTickets}
+                    types={bookingTypeOptions}
+                    max={seatsLeftForShowtime}
+                    onChange={handleBookingChange}
+                  />
+                )}
+              </>
             }
-            tiers={apiDisplayTiers ?? []}
+            tiers={[]}
             totals={orderTotals.lines}
             total={orderTotals.total}
             primaryLabel={isPastEvent ? t("detail.eventEnded") : primaryLabel}

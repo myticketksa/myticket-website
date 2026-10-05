@@ -377,7 +377,18 @@
     "reviewHalaBody": "أجواء رائعة والحديقة العائلية كانت مريحة فعلاً. طوابير الطعام طالت حول الساعة ٢١:٠٠.",
     "reviewKhalidDate": "مراجعة ٢ مارس ٢٠٢٦",
     "reviewKhalidBody": "منطقة الذهب تستحق إن أردت الاقتراب، لكن احضر قبل ١٩:٠٠ وإلا ستكون خلف الحشد المبكر.",
-    "bookingDate": "يوم الحجز"
+    "bookingDate": "يوم الحجز",
+    "ticketsNumber": "عدد التذاكر",
+    "addTicket": "إضافة تذكرة",
+    "removeTicket": "حذف تذكرة",
+    "addTicketHint": "أضف تذكرة لبدء الحجز.",
+    "ticketNumber": "تذكرة {{n}}",
+    "attendeeName": "اسم الحاضر",
+    "attendeeNameFor": "اسم الحاضر للتذكرة {{n}}",
+    "ticketTypeFor": "نوع التذكرة {{n}}",
+    "seatLabel": "المقعد {{seat}}",
+    "nameRequired": "اكتب اسماً لكل تذكرة",
+    "addAtLeastOne": "أضف تذكرة واحدة على الأقل"
   },
   "search": {
     "title": "بحث",

@@ -160,9 +160,22 @@ export function CheckoutPage() {
   const [marketing, setMarketing] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
-  const [guestNames, setGuestNames] = useState<string[]>(() =>
-    Array.from({ length: selectedCount }, () => ""),
-  );
+  // Names are entered on the event page now, next to each ticket, the way the
+  // app and the original site do it. Checkout carries them forward so they can
+  // be corrected, rather than asking for them for the first time at payment.
+  const [guestNames, setGuestNames] = useState<string[]>(() => {
+    const stored = (() => {
+      try {
+        const raw = JSON.parse(
+          sessionStorage.getItem("myticket.attendeeNames") ?? "[]",
+        );
+        return Array.isArray(raw) ? raw.map((name) => String(name ?? "")) : [];
+      } catch {
+        return [];
+      }
+    })();
+    return Array.from({ length: selectedCount }, (_, i) => stored[i] ?? "");
+  });
 
   useEffect(() => {
     setGuestNames((current) => {
@@ -263,6 +276,11 @@ export function CheckoutPage() {
           }))
         : [{ ticketId, quantity: count }];
     const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
+
+    if (guestNames.some((name) => !name.trim())) {
+      dispatch(toastPushed("error", t("checkout.nameRequired")));
+      return null;
+    }
 
     // Every order names a showtime. Without it the API answers
     // `session_required` and no order is ever created.
@@ -402,7 +420,7 @@ export function CheckoutPage() {
                 id="checkout-email"
                 name="email"
                 type="email"
-                defaultValue={user?.email ?? "sara.alharbi@example.com"}
+                defaultValue={user?.email ?? ""}
                 className="bg-bg-page"
               />
             </Field>

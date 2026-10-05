@@ -374,7 +374,18 @@
     "reviewHalaBody": "Great atmosphere and the family lawn was genuinely comfortable. Food queues got long around 21:00.",
     "reviewKhalidDate": "Reviewed 2 March 2026",
     "reviewKhalidBody": "Gold pit is worth it if you want to be close, but arrive by 19:00 or you'll be behind the early crowd.",
-    "bookingDate": "Booking date"
+    "bookingDate": "Booking date",
+    "ticketsNumber": "Number of tickets",
+    "addTicket": "Add a ticket",
+    "removeTicket": "Remove a ticket",
+    "addTicketHint": "Add a ticket to start booking.",
+    "ticketNumber": "Ticket {{n}}",
+    "attendeeName": "Attendee name",
+    "attendeeNameFor": "Attendee name for ticket {{n}}",
+    "ticketTypeFor": "Ticket type for ticket {{n}}",
+    "seatLabel": "Seat {{seat}}",
+    "nameRequired": "Give every ticket a name",
+    "addAtLeastOne": "Add at least one ticket"
   },
   "search": {
     "title": "Search",
