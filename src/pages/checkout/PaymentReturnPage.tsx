@@ -5,6 +5,7 @@ import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
 import { Button } from "@/components/ui";
 import { PageSection } from "@/layouts";
 import { PAYING_ORDER_KEY } from "@/lib/purchase/useResumePayment";
+import { isPaymentPending, isPaymentSettled } from "@/lib/purchase/paymentStatus";
 
 /**
  * Where the payment gateway drops the buyer back.
@@ -48,9 +49,8 @@ export function PaymentReturnPage() {
   const status = String(
     (order as Record<string, unknown> | undefined)?.paymentStatus ?? "",
   ).toLowerCase();
-  const settling =
-    !status || status.includes("pending") || status.includes("await");
-  const paid = status.includes("paid") || status.includes("success");
+  const settling = isPaymentPending(status);
+  const paid = isPaymentSettled(status);
 
   useEffect(() => {
     if (settling) return;

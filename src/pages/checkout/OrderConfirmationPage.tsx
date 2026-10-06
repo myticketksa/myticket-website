@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui";
 import { PageSection } from "@/layouts";
 import { cn } from "@/lib/cn";
+import { isPaymentPending } from "@/lib/purchase/paymentStatus";
 import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
 import { useAppSelector } from "@/app/hooks";
 import { selectAuthUser } from "@/features/auth/authSlice";
@@ -159,9 +160,7 @@ export function OrderConfirmationPage() {
     };
   }, [isError, isFetching, order, orderId, t, user?.email, user?.name]);
 
-  const paymentPending =
-    view.paymentStatus.includes("pending") ||
-    view.paymentStatus.includes("await");
+  const paymentPending = isPaymentPending(view.paymentStatus);
 
   /**
    * This page is proof of a completed purchase, so it must never render for an

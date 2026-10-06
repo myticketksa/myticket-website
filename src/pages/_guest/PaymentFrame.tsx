@@ -4,6 +4,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui";
 import { PageSection } from "@/layouts";
 import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
+import { isPaymentPending, isPaymentSettled } from "@/lib/purchase/paymentStatus";
 
 /**
  * The gateway, in its own window, with the outcome read from our server.
@@ -54,9 +55,9 @@ export function PaymentFrame({
 
   useEffect(() => {
     if (!open || orderId == null || !status) return;
-    if (status.includes("pending") || status.includes("await")) return;
+    if (isPaymentPending(status)) return;
     windowRef.current?.close();
-    if (status.includes("paid") || status.includes("success")) onPaid(orderId);
+    if (isPaymentSettled(status)) onPaid(orderId);
     else onFailed(orderId);
   }, [onFailed, onPaid, open, orderId, status]);
 
