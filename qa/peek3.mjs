@@ -1,0 +1,16 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage();
+await p.goto("http://localhost:5180/sign-in", { waitUntil: "networkidle" });
+await p.getByRole("textbox").first().fill("mohamedelhaj.career@gmail.com");
+await p.locator('input[type="password"]').fill("password123");
+await p.getByRole("button", { name: /sign in|login/i }).first().click();
+await p.waitForTimeout(3500);
+console.log("after sign-in:", p.url());
+await p.goto("http://localhost:5180/events/comedy-nights", { waitUntil: "networkidle" });
+await p.waitForTimeout(3000);
+console.log("buttons:", (await p.getByRole("button").allInnerTexts()).join(" | ").slice(0, 200));
+const t = await p.locator("body").innerText();
+const i = t.indexOf("Comedy Nights");
+console.log(t.slice(i, i + 260));
+await b.close();

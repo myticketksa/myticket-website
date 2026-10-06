@@ -210,6 +210,8 @@
     "refusedBody": "Nothing was charged. Your order is saved, so you can try again.",
     "tryAgain": "Try again",
     "frameTitle": "Complete your payment",
-    "frameNote": "Handled by the secure payment gateway. You're not leaving the site."
+    "frameNote": "Handled by the secure payment gateway. You're not leaving the site.",
+    "windowNote": "Finish paying in the window that opened. The result appears here as soon as it clears.",
+    "reopenWindow": "Reopen the payment window"
   }
 }

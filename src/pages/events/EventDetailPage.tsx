@@ -317,9 +317,7 @@ export function EventDetailPage() {
    */
   const [bookingOpen, setBookingOpen] = useState(false);
   /** Gateway page shown over the site while a card payment is taken. */
-  const [payment, setPayment] = useState<{ url: string; orderId: number } | null>(
-    null,
-  );
+  const [payment, setPayment] = useState<{ orderId: number } | null>(null);
 
   const { data: apiSeats } = useGetEventSeatsQuery(resolvedId!, {
     skip: !resolvedId || seatingType !== "assigned",
@@ -414,6 +412,19 @@ export function EventDetailPage() {
     });
     if (!allowed) return;
 
+    /*
+     * Open the payment window NOW, on the click that triggered this.
+     *
+     * The gateway url does not exist yet — it takes a round trip to mint — but a
+     * window opened after an await is not attributable to a user gesture and
+     * every browser blocks it. So claim the window first and point it at the
+     * gateway once we have the address.
+     */
+    const payWindow =
+      booking.method === "apple"
+        ? null
+        : window.open("about:blank", "MyTicketPayment", "width=520,height=720");
+
     const seatIds = booking.lines
       .map((line) => line.seatId)
       .filter((id): id is number => Number.isInteger(id));
@@ -481,22 +492,27 @@ export function EventDetailPage() {
       if (redirectUrl) {
         sessionStorage.setItem(PAYING_ORDER_KEY, String(orderId));
 
-        // Apple Pay will not run in a frame: the payment sheet requires the
-        // top-level browsing context and the merchant domain it was validated
-        // against. Cards have no such rule, so they stay in the overlay where
-        // the buyer keeps their place; Apple Pay takes the whole page and comes
-        // back through the return handler.
+        // Apple Pay needs the top-level page: its sheet only runs in the main
+        // browsing context, on the domain it was validated against.
         if (booking.method === "apple") {
           window.location.assign(redirectUrl);
           return;
         }
 
-        setPayment({ url: redirectUrl, orderId });
+        if (payWindow && !payWindow.closed) {
+          payWindow.location.replace(redirectUrl);
+          setPayment({ orderId });
+          return;
+        }
+
+        // Blocked after all — take the whole page rather than strand the buyer.
+        window.location.assign(redirectUrl);
         return;
       }
 
       navigate(`/order-confirmation?orderId=${orderId}`);
     } catch (error) {
+      payWindow?.close();
       dispatch(
         toastPushed("error", apiErrorMessage(error, t("detail.claimFailed"))),
       );
@@ -691,7 +707,6 @@ export function EventDetailPage() {
 
           <PaymentFrame
             open={payment != null}
-            url={payment?.url ?? null}
             orderId={payment?.orderId ?? null}
             onPaid={(id) => {
               sessionStorage.removeItem(PAYING_ORDER_KEY);

@@ -37,7 +37,7 @@ page.on("console", async (m) => {
 
 try {
   // --- sign in ---------------------------------------------------------
-  await page.goto(`${BASE}/sign-in`, { waitUntil: "networkidle" });
+  await page.goto(`${BASE}/sign-in`, { waitUntil: "domcontentloaded" });
   await page.getByRole("textbox").first().fill(EMAIL);
   await page.locator('input[type="password"]').fill(PASSWORD);
   await page.getByRole("button", { name: /sign in|login|دخول/i }).first().click();
@@ -45,7 +45,7 @@ try {
   check("signed in", !page.url().includes("/sign-in"), page.url());
 
   // --- event page ------------------------------------------------------
-  await page.goto(`${BASE}/events/${EVENT}`, { waitUntil: "networkidle" });
+  await page.goto(`${BASE}/events/${EVENT}`, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(2000);
 
   const bodyText = await page.locator("body").innerText();
@@ -139,33 +139,37 @@ try {
     .innerText();
   check("pay button quotes the amount", /\d/.test(payLabel), payLabel.trim());
 
+  // The gateway opens in its own window — listen before the click.
+  const popupPromise = page.context().waitForEvent("page", { timeout: 40000 });
   await dialog.getByRole("button", { name: /pay|ادفع/i }).first().click();
-  await page.waitForTimeout(9000);
+  const popup = await popupPromise.catch(() => null);
 
-  // --- the gateway overlay ---------------------------------------------
-  const frame = page.locator('iframe[title], iframe[src*="payment"]');
-  const frameCount = await frame.count();
-  check("payment overlay opened", frameCount > 0);
+  check("payment window opened", popup != null);
 
-  if (frameCount > 0) {
-    const src = await frame.first().getAttribute("src");
+  if (popup) {
+    // It opens blank on the click, then goes to the gateway once the order
+    // exists — wait for that second navigation rather than reading too early.
+    await popup
+      .waitForURL(/payment\.myticket\.sa/, { timeout: 40000 })
+      .catch(() => {});
+    await popup.waitForLoadState("domcontentloaded");
     check(
-      "overlay points at the gateway",
-      Boolean(src && src.includes("payment.myticket.sa")),
-      (src ?? "").slice(0, 60),
+      "window points at the gateway",
+      popup.url().includes("payment.myticket.sa"),
+      popup.url().slice(0, 60),
     );
-    check("still on our own page", page.url().startsWith(BASE), page.url());
-
-    const gateway = page.frameLocator('iframe[src*="payment"]');
-    const gatewayLoaded = await gateway
-      .locator("body")
-      .innerText()
-      .catch(() => "");
+    check("the site stayed put", page.url().startsWith(BASE), page.url());
+    const gatewayText = await popup.locator("body").innerText().catch(() => "");
     check(
-      "gateway page actually rendered",
-      gatewayLoaded.trim().length > 0,
-      `${gatewayLoaded.trim().slice(0, 40)}…`,
+      "gateway page rendered",
+      gatewayText.trim().length > 0,
+      `${gatewayText.trim().slice(0, 32)}…`,
     );
+    check(
+      "waiting state shown on the site",
+      /payment|الدفع/i.test(await page.locator("body").innerText()),
+    );
+    await popup.close().catch(() => {});
   }
 
   check(

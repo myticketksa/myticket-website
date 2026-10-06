@@ -1,25 +1,26 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { CloseIcon } from "@/components/icons";
+import { Button } from "@/components/ui";
+import { PageSection } from "@/layouts";
 import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
 
 /**
- * The gateway's own payment page, shown over the site instead of replacing it.
+ * The gateway, in its own window, with the outcome read from our server.
  *
- * The card form is still served by the gateway, so card details never touch our
- * code and the PCI posture is unchanged — this only changes where the page is
- * drawn. The buyer keeps their place on the event, there is no popup to be
- * blocked, and no hand-off to a different site to come back from.
+ * It has to be a separate window. The gateway's 3-D Secure step and its redirect
+ * page both navigate the top frame, so inside an overlay they either tear the
+ * site out from under the buyer or strand themselves — both were tried and both
+ * were watched happening.
  *
- * The frame is never asked what happened. It cannot be read across origins and
- * should not be trusted if it could; the outcome comes from polling the order on
- * our server, exactly as it does on the return page. Closing the overlay cancels
- * nothing — the order stays payable.
+ * What is NOT copied from the original is how it learned the result: it polled
+ * `window.closed` and lost the answer whenever the window was blocked, closed
+ * early, or opened on a phone. The window here is only a place to type a card.
+ * The truth comes from polling the order, so a closed window, a blocked popup or
+ * a buyer who wanders off cannot produce a wrong outcome.
  */
 export interface PaymentFrameProps {
   open: boolean;
-  url: string | null;
   orderId: number | null;
   onPaid: (orderId: number) => void;
   onFailed: (orderId: number) => void;
@@ -28,13 +29,19 @@ export interface PaymentFrameProps {
 
 export function PaymentFrame({
   open,
-  url,
   orderId,
   onPaid,
   onFailed,
   onClose,
 }: PaymentFrameProps) {
   const { t } = useTranslation(["checkout", "common"]);
+  // The window is opened by the click, before this renders — see the booking
+  // handler. Here we only need a handle to close it when the order settles.
+  const windowRef = useRef<Window | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    windowRef.current = window.open("", "MyTicketPayment");
+  }, [open]);
 
   const { data: order } = useGetOrderDetailsQuery(orderId!, {
     skip: !open || orderId == null,
@@ -48,40 +55,43 @@ export function PaymentFrame({
   useEffect(() => {
     if (!open || orderId == null || !status) return;
     if (status.includes("pending") || status.includes("await")) return;
+    windowRef.current?.close();
     if (status.includes("paid") || status.includes("success")) onPaid(orderId);
     else onFailed(orderId);
   }, [onFailed, onPaid, open, orderId, status]);
 
-  if (!url) return null;
+  if (!open) return null;
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-[60] bg-surface-inverse/65 backdrop-blur-[2px]" />
-        <DialogPrimitive.Content className="fixed inset-x-0 bottom-0 z-[60] flex h-[92dvh] flex-col overflow-hidden rounded-t-[22px] bg-surface-default outline-none sm:inset-0 sm:m-auto sm:h-[640px] sm:max-h-[90dvh] sm:w-[min(100vw-2rem,460px)] sm:rounded-[22px]">
-          <div className="flex items-center justify-between gap-md border-b border-border-default px-lg py-md">
-            <DialogPrimitive.Title className="text-[15px] font-semibold text-ink-primary">
-              {t("checkout:payment.frameTitle")}
-            </DialogPrimitive.Title>
-            <DialogPrimitive.Close
-              aria-label={t("common:actions.close")}
-              className="rounded-full p-[6px] text-ink-secondary hover:text-ink-primary"
-            >
-              <CloseIcon size={18} />
-            </DialogPrimitive.Close>
-          </div>
-
-          <iframe
-            src={url}
-            title={t("checkout:payment.frameTitle")}
-            className="min-h-0 w-full flex-1 border-0"
-            // The gateway needs these to run its own card and 3-D Secure flow.
-            allow="payment *; clipboard-write"
-          />
-
-          <p className="border-t border-border-default px-lg py-sm text-center text-[12px] text-ink-muted">
-            {t("checkout:payment.frameNote")}
-          </p>
+        <DialogPrimitive.Content className="fixed inset-0 z-[60] m-auto h-fit w-[min(100vw-2rem,420px)] rounded-[22px] bg-surface-default p-xl outline-none">
+          <PageSection padTop={0} padBottom={0}>
+            <div className="flex flex-col items-center gap-md text-center">
+              <span className="size-[28px] animate-spin rounded-full border-[3px] border-border-default border-t-ink-brand" />
+              <DialogPrimitive.Title className="text-[17px] font-bold text-ink-primary">
+                {t("checkout:payment.frameTitle")}
+              </DialogPrimitive.Title>
+              <p className="text-[14px] text-ink-secondary">
+                {t("checkout:payment.windowNote")}
+              </p>
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={() => window.open("", "MyTicketPayment")?.focus()}
+              >
+                {t("checkout:payment.reopenWindow")}
+              </Button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-[13px] text-ink-muted underline"
+              >
+                {t("common:actions.cancel")}
+              </button>
+            </div>
+          </PageSection>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
