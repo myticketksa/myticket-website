@@ -1,10 +1,11 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet } from 'react-router-dom'
 import { AccountTabBar, AccountTabBarItem, SiteFooter, SiteHeader } from '@/components/navigation'
 import { PageFade } from '@/components/motion'
 import { cn } from '@/lib/cn'
 import { useHeaderAccount } from '@/lib/auth/accountChip'
+import { useRequireAuth } from '@/lib/auth/useRequireAuth'
 
 /**
  * Account page head — title row + tab bar. Shared across ~seventeen account, ticket-action
@@ -114,12 +115,19 @@ export function AccountSplit({ children, aside, className }: AccountSplitProps) 
 /**
  * Pattern B — AccountLayout. Verified on My Tickets `207:9469`.
  *
- * Shell only: SiteHeader + Outlet + SiteFooter. Pages compose `AccountPageHead` and
- * optional `AccountSplit` themselves so profile (full-bleed) and ticket actions can
- * diverge without the layout inventing per-route heads.
+ * Shell only: SiteHeader + Outlet + SiteFooter. Requires sign-in — guests are
+ * sent to `/sign-in?next=…` instead of seeing fixture account chrome.
  */
 export function AccountLayout() {
+  const { isAuthenticated, requireAuth } = useRequireAuth()
   const account = useHeaderAccount()
+
+  useEffect(() => {
+    if (!isAuthenticated) requireAuth()
+  }, [isAuthenticated, requireAuth])
+
+  if (!isAuthenticated) return null
+
   return (
     <div className="flex min-h-dvh flex-col bg-bg-page">
       <SiteHeader state="signedIn" account={account} />

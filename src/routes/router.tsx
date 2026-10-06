@@ -8,6 +8,7 @@ import {
   FunnelLayout,
 } from "@/layouts";
 import { SiteDocumentMeta } from "@/components/navigation";
+import { RequireAuth } from "@/lib/auth/RequireAuth";
 import { ProbeRoute } from "./ProbeRoute";
 import { RouteErrorPage } from "./RouteErrorPage";
 import {
@@ -150,25 +151,30 @@ export const router = createBrowserRouter([
       {
         element: <FunnelLayout />,
         children: [
-          { path: "/my-tickets/:id", element: <TicketPage /> },
-          { path: "/my-tickets/:id/gift", element: <GiftTicketPage /> },
-          { path: "/gift/claim/:giftTicketId", element: <ClaimGiftPage /> },
           {
-            path: "/support/new",
-            element: <Navigate to="/support/chat" replace />,
+            element: <RequireAuth />,
+            children: [
+              { path: "/my-tickets/:id", element: <TicketPage /> },
+              { path: "/my-tickets/:id/gift", element: <GiftTicketPage /> },
+              {
+                path: "/support/new",
+                element: <Navigate to="/support/chat" replace />,
+              },
+              { path: "/support/chat", element: <SupportChatPage /> },
+              { path: "/submit-experience", element: <SubmitExperiencePage /> },
+              {
+                path: "/application-submitted",
+                element: <ApplicationSubmittedPage />,
+              },
+            ],
           },
-          { path: "/support/chat", element: <SupportChatPage /> },
+          { path: "/gift/claim/:giftTicketId", element: <ClaimGiftPage /> },
           { path: "/apply/facilities", element: <ApplyVendorPage /> },
           {
             path: "/apply/vendor",
             element: <Navigate to="/apply/facilities" replace />,
           },
           { path: "/apply/talent", element: <ApplyTalentPage /> },
-          { path: "/submit-experience", element: <SubmitExperiencePage /> },
-          {
-            path: "/application-submitted",
-            element: <ApplicationSubmittedPage />,
-          },
         ],
       },
       {
