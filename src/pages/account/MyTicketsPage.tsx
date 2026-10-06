@@ -119,9 +119,9 @@ export function MyTicketsPage() {
                 cover={ticket.cover}
                 bookedAt={ticket.orderDate}
                 startsAt={ticket.startTime}
-                note={
-                  ticket.status === "AWAITING SEAT"
-                    ? t("account:tickets.awaitingSeat")
+                stamp={
+                  ticket.status === "PAST"
+                    ? t("account:tickets.tabPast")
                     : ticket.status === "TRANSFERRED"
                       ? t("account:tickets.transferred")
                       : undefined
