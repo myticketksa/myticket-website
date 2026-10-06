@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { EmptyState } from '@/components/feedback'
 import { AccountPageHead, AccountSplit } from '@/layouts'
 import { DefaultAccountAside } from '@/pages/_account/AccountAside'
+import { ReservationStub } from '@/pages/_account/ReservationStub'
 import { useGetGiftTicketsQuery } from '@/app/api/accountApis'
 import { useGetOrdersQuery } from '@/app/api/ordersApi'
 import { mapGiftTicketToMyTicket } from '@/lib/api/mappers/gifts'
@@ -107,58 +108,26 @@ export function MyTicketsPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-[14px] md:grid-cols-2">
-            {visible.map((ticket) => {
-              const href = ticketHref(ticket)
-              return (
-                <Link
-                  key={ticket.id}
-                  to={href}
-                  className="flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default outline-offset-2 transition-opacity hover:opacity-95 focus-visible:outline-2 focus-visible:outline-ink-brand"
-                >
-                  <div className="relative h-[160px] w-full shrink-0">
-                    {ticket.cover ? (
-                      <img
-                        src={ticket.cover}
-                        alt=""
-                        className="absolute inset-0 size-full object-cover"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-bg-tint-brand" />
-                    )}
-                  </div>
-                  <div className="flex min-w-0 flex-1 flex-col px-lg py-[16px] sm:px-[18px]">
-                    <h2 className="text-[18px] leading-[1.15] font-extrabold tracking-[-0.4px] text-ink-primary sm:text-[20px]">
-                      {ticket.title}
-                    </h2>
-                    <dl className="mt-[12px] flex flex-col gap-[6px] text-[13px]">
-                      <div className="flex justify-between gap-md">
-                        <dt className="shrink-0 text-ink-muted">{t('account:tickets.facts.city')}</dt>
-                        <dd className="min-w-0 text-end font-semibold break-words text-ink-primary">
-                          {ticket.city}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-md">
-                        <dt className="shrink-0 text-ink-muted">
-                          {t('account:tickets.facts.startTime')}
-                        </dt>
-                        <dd className="min-w-0 text-end font-semibold break-words text-ink-primary">
-                          {ticket.startTime}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-md">
-                        <dt className="shrink-0 text-ink-muted">
-                          {t('account:tickets.facts.orderDate')}
-                        </dt>
-                        <dd className="min-w-0 text-end font-semibold break-words text-ink-primary">
-                          {ticket.orderDate}
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
-                </Link>
-              )
-            })}
+          {/* Centred grid of ticket stubs, as the original laid them out. */}
+          <div className="grid grid-cols-1 justify-items-center gap-lg sm:grid-cols-2">
+            {visible.map((ticket) => (
+              <ReservationStub
+                key={ticket.id}
+                to={ticketHref(ticket)}
+                title={ticket.title}
+                venue={ticket.city}
+                cover={ticket.cover}
+                bookedAt={ticket.orderDate}
+                startsAt={ticket.startTime}
+                note={
+                  ticket.status === "AWAITING SEAT"
+                    ? t("account:tickets.awaitingSeat")
+                    : ticket.status === "TRANSFERRED"
+                      ? t("account:tickets.transferred")
+                      : undefined
+                }
+              />
+            ))}
           </div>
         </div>
       </AccountSplit>

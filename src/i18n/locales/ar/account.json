@@ -143,7 +143,11 @@
       "LISTED": "معروضة",
       "CONFIRMED": "مؤكد",
       "INSTALMENTS": "أقساط"
-    }
+    },
+    "reservationTime": "وقت الحجز",
+    "showTime": "وقت العرض",
+    "awaitingSeat": "بانتظار تحديد المقعد",
+    "transferred": "تم تحويلها"
   },
   "ticket": {
     "backToTicket": "العودة إلى التذكرة",

@@ -143,7 +143,11 @@
       "LISTED": "Listed",
       "CONFIRMED": "Confirmed",
       "INSTALMENTS": "Instalments"
-    }
+    },
+    "reservationTime": "Reservation time",
+    "showTime": "Show time",
+    "awaitingSeat": "Awaiting a seat",
+    "transferred": "Transferred"
   },
   "ticket": {
     "backToTicket": "Back to ticket",
