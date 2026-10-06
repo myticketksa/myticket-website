@@ -53,8 +53,16 @@ const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQuery
 
   if (result.error) {
     if (isUnauthorized(result.error)) {
+      const hadToken = Boolean(
+        (api.getState() as { auth: { token: string | null } }).auth?.token,
+      )
       api.dispatch(credentialsCleared())
-      if (typeof window !== 'undefined' && window.location.pathname !== AUTH_REDIRECT) {
+      // Only bounce expired sessions — guests hitting auth-only endpoints must not leave browse.
+      if (
+        hadToken &&
+        typeof window !== 'undefined' &&
+        window.location.pathname !== AUTH_REDIRECT
+      ) {
         window.location.assign(AUTH_REDIRECT)
       }
     } else {
@@ -99,6 +107,7 @@ export const baseApi = createApi({
     'Review',
     'SupportCase',
     'Application',
+    'TalentRequest',
     'Wallet',
     'Favorite',
   ],

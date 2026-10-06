@@ -15,6 +15,12 @@ export type TalentsListResult = {
 
 export type GetTalentsParams = {
   page?: number
+  /** `filters[category]` — talent type id */
+  categoryId?: string | number
+  /** `filters[in]` — city id where they perform */
+  cityId?: string | number
+  /** `filters[rating]` — minimum rating */
+  rating?: string | number
 }
 
 export const talentsApi = baseApi.injectEndpoints({
@@ -27,10 +33,23 @@ export const talentsApi = baseApi.injectEndpoints({
     getTalents: build.query<TalentsListResult, void | GetTalentsParams>({
       query: (params) => {
         const page = params && 'page' in params ? params.page : undefined
+        const categoryId =
+          params && 'categoryId' in params ? params.categoryId : undefined
+        const cityId = params && 'cityId' in params ? params.cityId : undefined
+        const rating = params && 'rating' in params ? params.rating : undefined
         return {
           url: '/talents',
           params: {
             ...(page && page > 1 ? { page } : page === 1 ? { page: 1 } : {}),
+            ...(categoryId != null && categoryId !== ''
+              ? { 'filters[category]': categoryId }
+              : {}),
+            ...(cityId != null && cityId !== ''
+              ? { 'filters[in]': cityId }
+              : {}),
+            ...(rating != null && rating !== ''
+              ? { 'filters[rating]': rating }
+              : {}),
           },
         }
       },
@@ -90,6 +109,12 @@ export const talentsApi = baseApi.injectEndpoints({
         method: 'POST',
         body: { ...body, talent_id: talentId },
       }),
+      invalidatesTags: ['TalentRequest'],
+    }),
+    getMyTalentRequests: build.query<ApiRecord[], void>({
+      query: () => '/talents/my-requests',
+      transformResponse: (response: unknown) => asList<ApiRecord>(response),
+      providesTags: ['TalentRequest'],
     }),
   }),
 })
@@ -104,4 +129,5 @@ export const {
   useFavoriteTalentMutation,
   useUnfavoriteTalentMutation,
   useRequestTalentMutation,
+  useGetMyTalentRequestsQuery,
 } = talentsApi

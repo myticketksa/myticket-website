@@ -180,7 +180,7 @@ export function EventCard({
         </p>
         <h3
           className={cn(
-            'text-[17px] leading-[1.22] text-ink-primary',
+            'line-clamp-2 min-w-0 text-[17px] leading-[1.22] text-ink-primary',
             isHome ? 'font-bold' : 'font-semibold',
           )}
         >
@@ -188,18 +188,18 @@ export function EventCard({
         </h3>
         <p
           className={cn(
-            'text-[13px] text-ink-secondary',
+            'truncate min-w-0 text-[13px] text-ink-secondary',
             isHome ? 'font-medium' : 'font-normal',
           )}
         >
           {venue}
         </p>
 
-        <div className="flex w-full items-center gap-md">
+        <div className="flex w-full min-w-0 items-center gap-md">
           <StarFillIcon className="shrink-0 text-ink-primary" />
           <span
             className={cn(
-              'ltr-run text-[13px] text-ink-primary',
+              'ltr-run shrink-0 text-[13px] text-ink-primary',
               isHome ? 'font-bold' : 'font-medium',
             )}
           >
@@ -207,7 +207,7 @@ export function EventCard({
           </span>
           <span
             className={cn(
-              'text-[13px] text-ink-secondary',
+              'min-w-0 truncate text-[13px] text-ink-secondary',
               isHome ? 'font-medium' : 'font-normal',
             )}
           >

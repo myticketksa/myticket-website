@@ -73,7 +73,7 @@ export function SiteFooter({ size = "full", className }: SiteFooterProps) {
   return (
     <footer
       className={cn(
-        "mt-16 flex w-full flex-col items-center bg-bg-warm",
+        "mt-10 flex w-full flex-col items-center bg-bg-warm sm:mt-16",
         size === "full" && "border-t border-border-default",
         className,
       )}

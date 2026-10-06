@@ -8,15 +8,16 @@ import {
   ChevronDownIcon,
   SearchIcon,
 } from '@/components/icons'
-import { PopularChip } from '@/components/data-display'
 import { FadeUp } from '@/components/motion'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
-import { HOME_POPULAR } from './home-data'
 
 /**
  * Home Hero — copy + search + image-ad slider (replaces Featured this week).
- * 1 ad → full-width single card; 2+ ads → two side-by-side cards with autoplay.
+ *
+ * Ad layout:
+ * - Side column (`xl+`) and phones: one full-width card per slide (never skinny twins).
+ * - Tablet stacked band (`sm`–`lg`): two side-by-side cards when width allows.
  */
 
 const REGION_OPTIONS = [
@@ -28,15 +29,34 @@ const REGION_OPTIONS = [
 
 const AUTO_MS = 5000
 
+/** Pair ads only while the media block is full-bleed under the copy (640–1279). */
+function usePairHeroAds() {
+  const [pair, setPair] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia('(min-width: 640px) and (max-width: 1279px)').matches
+      : false,
+  )
+
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 640px) and (max-width: 1279px)')
+    const onChange = () => setPair(mql.matches)
+    onChange()
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [])
+
+  return pair
+}
+
 function HeroAdCard({
   ad,
   className,
-  full,
+  paired,
 }: {
   ad: AdRecord
   className?: string
-  /** Single-ad mode: span the full two-card media column. */
-  full?: boolean
+  /** Two-up tablet layout. */
+  paired?: boolean
 }) {
   const title = asAdText(ad.title)
   const description = asAdText(ad.description)
@@ -45,10 +65,11 @@ function HeroAdCard({
   return (
     <article
       className={cn(
-        'group relative flex flex-col items-start justify-end overflow-hidden rounded-[22px] border border-border-default bg-bg-skeleton p-[18px]',
-        full
-          ? 'h-[360px] w-full sm:h-[420px] lg:h-[494px]'
-          : 'h-[360px] min-w-0 flex-1 sm:h-[420px] lg:h-[494px]',
+        'group relative flex w-full shrink-0 flex-col items-start justify-end overflow-hidden rounded-[20px] border border-border-default bg-bg-skeleton p-[14px] sm:rounded-[22px] sm:p-[16px]',
+        // Wide media frame, height-capped — portrait creatives crop via object-cover.
+        paired
+          ? 'h-[280px] min-w-0 flex-1 sm:h-[320px]'
+          : 'h-[240px] sm:h-[300px] xl:h-[380px]',
         className,
       )}
     >
@@ -56,19 +77,19 @@ function HeroAdCard({
         <img
           src={image}
           alt={title || ''}
-          className="absolute inset-0 size-full object-cover transition-transform duration-slow ease-standard group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
+          className="absolute inset-0 size-full object-cover object-center transition-transform duration-slow ease-standard group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
         />
       ) : null}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(25,16,8,0.08)_0%,rgba(25,16,8,0)_28%,rgba(25,16,8,0.55)_68%,rgba(25,16,8,0.92)_100%)]" />
       {(title || description) && (
-        <div className="relative z-[1] flex w-full flex-col">
+        <div className="relative z-[1] flex w-full min-w-0 flex-col">
           {title ? (
-            <p className="text-[18px] leading-[1.2] font-bold text-balance text-ink-inverse sm:text-[22px]">
+            <p className="line-clamp-2 text-[16px] leading-[1.2] font-bold text-balance text-ink-inverse sm:text-[18px]">
               {title}
             </p>
           ) : null}
           {description ? (
-            <p className="mt-[6px] line-clamp-2 text-[13px] font-medium text-ink-inverse/90">
+            <p className="mt-[4px] line-clamp-2 text-[12px] font-medium text-ink-inverse/90 sm:text-[13px]">
               {description}
             </p>
           ) : null}
@@ -83,25 +104,28 @@ export function HomeHero({ apiAds }: { apiAds?: AdRecord[] }) {
   const [slide, setSlide] = useState(0)
   const [region, setRegion] = useState(REGION_OPTIONS[0]!.value)
   const [paused, setPaused] = useState(false)
+  const pairAds = usePairHeroAds()
 
   const imageAds = useMemo(() => partitionAds(apiAds).images, [apiAds])
   const single = imageAds.length === 1
+  const usePairs = !single && pairAds
 
-  /** Each slide shows a pair of ads (current + next); single ad is one full card. */
-  const pairedSlides = useMemo(() => {
+  /** One card per slide by default; tablet full-bleed uses current+next pairs. */
+  const slides = useMemo(() => {
     if (imageAds.length < 2) return [] as AdRecord[][]
+    if (!usePairs) return imageAds.map((ad) => [ad])
     return imageAds.map((_, i) => [
       imageAds[i]!,
       imageAds[(i + 1) % imageAds.length]!,
     ])
-  }, [imageAds])
+  }, [imageAds, usePairs])
 
-  const slideCount = single ? 1 : pairedSlides.length
-  const pair = pairedSlides[slide] ?? pairedSlides[0]
+  const slideCount = single ? 1 : slides.length
+  const current = slides[slide] ?? slides[0]
 
   useEffect(() => {
     setSlide(0)
-  }, [imageAds.length])
+  }, [imageAds.length, usePairs])
 
   useEffect(() => {
     if (slideCount < 2 || paused) return
@@ -125,26 +149,16 @@ export function HomeHero({ apiAds }: { apiAds?: AdRecord[] }) {
   return (
     <PageSection
       padBottom={0}
-      className="relative overflow-hidden bg-bg-page pt-3xl sm:pt-[48px] lg:pt-[60px]"
+      className="relative overflow-hidden bg-bg-page pt-3xl sm:pt-[48px] xl:pt-[60px]"
       style={{
         backgroundImage:
           'radial-gradient(ellipse 1100px 620px at 8% -10%, color-mix(in srgb, var(--color-brand-primary) 22%, transparent), transparent 62%), radial-gradient(ellipse 900px 560px at 96% 4%, color-mix(in srgb, var(--color-brand-primary) 14%, transparent), transparent 60%)',
       }}
     >
-      <div className="flex flex-col gap-3xl lg:flex-row lg:items-start lg:gap-[52px]">
-        <div className="flex w-full max-w-[675px] flex-col lg:pt-xl">
-          <FadeUp inView={false} delay={0.05} distance={8}>
-            <div className="flex w-full max-w-full items-start gap-[10px] rounded-[16px] bg-identity-gradient px-[14px] py-[10px] text-[12px] leading-[1.4] font-bold text-ink-inverse shadow-[0px_8px_22px_-10px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)] sm:inline-flex sm:w-auto sm:items-center sm:rounded-[22px] sm:py-[7px] sm:pe-[15px] sm:ps-[11px] sm:text-[13px] sm:leading-none">
-              <span
-                className="mt-[5px] size-[7px] shrink-0 rounded-pill bg-ink-inverse sm:mt-0"
-                aria-hidden
-              />
-              <span className="min-w-0 text-pretty">{t('home.liveCount')}</span>
-            </div>
-          </FadeUp>
-
+      <div className="flex flex-col gap-3xl xl:flex-row xl:items-start xl:gap-[52px]">
+        <div className="flex w-full min-w-0 flex-1 flex-col xl:max-w-[675px] xl:pt-xl">
           <FadeUp inView={false} delay={0.1} distance={12}>
-            <h1 className="mt-xl max-w-[560px] text-[32px] leading-[1.1] font-bold tracking-[-0.04em] text-balance text-ink-primary sm:mt-[26px] sm:text-[42px] sm:leading-[1.08] lg:text-display-hero-xl">
+            <h1 className="max-w-[560px] text-[32px] leading-[1.1] font-bold tracking-[-0.04em] text-balance text-ink-primary sm:text-[42px] sm:leading-[1.08] xl:text-display-hero-xl">
               {t('home.heroTitle')}
             </h1>
 
@@ -156,9 +170,9 @@ export function HomeHero({ apiAds }: { apiAds?: AdRecord[] }) {
           <FadeUp inView={false} delay={0.2} distance={8}>
             <form
               action="/search"
-              className="mt-2xl flex w-full flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default shadow-[0px_22px_48px_-24px_color-mix(in_srgb,var(--color-brand-primary)_55%,transparent),0px_2px_4px_0px_color-mix(in_srgb,var(--color-ink-primary)_4%,transparent)] sm:mt-3xl sm:flex-row sm:items-center sm:gap-[10px] sm:p-sm"
+              className="mt-2xl flex w-full flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default shadow-[0px_22px_48px_-24px_color-mix(in_srgb,var(--color-brand-primary)_55%,transparent),0px_2px_4px_0px_color-mix(in_srgb,var(--color-ink-primary)_4%,transparent)] lg:mt-3xl lg:flex-row lg:items-center lg:gap-[10px] lg:p-sm"
             >
-              <label className="flex min-h-[52px] min-w-0 flex-1 items-center gap-md border-b border-border-default px-lg py-[12px] sm:min-h-0 sm:border-b-0 sm:py-[10px]">
+              <label className="flex min-h-[52px] min-w-0 flex-1 items-center gap-md border-b border-border-default px-lg py-[12px] lg:min-h-0 lg:border-b-0 lg:py-[10px]">
                 <SearchIcon size={19} className="shrink-0 text-brand-primary" />
                 <input
                   name="q"
@@ -166,15 +180,15 @@ export function HomeHero({ apiAds }: { apiAds?: AdRecord[] }) {
                   className="min-w-0 flex-1 bg-transparent text-[16px] font-medium text-ink-primary outline-none placeholder:truncate placeholder:text-ink-muted"
                 />
               </label>
-              <span className="hidden h-[28px] w-px shrink-0 bg-border-default sm:block" />
-              <div className="flex items-stretch gap-sm p-sm sm:contents sm:p-0">
-                <label className="relative flex min-h-[48px] min-w-0 flex-1 items-center gap-sm rounded-[14px] bg-bg-page px-[14px] sm:h-[58px] sm:flex-none sm:rounded-none sm:bg-transparent">
+              <span className="hidden h-[28px] w-px shrink-0 bg-border-default lg:block" />
+              <div className="flex items-stretch gap-sm p-sm lg:contents lg:p-0">
+                <label className="relative flex min-h-[48px] min-w-0 flex-1 items-center gap-sm rounded-[14px] bg-bg-page px-[14px] lg:h-[58px] lg:max-w-[11.5rem] lg:flex-none lg:rounded-none lg:bg-transparent">
                   <span className="sr-only">{t('home.region')}</span>
                   <select
                     name="region"
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
-                    className="w-full min-w-0 appearance-none bg-transparent pe-lg text-[14px] font-semibold text-ink-secondary outline-none cursor-pointer sm:text-[15px]"
+                    className="w-full min-w-0 appearance-none truncate bg-transparent pe-lg text-[14px] font-semibold text-ink-secondary outline-none cursor-pointer lg:text-[15px]"
                   >
                     {REGION_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -189,25 +203,12 @@ export function HomeHero({ apiAds }: { apiAds?: AdRecord[] }) {
                 </label>
                 <button
                   type="submit"
-                  className="flex h-[48px] shrink-0 items-center justify-center rounded-[14px] bg-identity-gradient px-[22px] text-[15px] font-bold text-ink-inverse shadow-[0px_8px_20px_-8px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)] sm:h-[58px] sm:px-[30px]"
+                  className="flex h-[48px] shrink-0 items-center justify-center rounded-[14px] bg-identity-gradient px-[22px] text-[15px] font-bold text-ink-inverse shadow-[0px_8px_20px_-8px_color-mix(in_srgb,var(--color-brand-primary)_75%,transparent)] lg:h-[58px] lg:px-[30px]"
                 >
                   {t('common:actions.search')}
                 </button>
               </div>
             </form>
-          </FadeUp>
-
-          <FadeUp inView={false} delay={0.25} distance={0}>
-            <div className="mt-lg flex flex-col gap-sm sm:mt-[18px] sm:flex-row sm:flex-wrap sm:items-center">
-              <span className="text-[13px] font-semibold text-ink-muted">{t('home.popular')}</span>
-              <div className="flex flex-wrap items-center gap-sm">
-                {HOME_POPULAR.map((term) => (
-                  <PopularChip key={term} href={`/search?q=${encodeURIComponent(term)}`}>
-                    {term}
-                  </PopularChip>
-                ))}
-              </div>
-            </div>
           </FadeUp>
         </div>
 
@@ -216,7 +217,7 @@ export function HomeHero({ apiAds }: { apiAds?: AdRecord[] }) {
             inView={false}
             delay={0.3}
             distance={16}
-            className="flex w-full max-w-[593px] flex-col gap-[14px]"
+            className="flex w-full min-w-0 flex-col gap-[14px] xl:w-[min(100%,520px)] xl:max-w-[520px] xl:shrink-0"
           >
             <div className="flex flex-col gap-md sm:h-[36px] sm:flex-row sm:items-center sm:justify-between sm:gap-sm">
               <p className="text-label-overline text-brand-gradient-end">
@@ -252,14 +253,19 @@ export function HomeHero({ apiAds }: { apiAds?: AdRecord[] }) {
               onBlurCapture={() => setPaused(false)}
             >
               {single && imageAds[0] ? (
-                <HeroAdCard ad={imageAds[0]} full />
-              ) : pair ? (
-                <div className="flex flex-col gap-lg sm:flex-row sm:gap-md">
-                  {pair.map((ad, i) => (
+                <HeroAdCard ad={imageAds[0]} />
+              ) : current ? (
+                <div
+                  className={cn(
+                    'flex gap-md',
+                    usePairs ? 'flex-row' : 'flex-col',
+                  )}
+                >
+                  {current.map((ad, i) => (
                     <HeroAdCard
                       key={`${slide}-${String(ad.id ?? ad.image)}-${i}`}
                       ad={ad}
-                      className={cn(i > 0 && 'hidden sm:flex')}
+                      paired={usePairs}
                     />
                   ))}
                 </div>
@@ -268,7 +274,7 @@ export function HomeHero({ apiAds }: { apiAds?: AdRecord[] }) {
 
             {!single && slideCount > 1 ? (
               <div className="flex gap-[7px]" role="tablist" aria-label={t('home.featuredSlides')}>
-                {pairedSlides.map((_, i) => (
+                {slides.map((_, i) => (
                   <button
                     key={i}
                     type="button"

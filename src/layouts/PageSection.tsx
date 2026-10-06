@@ -9,17 +9,22 @@ import { cn } from '@/lib/cn'
  * the inner shell is capped at `--container-page` (1440) with `--spacing-page-gutter` (60)
  * horizontal padding, which yields 1320 at the design width.
  *
- * Vertical rhythm is per-section on Home (60, 72, 76, 84, 88, 96), so top and bottom
- * padding are caller-supplied rather than assumed.
+ * Vertical rhythm is per-section on Home (60, 72, 76, 84, 88, 96). Desktop pad values
+ * scale down on smaller viewports so mobile doesn’t inherit Figma’s large gaps.
  */
 export interface PageSectionProps extends HTMLAttributes<HTMLElement> {
   children: ReactNode
-  /** Top padding in px. */
+  /** Top padding in px at the desktop breakpoint. */
   padTop?: number
-  /** Bottom padding in px. */
+  /** Bottom padding in px at the desktop breakpoint. */
   padBottom?: number
   /** When false, children fill the full-bleed section with no gutter inset. */
   inset?: boolean
+}
+
+type SectionPadVars = CSSProperties & {
+  '--ps-pt'?: string
+  '--ps-pb'?: string
 }
 
 export function PageSection({
@@ -31,15 +36,26 @@ export function PageSection({
   style,
   ...props
 }: PageSectionProps) {
-  // Apply after `{...props}` so residual `style` in props cannot override pads.
-  const paddingStyle: CSSProperties = {
+  // CSS vars + responsive utilities — raw px pads used to over-space phones.
+  const paddingStyle: SectionPadVars = {
     ...style,
-    ...(padTop !== undefined ? { paddingTop: padTop } : null),
-    ...(padBottom !== undefined ? { paddingBottom: padBottom } : null),
+    ...(padTop !== undefined ? { '--ps-pt': `${padTop}px` } : null),
+    ...(padBottom !== undefined ? { '--ps-pb': `${padBottom}px` } : null),
   }
 
   return (
-    <section {...props} className={cn('w-full', className)} style={paddingStyle}>
+    <section
+      {...props}
+      className={cn(
+        'w-full',
+        padTop !== undefined &&
+          'pt-[calc(var(--ps-pt)*0.45)] md:pt-[calc(var(--ps-pt)*0.7)] lg:pt-[var(--ps-pt)]',
+        padBottom !== undefined &&
+          'pb-[calc(var(--ps-pb)*0.45)] md:pb-[calc(var(--ps-pb)*0.7)] lg:pb-[var(--ps-pb)]',
+        className,
+      )}
+      style={paddingStyle}
+    >
       {inset ? (
         <div className="mx-auto w-full min-w-0 max-w-[var(--container-page)] px-page-gutter">
           {children}

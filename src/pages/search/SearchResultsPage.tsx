@@ -291,7 +291,7 @@ export function SearchResultsPage() {
   const [cities, setCities] = useState<string[]>([]);
 
   const { data: eventsResult, isError: eventsError } = useGetEventsQuery({
-    search: query,
+    upcoming: true,
   });
   const apiEvents = eventsResult?.items;
   const { data: talentsResult, isError: talentsError } = useGetTalentsQuery();

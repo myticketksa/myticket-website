@@ -4,10 +4,10 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { CloseIcon, MinusIcon, PlusIcon } from "@/components/icons";
 import { Button, TextInput } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { getActiveLocale } from "@/i18n/config";
 import { formatMoneySar } from "@/lib/api/locale";
 import type { EventSession } from "@/lib/api/mappers/events";
 import { sessionRemaining } from "@/lib/api/mappers/events";
+import { SessionPicker } from "./SessionPicker";
 
 /**
  * Booking, in the order the original site's modal does it.
@@ -56,30 +56,6 @@ export interface BookingModalProps {
   }) => void;
 }
 
-function sessionLabel(session: EventSession, locale: string): string {
-  const start = session.startsAt ? new Date(session.startsAt) : undefined;
-  if (!start || Number.isNaN(start.getTime())) return `#${session.id}`;
-  const day = start.toLocaleDateString(locale, {
-    weekday: "long",
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "UTC",
-    numberingSystem: "latn",
-  });
-  const time = (value: Date) =>
-    value.toLocaleTimeString(locale, {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-      timeZone: "UTC",
-      numberingSystem: "latn",
-    });
-  const end = session.endsAt ? new Date(session.endsAt) : undefined;
-  return end && !Number.isNaN(end.getTime())
-    ? `${day} · ${time(start)} – ${time(end)}`
-    : `${day} · ${time(start)}`;
-}
-
 export function BookingModal({
   open,
   onOpenChange,
@@ -92,7 +68,6 @@ export function BookingModal({
   onConfirm,
 }: BookingModalProps) {
   const { t } = useTranslation(["catalog", "checkout", "common"]);
-  const locale = getActiveLocale() === "ar" ? "ar-SA" : "en-SA";
   const selectableTypes = types.filter((type) => !type.disabled);
 
   const [typeId, setTypeId] = useState<number | undefined>();
@@ -108,7 +83,7 @@ export function BookingModal({
   useEffect(() => {
     if (!open) return;
     setTypeId(selectableTypes[0]?.id);
-    setSessionId(undefined);
+    setSessionId(sessions.length === 1 ? sessions[0]?.id : undefined);
     setLines([]);
     setPromoCode("");
     setError("");
@@ -274,33 +249,12 @@ export function BookingModal({
           )}
 
           {step === 0 && (
-          <label className="mb-lg flex flex-col gap-xs">
-            <span className="text-[13px] font-semibold text-ink-primary">
-              {t("detail.bookingDate")}
-            </span>
-            <select
-              value={sessionId ?? ""}
-              onChange={(event) => chooseSession(Number(event.target.value))}
-              className="h-[44px] rounded-[12px] border border-border-default bg-surface-default px-[12px] text-[14px] text-ink-primary"
-            >
-              <option value="" disabled>
-                {t("detail.pickShowtime")}
-              </option>
-              {sessions.map((session) => {
-                const discount = session.discountValue
-                  ? session.discountType === "percentage"
-                    ? ` — ${session.discountValue}%`
-                    : ` — ${session.discountValue}`
-                  : "";
-                return (
-                  <option key={session.id} value={session.id}>
-                    {sessionLabel(session, locale)}
-                    {discount}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
+            <SessionPicker
+              className="mb-lg"
+              sessions={sessions}
+              selectedId={sessionId}
+              onSelect={chooseSession}
+            />
           )}
 
           {step === 1 && (
@@ -372,33 +326,20 @@ export function BookingModal({
                       {t("detail.noSeats")}
                     </span>
                   ) : (
-                    <select
-                      value={line.seatId ?? ""}
-                      aria-label={t("detail.seatFor", { n: index + 1 })}
-                      onChange={(event) =>
+                    <SeatPicker
+                      label={t("detail.seatFor", { n: index + 1 })}
+                      placeholder={t("detail.seatNumber")}
+                      seats={seatsForSession}
+                      takenIds={takenByOthers}
+                      value={line.seatId}
+                      onChange={(seatId) =>
                         setLines((current) =>
                           current.map((item, i) =>
-                            i === index
-                              ? { ...item, seatId: Number(event.target.value) }
-                              : item,
+                            i === index ? { ...item, seatId } : item,
                           ),
                         )
                       }
-                      className="h-[42px] rounded-[12px] border border-border-default bg-bg-page px-[12px] text-[14px] text-ink-primary"
-                    >
-                      <option value="" disabled>
-                        {t("detail.seatNumber")}
-                      </option>
-                      {seatsForSession.map((seat) => (
-                        <option
-                          key={seat.id}
-                          value={seat.id}
-                          disabled={takenByOthers.has(seat.id)}
-                        >
-                          {seat.label}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   ))}
               </div>
             );
@@ -505,6 +446,59 @@ export function BookingModal({
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
+  );
+}
+
+/** In-modal seat list — same row pattern as SessionPicker (no OS `<select>`). */
+function SeatPicker({
+  label,
+  placeholder,
+  seats,
+  takenIds,
+  value,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  seats: SeatOption[];
+  takenIds: Set<number | undefined>;
+  value?: number;
+  onChange: (seatId: number) => void;
+}) {
+  const selected = seats.find((seat) => seat.id === value);
+
+  return (
+    <fieldset className="flex flex-col gap-xs">
+      <legend className="sr-only">{label}</legend>
+      <span className="text-[12px] font-medium text-ink-secondary">
+        {selected ? selected.label : placeholder}
+      </span>
+      <div className="grid max-h-[160px] grid-cols-4 gap-[6px] overflow-y-auto sm:grid-cols-5">
+        {seats.map((seat) => {
+          const taken = takenIds.has(seat.id);
+          const active = seat.id === value;
+          return (
+            <button
+              key={seat.id}
+              type="button"
+              disabled={taken}
+              aria-pressed={active}
+              aria-label={seat.label}
+              onClick={() => onChange(seat.id)}
+              className={cn(
+                "rounded-[10px] border px-[6px] py-[8px] text-[13px] font-semibold transition-[border-color,background-color] duration-micro ease-micro",
+                active
+                  ? "border-border-brand bg-bg-tint-brand text-ink-brand-mid"
+                  : "border-border-default bg-bg-page text-ink-primary hover:border-border-brand",
+                taken && "cursor-not-allowed opacity-45 hover:border-border-default",
+              )}
+            >
+              {seat.label}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 

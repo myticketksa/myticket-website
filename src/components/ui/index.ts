@@ -12,6 +12,10 @@ export { OTPInput, type OTPInputProps } from './OTPInput'
 export { FileDropButton, type FileDropButtonProps } from './FileDropButton'
 export { ChipMultiSelect, type ChipMultiSelectProps } from './ChipMultiSelect'
 export {
+  MultiSelectDropdown,
+  type MultiSelectDropdownProps,
+} from './MultiSelectDropdown'
+export {
   Field,
   FieldLabel,
   InlineError,

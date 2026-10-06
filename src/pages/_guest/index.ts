@@ -24,7 +24,6 @@ export { AUCTION_EVENT_COVER } from './auctions-media'
 export {
   CatalogPageHead,
   CatalogSaveAlertActions,
-  type CatalogChip,
   type CatalogPageHeadProps,
 } from './CatalogPageHead'
 export {

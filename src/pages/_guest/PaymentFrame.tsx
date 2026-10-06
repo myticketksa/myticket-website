@@ -7,42 +7,57 @@ import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
 import { isPaymentPending, isPaymentSettled } from "@/lib/purchase/paymentStatus";
 
 /**
- * The gateway, in its own window, with the outcome read from our server.
+ * Payment runs in a separate browser *tab*; this overlay stays on the booking
+ * tab and polls the order until it settles, then closes the payment tab and
+ * focuses this one again.
  *
- * It has to be a separate window. The gateway's 3-D Secure step and its redirect
- * page both navigate the top frame, so inside an overlay they either tear the
- * site out from under the buyer or strand themselves — both were tried and both
- * were watched happening.
- *
- * What is NOT copied from the original is how it learned the result: it polled
- * `window.closed` and lost the answer whenever the window was blocked, closed
- * early, or opened on a phone. The window here is only a place to type a card.
- * The truth comes from polling the order, so a closed window, a blocked popup or
- * a buyer who wanders off cannot produce a wrong outcome.
+ * The gateway must not load in an iframe/overlay — 3-D Secure and its return
+ * navigate the top frame and tear the SPA apart.
  */
 export interface PaymentFrameProps {
   open: boolean;
   orderId: number | null;
+  /** Tab opened on the Pay click (gesture-safe). */
+  paymentWindow?: Window | null;
   onPaid: (orderId: number) => void;
   onFailed: (orderId: number) => void;
   onClose: () => void;
 }
 
+function closePaymentTab(tab: Window | null | undefined) {
+  if (!tab || tab.closed) return;
+  try {
+    tab.close();
+  } catch {
+    // Cross-origin after gateway redirect — ignore.
+  }
+}
+
 export function PaymentFrame({
   open,
   orderId,
+  paymentWindow = null,
   onPaid,
   onFailed,
   onClose,
 }: PaymentFrameProps) {
   const { t } = useTranslation(["checkout", "common"]);
-  // The window is opened by the click, before this renders — see the booking
-  // handler. Here we only need a handle to close it when the order settles.
-  const windowRef = useRef<Window | null>(null);
+  const tabRef = useRef<Window | null>(null);
+  const onPaidRef = useRef(onPaid);
+  const onFailedRef = useRef(onFailed);
+  const handledRef = useRef(false);
+
+  onPaidRef.current = onPaid;
+  onFailedRef.current = onFailed;
+
   useEffect(() => {
-    if (!open) return;
-    windowRef.current = window.open("", "MyTicketPayment");
-  }, [open]);
+    if (!open) {
+      handledRef.current = false;
+      tabRef.current = null;
+      return;
+    }
+    tabRef.current = paymentWindow;
+  }, [open, paymentWindow]);
 
   const { data: order } = useGetOrderDetailsQuery(orderId!, {
     skip: !open || orderId == null,
@@ -54,17 +69,34 @@ export function PaymentFrame({
   ).toLowerCase();
 
   useEffect(() => {
-    if (!open || orderId == null || !status) return;
+    if (!open || orderId == null || handledRef.current) return;
     if (isPaymentPending(status)) return;
-    windowRef.current?.close();
-    if (isPaymentSettled(status)) onPaid(orderId);
-    else onFailed(orderId);
-  }, [onFailed, onPaid, open, orderId, status]);
+
+    handledRef.current = true;
+    closePaymentTab(tabRef.current);
+    tabRef.current = null;
+    // Bring the buyer back to this tab before routing/toasting.
+    try {
+      window.focus();
+    } catch {
+      // ignore
+    }
+
+    if (isPaymentSettled(status)) onPaidRef.current(orderId);
+    else onFailedRef.current(orderId);
+  }, [open, orderId, status]);
 
   if (!open) return null;
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={(next) => !next && onClose()}>
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (next) return;
+        closePaymentTab(tabRef.current);
+        onClose();
+      }}
+    >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-[60] bg-surface-inverse/65 backdrop-blur-[2px]" />
         <DialogPrimitive.Content className="fixed inset-0 z-[60] m-auto h-fit w-[min(100vw-2rem,420px)] rounded-[22px] bg-surface-default p-xl outline-none">
@@ -80,13 +112,24 @@ export function PaymentFrame({
               <Button
                 variant="secondary"
                 className="w-full"
-                onClick={() => window.open("", "MyTicketPayment")?.focus()}
+                onClick={() => {
+                  const tab = tabRef.current;
+                  if (tab && !tab.closed) {
+                    tab.focus();
+                    return;
+                  }
+                  tabRef.current = window.open("about:blank", "_blank");
+                  tabRef.current?.focus();
+                }}
               >
                 {t("checkout:payment.reopenWindow")}
               </Button>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => {
+                  closePaymentTab(tabRef.current);
+                  onClose();
+                }}
                 className="text-[13px] text-ink-muted underline"
               >
                 {t("common:actions.cancel")}

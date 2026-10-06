@@ -76,7 +76,7 @@ export function SessionPicker({
 
   return (
     <fieldset className={cn("flex flex-col gap-xs", className)}>
-      <legend className="mb-xs text-[13px] text-ink-secondary">
+      <legend className="mb-xs text-[13px] font-semibold text-ink-primary">
         {t("detail.bookingDate")}
       </legend>
       <div className="flex flex-col gap-[6px]">

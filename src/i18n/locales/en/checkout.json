@@ -204,6 +204,7 @@
     "unknownTitle": "We couldn't match that payment",
     "unknownBody": "Nothing was lost — your orders are on your tickets page.",
     "goToTickets": "Go to my tickets",
+    "goToReservation": "My reservation",
     "slowTitle": "Payment is taking longer than usual",
     "slowBody": "You haven't been charged twice. The order is saved on your tickets page and you can finish paying there.",
     "refusedTitle": "Payment didn't go through",
@@ -211,7 +212,11 @@
     "tryAgain": "Try again",
     "frameTitle": "Complete your payment",
     "frameNote": "Handled by the secure payment gateway. You're not leaving the site.",
-    "windowNote": "Finish paying in the window that opened. The result appears here as soon as it clears.",
-    "reopenWindow": "Reopen the payment window"
+    "windowNote": "Finish paying in the tab that opened. We’ll close it and bring you back here when it’s done.",
+    "reopenWindow": "Switch to payment tab",
+    "successTitle": "Payment successful",
+    "successBody": "Your tickets are ready. Reference #{{orderId}}.",
+    "viewTicket": "View ticket",
+    "giftTicket": "Gift this ticket"
   }
 }

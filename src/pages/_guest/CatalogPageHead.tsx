@@ -1,22 +1,13 @@
 import type { ReactNode } from 'react'
-import { FilterChip } from '@/components/data-display'
 import { HeartGlyphIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 
-export interface CatalogChip {
-  /** Stable filter value (fixture / API English label). */
-  label: string
-  /** Localized chip text; defaults to `label`. */
-  displayLabel?: string
-  selected?: boolean
-}
-
 export interface CatalogPageHeadProps {
   title: string
   subtitle?: string
-  chips?: CatalogChip[]
-  onChipSelect?: (label: string) => void
+  /** Filter controls under the title (dropdowns — not a chip strip). */
+  filters?: ReactNode
   /** Secondary + primary actions on the right of the title row (Events pattern). */
   actions?: ReactNode
   /** Optional eyebrow above the H1 (Talents / Facilities / Auction). */
@@ -24,12 +15,11 @@ export interface CatalogPageHeadProps {
   className?: string
 }
 
-/** Breadcrumb → PageHead (H1 + sub + actions + FilterChip row). */
+/** Breadcrumb → PageHead (H1 + sub + actions + filter row). */
 export function CatalogPageHead({
   title,
   subtitle,
-  chips,
-  onChipSelect,
+  filters,
   actions,
   eyebrow,
   className,
@@ -52,19 +42,11 @@ export function CatalogPageHead({
         {actions && <div className="w-full shrink-0 sm:w-auto">{actions}</div>}
       </div>
 
-      {chips && chips.length > 0 && (
-        <div className="mt-[22px] flex w-full flex-wrap gap-[9px]">
-          {chips.map((chip) => (
-            <FilterChip
-              key={chip.label}
-              selected={chip.selected}
-              onClick={() => onChipSelect?.(chip.label)}
-            >
-              {chip.displayLabel ?? chip.label}
-            </FilterChip>
-          ))}
+      {filters ? (
+        <div className="mt-[22px] flex w-full flex-wrap items-center gap-[9px]">
+          {filters}
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

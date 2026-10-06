@@ -2,145 +2,89 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { EventCard } from "@/components/cards";
+import { MapPinIcon } from "@/components/icons";
 import { FadeUp, StaggerGroup } from "@/components/motion";
-import { Breadcrumbs } from "@/components/navigation";
+import { Breadcrumbs, NumberedPagination } from "@/components/navigation";
+import { MultiSelectDropdown, SearchField } from "@/components/ui";
 import { PageSection } from "@/layouts";
-import { NumberedPagination } from "@/components/navigation";
 import {
-  CatalogBody,
-  CatalogPageHead,
   EVENT_CATEGORY_CHIPS,
-  FilterSidebar,
-  type FilterSidebarState,
   LinkedCard,
-  ResultsToolbar,
   slugify,
 } from "@/pages/_guest";
+import { useGetCitiesQuery } from "@/app/api/accountApis";
 import {
   useGetEventCategoriesQuery,
   useGetEventsQuery,
 } from "@/app/api/eventsApi";
-import { mapCategoryLabels } from "@/lib/api/mappers/categories";
+import { mapCategoryOptions, mapCityOptions } from "@/lib/api/mappers/cities";
 import { mapApiEventToCard } from "@/lib/api/mappers/events";
 import { buildPageNumbers } from "@/lib/api/unwrap";
 import { useEventFavorites } from "@/lib/favorites/useEventFavorites";
 import { catalogLabel } from "@/lib/i18n/catalogLabels";
+import { cn } from "@/lib/cn";
 
-const SORT_KEYS = ["date", "newest", "price", "rating"] as const;
-
-type SortKey = (typeof SORT_KEYS)[number];
-
-const EMPTY_FILTERS: FilterSidebarState = {
-  when: "Any date",
-  cities: [],
-  rating: "Any",
-  other: [],
-  maxPrice: 1500,
-  seatingTypes: [],
-};
-
-function parseRatingFloor(option: string): number | null {
-  if (option === "Any") return null;
-  const n = Number.parseFloat(option.replace("+", ""));
-  return Number.isFinite(n) ? n : null;
-}
-
-function parsePrice(price: string): number {
-  const n = Number.parseFloat(price.replace(/[^\d.]/g, ""));
-  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
-}
-
-function categoryKey(value: string | undefined): string {
-  return (value ?? "").trim().toLocaleLowerCase().replace(/\s+/g, " ");
-}
-
-function startOfLocalDay(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-
-/** Filter using API `startTime` when present; fixtures fall back to the date label. */
-function matchesWhen(
-  startTime: string | undefined,
-  dateLabel: string,
-  when: string,
-): boolean {
-  if (when === "Any date") return true;
-
-  const parsed = startTime ? new Date(startTime) : null;
-  if (!parsed || Number.isNaN(parsed.getTime())) {
-    if (when === "Weekend") return /\b(Fri|Sat|Sun)\b/i.test(dateLabel);
-    return true;
-  }
-
-  const now = new Date();
-  const today = startOfLocalDay(now);
-  const eventDay = startOfLocalDay(parsed);
-
-  if (when === "Today") {
-    return eventDay.getTime() === today.getTime();
-  }
-
-  if (when === "This week") {
-    const day = today.getDay();
-    const mondayOffset = day === 0 ? -6 : 1 - day;
-    const weekStart = new Date(today);
-    weekStart.setDate(weekStart.getDate() + mondayOffset);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-    return parsed >= weekStart && parsed < weekEnd;
-  }
-
-  if (when === "Weekend") {
-    // Saudi weekend: Friday–Saturday
-    const dow = parsed.getDay();
-    return dow === 5 || dow === 6;
-  }
-
-  if (when === "This month") {
-    return (
-      parsed.getFullYear() === now.getFullYear() &&
-      parsed.getMonth() === now.getMonth()
-    );
-  }
-
-  return true;
-}
-
-/** Events directory — Figma `207:4600`. Events API with fixture fallback. */
+/**
+ * Events directory — matches mobile DiscoveryList:
+ * categories dropdown, nearest search, city dropdown, upcoming list.
+ * Optional `?free=1` for the free-tickets drill-down.
+ */
 export function EventsPage() {
   const { t } = useTranslation(["catalog", "nav", "common"]);
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Math.max(1, Number(searchParams.get("page") || 1) || 1);
-  const sortParam = searchParams.get("sort");
-  const [category, setCategory] = useState("All events");
-  const [view, setView] = useState<"grid" | "list">("grid");
-  const [sortKey, setSortKey] = useState<SortKey>(
-    sortParam === "newest" ? "newest" : "date",
-  );
-  const [filters, setFilters] = useState<FilterSidebarState>(EMPTY_FILTERS);
+  const freeParam = searchParams.get("free");
+  const freeOnly =
+    freeParam === "1" || freeParam === "true"
+      ? true
+      : freeParam === "0" || freeParam === "false"
+        ? false
+        : undefined;
 
-  useEffect(() => {
-    if (sortParam === "newest") setSortKey("newest");
-  }, [sortParam]);
+  const [categoryId, setCategoryId] = useState("");
+  const [cityId, setCityId] = useState("");
+  const [query, setQuery] = useState("");
 
   const { data: apiCategories } = useGetEventCategoriesQuery();
+  const { data: apiCities } = useGetCitiesQuery();
   const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites();
 
-  const selectedCategoryId = useMemo(() => {
-    if (categoryKey(category) === categoryKey("All events")) return undefined;
-    const selected = (apiCategories ?? []).find((record) => {
-      const label = mapCategoryLabels([record])[0];
-      return categoryKey(label) === categoryKey(category);
-    });
-    const id = selected?.id;
-    return typeof id === "string" || typeof id === "number" ? id : undefined;
-  }, [apiCategories, category]);
+  const categoryOptions = useMemo(
+    () =>
+      mapCategoryOptions(apiCategories, {
+        fallback: EVENT_CATEGORY_CHIPS.filter(
+          (label) => label !== "All events",
+        ).map((label, index) => ({
+          value: String(index + 1),
+          label,
+        })),
+      }).map((option) => ({
+        ...option,
+        label: catalogLabel(t, option.label),
+      })),
+    [apiCategories, t],
+  );
+
+  const cityOptions = useMemo(
+    () =>
+      mapCityOptions(apiCities).map((city) => ({
+        ...city,
+        label: catalogLabel(t, city.label),
+      })),
+    [apiCities, t],
+  );
 
   const {
     data: eventsResult,
     isFetching,
     isError,
-  } = useGetEventsQuery({ page, categoryId: selectedCategoryId });
+  } = useGetEventsQuery({
+    page,
+    categoryId: categoryId || undefined,
+    cityId: cityId || undefined,
+    free: freeOnly,
+    upcoming: true,
+  });
   const apiEvents = eventsResult?.items;
   const pagination = eventsResult?.pagination;
 
@@ -157,24 +101,7 @@ export function EventsPage() {
     );
   };
 
-  // Reset to page 1 only when filters/sort actually change.
-  // Do not depend on `setSearchParams` — RR recreates it whenever `searchParams`
-  // change, which would wipe `?page=` right after a pagination click.
-  // Avoid a one-shot skip ref: React Strict Mode re-runs effects on the same
-  // instance and would burn the guard, then clear the page on the second pass.
-  const filterKey = useMemo(
-    () =>
-      JSON.stringify({
-        when: filters.when,
-        cities: filters.cities,
-        rating: filters.rating,
-        other: filters.other,
-        maxPrice: filters.maxPrice,
-        seatingTypes: filters.seatingTypes,
-      }),
-    [filters],
-  );
-  const pageResetSig = `${filterKey}\0${category}\0${sortKey}`;
+  const pageResetSig = `${cityId}\0${categoryId}\0${freeOnly}\0${query}`;
   const prevPageResetSigRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -192,122 +119,42 @@ export function EventsPage() {
       },
       { replace: true },
     );
-  }, [pageResetSig]); // eslint-disable-line react-hooks/exhaustive-deps -- omit setSearchParams on purpose
-
-  const categoryChips = useMemo(
-    () =>
-      mapCategoryLabels(apiCategories, {
-        allLabel: "All events",
-        fallback: EVENT_CATEGORY_CHIPS,
-      }),
-    [apiCategories],
-  );
+  }, [pageResetSig]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const catalog = useMemo(() => {
     if (eventsResult !== undefined) {
       return (apiEvents ?? []).map(mapApiEventToCard);
     }
-    // No sample catalogue behind the API — an empty list stays empty.
     return [];
   }, [apiEvents, eventsResult]);
 
-  const filtered = useMemo(() => {
-    const ratingFloor = parseRatingFloor(filters.rating);
-    const freeOnly = filters.other.includes("Free entry only");
-    const hasEventCategories = catalog.some((event) => event.category?.trim());
-
-    return catalog.filter((e) => {
-      if (
-        categoryKey(category) !== categoryKey("All events") &&
-        hasEventCategories
-      ) {
-        if (categoryKey(e.category) !== categoryKey(category)) return false;
-      }
-      if (
-        filters.cities.length > 0 &&
-        !filters.cities.some((city) =>
-          e.venue.toLowerCase().includes(city.toLowerCase()),
-        )
-      ) {
-        return false;
-      }
-      if (ratingFloor !== null && Number.parseFloat(e.rating) < ratingFloor)
-        return false;
-      if (
-        !matchesWhen(
-          "startTime" in e ? e.startTime : undefined,
-          e.date,
-          filters.when,
-        )
-      ) {
-        return false;
-      }
-      if (freeOnly && parsePrice(e.price) > 0) return false;
-      if (parsePrice(e.price) > filters.maxPrice) return false;
-      if (filters.seatingTypes.length > 0) {
-        const seating =
-          "seatingType" in e && e.seatingType ? e.seatingType : "assigned";
-        if (!filters.seatingTypes.includes(seating)) return false;
-      }
-      return true;
-    });
-  }, [catalog, category, filters]);
-
+  // Server ignores `q` — same client filter as the mobile app.
   const shown = useMemo(() => {
-    const list = [...filtered];
-    if (sortKey === "price") {
-      list.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
-    } else if (sortKey === "rating") {
-      list.sort(
-        (a, b) => Number.parseFloat(b.rating) - Number.parseFloat(a.rating),
-      );
-    } else if (sortKey === "newest") {
-      list.sort((a, b) => {
-        const aId = Number(("id" in a && a.id) || 0);
-        const bId = Number(("id" in b && b.id) || 0);
-        return bId - aId;
-      });
-    }
-    return list;
-  }, [filtered, sortKey]);
+    const needle = query.trim().toLowerCase();
+    if (!needle) return catalog;
+    return catalog.filter((event) => {
+      const hay = `${event.title} ${event.venue}`.toLowerCase();
+      return hay.includes(needle);
+    });
+  }, [catalog, query]);
 
   const lastPage = Math.max(1, pagination?.lastPage ?? 1);
   const currentPage = Math.min(page, lastPage);
   const pageNumbers = buildPageNumbers(currentPage, lastPage);
-  const usingApiPages = Boolean(
-    apiEvents && apiEvents.length > 0 && pagination,
-  );
 
-  const sortLabels: Record<SortKey, string> = {
-    date: t("results.sortDateSoonest"),
-    newest: t("results.sortNewest"),
-    price: t("results.sortPriceLow"),
-    rating: t("results.sortRating"),
-  };
-  const sortModeLabel = sortLabels[sortKey];
-  const cycleSort = () => {
-    const idx = SORT_KEYS.indexOf(sortKey);
-    const next = SORT_KEYS[(idx + 1) % SORT_KEYS.length]!;
-    setSortKey(next);
-    setSearchParams(
-      (prev) => {
-        const params = new URLSearchParams(prev);
-        if (next === "newest") params.set("sort", "newest");
-        else params.delete("sort");
-        return params;
-      },
-      { replace: true },
-    );
-  };
+  const title =
+    freeOnly === true
+      ? t("pages.freeTickets", { defaultValue: "Free tickets" })
+      : freeOnly === false
+        ? t("pages.upcomingEvents", { defaultValue: "Upcoming events" })
+        : t("pages.upcomingEvents", { defaultValue: "Upcoming events" });
 
-  const categoryDisplay = catalogLabel(t, category);
-  const resultCount = usingApiPages
-    ? (pagination?.total ?? shown.length)
-    : shown.length;
-  const subtitleParts = [
+  const statusLine = [
     isError ? t("pages.apiPreview") : null,
     isFetching ? t("pages.updating") : null,
-  ].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <>
@@ -315,91 +162,101 @@ export function EventsPage() {
         <Breadcrumbs
           items={[
             { label: t("nav:main"), href: "/" },
-            { label: t("nav:events"), href: "/events" },
-            { label: categoryDisplay },
+            { label: t("nav:events") },
           ]}
         />
       </PageSection>
 
       <PageSection padTop={14} padBottom={0}>
         <FadeUp>
-          <CatalogPageHead
-            title={t("pages.eventsInSaudi", { category: categoryDisplay })}
-            subtitle={subtitleParts.join(" ")}
-            chips={categoryChips.map((label) => ({
-              label,
-              displayLabel: catalogLabel(t, label),
-              selected:
-                label === category ||
-                (label === "All events" && category === "All events"),
-            }))}
-            onChipSelect={(label) => {
-              setCategory(label);
-            }}
-          />
+          <div className="flex w-full flex-col gap-lg sm:flex-row sm:items-center sm:justify-between">
+            <MultiSelectDropdown
+              multi={false}
+              size="chip"
+              label={t("filters.category")}
+              allLabel={t("filters.allEvents")}
+              placeholder={t("filters.category")}
+              options={categoryOptions}
+              value={categoryId ? [categoryId] : []}
+              onChange={(next) => setCategoryId(next[0] ?? "")}
+            />
+            <h1 className="text-display-hero text-ink-primary sm:text-center">
+              {title}
+            </h1>
+            <div className="hidden w-[120px] sm:block" aria-hidden />
+          </div>
+          {statusLine ? (
+            <p className="mt-md text-[14px] text-ink-secondary">{statusLine}</p>
+          ) : null}
         </FadeUp>
+
+        <div className="mt-xl flex w-full flex-col gap-md">
+          <label className="relative block w-full">
+            <span className="sr-only">
+              {t("filters.searchNear", {
+                defaultValue: "Search nearest to you",
+              })}
+            </span>
+            <SearchField
+              className="!max-w-none focus-within:!max-w-none"
+              placeholder={t("filters.searchNear", {
+                defaultValue: "Search nearest to you",
+              })}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <MapPinIcon
+              size={16}
+              className="pointer-events-none absolute end-md top-1/2 -translate-y-1/2 text-ink-brand"
+            />
+          </label>
+
+          <MultiSelectDropdown
+            multi={false}
+            size="field"
+            className="w-full"
+            allLabel={t("filters.anywhereSaudi")}
+            placeholder={t("filters.city")}
+            options={cityOptions}
+            value={cityId ? [cityId] : []}
+            onChange={(next) => setCityId(next[0] ?? "")}
+          />
+        </div>
       </PageSection>
 
-      <PageSection padTop={28} padBottom={0}>
-        <CatalogBody
-          filters={
-            <FilterSidebar
-              interactive
-              onChange={setFilters}
-              onClear={() => setFilters(EMPTY_FILTERS)}
-            />
-          }
+      <PageSection padTop={28} padBottom={64}>
+        <StaggerGroup
+          className={cn(
+            "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3",
+          )}
         >
-          <ResultsToolbar
-            countLabel={t("results.countEvents", {
-              count: shown.length,
-              total: resultCount,
-            })}
-            activeFilter={
-              category === "All events" ? undefined : categoryDisplay
-            }
-            onClearFilter={() => setCategory("All events")}
-            sortLabel={t("results.sort")}
-            sortValue={sortModeLabel}
-            onSortClick={cycleSort}
-            view={view}
-            onViewChange={setView}
-          />
-          <StaggerGroup
-            className={
-              view === "list"
-                ? "mt-lg flex flex-col gap-lg"
-                : "mt-lg grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-            }
-          >
-            {shown.map((event) => (
-              <LinkedCard
-                key={event.slug ?? event.title}
-                to={`/events/${event.slug ?? slugify(event.title)}`}
-              >
-                <EventCard
-                  {...event}
-                  context="catalog"
-                  favourited={"id" in event ? isFavourite(event.id) : false}
-                  onToggleFavourite={
-                    "id" in event && canFavourite(event.id)
-                      ? () => void toggleFavourite(event.id)
-                      : undefined
-                  }
-                />
-              </LinkedCard>
-            ))}
-          </StaggerGroup>
-          {lastPage > 1 ? (
-            <div className="mt-[36px]">
-              <NumberedPagination
-                page={currentPage}
-                pages={pageNumbers}
-                onPageChange={setPage}
+          {shown.map((event) => (
+            <LinkedCard
+              key={event.slug ?? event.title}
+              to={`/events/${event.slug ?? slugify(event.title)}`}
+            >
+              <EventCard
+                {...event}
+                context="catalog"
+                favourited={"id" in event ? isFavourite(event.id) : false}
+                onToggleFavourite={
+                  "id" in event && canFavourite(event.id)
+                    ? () => void toggleFavourite(event.id)
+                    : undefined
+                }
               />
-            </div>
-          ) : null}
-        </CatalogBody>
+            </LinkedCard>
+          ))}
+        </StaggerGroup>
+        {lastPage > 1 ? (
+          <div className="mt-[36px]">
+            <NumberedPagination
+              page={currentPage}
+              pages={pageNumbers}
+              onPageChange={setPage}
+            />
+          </div>
+        ) : null}
       </PageSection>
     </>
   );

@@ -14,6 +14,7 @@ import {
   CloseIcon,
   MenuIcon,
   PowerIcon,
+  SearchIcon,
 } from "@/components/icons";
 import { Button } from "@/components/ui";
 import { mobileNavToggled, selectMobileNavOpen } from "@/features/ui/uiSlice";
@@ -26,9 +27,9 @@ import { SearchPill } from "./SearchPill";
 
 /**
  * Site header — Logo · nav · search · bell · profile/login · language.
- * Nav: Tickets & offers (dropdown) · Talents · Offers · Institutions.
+ * Nav: Events · Experiences · Talents · Facilities.
  */
-export type NavId = "TicketsAndOffers" | "Talents" | "Offers" | "Institutions";
+export type NavId = "Events" | "Experiences" | "Talents" | "Facilities";
 
 export interface HeaderNavLink {
   id?: NavId | string;
@@ -51,11 +52,19 @@ export interface SiteHeaderProps {
   className?: string;
 }
 
-const TICKETS_OFFERS_LINKS = [
-  { key: "upcoming" as const, href: "/events" },
-  { key: "newlyAdded" as const, href: "/events?sort=newest" },
-  { key: "landmarks" as const, href: "/experiences?type=attraction" },
-  { key: "activities" as const, href: "/experiences?type=activity" },
+const MAIN_LINKS = [
+  { id: "Events" as const, key: "events" as const, href: "/events" },
+  {
+    id: "Experiences" as const,
+    key: "experiences" as const,
+    href: "/experiences",
+  },
+  { id: "Talents" as const, key: "talents" as const, href: "/talents" },
+  {
+    id: "Facilities" as const,
+    key: "vendors" as const,
+    href: "/apply/facilities",
+  },
 ];
 
 const PROFILE_LINKS = [
@@ -109,61 +118,6 @@ function dropdownItemClassName() {
     "flex cursor-pointer select-none items-center rounded-[10px] px-md py-[10px]",
     "text-[14px] font-semibold text-ink-primary outline-none",
     "data-[highlighted]:bg-bg-page data-[highlighted]:text-ink-brand-mid",
-  );
-}
-
-function TicketsOffersDropdown({
-  active,
-  activeItemState,
-  onNavigate,
-}: {
-  active: boolean;
-  activeItemState: "active" | "section";
-  onNavigate: (path: string) => void;
-}) {
-  const { t } = useTranslation("nav");
-  const { locale } = useLocale();
-  const dir = locale === "ar" ? "rtl" : "ltr";
-
-  return (
-    <DropdownMenu.Root dir={dir}>
-      <DropdownMenu.Trigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "inline-flex items-center gap-[6px] text-[15px] leading-[normal] font-semibold whitespace-nowrap",
-            "transition-[color,opacity] duration-micro ease-micro",
-            !active && "text-ink-primary hover:text-ink-secondary",
-            active &&
-              activeItemState === "active" &&
-              "border-b-2 border-border-focus pb-[4px] text-ink-brand-mid",
-            active && activeItemState === "section" && "text-brand-primary",
-          )}
-        >
-          {t("ticketsAndOffers")}
-          <ChevronDownIcon size={12} className="opacity-70" />
-        </button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content
-          align="start"
-          side="bottom"
-          sideOffset={10}
-          collisionPadding={12}
-          className={dropdownContentClassName()}
-        >
-          {TICKETS_OFFERS_LINKS.map((item) => (
-            <DropdownMenu.Item
-              key={item.key}
-              className={dropdownItemClassName()}
-              onSelect={() => onNavigate(item.href)}
-            >
-              {t(`ticketsMenu.${item.key}`)}
-            </DropdownMenu.Item>
-          ))}
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
   );
 }
 
@@ -264,7 +218,7 @@ function DesktopAuthActions({
   );
 }
 
-function MobileDrawerAuth({
+function MobileDrawerAccount({
   state,
   account,
   onNavigate,
@@ -280,30 +234,25 @@ function MobileDrawerAuth({
 
   if (state === "signedOut") {
     return (
-      <div className="mb-xl flex flex-col gap-sm">
-        <Button
-          size="md"
-          onClick={() => onNavigate("/sign-in")}
-          className="w-full"
-        >
-          {t("common:actions.login")}
-        </Button>
-      </div>
+      <Button
+        size="md"
+        onClick={() => onNavigate("/sign-in")}
+        className="w-full"
+      >
+        {t("common:actions.login")}
+      </Button>
     );
   }
 
   return (
-    <div className="mb-xl flex flex-col gap-md">
-      <div className="flex items-center gap-sm">
-        <NotificationsMenu />
-        <div className="ms-auto flex min-w-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pe-[12px] ps-[5px]">
-          <Avatar initials={account?.initials ?? ""} size="md" />
-          {account?.name ? (
-            <span className="max-w-[7rem] truncate text-[13px] font-bold text-ink-primary">
-              {account.name}
-            </span>
-          ) : null}
-        </div>
+    <div className="flex flex-col gap-md">
+      <div className="flex min-w-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pe-[12px] ps-[5px]">
+        <Avatar initials={account?.initials ?? ""} size="md" />
+        {account?.name ? (
+          <span className="max-w-[10rem] truncate text-[13px] font-bold text-ink-primary">
+            {account.name}
+          </span>
+        ) : null}
       </div>
 
       {PROFILE_LINKS.map((item) => (
@@ -311,7 +260,7 @@ function MobileDrawerAuth({
           key={item.key}
           to={item.href}
           onClick={onClose}
-          className="text-[15px] font-bold text-ink-primary transition-colors duration-micro ease-micro hover:text-ink-secondary"
+          className="flex min-h-[44px] items-center text-[15px] font-bold text-ink-primary transition-colors duration-micro ease-micro hover:text-ink-secondary"
         >
           {t(`nav:accountMenu.${item.key}`)}
         </Link>
@@ -319,7 +268,7 @@ function MobileDrawerAuth({
 
       <button
         type="button"
-        className="flex h-[40px] w-full items-center gap-[11px] rounded-[12px] px-[11px] text-[14px] font-semibold text-state-danger hover:bg-bg-page disabled:opacity-60"
+        className="flex min-h-[44px] w-full items-center gap-[11px] rounded-[12px] px-[11px] text-[14px] font-semibold text-state-danger hover:bg-bg-page disabled:opacity-60"
         disabled={isLoading}
         onClick={() => {
           onClose();
@@ -339,80 +288,33 @@ function MainNav({
   onNavigate,
   className,
   itemClassName,
-  ticketsMode = "dropdown",
 }: {
   activeItem?: string;
   activeItemState: "active" | "section";
   onNavigate: (path: string) => void;
   className?: string;
   itemClassName?: string;
-  ticketsMode?: "dropdown" | "flat";
 }) {
   const { t } = useTranslation("nav");
-  const talentsActive = navItemActive("Talents", activeItem);
-  const offersActive = navItemActive("Offers", activeItem);
-  const institutionsActive = navItemActive("Institutions", activeItem);
-  const ticketsActive = navItemActive("TicketsAndOffers", activeItem);
-  const institutionsHref = "/apply/facilities";
 
   return (
     <nav aria-label={t("main")} className={className}>
-      {ticketsMode === "dropdown" ? (
-        <TicketsOffersDropdown
-          active={ticketsActive}
-          activeItemState={activeItemState}
-          onNavigate={onNavigate}
-        />
-      ) : (
-        <>
-          <p className="text-[12px] font-bold tracking-[0.06em] text-ink-muted uppercase">
-            {t("ticketsAndOffers")}
-          </p>
-          {TICKETS_OFFERS_LINKS.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              className={cn(
-                "min-h-[44px] text-start text-[14px] font-semibold text-ink-primary",
-                itemClassName,
-              )}
-              onClick={() => onNavigate(item.href)}
-            >
-              {t(`ticketsMenu.${item.key}`)}
-            </button>
-          ))}
-        </>
-      )}
-      <NavItem
-        label={t("talents")}
-        href="/talents"
-        state={talentsActive ? activeItemState : "default"}
-        className={itemClassName}
-        onClick={(event) => {
-          event.preventDefault();
-          onNavigate("/talents");
-        }}
-      />
-      <NavItem
-        label={t("offers")}
-        href="/events"
-        state={offersActive ? activeItemState : "default"}
-        className={itemClassName}
-        onClick={(event) => {
-          event.preventDefault();
-          onNavigate("/events");
-        }}
-      />
-      <NavItem
-        label={t("institutions")}
-        href={institutionsHref}
-        state={institutionsActive ? activeItemState : "default"}
-        className={itemClassName}
-        onClick={(event) => {
-          event.preventDefault();
-          onNavigate(institutionsHref);
-        }}
-      />
+      {MAIN_LINKS.map((item) => {
+        const active = navItemActive(item.id, activeItem);
+        return (
+          <NavItem
+            key={item.id}
+            label={t(item.key)}
+            href={item.href}
+            state={active ? activeItemState : "default"}
+            className={itemClassName}
+            onClick={(event) => {
+              event.preventDefault();
+              onNavigate(item.href);
+            }}
+          />
+        );
+      })}
     </nav>
   );
 }
@@ -470,7 +372,7 @@ export function SiteHeader({
     >
       <div className="flex h-full w-full max-w-[1400px] items-center gap-md px-gutter-desktop lg:gap-[28px]">
         <Link to="/" aria-label={t("nav:home")} className="shrink-0">
-          <Logo height={40} alt="" />
+          <Logo height={40} className="max-lg:!h-8" alt="" />
         </Link>
 
         <MainNav
@@ -501,10 +403,24 @@ export function SiteHeader({
         </div>
 
         <div className="flex shrink-0 items-center gap-sm lg:hidden">
-          <HeaderLanguagePill />
-          {state === "signedIn" && (
-            <NotificationsMenu />
+          {showSearch && (
+            <Button
+              variant="icon"
+              size="sm"
+              className="sm:hidden"
+              aria-label={t("nav:searchPlaceholder")}
+              onClick={() => go("/search")}
+            >
+              <SearchIcon size={16} />
+            </Button>
           )}
+          {state === "signedOut" && (
+            <Button size="sm" onClick={() => go("/sign-in")}>
+              {t("common:actions.login")}
+            </Button>
+          )}
+          <HeaderLanguagePill />
+          {state === "signedIn" && <NotificationsMenu />}
           <Button
             variant="icon"
             size="sm"
@@ -545,22 +461,12 @@ export function SiteHeader({
                 </DialogPrimitive.Close>
               </div>
 
-              <MobileDrawerAuth
-                state={state}
-                account={account}
-                onNavigate={go}
-                onClose={closeDrawer}
-              />
-
-              <div className="mb-xl h-px w-full bg-border-divider" />
-
               <MainNav
                 activeItem={activeItem}
                 activeItemState={activeItemState}
                 onNavigate={go}
-                ticketsMode="flat"
-                className="flex flex-col items-stretch gap-md"
-                itemClassName="min-h-[44px] items-center"
+                className="flex flex-col items-stretch gap-xs"
+                itemClassName="min-h-[48px] w-full justify-start px-sm"
               />
 
               {showSearch && (
@@ -572,6 +478,15 @@ export function SiteHeader({
                   />
                 </form>
               )}
+
+              <div className="my-xl h-px w-full bg-border-divider" />
+
+              <MobileDrawerAccount
+                state={state}
+                account={account}
+                onNavigate={go}
+                onClose={closeDrawer}
+              />
             </DialogPrimitive.Content>
           </DialogPrimitive.Portal>
         ) : null}

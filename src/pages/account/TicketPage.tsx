@@ -57,9 +57,9 @@ function TicketQr({ value }: { value: string }) {
   return (
     <QRCodeSVG
       value={value}
-      size={126}
+      size={200}
       level="M"
-      marginSize={0}
+      marginSize={1}
       bgColor="#FFFFFF"
       fgColor="#0A0A0A"
       aria-label="Ticket QR code"
@@ -173,29 +173,19 @@ export function TicketPage() {
                     <div className="mt-[22px] flex flex-wrap gap-[10px] border-t border-dashed border-border-default pt-[18px]">
                       {paid ? (
                         <Link to={`/my-tickets/${detail?.id ?? id}/gift`}>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
-                          >
+                          <Button variant="secondary" size="md">
                             {t('ticket.gift')}
                           </Button>
                         </Link>
                       ) : (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="h-[36px] rounded-[18px] bg-bg-page px-[14px]"
-                          disabled
-                        >
+                        <Button variant="secondary" size="md" disabled>
                           {t('ticket.gift')}
                         </Button>
                       )}
                       {canCancel && (
                         <Button
-                          variant="secondary"
-                          size="sm"
-                          className="h-[36px] rounded-[18px] bg-bg-page px-[14px] text-state-danger"
+                          variant="destructive"
+                          size="md"
                           loading={cancelState.isLoading}
                           onClick={() => void handleCancel()}
                         >
@@ -205,16 +195,16 @@ export function TicketPage() {
                     </div>
                   </div>
 
-                  <div className="relative flex w-full shrink-0 flex-col items-center justify-center gap-[12px] border-t-2 border-dashed border-border-default bg-bg-page p-[22px] sm:w-[200px] sm:border-t-0 sm:border-s-2 md:w-[232px]">
+                  <div className="relative flex w-full shrink-0 flex-col items-center justify-center gap-[14px] border-t-2 border-dashed border-border-default bg-bg-page px-[22px] py-[28px] sm:w-[260px] sm:border-t-0 sm:border-s-2 md:w-[280px]">
                     <div
                       className={cn(
-                        'rounded-[12px] border border-border-default bg-surface-default p-[10px]',
+                        'rounded-[16px] border border-border-default bg-surface-default p-[14px]',
                         !paid && 'opacity-40',
                       )}
                     >
                       <TicketQr value={qrValue} />
                     </div>
-                    <div className="text-center text-[12px] leading-[1.45]">
+                    <div className="text-center text-[13px] leading-[1.45]">
                       <p className="font-semibold text-ink-secondary">
                         {t('ticket.scanAtGate', {
                           gate: seat?.gate && seat.gate !== '—' ? seat.gate : '—',

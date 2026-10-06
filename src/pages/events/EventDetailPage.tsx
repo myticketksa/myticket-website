@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   useApplyPromoCodeMutation,
   useCreateOrderMutation,
@@ -26,7 +26,10 @@ import {
   resolveDefaultSessionId,
   resolveSeatingType,
 } from "@/lib/api/mappers/events";
-import { PAYING_ORDER_KEY } from "@/lib/purchase/useResumePayment";
+import {
+  beginPaymentRedirect,
+  buildPaymentReturnUrl,
+} from "@/lib/purchase/paymentReturn";
 import {
   clearHoldSession,
   startPurchaseForEvent,
@@ -48,7 +51,6 @@ import { NotFoundPage } from "@/pages/system/NotFoundPage";
 import {
   DetailGallery,
   BookingModal,
-  PaymentFrame,
   type BookingLine,
   type SeatOption,
   EVENT_DETAIL_GALLERY,
@@ -109,10 +111,12 @@ export function EventDetailPage() {
   const { t } = useTranslation(["catalog", "common", "checkout"]);
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { pathname, search } = useLocation();
   const dispatch = useAppDispatch();
-  const { requireAuth } = useRequireAuth();
+  const { requireAuth, isAuthenticated } = useRequireAuth();
   const [createOrder, createState] = useCreateOrderMutation();
   const [payOrder, payState] = usePayOrderMutation();
+  const [applyPromo] = useApplyPromoCodeMutation();
   const slugOrId = slug ?? "";
   const { isFavourite, toggleFavourite } = useEventFavorites();
 
@@ -316,11 +320,14 @@ export function EventDetailPage() {
    * from this so the existing totals and order payload keep working.
    */
   const [bookingOpen, setBookingOpen] = useState(false);
-  /** Gateway page shown over the site while a card payment is taken. */
-  const [payment, setPayment] = useState<{ orderId: number } | null>(null);
 
   const { data: apiSeats } = useGetEventSeatsQuery(resolvedId!, {
-    skip: !resolvedId || seatingType !== "assigned",
+    // Seats API requires auth — don't probe it on public detail (401 used to kick guests to sign-in).
+    skip:
+      !resolvedId ||
+      seatingType !== "assigned" ||
+      !isAuthenticated ||
+      !bookingOpen,
   });
 
   /** Seat rows for the chosen showtime — the endpoint returns the whole event. */
@@ -351,7 +358,6 @@ export function EventDetailPage() {
       })
       .filter((seat) => Number.isInteger(seat.id));
   }, [apiSeats, selectedSessionId]);
-  const [applyPromo] = useApplyPromoCodeMutation();
 
   const bookingTypeOptions = useMemo(
     () =>
@@ -412,19 +418,6 @@ export function EventDetailPage() {
     });
     if (!allowed) return;
 
-    /*
-     * Open the payment window NOW, on the click that triggered this.
-     *
-     * The gateway url does not exist yet — it takes a round trip to mint — but a
-     * window opened after an await is not attributable to a user gesture and
-     * every browser blocks it. So claim the window first and point it at the
-     * gateway once we have the address.
-     */
-    const payWindow =
-      booking.method === "apple"
-        ? null
-        : window.open("about:blank", "MyTicketPayment", "width=520,height=720");
-
     const seatIds = booking.lines
       .map((line) => line.seatId)
       .filter((id): id is number => Number.isInteger(id));
@@ -469,19 +462,14 @@ export function EventDetailPage() {
       const paid = await payOrder({
         orderId,
         brand: booking.method === "wallet" ? "WALLET" : "CREDIT",
-        // Land the buyer on the handler that reads the outcome, rather than
-        // wherever the gateway's default points. The server only honours hosts
-        // on its own allow-list, so this cannot be pointed anywhere else.
-        returnUrl: `${window.location.origin}/payment-return?orderId=${orderId}`,
+        // Gateway status page sends the buyer here with the order reference.
+        // Host must be allow-listed on the API (https myticket.sa, or localhost).
+        returnUrl: buildPaymentReturnUrl(orderId),
       }).unwrap();
 
-      sessionStorage.setItem("myticket.lastOrderId", String(orderId));
       clearHoldSession();
       setBookingOpen(false);
 
-      // Card and Apple Pay are not settled here — the API answers with a hosted
-      // payment page. Open it the way the original does, in a window beside the
-      // booking, and watch the order until it clears.
       const redirectUrl =
         typeof paid?.redirectUrl === "string"
           ? paid.redirectUrl
@@ -490,29 +478,15 @@ export function EventDetailPage() {
             : undefined;
 
       if (redirectUrl) {
-        sessionStorage.setItem(PAYING_ORDER_KEY, String(orderId));
-
-        // Apple Pay needs the top-level page: its sheet only runs in the main
-        // browsing context, on the domain it was validated against.
-        if (booking.method === "apple") {
-          window.location.assign(redirectUrl);
-          return;
-        }
-
-        if (payWindow && !payWindow.closed) {
-          payWindow.location.replace(redirectUrl);
-          setPayment({ orderId });
-          return;
-        }
-
-        // Blocked after all — take the whole page rather than strand the buyer.
+        // Same tab → gateway → /payment-return?orderId=… → back here + modal.
+        beginPaymentRedirect(orderId, `${pathname}${search}`);
         window.location.assign(redirectUrl);
         return;
       }
 
+      // Wallet (and any brand that settles inline) — no hosted page.
       navigate(`/order-confirmation?orderId=${orderId}`);
     } catch (error) {
-      payWindow?.close();
       dispatch(
         toastPushed("error", apiErrorMessage(error, t("detail.claimFailed"))),
       );
@@ -704,23 +678,6 @@ export function EventDetailPage() {
               {isPastEvent ? t("detail.eventEnded") : primaryLabel}
             </Button>
           </div>
-
-          <PaymentFrame
-            open={payment != null}
-            orderId={payment?.orderId ?? null}
-            onPaid={(id) => {
-              sessionStorage.removeItem(PAYING_ORDER_KEY);
-              setPayment(null);
-              setBookingOpen(false);
-              navigate(`/order-confirmation?orderId=${id}`);
-            }}
-            onFailed={() => {
-              sessionStorage.removeItem(PAYING_ORDER_KEY);
-              setPayment(null);
-              dispatch(toastPushed("error", t("detail.paymentNotCompleted")));
-            }}
-            onClose={() => setPayment(null)}
-          />
 
           <BookingModal
             open={bookingOpen}

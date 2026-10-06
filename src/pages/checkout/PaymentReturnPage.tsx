@@ -4,33 +4,27 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
 import { Button } from "@/components/ui";
 import { PageSection } from "@/layouts";
-import { PAYING_ORDER_KEY } from "@/lib/purchase/useResumePayment";
+import {
+  PAYING_ORDER_KEY,
+  consumePaymentBackPath,
+  markPaymentSuccess,
+} from "@/lib/purchase/paymentReturn";
 import { isPaymentPending, isPaymentSettled } from "@/lib/purchase/paymentStatus";
 
 /**
- * Where the payment gateway drops the buyer back.
+ * Where the payment gateway drops the buyer after paying.
  *
- * The outcome is read from the order on the server, never from anything the
- * gateway puts in the URL and never from the state of a browser window. The
- * original watched a popup handle and lost the result whenever that window was
- * blocked, closed early, or opened on a phone; this cannot, because the order
- * is the only thing consulted.
- *
- * Three endings, and no others: paid goes to the confirmation, refused goes
- * back to the event with a reason, still-settling keeps asking for a while and
- * then hands the buyer to their tickets, where the order is waiting and can be
- * paid again. A purchase is never silently lost.
+ * Outcome is read from the order on the server — never from URL flags the
+ * gateway controls. On success we restore the page they left and leave a
+ * session flag so that page can open the success modal.
  */
 
-/** How long to keep asking before we stop waiting on the gateway. */
 const SETTLE_TIMEOUT_MS = 45_000;
 
 function readOrderId(params: URLSearchParams): number | undefined {
   const fromUrl = Number(params.get("orderId") ?? params.get("order_id") ?? "");
   if (Number.isInteger(fromUrl) && fromUrl > 0) return fromUrl;
-  const remembered = Number(
-    sessionStorage.getItem(PAYING_ORDER_KEY) ?? "",
-  );
+  const remembered = Number(sessionStorage.getItem(PAYING_ORDER_KEY) ?? "");
   return Number.isInteger(remembered) && remembered > 0 ? remembered : undefined;
 }
 
@@ -53,9 +47,15 @@ export function PaymentReturnPage() {
   const paid = isPaymentSettled(status);
 
   useEffect(() => {
-    if (settling) return;
+    if (settling || orderId == null) return;
+    if (paid) {
+      markPaymentSuccess(orderId);
+      navigate(consumePaymentBackPath(`/order-confirmation?orderId=${orderId}`), {
+        replace: true,
+      });
+      return;
+    }
     sessionStorage.removeItem(PAYING_ORDER_KEY);
-    if (paid) navigate(`/order-confirmation?orderId=${orderId}`, { replace: true });
   }, [navigate, orderId, paid, settling]);
 
   useEffect(() => {
@@ -100,14 +100,20 @@ export function PaymentReturnPage() {
     );
   }
 
-  if (paid) return <Shell title={t("checkout:confirmation.settlingTitle")} spinner />;
+  if (paid) {
+    return <Shell title={t("checkout:confirmation.settlingTitle")} spinner />;
+  }
 
   return (
     <Shell title={t("checkout:payment.refusedTitle")}>
       <p className="text-[14px] text-ink-secondary">
         {t("checkout:payment.refusedBody")}
       </p>
-      <Button onClick={() => navigate("/my-tickets", { replace: true })}>
+      <Button
+        onClick={() =>
+          navigate(consumePaymentBackPath("/my-tickets"), { replace: true })
+        }
+      >
         {t("checkout:payment.tryAgain")}
       </Button>
     </Shell>

@@ -12,7 +12,7 @@
   "institutions": "Institutions",
   "vendors": "Facilities",
   "auctions": "Auctions",
-  "myTickets": "My tickets",
+  "myTickets": "My reservation",
   "notifications": "Notifications",
   "profile": "Profile",
   "profileNamed": "Profile, {{name}}",
@@ -25,7 +25,7 @@
   },
   "accountMenu": {
     "profile": "Profile",
-    "reservations": "Reservations",
+    "reservations": "My reservation",
     "favorites": "Favorites"
   },
   "footer": {

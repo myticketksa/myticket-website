@@ -28,9 +28,9 @@ function TicketQr({ value }: { value: string }) {
   return (
     <QRCodeSVG
       value={value}
-      size={105}
+      size={180}
       level="M"
-      marginSize={0}
+      marginSize={1}
       bgColor="#FFFFFF"
       fgColor="#0A0A0A"
       aria-label="Ticket QR code"

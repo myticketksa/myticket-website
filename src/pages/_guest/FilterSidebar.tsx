@@ -1,16 +1,12 @@
 import type { ReactNode } from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FilterChip, MoneyAmount } from '@/components/data-display'
-import { Checkbox } from '@/components/ui'
+import { MoneyAmount } from '@/components/data-display'
+import { Checkbox, MultiSelectDropdown } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { catalogLabel } from '@/lib/i18n/catalogLabels'
-import {
-  CITY_FACETS,
-  OTHER_FILTERS,
-  RATING_OPTIONS,
-  WHEN_OPTIONS,
-} from './fixtures'
+import type { IdLabelOption } from '@/lib/api/formPayload'
+import { CITY_FACETS } from './fixtures'
 
 export interface FilterOption {
   label: string
@@ -27,41 +23,29 @@ export interface FilterGroup {
 }
 
 export type FilterSidebarState = {
-  when: string
-  cities: string[]
-  rating: string
-  other: string[]
-  /** Inclusive max ticket price in SAR; default 1500. */
-  maxPrice: number
-  /** Empty = any; values are `free` | `assigned`. */
-  seatingTypes: Array<'free' | 'assigned'>
+  /** Single city id (mobile is single-select). Empty = any. */
+  cityId: string
+  freeOnly: boolean
 }
 
 export interface FilterSidebarProps {
   title?: string
   clearLabel?: string
   onClear?: () => void
-  /** Fired when default-shell filter state changes (and on clear). */
   onChange?: (state: FilterSidebarState) => void
-  /** When omitted, Events defaults (When / City / Price / Rating / Other). */
   groups?: FilterGroup[]
+  /** Cities from `GET /generals/cities` — ids for `filters[city]` / `filters[in]`. */
+  cityOptions?: IdLabelOption[]
   width?: 268 | 252 | 244
   className?: string
   children?: ReactNode
-  /**
-   * When false, shell controls look inactive (no unexplained dead interactivity).
-   * Default true — pages that pass onChange should keep interactive.
-   */
   interactive?: boolean
+  /** Show free-entry checkbox (events). Default true. */
+  showFreeOnly?: boolean
 }
 
-const FREE_ENTRY = 'Free entry only'
 const PRICE_MIN = 50
 const PRICE_MAX = 1500
-const SEATING_OPTIONS = [
-  { id: 'free' as const, label: 'Free seating' },
-  { id: 'assigned' as const, label: 'Assigned seating' },
-]
 
 function FilterGroupLabel({ children }: { children: ReactNode }) {
   return (
@@ -77,275 +61,102 @@ export function FilterSidebar({
   onClear,
   onChange,
   groups,
+  cityOptions,
   width = 268,
   className,
   children,
   interactive = true,
+  showFreeOnly = true,
 }: FilterSidebarProps) {
   const { t } = useTranslation('catalog')
   const resolvedTitle = title ?? t('results.filters')
   const resolvedClear = clearLabel ?? t('results.clearAll')
   const baseId = useId()
-  const [when, setWhen] = useState('Any date')
-  const [rating, setRating] = useState('Any')
-  const [cities, setCities] = useState<string[]>([])
-  const [other, setOther] = useState<string[]>([])
-  const [seatingTypes, setSeatingTypes] = useState<Array<'free' | 'assigned'>>([])
-  const [maxPrice, setMaxPrice] = useState(PRICE_MAX)
+  const [cityId, setCityId] = useState('')
+  const [freeOnly, setFreeOnly] = useState(false)
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
 
+  const cities =
+    cityOptions && cityOptions.length > 0
+      ? cityOptions
+      : CITY_FACETS.map((c) => ({ value: c.label, label: c.label }))
+
   useEffect(() => {
-    onChangeRef.current?.({ when, cities, rating, other, maxPrice, seatingTypes })
-  }, [when, cities, rating, other, maxPrice, seatingTypes])
+    onChangeRef.current?.({ cityId, freeOnly })
+  }, [cityId, freeOnly])
 
-  const toggle = (list: string[], value: string, set: (next: string[]) => void) => {
-    set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value])
-  }
-
-  const toggleSeating = (value: 'free' | 'assigned') => {
-    setSeatingTypes((current) =>
-      current.includes(value) ? current.filter((v) => v !== value) : [...current, value],
-    )
-  }
-
-  const clear = () => {
-    setWhen('Any date')
-    setRating('Any')
-    setCities([])
-    setOther([])
-    setSeatingTypes([])
-    setMaxPrice(PRICE_MAX)
+  function handleClear() {
+    setCityId('')
+    setFreeOnly(false)
     onClear?.()
   }
 
   return (
     <aside
       className={cn(
-        'flex shrink-0 flex-col gap-[22px] rounded-[18px] border border-border-default bg-surface-default p-xl',
+        'flex shrink-0 flex-col gap-[22px] rounded-[18px] border border-border-default bg-surface-default p-lg',
         className,
       )}
       style={{ width }}
     >
-      <div className="flex w-full items-center justify-between">
-        <p className="text-[16px] font-semibold text-ink-primary">{resolvedTitle}</p>
+      <div className="flex items-center justify-between gap-md">
+        <p className="text-[15px] font-bold text-ink-primary">{resolvedTitle}</p>
         <button
           type="button"
-          disabled={!interactive}
-          onClick={clear}
-          className="text-[13px] font-semibold text-ink-brand disabled:cursor-not-allowed disabled:text-ink-disabled"
+          onClick={handleClear}
+          className="text-[13px] font-semibold text-ink-brand hover:underline"
         >
           {resolvedClear}
         </button>
       </div>
 
       {children ??
-        (groups ? (
-          groups.map((group) => (
-            <div key={group.id} className="flex w-full flex-col">
-              <div className="mb-md flex items-baseline justify-between">
-                <FilterGroupLabel>{group.label}</FilterGroupLabel>
-                {group.trailing}
-              </div>
-              {group.kind === 'chips' && (
-                <div className="flex flex-wrap gap-[7px]">
-                  {group.options?.map((opt) => (
-                    <FilterChip
-                      key={opt.label}
-                      selected={group.selected === opt.label}
-                      disabled={!interactive}
-                      className="h-[32px] rounded-[16px] px-md text-[13px] disabled:cursor-not-allowed disabled:opacity-55"
-                    >
-                      {catalogLabel(t, opt.label)}
-                    </FilterChip>
-                  ))}
-                </div>
-              )}
-              {group.kind === 'checks' && (
-                <div className="flex flex-col gap-[9px]">
-                  {group.options?.map((opt, i) => (
-                    <Checkbox
-                      key={opt.label}
-                      id={`${baseId}-${group.id}-${i}`}
-                      label={catalogLabel(t, opt.label)}
-                      count={opt.count}
-                      fullWidth
-                      disabled={!interactive}
-                    />
-                  ))}
-                </div>
-              )}
-              {group.kind === 'rating' && (
-                <div className="flex flex-wrap gap-[7px]">
-                  {group.options?.map((opt) => (
-                    <FilterChip
-                      key={opt.label}
-                      selected={group.selected === opt.label}
-                      disabled={!interactive}
-                      className="h-[34px] min-w-0 flex-1 rounded-[9px] px-md text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-55"
-                    >
-                      {catalogLabel(t, opt.label)}
-                    </FilterChip>
-                  ))}
-                </div>
-              )}
-              {group.kind === 'price' && <PriceSlider disabled={!interactive} />}
-              {group.kind === 'custom' && group.trailing}
-            </div>
-          ))
-        ) : (
+        (groups ? null : (
           <>
             <div className="flex w-full flex-col">
-              <FilterGroupLabel>{t('filters.when')}</FilterGroupLabel>
-              <div className="mt-md flex flex-wrap gap-[7px]">
-                {WHEN_OPTIONS.map((opt) => (
-                  <FilterChip
-                    key={opt}
-                    selected={when === opt}
-                    disabled={!interactive}
-                    onClick={() => interactive && setWhen(opt)}
-                    className="h-[32px] rounded-[16px] px-md text-[13px] disabled:cursor-not-allowed disabled:opacity-55"
-                  >
-                    {catalogLabel(t, opt)}
-                  </FilterChip>
-                ))}
-              </div>
-              {/* Date shells — decorative until a real date picker is wired. */}
-              <div className="mt-row-gap flex gap-sm" title="Date range not available yet">
-                <div
-                  aria-disabled="true"
-                  className="flex h-[36px] flex-1 cursor-not-allowed items-center rounded-[9px] border border-border-default bg-bg-skeleton px-row-gap text-[13px] text-ink-disabled"
-                >
-                  dd/mm/yyyy
-                </div>
-                <div
-                  aria-disabled="true"
-                  className="flex h-[36px] flex-1 cursor-not-allowed items-center rounded-[9px] border border-border-default bg-bg-skeleton px-row-gap text-[13px] text-ink-disabled"
-                >
-                  dd/mm/yyyy
-                </div>
-              </div>
-            </div>
-
-            <div className="h-px w-full bg-border-divider" />
-
-            <div className="flex w-full flex-col">
               <FilterGroupLabel>{t('filters.city')}</FilterGroupLabel>
-              <div className="mt-md flex flex-col gap-[9px]">
-                {CITY_FACETS.map((city, i) => (
-                  <Checkbox
-                    key={city.label}
-                    id={`${baseId}-city-${i}`}
-                    label={catalogLabel(t, city.label)}
-                    count={city.count}
-                    fullWidth
-                    disabled={!interactive}
-                    checked={cities.includes(city.label)}
-                    onCheckedChange={() =>
-                      interactive && toggle(cities, city.label, setCities)
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="h-px w-full bg-border-divider" />
-
-            <div className="flex w-full flex-col">
-              <div className="flex items-baseline justify-between">
-                <FilterGroupLabel>{t('filters.price')}</FilterGroupLabel>
-                <p className="text-[13px] text-ink-secondary">
-                  {t('filters.upToPrice', {
-                    price: maxPrice >= PRICE_MAX ? '1,500+' : maxPrice.toLocaleString('en-US'),
-                  })}
-                </p>
-              </div>
-              <PriceSlider
-                className="mt-[14px]"
-                value={maxPrice}
-                disabled={!interactive}
-                onChange={setMaxPrice}
-              />
               <div className="mt-md">
-                <Checkbox
-                  id={`${baseId}-free`}
-                  label={catalogLabel(t, FREE_ENTRY)}
-                  fullWidth
-                  disabled={!interactive}
-                  checked={other.includes(FREE_ENTRY)}
-                  onCheckedChange={() =>
-                    interactive && toggle(other, FREE_ENTRY, setOther)
-                  }
+                <MultiSelectDropdown
+                  multi={false}
+                  size="field"
+                  allLabel={t('filters.anywhereSaudi')}
+                  placeholder={t('filters.city')}
+                  options={cities}
+                  value={cityId ? [cityId] : []}
+                  onChange={(next) => {
+                    if (!interactive) return
+                    setCityId(next[0] ?? '')
+                  }}
                 />
               </div>
             </div>
 
-            <div className="h-px w-full bg-border-divider" />
-
-            <div className="flex w-full flex-col">
-              <FilterGroupLabel>{t('filters.seating')}</FilterGroupLabel>
-              <div className="mt-md flex flex-col gap-[9px]">
-                {SEATING_OPTIONS.map((opt, i) => (
+            {showFreeOnly ? (
+              <>
+                <div className="h-px w-full bg-border-divider" />
+                <div className="flex w-full flex-col">
                   <Checkbox
-                    key={opt.id}
-                    id={`${baseId}-seating-${i}`}
-                    label={catalogLabel(t, opt.label)}
+                    id={`${baseId}-free`}
+                    label={catalogLabel(t, 'Free entry only')}
                     fullWidth
                     disabled={!interactive}
-                    checked={seatingTypes.includes(opt.id)}
-                    onCheckedChange={() => interactive && toggleSeating(opt.id)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="h-px w-full bg-border-divider" />
-
-            <div className="flex w-full flex-col">
-              <FilterGroupLabel>{t('filters.rating')}</FilterGroupLabel>
-              <div className="mt-md flex gap-[7px]">
-                {RATING_OPTIONS.map((opt) => (
-                  <FilterChip
-                    key={opt}
-                    selected={rating === opt}
-                    disabled={!interactive}
-                    onClick={() => interactive && setRating(opt)}
-                    className="h-[34px] min-w-0 flex-1 rounded-[9px] px-md text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-55"
-                  >
-                    {catalogLabel(t, opt)}
-                  </FilterChip>
-                ))}
-              </div>
-            </div>
-
-            <div className="h-px w-full bg-border-divider" />
-
-            <div className="flex w-full flex-col">
-              <FilterGroupLabel>{t('filters.other')}</FilterGroupLabel>
-              <div className="mt-md flex flex-col gap-[9px]">
-                {OTHER_FILTERS.map((label, i) => (
-                  <Checkbox
-                    key={label}
-                    id={`${baseId}-other-${i}`}
-                    label={catalogLabel(t, label)}
-                    fullWidth
-                    disabled={!interactive}
-                    checked={other.includes(label)}
-                    onCheckedChange={() =>
-                      interactive && toggle(other, label, setOther)
+                    checked={freeOnly}
+                    onCheckedChange={(checked) =>
+                      interactive && setFreeOnly(checked === true)
                     }
                   />
-                ))}
-              </div>
-            </div>
+                </div>
+              </>
+            ) : null}
           </>
         ))}
     </aside>
   )
 }
 
-/** Max-price rail — Figma filled track; thumb position maps 50–1500 SAR. */
-function PriceSlider({
+/** Kept for pages that still render a decorative price rail. */
+export function PriceSlider({
   className,
   disabled = false,
   value = PRICE_MAX,

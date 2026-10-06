@@ -40,8 +40,8 @@ export interface CarouselProps extends ComponentProps<'div'> {
 }
 
 /**
- * Embla carousel — slides align with the section title; prev/next sit just
- * outside the track so they don’t cover cards.
+ * Embla carousel — slides align with the section title. Prev/next sit inside
+ * the track below `lg` (narrow gutters) and just outside from `lg` up.
  */
 export function Carousel({
   opts,
@@ -152,8 +152,9 @@ export function CarouselPrevious({
       size="sm"
       className={cn(
         'absolute top-1/2 z-10 start-0 rounded-full bg-surface-default/95 shadow-lift',
-        // Fully outside the track (cards stay flush with the section title).
-        '[transform:translate(calc(-100%-8px),-50%)] rtl:[transform:translate(calc(100%+8px),-50%)]',
+        // Inside the track below lg (20px gutters); outside once gutters are wide enough.
+        '[transform:translate(8px,-50%)] rtl:[transform:translate(-8px,-50%)]',
+        'lg:[transform:translate(calc(-100%-8px),-50%)] lg:rtl:[transform:translate(calc(100%+8px),-50%)]',
         className,
       )}
       disabled={!canScrollPrev}
@@ -179,7 +180,8 @@ export function CarouselNext({
       size="sm"
       className={cn(
         'absolute top-1/2 z-10 end-0 rounded-full bg-surface-default/95 shadow-lift',
-        '[transform:translate(calc(100%+8px),-50%)] rtl:[transform:translate(calc(-100%-8px),-50%)]',
+        '[transform:translate(-8px,-50%)] rtl:[transform:translate(8px,-50%)]',
+        'lg:[transform:translate(calc(100%+8px),-50%)] lg:rtl:[transform:translate(calc(-100%-8px),-50%)]',
         className,
       )}
       disabled={!canScrollNext}

@@ -70,7 +70,7 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
             {talents.map((talent, i) => (
               <CarouselItem
                 key={talent.slug}
-                className="basis-[45%] sm:basis-1/3 md:basis-1/4 lg:basis-1/5"
+                className="basis-[32%] sm:basis-[26%] md:basis-1/5 lg:basis-1/6"
               >
                 <Link to={`/talents/${talent.slug}`} className="block min-w-0">
                   <TalentCard
@@ -117,8 +117,8 @@ export function HomeCategories({ apiCategories }: { apiCategories?: EventApiReco
       <FadeUp>
         <HomeSectionHeader heading={t('home.browseCategory')} />
       </FadeUp>
-      <FadeUp className="mt-[22px] -me-page-gutter overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:overflow-hidden">
-        <div className="flex w-max gap-[9px] pr-page-gutter sm:w-auto">
+      <FadeUp className="mt-[22px] -me-page-gutter overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:overflow-hidden">
+        <div className="flex w-max gap-[9px] pr-page-gutter lg:w-auto">
           {categories.map((cat) => (
             <CategoryChip
               key={cat.label}
@@ -135,41 +135,7 @@ export function HomeCategories({ apiCategories }: { apiCategories?: EventApiReco
   )
 }
 
-/** Figma `207:4459` — upcoming events carousel (no time tabs). */
-export function HomeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
-  const { t } = useTranslation(['catalog', 'common'])
-  const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
-
-  const events = useMemo(() => {
-    if (apiEvents && apiEvents.length > 0) {
-      return apiEvents.map(mapApiEventToCard).slice(0, HOME_EVENTS.length)
-    }
-    return HOME_EVENTS.map((e) => ({
-      ...e,
-      slug: slugify(e.title),
-      isFree: e.price === 'Free',
-    }))
-  }, [apiEvents])
-
-  return (
-    <PageSection padTop={60} padBottom={0}>
-      <FadeUp>
-        <HomeSectionHeader
-          heading={t('home.ticketsAndOffersHeading')}
-          link={{ label: t('common:actions.viewAll'), to: '/events' }}
-        />
-      </FadeUp>
-      <EventCarousel
-        events={events}
-        isFavourite={isFavourite}
-        toggleFavourite={toggleFavourite}
-        canFavourite={canFavourite}
-      />
-    </PageSection>
-  )
-}
-
-/** Newest events first — same events API, sorted by created/id descending. */
+/** Newest paid events first — free events live in their own rail. */
 export function HomeRecentlyAdded({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
   const { t } = useTranslation(['catalog', 'common'])
   const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
@@ -187,14 +153,21 @@ export function HomeRecentlyAdded({ apiEvents }: { apiEvents?: EventApiRecord[] 
           0
         return bTime - aTime
       })
-      return ranked.map(mapApiEventToCard).slice(0, HOME_EVENTS.length)
+      return ranked
+        .map(mapApiEventToCard)
+        .filter((event) => !event.isFree)
+        .slice(0, HOME_EVENTS.length)
     }
-    return HOME_EVENTS.map((e) => ({
-      ...e,
-      slug: slugify(e.title),
-      isFree: e.price === 'Free',
-    })).reverse()
+    return HOME_EVENTS.filter((e) => e.price !== 'Free')
+      .map((e) => ({
+        ...e,
+        slug: slugify(e.title),
+        isFree: false as const,
+      }))
+      .reverse()
   }, [apiEvents])
+
+  if (events.length === 0) return null
 
   return (
     <PageSection padTop={72} padBottom={0}>

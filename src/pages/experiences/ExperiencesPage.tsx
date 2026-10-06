@@ -6,28 +6,17 @@ import {
   useGetExperiencesQuery,
 } from "@/app/api/experiencesApi";
 import { ExperienceCard } from "@/components/cards";
-import { FilterChip } from "@/components/data-display";
-import { ChevronDownIcon } from "@/components/icons";
 import { FadeUp, StaggerGroup } from "@/components/motion";
 import { Breadcrumbs } from "@/components/navigation";
-import { Button, TextInput } from "@/components/ui";
+import { MultiSelectDropdown } from "@/components/ui";
 import { PageSection } from "@/layouts";
-import { mapCategoryLabels } from "@/lib/api/mappers/categories";
-import {
-  mapApiExperienceToCard,
-  type MappedExperience,
-} from "@/lib/api/mappers/experiences";
+import { mapCategoryOptions } from "@/lib/api/mappers/cities";
+import { mapApiExperienceToCard } from "@/lib/api/mappers/experiences";
 import { catalogLabel } from "@/lib/i18n/catalogLabels";
-import {
-  CITY_FACETS,
-  LinkedCard,
-  PromoBand,
-  slugify,
-} from "@/pages/_guest";
+import { LinkedCard, slugify } from "@/pages/_guest";
 import { cn } from "@/lib/cn";
 
-const CATEGORIES = [
-  "All experiences",
+const CATEGORY_FALLBACK = [
   "Food & desert",
   "Culture",
   "Heritage",
@@ -36,127 +25,80 @@ const CATEGORIES = [
   "Music",
 ] as const;
 
-function ExperienceTypeSection({
-  heading,
-  lede,
-  items,
-}: {
-  heading: string;
-  lede: string;
-  items: MappedExperience[];
-}) {
-  if (items.length === 0) return null;
-  return (
-    <PageSection padTop={36} padBottom={0}>
-      <FadeUp>
-        <div className="mb-[22px]">
-          <h2 className="text-heading-h2-section text-ink-primary">
-            {heading}
-          </h2>
-          <p className="mt-[6px] text-[15px] text-ink-secondary">{lede}</p>
-        </div>
-      </FadeUp>
-      <StaggerGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {items.map((exp) => (
-          <LinkedCard
-            key={exp.slug ?? exp.title}
-            to={`/experiences/${exp.slug ?? slugify(exp.title)}`}
-          >
-            <ExperienceCard
-              context="catalog"
-              title={exp.title}
-              location={exp.location}
-              eyebrow={exp.meta}
-              rating={exp.rating}
-              guests={exp.guests}
-              price={exp.price}
-              flag={exp.flag}
-              image={exp.image}
-            />
-          </LinkedCard>
-        ))}
-      </StaggerGroup>
-    </PageSection>
-  );
-}
+const TYPE_TABS = [
+  { key: "", labelKey: "filters.any" as const },
+  {
+    key: "attraction" as const,
+    labelKey: "home.attractionsHeading" as const,
+  },
+  {
+    key: "activity" as const,
+    labelKey: "home.activitiesHeading" as const,
+  },
+];
 
-/** Experiences directory — attractions then activities (API `type`). */
+/**
+ * Experiences directory — mobile only: type tabs + category dropdown.
+ */
 export function ExperiencesPage() {
   const { t } = useTranslation(["catalog", "nav", "common"]);
-  const [searchParams] = useSearchParams();
-  const typeFilter = searchParams.get("type");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const typeParam = searchParams.get("type");
+  const experienceType =
+    typeParam === "attraction" || typeParam === "activity" ? typeParam : "";
 
-  const whereOptions = useMemo(
+  const { data: apiCategories } = useGetExperienceCategoriesQuery();
+
+  const categoryOptions = useMemo(
     () =>
-      [
-        "Anywhere in Saudi Arabia",
-        ...CITY_FACETS.slice(0, 5).map((c) => c.label),
-      ] as const,
-    [],
+      mapCategoryOptions(apiCategories, {
+        fallback: CATEGORY_FALLBACK.map((label, index) => ({
+          value: String(index + 1),
+          label,
+        })),
+      }).map((option) => ({
+        ...option,
+        label: catalogLabel(t, option.label),
+      })),
+    [apiCategories, t],
   );
-  const [category, setCategory] = useState("All experiences");
-  const [where, setWhere] = useState<string>("Anywhere in Saudi Arabia");
-  const [searchDraft, setSearchDraft] = useState("");
-  const [search, setSearch] = useState("");
+
+  const [categoryId, setCategoryId] = useState("");
 
   const {
     data: apiExperiences,
     isFetching,
     isError,
-  } = useGetExperiencesQuery();
-  const { data: apiCategories } = useGetExperienceCategoriesQuery();
-
-  const categoryChips = useMemo(
-    () =>
-      mapCategoryLabels(apiCategories, {
-        allLabel: "All experiences",
-        fallback: CATEGORIES,
-      }),
-    [apiCategories],
-  );
+  } = useGetExperiencesQuery({
+    categoryId: categoryId || undefined,
+    type: experienceType || undefined,
+  });
 
   const catalog = useMemo(() => {
     if (apiExperiences && apiExperiences.length > 0) {
       return apiExperiences.map(mapApiExperienceToCard);
     }
-    // No sample catalogue behind the API — an empty list stays empty.
-    return [] as MappedExperience[];
+    return [];
   }, [apiExperiences]);
 
-  const filtered = useMemo(() => {
-    return catalog.filter((exp) => {
-      if (typeFilter === "attraction" || typeFilter === "activity") {
-        const expType = exp.experienceType ?? "attraction";
-        if (expType !== typeFilter) return false;
-      }
-      if (category !== "All experiences") {
-        const needle = category.toLowerCase().split(" ")[0]!;
-        if (!exp.meta.toLowerCase().includes(needle)) return false;
-      }
-      if (where !== "Anywhere in Saudi Arabia") {
-        const hay = `${exp.location} ${exp.place}`.toLowerCase();
-        if (!hay.includes(where.toLowerCase())) return false;
-      }
-      if (search) {
-        const hay =
-          `${exp.title} ${exp.meta} ${exp.location} ${exp.place} ${exp.summary ?? ""}`.toLowerCase();
-        if (!hay.includes(search.toLowerCase())) return false;
-      }
-      return true;
-    });
-  }, [catalog, category, search, typeFilter, where]);
+  const setType = (next: string) => {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        if (!next) params.delete("type");
+        else params.set("type", next);
+        return params;
+      },
+      { replace: true },
+    );
+  };
 
-  const attractions = filtered.filter(
-    (exp) => (exp.experienceType ?? "attraction") === "attraction",
-  );
-  const activities = filtered.filter(
-    (exp) => exp.experienceType === "activity",
-  );
-
-  const subtitleParts = [
+  const statusLine = [
     isError ? t("pages.apiPreview") : null,
     isFetching ? t("pages.updating") : null,
-  ].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <>
@@ -171,114 +113,78 @@ export function ExperiencesPage() {
 
       <PageSection padTop={14} padBottom={0}>
         <FadeUp>
-          {subtitleParts.length > 0 ? (
-            <p className="mb-lg text-[14px] text-ink-secondary">
-              {subtitleParts.join(" ")}
-            </p>
+          <h1 className="text-display-hero text-ink-primary">
+            {t("pages.experiencesTitle")}
+          </h1>
+          <p className="mt-[10px] max-w-[620px] text-[17px] leading-[1.45] text-ink-secondary">
+            {t("pages.experiencesSubtitle")}
+          </p>
+          {statusLine ? (
+            <p className="mt-md text-[14px] text-ink-secondary">{statusLine}</p>
           ) : null}
         </FadeUp>
 
-        <div className="mt-3xl flex h-auto w-full flex-col gap-md rounded-[18px] border border-border-default bg-surface-default p-md sm:h-[72px] sm:flex-row sm:items-center sm:gap-0 sm:p-0 sm:px-[14px]">
-          <label className="relative min-w-0 flex-1 px-sm">
-            <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-              {t("filters.where")}
-            </p>
-            <div className="mt-[3px] flex items-center gap-sm">
-              <select
-                value={where}
-                onChange={(e) => setWhere(e.target.value)}
+        <div className="mt-xl flex flex-wrap items-center gap-[9px]">
+          {TYPE_TABS.map((tab) => {
+            const selected = experienceType === tab.key;
+            const label =
+              tab.key === ""
+                ? t("filters.any", { defaultValue: "All" })
+                : t(tab.labelKey, {
+                    defaultValue:
+                      tab.key === "attraction" ? "Attractions" : "Activities",
+                  });
+            return (
+              <button
+                key={tab.key || "all"}
+                type="button"
+                onClick={() => setType(tab.key)}
                 className={cn(
-                  "w-full appearance-none bg-transparent text-[15px] font-semibold text-ink-primary outline-none",
-                  "cursor-pointer pr-lg",
+                  "inline-flex min-h-[38px] items-center rounded-full border px-md text-[14px] font-medium",
+                  selected
+                    ? "border-brand-primary bg-brand-primary/8 text-ink-brand"
+                    : "border-border-default bg-surface-default text-ink-primary hover:border-border-brand",
                 )}
-                aria-label={t("filters.where")}
               >
-                {whereOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {catalogLabel(t, opt)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDownIcon
-                size={12}
-                className="pointer-events-none absolute right-sm bottom-[6px] text-ink-primary"
-              />
-            </div>
-          </label>
-          <div className="mx-[2px] hidden h-[34px] w-px bg-border-divider sm:block" />
-          <label className="min-w-0 flex-1 border-t border-border-divider px-sm pt-md sm:border-t-0 sm:pt-0">
-            <p className="text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-              {t("common:actions.search")}
-            </p>
-            <div className="mt-[3px]">
-              <TextInput
-                type="search"
-                aria-label={t("home.searchPlaceholderAll")}
-                placeholder={t("home.searchPlaceholderAll")}
-                value={searchDraft}
-                onChange={(event) => setSearchDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") setSearch(searchDraft.trim());
-                }}
-                className="!h-auto border-0 bg-transparent py-0 !px-0 text-[15px] font-semibold shadow-none focus-visible:ring-0"
-              />
-            </div>
-          </label>
-          <div className="mx-[2px] hidden h-[34px] w-px bg-border-divider sm:block" />
-          <Button
-            className="mt-sm h-[48px] w-full shrink-0 rounded-[24px] sm:mt-0 sm:w-[104px]"
-            onClick={() => setSearch(searchDraft.trim())}
-          >
-            {t("common:actions.search")}
-          </Button>
-        </div>
-
-        <div className="mt-xl flex flex-wrap gap-[9px]">
-          {categoryChips.map((label) => (
-            <FilterChip
-              key={label}
-              selected={label === category}
-              onClick={() => setCategory(label)}
-            >
-              {catalogLabel(t, label)}
-            </FilterChip>
-          ))}
+                {label}
+              </button>
+            );
+          })}
+          <MultiSelectDropdown
+            multi={false}
+            size="chip"
+            label={t("filters.category")}
+            allLabel={t("filters.allExperiences")}
+            placeholder={t("filters.category")}
+            options={categoryOptions}
+            value={categoryId ? [categoryId] : []}
+            onChange={(next) => setCategoryId(next[0] ?? "")}
+          />
         </div>
       </PageSection>
 
-      {typeFilter !== "activity" ? (
-        <ExperienceTypeSection
-          heading={t("home.attractionsHeading", {
-            defaultValue: "Attractions",
-          })}
-          lede={t("home.attractionsLede", {
-            defaultValue: "Landmarks and destinations open year-round.",
-          })}
-          items={attractions}
-        />
-      ) : null}
-
-      {typeFilter !== "attraction" ? (
-        <ExperienceTypeSection
-          heading={t("home.activitiesHeading", { defaultValue: "Activities" })}
-          lede={t("home.activitiesLede", {
-            defaultValue: "Workshops, tours and hands-on experiences.",
-          })}
-          items={activities}
-        />
-      ) : null}
-
-      {typeFilter !== "attraction" ? (
-        <PageSection padTop={88} padBottom={96}>
-          <PromoBand
-            tone="inverse"
-            heading={t("pages.hostExperienceHeading")}
-            body={t("pages.hostExperienceBody")}
-            ctaLabel={t("pages.hostExperienceCta")}
-            ctaTo="/submit-experience"
-          />
-        </PageSection>
-      ) : null}
+      <PageSection padTop={28} padBottom={64}>
+        <StaggerGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {catalog.map((exp) => (
+            <LinkedCard
+              key={exp.slug ?? exp.title}
+              to={`/experiences/${exp.slug ?? slugify(exp.title)}`}
+            >
+              <ExperienceCard
+                context="catalog"
+                title={exp.title}
+                location={exp.location}
+                eyebrow={exp.meta}
+                rating={exp.rating}
+                guests={exp.guests}
+                price={exp.price}
+                flag={exp.flag}
+                image={exp.image}
+              />
+            </LinkedCard>
+          ))}
+        </StaggerGroup>
+      </PageSection>
     </>
   );
 }

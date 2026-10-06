@@ -2,14 +2,6 @@
  * Fixture content for the Home page, transcribed from Figma frame `207:4362`.
  * Replace with RTK Query once the API exists — shapes match the card props already built.
  */
-export const HOME_POPULAR = [
-  'Riyadh Season',
-  'Football',
-  'AlUla',
-  'Comedy nights',
-  'Family days',
-] as const
-
 export const HOME_FEATURED = [
   {
     date: 'Thu 8 Oct · 20:00',

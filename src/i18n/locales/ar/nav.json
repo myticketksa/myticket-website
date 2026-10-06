@@ -12,7 +12,7 @@
   "institutions": "المنشآت",
   "vendors": "المنشآت",
   "auctions": "المزادات",
-  "myTickets": "تذاكري",
+  "myTickets": "حجوزاتي",
   "notifications": "الإشعارات",
   "profile": "الملف الشخصي",
   "profileNamed": "الملف الشخصي، {{name}}",
@@ -25,7 +25,7 @@
   },
   "accountMenu": {
     "profile": "الملف الشخصي",
-    "reservations": "الحجوزات",
+    "reservations": "حجوزاتي",
     "favorites": "المفضلة"
   },
   "footer": {

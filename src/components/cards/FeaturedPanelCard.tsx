@@ -94,11 +94,11 @@ export function FeaturedPanelCard({
           {date}
         </p>
 
-        <h3 className="mt-[7px] text-[26px] leading-[1.05] font-bold tracking-[-0.78px] text-ink-primary">
+        <h3 className="mt-[7px] line-clamp-2 text-[20px] leading-[1.1] font-bold tracking-[-0.78px] text-ink-primary sm:text-[26px] sm:leading-[1.05]">
           {title}
         </h3>
 
-        <p className="mt-sm text-[14px] font-medium text-ink-secondary">{venue}</p>
+        <p className="mt-sm truncate text-[14px] font-medium text-ink-secondary">{venue}</p>
 
         <div className="mt-lg flex w-full items-center justify-between">
           <MoneyAmount

@@ -3,14 +3,39 @@ import { asList, unwrapData } from '@/lib/api/unwrap'
 
 export type ApiRecord = Record<string, unknown>
 
+export type GetExperiencesParams = {
+  categoryId?: string | number
+  /** `filters[where]` — city id */
+  cityId?: string | number
+  /** `filters[type]` — attraction | activity */
+  type?: 'attraction' | 'activity'
+}
+
 export const experiencesApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getExperienceCategories: build.query<ApiRecord[], void>({
       query: () => '/experiences/categories',
       transformResponse: (response: unknown) => asList<ApiRecord>(response),
     }),
-    getExperiences: build.query<ApiRecord[], void>({
-      query: () => '/experiences',
+    getExperiences: build.query<ApiRecord[], void | GetExperiencesParams>({
+      query: (params) => {
+        const categoryId =
+          params && 'categoryId' in params ? params.categoryId : undefined
+        const cityId = params && 'cityId' in params ? params.cityId : undefined
+        const type = params && 'type' in params ? params.type : undefined
+        return {
+          url: '/experiences',
+          params: {
+            ...(categoryId != null && categoryId !== ''
+              ? { 'filters[category]': categoryId }
+              : {}),
+            ...(cityId != null && cityId !== ''
+              ? { 'filters[where]': cityId }
+              : {}),
+            ...(type ? { 'filters[type]': type } : {}),
+          },
+        }
+      },
       transformResponse: (response: unknown) => asList<ApiRecord>(response),
       providesTags: [{ type: 'Experience', id: 'LIST' }],
     }),

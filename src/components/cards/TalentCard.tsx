@@ -58,7 +58,7 @@ export function TalentCard({
           className,
         )}
       >
-        <div className="size-[112px] overflow-hidden rounded-full bg-bg-skeleton sm:size-[128px]">
+        <div className="size-[88px] overflow-hidden rounded-full bg-bg-skeleton sm:size-[100px] md:size-[112px]">
           {image ? (
             <img
               src={image}
@@ -69,7 +69,7 @@ export function TalentCard({
             <ImagePlaceholder ratio="fill" caption="" />
           )}
         </div>
-        <h3 className="max-w-full text-[15px] font-bold text-balance text-ink-primary sm:text-[16px]">
+        <h3 className="max-w-full line-clamp-2 text-[15px] font-bold text-balance text-ink-primary sm:text-[16px]">
           {name}
         </h3>
         <div

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 
 export interface CatalogBodyProps {
-  filters: ReactNode
+  filters?: ReactNode
   children: ReactNode
   /** Filter column width — Events 268, Talents/Facilities 252, Search 244. */
   filterWidth?: 268 | 252 | 244
@@ -39,6 +39,7 @@ export function CatalogBody({
   const { t } = useTranslation('common')
   const isLg = useIsLg()
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const hasFilters = Boolean(filters)
 
   useEffect(() => {
     if (isLg) setFiltersOpen(false)
@@ -46,21 +47,23 @@ export function CatalogBody({
 
   return (
     <div className={cn('flex w-full flex-col gap-lg', className)} data-filter-width={filterWidth}>
-      <div className="flex lg:hidden">
-        <Button
-          variant="secondary"
-          size="md"
-          icon={<FilterIcon size={16} />}
-          aria-expanded={filtersOpen}
-          aria-controls="catalog-filters-sheet"
-          onClick={() => setFiltersOpen(true)}
-        >
-          {t('catalog.filters')}
-        </Button>
-      </div>
+      {hasFilters ? (
+        <div className="flex lg:hidden">
+          <Button
+            variant="secondary"
+            size="md"
+            icon={<FilterIcon size={16} />}
+            aria-expanded={filtersOpen}
+            aria-controls="catalog-filters-sheet"
+            onClick={() => setFiltersOpen(true)}
+          >
+            {t('catalog.filters')}
+          </Button>
+        </div>
+      ) : null}
 
       <div className="flex w-full items-start gap-4xl">
-        {isLg ? (
+        {hasFilters && isLg ? (
           <div className="shrink-0" style={{ width: filterWidth }}>
             <div className="[&>aside]:!w-full">{filters}</div>
           </div>
@@ -69,7 +72,7 @@ export function CatalogBody({
         <div className="flex min-w-0 flex-1 flex-col">{children}</div>
       </div>
 
-      {!isLg ? (
+      {hasFilters && !isLg ? (
         <DialogPrimitive.Root open={filtersOpen} onOpenChange={setFiltersOpen}>
           <DialogPrimitive.Portal>
             <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-surface-inverse/55 backdrop-blur-[1.5px]" />

@@ -127,6 +127,8 @@ export function resolveDefaultSessionId(
 }
 
 function numberOrUndefined(value: unknown): number | undefined {
+  // Number(null) === 0 in JS — treat null/empty as missing, not free.
+  if (value == null || value === "") return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 }
