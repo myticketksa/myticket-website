@@ -33,7 +33,6 @@ const TITLE_RULES: { pattern: string; titleKey: string }[] = [
   { pattern: "/gift/claim/:giftTicketId", titleKey: "titles.claimGift" },
   { pattern: "/favorites", titleKey: "titles.favorites" },
   { pattern: "/saved", titleKey: "titles.favorites" },
-  { pattern: "/notifications", titleKey: "titles.notifications" },
   { pattern: "/wallet", titleKey: "titles.wallet" },
   { pattern: "/my-reviews", titleKey: "titles.myReviews" },
   { pattern: "/my-submissions", titleKey: "titles.mySubmissions" },

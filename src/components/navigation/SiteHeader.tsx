@@ -3,14 +3,13 @@ import { useTranslation } from "react-i18next";
 import { Dialog as DialogPrimitive, DropdownMenu } from "radix-ui";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
+import { NotificationsMenu } from "./NotificationsMenu";
 import {
   Avatar,
-  CountBadge,
   FlagSaudiArabia,
   FlagUnitedStates,
 } from "@/components/data-display";
 import {
-  BellIcon,
   ChevronDownIcon,
   CloseIcon,
   MenuIcon,
@@ -259,24 +258,7 @@ function DesktopAuthActions({
 
   return (
     <>
-      <span className="relative shrink-0">
-        <Button
-          variant="icon"
-          size="sm"
-          aria-label={t("nav:notifications")}
-          onClick={() => onNavigate("/notifications")}
-        >
-          <BellIcon size={16} />
-        </Button>
-        {account?.notifications != null && account.notifications > 0 && (
-          <span className="absolute -top-[5.5px] -end-[5.5px]">
-            <CountBadge
-              count={account.notifications}
-              className="h-[17px] min-w-[17px] rounded-[9px] text-[10px]"
-            />
-          </span>
-        )}
-      </span>
+      <NotificationsMenu />
       <ProfileDropdown account={account} onNavigate={onNavigate} />
     </>
   );
@@ -313,24 +295,7 @@ function MobileDrawerAuth({
   return (
     <div className="mb-xl flex flex-col gap-md">
       <div className="flex items-center gap-sm">
-        <span className="relative shrink-0">
-          <Button
-            variant="icon"
-            size="sm"
-            aria-label={t("nav:notifications")}
-            onClick={() => onNavigate("/notifications")}
-          >
-            <BellIcon size={16} />
-          </Button>
-          {account?.notifications != null && account.notifications > 0 && (
-            <span className="absolute -top-[5.5px] -end-[5.5px]">
-              <CountBadge
-                count={account.notifications}
-                className="h-[17px] min-w-[17px] rounded-[9px] text-[10px]"
-              />
-            </span>
-          )}
-        </span>
+        <NotificationsMenu />
         <div className="ms-auto flex min-w-0 items-center gap-control-gap rounded-search border-[1.5px] border-border-default bg-surface-default py-[5px] pe-[12px] ps-[5px]">
           <Avatar initials={account?.initials ?? ""} size="md" />
           {account?.name ? (
@@ -538,24 +503,7 @@ export function SiteHeader({
         <div className="flex shrink-0 items-center gap-sm lg:hidden">
           <HeaderLanguagePill />
           {state === "signedIn" && (
-            <span className="relative shrink-0">
-              <Button
-                variant="icon"
-                size="sm"
-                aria-label={t("nav:notifications")}
-                onClick={() => go("/notifications")}
-              >
-                <BellIcon size={16} />
-              </Button>
-              {account?.notifications != null && account.notifications > 0 && (
-                <span className="absolute -top-[5.5px] -end-[5.5px]">
-                  <CountBadge
-                    count={account.notifications}
-                    className="h-[17px] min-w-[17px] rounded-[9px] text-[10px]"
-                  />
-                </span>
-              )}
-            </span>
+            <NotificationsMenu />
           )}
           <Button
             variant="icon"

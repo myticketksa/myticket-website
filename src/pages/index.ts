@@ -18,7 +18,6 @@ export { SettingsPage } from "./account/SettingsPage";
 export { MyTicketsPage } from "./account/MyTicketsPage";
 export { TicketPage } from "./account/TicketPage";
 export { FavoritesPage, SavedPage } from "./account/FavoritesPage";
-export { NotificationsPage } from "./account/NotificationsPage";
 export { WalletPage } from "./account/WalletPage";
 export { MyReviewsPage } from "./account/MyReviewsPage";
 export { MySubmissionsPage } from "./account/MySubmissionsPage";
