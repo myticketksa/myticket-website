@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useGetFavoritesQuery } from '@/app/api/accountApis'
+import { useGetWalletQuery, useGetFavoritesQuery } from '@/app/api/accountApis'
 import { useAppSelector } from '@/app/hooks'
 import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
 import { ACCOUNT_NAV_LINKS, SIDEBAR_RECS } from './fixtures'
@@ -33,7 +33,14 @@ function Panel({
 export function AccountWalletCard({ className }: { className?: string } = {}) {
   const { t } = useTranslation('account')
   const user = useAppSelector(selectAuthUser)
-  const display = formatAuthWalletBalance(user?.walletBalance)
+  // The session's copy is whatever the balance was at sign-in, so it goes stale
+  // the moment anything is bought. Ask the wallet and fall back to the session
+  // only while that is in flight.
+  const { data: wallet } = useGetWalletQuery()
+  const live = (wallet as { balance?: unknown } | undefined)?.balance
+  const display = formatAuthWalletBalance(
+    live != null ? (live as number | string) : user?.walletBalance,
+  )
 
   return (
     <div

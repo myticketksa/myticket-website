@@ -19,8 +19,12 @@
   /* -------------------------------------------------------------- colour */
 
   /* backgrounds */
-  --color-bg-page: #fff7f3;
-  --color-bg-warm: #fff1e9;
+  /* The original site paints the page white and tints its sections with a very
+   * light cool grey, not cream. Measured off demo.myticketapp.net: the page
+   * itself is transparent over white, section panels are slate-50 at half
+   * strength. The brand colours below are untouched. */
+  --color-bg-page: #ffffff;
+  --color-bg-warm: #f8fafc;
   --color-bg-tint-brand: #fff0e9;
   --color-bg-skeleton: #f5ede7;
 
