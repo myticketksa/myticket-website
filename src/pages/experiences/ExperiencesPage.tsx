@@ -174,7 +174,7 @@ export function ExperiencesPage() {
                 context="catalog"
                 title={exp.title}
                 location={exp.location}
-                eyebrow={exp.meta}
+                eyebrow={exp.meta !== exp.experienceType ? exp.meta : undefined}
                 rating={exp.rating}
                 guests={exp.guests}
                 price={exp.price}

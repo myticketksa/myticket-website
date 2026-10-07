@@ -1,178 +1,40 @@
-import {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
+import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowRightIcon } from "@/components/icons";
-import { Button, TextInput } from "@/components/ui";
-import { FunnelHeader, PageSection } from "@/layouts";
 import {
-  useGetChatMessagesQuery,
-  useGetChatsQuery,
-  useMarkChatsReadMutation,
-  useSendChatMessageMutation,
-} from "@/app/api/accountApis";
+  SupportChatAgentBar,
+  SupportChatComposer,
+  SupportChatThread,
+} from "@/components/support";
+import { Button } from "@/components/ui";
+import { FunnelHeader, PageSection } from "@/layouts";
 import { useRequireAuth } from "@/lib/auth/useRequireAuth";
 import {
-  useSupportChatRealtime,
-  type SupportChatConnectionState,
-} from "@/lib/supportChatRealtime";
-import { formatHumanDateTime, localizedString } from "@/lib/api/locale";
+  formatChatTimestamp,
+  useSupportChat,
+  type ChatMessage,
+} from "@/lib/useSupportChat";
 
 const FALLBACK_FROM = ["you", "agent", "you", "agent"] as const;
 
 const QUICK_LINK_IDS = ["refund", "qr", "waitlists", "gift"] as const;
 
-type ChatMessage = {
-  from: "you" | "agent";
-  body: string;
-  meta: string;
-};
-
-function formatChatTimestamp(value: unknown): string {
-  const raw = String(value ?? "").trim();
-  if (!raw) return "";
-
-  const timeOnly = /^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i.exec(raw);
-  if (timeOnly) {
-    const date = new Date();
-    let hours = Number(timeOnly[1]);
-    if (timeOnly[3]?.toUpperCase() === "PM" && hours < 12) hours += 12;
-    if (timeOnly[3]?.toUpperCase() === "AM" && hours === 12) hours = 0;
-    date.setHours(hours, Number(timeOnly[2]), 0, 0);
-    return formatHumanDateTime(date);
-  }
-
-  return formatHumanDateTime(raw);
-}
-
-function mapChatMessage(
-  record: Record<string, unknown>,
-  labels: { you: string; agent: string },
-  fallback: ChatMessage,
-): ChatMessage {
-  const sender = String(
-    record.sender ?? record.from ?? record.role ?? "",
-  ).toLowerCase();
-  const from: ChatMessage["from"] =
-    sender.includes("user") ||
-    sender.includes("you") ||
-    sender.includes("guest")
-      ? "you"
-      : "agent";
-  const author = String(
-    record.author ??
-      record.agent_name ??
-      (from === "you" ? labels.you : labels.agent),
-  );
-  const time = formatChatTimestamp(
-    record.created_at ?? record.createdAt ?? record.time,
-  );
-  return {
-    from,
-    body: String(
-      record.body ?? record.message ?? record.content ?? fallback.body,
-    ),
-    meta: time
-      ? `${author} · ${time}`
-      : `${author} · ${fallback.meta.split("·").pop()?.trim() ?? ""}`,
-  };
-}
-
-function pickSupportChat(
-  chats: Record<string, unknown>[],
-): Record<string, unknown> | undefined {
-  const support = chats.find((chat) => {
-    const channel = String(chat.channel ?? chat.type ?? "").toLowerCase();
-    return channel.includes("support") || channel === "";
-  });
-  return support ?? chats[0];
-}
-
-function getChatId(
-  chat: Record<string, unknown> | undefined,
-): string | number | undefined {
-  const raw = chat?.id ?? chat?.chat_id ?? chat?.chatId;
-  if (typeof raw === "string" || typeof raw === "number") return raw;
-  return undefined;
-}
-
-function getChatAgentName(
-  chat: Record<string, unknown> | undefined,
-): string | undefined {
-  if (!chat) return undefined;
-  const candidates = [
-    chat.assignedTo,
-    chat.assigned_to,
-    chat.supportAgent,
-    chat.support_agent,
-    chat.agent,
-    chat.agent_name,
-    chat.recipient,
-  ];
-
-  for (const candidate of candidates) {
-    if (typeof candidate === "string" && candidate.trim())
-      return candidate.trim();
-    if (!candidate || typeof candidate !== "object") continue;
-    const record = candidate as Record<string, unknown>;
-    const name = localizedString(
-      record.name ??
-        record.displayName ??
-        record.display_name ??
-        record.fullName ??
-        record.full_name,
-    );
-    if (name) return name;
-  }
-
-  return undefined;
-}
-
 /** Support chat — Figma `207:12302`. */
 export function SupportChatPage() {
   const { t } = useTranslation("account");
   const { isAuthenticated, requireAuth } = useRequireAuth();
-  const [draft, setDraft] = useState("");
-  const messageViewportRef = useRef<HTMLDivElement>(null);
-  const followLatestMessageRef = useRef(true);
-  const { data: chats } = useGetChatsQuery(undefined, {
-    skip: !isAuthenticated,
-  });
-  const supportChat = useMemo(
-    () => (chats && chats.length > 0 ? pickSupportChat(chats) : undefined),
-    [chats],
-  );
-  const chatId = getChatId(supportChat);
-  const agentName = getChatAgentName(supportChat) ?? t("support.unknown");
-  const [socketState, setSocketState] =
-    useState<SupportChatConnectionState>("idle");
-  const { data: apiMessages } = useGetChatMessagesQuery(chatId ?? "", {
-    skip: !isAuthenticated || chatId == null,
-    pollingInterval: socketState === "subscribed" ? 0 : 5000,
-  });
-  useSupportChatRealtime(chatId, apiMessages !== undefined, setSocketState);
-  const [sendMessage, sendState] = useSendChatMessageMutation();
-  const [markRead] = useMarkChatsReadMutation();
+  const {
+    agentName,
+    socketState,
+    messages: apiMessages,
+    send,
+    sending,
+  } = useSupportChat(isAuthenticated);
 
   useEffect(() => {
     if (!isAuthenticated) requireAuth();
   }, [isAuthenticated, requireAuth]);
-
-  useEffect(() => {
-    if (!isAuthenticated || chatId == null) return;
-    void markRead({ chatIds: [Number(chatId)] });
-  }, [chatId, isAuthenticated, markRead]);
-
-  const labels = useMemo(
-    () => ({ you: t("support.you"), agent: agentName }),
-    [agentName, t],
-  );
 
   const fallbackMessages = useMemo(() => {
     const rows = t("support.fallback", { returnObjects: true }) as
@@ -181,63 +43,17 @@ export function SupportChatPage() {
     if (!Array.isArray(rows)) return [] as ChatMessage[];
     return rows.map((row, index) => {
       const from = FALLBACK_FROM[index] ?? "agent";
-      const author = from === "you" ? labels.you : agentName;
+      const author =
+        from === "you" ? t("support.you") : (agentName ?? t("support.agent"));
       return {
         from,
         body: row.body,
         meta: `${author} · ${formatChatTimestamp(row.time)}`,
       } satisfies ChatMessage;
     });
-  }, [agentName, labels.you, t]);
+  }, [agentName, t]);
 
-  const messages = useMemo(() => {
-    if (apiMessages && apiMessages.length > 0) {
-      return apiMessages.map((record, index) =>
-        mapChatMessage(
-          record,
-          labels,
-          fallbackMessages[index % Math.max(fallbackMessages.length, 1)] ?? {
-            from: "agent",
-            body: "",
-            meta: labels.agent,
-          },
-        ),
-      );
-    }
-    return fallbackMessages;
-  }, [apiMessages, fallbackMessages, labels]);
-
-  useLayoutEffect(() => {
-    const viewport = messageViewportRef.current;
-    if (viewport && followLatestMessageRef.current) {
-      viewport.scrollTop = viewport.scrollHeight;
-    }
-  }, [messages]);
-
-  function handleMessageScroll() {
-    const viewport = messageViewportRef.current;
-    if (!viewport) return;
-    followLatestMessageRef.current =
-      viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop < 80;
-  }
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    const message = draft.trim();
-    if (!message) return;
-    followLatestMessageRef.current = true;
-
-    try {
-      await sendMessage({
-        chatId: chatId != null ? Number(chatId) : undefined,
-        channel: "support",
-        message,
-      }).unwrap();
-      setDraft("");
-    } catch {
-      /* Keep UI unchanged on failure — user can retry */
-    }
-  }
+  const messages = apiMessages.length > 0 ? apiMessages : fallbackMessages;
 
   if (!isAuthenticated) return null;
 
@@ -252,72 +68,17 @@ export function SupportChatPage() {
       <PageSection padTop={40} padBottom={96}>
         <div className="flex flex-col items-start gap-[28px] lg:flex-row">
           <div className="flex h-[min(70vh,720px)] min-h-[420px] w-full min-w-0 flex-col overflow-hidden rounded-[22px] border border-border-default bg-surface-default sm:min-h-[560px] lg:flex-1">
-            <div className="flex items-center gap-[14px] border-b border-border-divider px-[24px] py-[18px]">
-              <div className="relative flex size-[44px] items-center justify-center rounded-[22px] bg-brand-gradient text-[15px] font-extrabold text-ink-inverse">
-                {[...agentName.trim()].slice(0, 2).join("").toUpperCase()}
-                <span className="absolute end-0 bottom-0 size-[12px] rounded-full border-2 border-surface-default bg-state-success" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[15.5px] font-bold text-ink-primary">
-                  {t("support.agentName", { name: agentName })}
-                </p>
-                <p
-                  className={`text-[12.5px] font-semibold ${socketState === "subscribed" ? "text-state-success" : "text-ink-muted"}`}
-                  role="status"
-                  aria-live="polite"
-                >
-                  {t(`support.socket.${socketState}`)}
-                </p>
-              </div>
-            </div>
-
-            <div
-              ref={messageViewportRef}
-              onScroll={handleMessageScroll}
-              className="flex min-h-0 flex-1 flex-col gap-[16px] overflow-y-auto overscroll-contain bg-bg-page p-[24px]"
-              role="log"
-              aria-live="polite"
-              aria-relevant="additions"
-            >
-              {messages.map((msg) => (
-                <div
-                  key={msg.meta + msg.body}
-                  className={`flex flex-col ${msg.from === "you" ? "items-end" : "items-start"}`}
-                >
-                  <div
-                    className={
-                      msg.from === "you"
-                        ? "max-w-[90%] rounded-ss-[16px] rounded-se-[16px] rounded-ee-[4px] rounded-es-[16px] bg-brand-gradient px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-inverse"
-                        : "max-w-[448px] rounded-ss-[16px] rounded-se-[16px] rounded-ee-[16px] rounded-es-[4px] border border-border-default bg-surface-default px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-primary"
-                    }
-                  >
-                    {msg.body}
-                  </div>
-                  <p className="mt-[5px] text-[11.5px] text-ink-muted">
-                    {msg.meta}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <form
-              className="flex items-center gap-[10px] border-t border-border-divider px-[24px] py-[16px]"
-              onSubmit={(event) => void handleSubmit(event)}
-            >
-              <TextInput
-                className="flex-1 !rounded-[22px]"
-                placeholder={t("support.chatPlaceholder")}
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-              />
-              <Button
-                size="md"
-                type="submit"
-                disabled={sendState.isLoading || !draft.trim()}
-              >
-                {t("support.send")}
-              </Button>
-            </form>
+            <SupportChatAgentBar
+              agentName={agentName}
+              socketState={socketState}
+              className="px-[24px] py-[18px]"
+            />
+            <SupportChatThread messages={messages} className="p-[24px]" />
+            <SupportChatComposer
+              onSend={send}
+              sending={sending}
+              className="px-[24px] py-[16px]"
+            />
           </div>
 
           <aside className="flex w-full flex-col gap-[14px] lg:w-[340px] lg:shrink-0">

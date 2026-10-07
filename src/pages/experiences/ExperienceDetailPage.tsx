@@ -25,6 +25,7 @@ import {
 import { PageSection } from '@/layouts'
 import {
   mapApiExperienceToCard,
+  MEETING_POINT_LABEL,
   resolveExperienceFromList,
   resolveExperienceId,
   type MappedExperience,
@@ -32,7 +33,6 @@ import {
 import {
   DetailGallery,
   EXPERIENCE_DETAIL_GALLERY,
-  EXPERIENCE_DETAIL_MAP,
   EXPERIENCE_DETAIL_NEARBY,
   LinkedCard,
   SimilarSection,
@@ -203,7 +203,9 @@ export function ExperienceDetailPage() {
                 <StarFillIcon size={15} />
                 {ratingDisplay}
               </span>
-              <span className="text-ink-secondary">{experience.place}</span>
+              {experience.place !== MEETING_POINT_LABEL && (
+                <span className="text-ink-secondary">{experience.place}</span>
+              )}
             </div>
           </FadeUp>
           <div className="mt-[22px] flex flex-wrap gap-row-gap">
@@ -217,30 +219,24 @@ export function ExperienceDetailPage() {
             <Button variant="secondary" onClick={handleRateClick}>
               Rate this experience
             </Button>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                window.open(
+                  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`,
+                  '_blank',
+                  'noopener,noreferrer',
+                )
+              }
+            >
+              {t('detail.openInMaps')}
+            </Button>
           </div>
 
           <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">About</h2>
           <p className="mt-[18px] max-w-[720px] text-[16px] leading-[1.6] text-ink-secondary">
             {aboutText}
           </p>
-
-          <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">Meeting point</h2>
-          <div className="mt-[18px] overflow-hidden rounded-[18px] border border-border-default">
-            <div className="relative h-[220px] w-full overflow-hidden">
-              <img src={EXPERIENCE_DETAIL_MAP} alt="" className="size-full object-cover" />
-            </div>
-            <div className="flex items-center justify-between gap-lg px-lg py-md">
-              <p className="text-[14px] text-ink-secondary">{experience.place}</p>
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-[36px] items-center rounded-[18px] border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold text-ink-primary hover:border-border-brand hover:text-ink-brand"
-              >
-                Open in maps
-              </a>
-            </div>
-          </div>
         </article>
       </PageSection>
 

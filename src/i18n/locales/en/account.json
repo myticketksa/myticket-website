@@ -749,6 +749,12 @@
     "guestBanner": "Today · {{time}} — you're chatting as a guest of MyTicket",
     "you": "You",
     "agent": "Support",
+    "team": "MyTicket Support",
+    "bubbleOpen": "Chat with support",
+    "bubbleClose": "Close chat",
+    "bubbleGreeting": "Hi! How can we help you today?",
+    "bubbleSignInBody": "Sign in to chat with our support team. Your conversation is saved so you can pick it up any time.",
+    "bubbleSignIn": "Sign in to chat",
     "fallback": [
       {
         "body": "Hi — I bought tickets but never got the confirmation email.",

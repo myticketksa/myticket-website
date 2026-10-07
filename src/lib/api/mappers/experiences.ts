@@ -80,6 +80,9 @@ export function parseExperienceIncludes(value: unknown): string[] {
 }
 
 /** `lng:lat` or `lat,lng` → Google Maps query `lat,lng`. */
+/** Stand-in place name when the API only sends coordinates. */
+export const MEETING_POINT_LABEL = 'Meeting point'
+
 export function experienceMapQuery(location: unknown): string | undefined {
   const raw = localizedString(location)
   if (!raw) return undefined
@@ -199,7 +202,7 @@ export function mapApiExperienceToCard(exp: ApiRecord): MappedExperience {
 
   // When API only sends coordinates, avoid showing raw lng:lat as the place line.
   const placeLooksLikeCoords = Boolean(mapQuery && /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.test(mapQuery))
-  const placeLabel = placeLooksLikeCoords ? 'Meeting point' : place || location || '—'
+  const placeLabel = placeLooksLikeCoords ? MEETING_POINT_LABEL : place || location || '—'
 
   return {
     id: exp.id != null ? String(exp.id) : undefined,

@@ -3,6 +3,7 @@ import { useGetEventsQuery } from '@/app/api/eventsApi'
 import { useGetExperiencesQuery } from '@/app/api/experiencesApi'
 import { useGetTalentsQuery } from '@/app/api/talentsApi'
 import { HomeVideoAdsSection } from '@/components/ads'
+import { SupportChatBubble } from '@/components/support'
 import { HomeHero } from './HomeHero'
 import {
   HomeExperiences,
@@ -30,6 +31,7 @@ export function HomePage() {
       <HomeFreeEvents apiEvents={apiEvents} />
       <HomeVideoAdsSection ads={apiAds} />
       <HomeExperiences apiExperiences={apiExperiences} />
+      <SupportChatBubble />
     </>
   )
 }
