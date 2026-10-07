@@ -10,7 +10,11 @@ import {
   useGetEventDetailsQuery,
   useGetEventsQuery,
 } from "@/app/api/eventsApi";
-import { useGetEventSeatsQuery } from "@/app/api/seatsApi";
+import {
+  useGetEventSeatsQuery,
+  useHoldSeatsMutation,
+  useReleaseHoldMutation,
+} from "@/app/api/seatsApi";
 import { useAppDispatch } from "@/app/hooks";
 import { toastPushed } from "@/features/ui/uiSlice";
 import { apiErrorMessage } from "@/lib/api/unwrap";
@@ -26,10 +30,12 @@ import {
   resolveDefaultSessionId,
   resolveSeatingType,
 } from "@/lib/api/mappers/events";
+import { mapApiSeatsToRows } from "@/lib/api/mappers/seats";
 import {
   beginPaymentRedirect,
   buildPaymentReturnUrl,
 } from "@/lib/purchase/paymentReturn";
+import { toPaymentBrand, type BookingPaymentMethod } from "@/lib/purchase/paymentBrand";
 import {
   clearHoldSession,
   startPurchaseForEvent,
@@ -117,6 +123,8 @@ export function EventDetailPage() {
   const [createOrder, createState] = useCreateOrderMutation();
   const [payOrder, payState] = usePayOrderMutation();
   const [applyPromo] = useApplyPromoCodeMutation();
+  const [holdSeats, holdState] = useHoldSeatsMutation();
+  const [releaseHold] = useReleaseHoldMutation();
   const slugOrId = slug ?? "";
   const { isFavourite, toggleFavourite } = useEventFavorites();
 
@@ -296,9 +304,12 @@ export function EventDetailPage() {
       ),
     [apiEvents, eventSource, slugOrId],
   );
-  // The modal owns the chosen showtime while booking; the page only needs a
-  // default so prices and stock on the panel reflect the next date on sale.
+  // Panel prices use the next bookable showtime; the modal can pick another
+  // and we refetch seats for that date (same as the mobile app).
   const selectedSessionId = defaultSessionId;
+  const [bookingSessionId, setBookingSessionId] = useState<
+    number | undefined
+  >();
 
   const apiTicketTypes = useMemo(
     () =>
@@ -308,67 +319,82 @@ export function EventDetailPage() {
       ),
     [apiEvents, eventSource, selectedSessionId, slugOrId],
   );
+
+  /** Types for the modal's chosen showtime (each date can have its own price). */
+  const bookingTicketTypes = useMemo(
+    () =>
+      listTicketTypes(
+        eventSource ?? resolveEventFromList(apiEvents, slugOrId),
+        bookingSessionId ?? selectedSessionId,
+      ),
+    [apiEvents, bookingSessionId, eventSource, selectedSessionId, slugOrId],
+  );
   // Landing on a different event abandons any half-finished purchase.
   useEffect(() => {
     startPurchaseForEvent(resolvedId ?? slugOrId);
   }, [resolvedId, slugOrId]);
 
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const seatsSessionId = bookingSessionId ?? selectedSessionId;
+
+  const {
+    data: apiSeats,
+    isLoading: seatsLoading,
+    isFetching: seatsFetching,
+  } = useGetEventSeatsQuery(
+    {
+      eventId: resolvedId!,
+      sessionId: seatsSessionId,
+    },
+    {
+      // Seats API requires auth — don't probe it on public detail (401 used to kick guests to sign-in).
+      skip:
+        !resolvedId ||
+        seatingType !== "assigned" ||
+        !isAuthenticated ||
+        !bookingOpen,
+      // Keep inventory fresh while the modal is open, matching the app's 15s poll.
+      pollingInterval: bookingOpen ? 15_000 : 0,
+    },
+  );
 
   /**
-   * One entry per ticket being bought, each with its attendee name — the shape
-   * the app and the original website both use. `ticketQuantities` is derived
-   * from this so the existing totals and order payload keep working.
+   * Unwrap + map the same way SeatSelectionPage / the mobile app do.
+   * Treating the envelope as an array left the modal with zero seats.
    */
-  const [bookingOpen, setBookingOpen] = useState(false);
-
-  const { data: apiSeats } = useGetEventSeatsQuery(resolvedId!, {
-    // Seats API requires auth — don't probe it on public detail (401 used to kick guests to sign-in).
-    skip:
-      !resolvedId ||
-      seatingType !== "assigned" ||
-      !isAuthenticated ||
-      !bookingOpen,
-  });
-
-  /** Seat rows for the chosen showtime — the endpoint returns the whole event. */
   const seatOptions = useMemo<SeatOption[]>(() => {
-    const rows = Array.isArray(apiSeats) ? apiSeats : [];
-    return rows
-      .filter((row) => {
-        const rowSession = Number(
-          (row as Record<string, unknown>).sessionId ??
-            (row as Record<string, unknown>).session_id,
-        );
-        return !Number.isFinite(rowSession) || rowSession === selectedSessionId;
-      })
-      .map((row) => {
-        const record = row as Record<string, unknown>;
-        const id = Number(record.id);
-        const label =
-          String(record.label ?? "") ||
-          `${String(record.row ?? "")}${String(record.number ?? "")}`;
-        return {
+    const rows = mapApiSeatsToRows(apiSeats, seatsSessionId);
+    if (!rows?.length) return [];
+    const options: SeatOption[] = [];
+    for (const { seats } of rows) {
+      for (const seat of seats) {
+        const id = Number(seat.id);
+        if (!Number.isInteger(id)) continue;
+        options.push({
           id,
-          label: label || String(id),
-          ticketTypeId: Number(
-            (record.ticket_type as Record<string, unknown> | undefined)?.id,
-          ),
-          taken: String(record.status ?? "").toLowerCase() !== "available",
-        };
-      })
-      .filter((seat) => Number.isInteger(seat.id));
-  }, [apiSeats, selectedSessionId]);
+          label: `${seat.row}${seat.number}`,
+          row: seat.row,
+          number: seat.number,
+          ticketTypeId: seat.ticketTypeId,
+          sessionId: seatsSessionId,
+          accessible: seat.accessible,
+          taken: seat.status !== "available",
+        });
+      }
+    }
+    return options;
+  }, [apiSeats, seatsSessionId]);
 
   const bookingTypeOptions = useMemo(
     () =>
-      apiTicketTypes.map((tier) => ({
+      bookingTicketTypes.map((tier) => ({
         id: tier.id,
         name: tier.name,
         price: tier.price,
         remaining: tier.remaining,
         disabled: tier.remaining === 0,
       })),
-    [apiTicketTypes],
+    [bookingTicketTypes],
   );
 
 
@@ -394,21 +420,15 @@ export function EventDetailPage() {
 
 
   /**
-   * Free-seating purchase, start to finish, without leaving the page.
-   *
-   * The order endpoint takes the whole booking in one call — showtime, items,
-   * attendee names, promo — so splitting it across pages only invented
-   * intermediate state, which is where the wrong-event and stale-hold bugs came
-   * from. A hall with assigned seats still needs its own step, because seats
-   * must be held on a timer.
+   * Same sequence as the mobile app: soft-hold assigned seats, create order
+   * with `holdId` + `seatIds`, optional promo, then pay.
    */
-  /** The modal's Pay button. Creates the order, applies any code, pays. */
   async function confirmBooking(booking: {
     typeId: number;
     sessionId: number;
     lines: BookingLine[];
     promoCode: string;
-    method: "card" | "apple" | "wallet";
+    method: BookingPaymentMethod;
   }): Promise<void> {
     if (!resolvedId) return;
 
@@ -421,8 +441,32 @@ export function EventDetailPage() {
     const seatIds = booking.lines
       .map((line) => line.seatId)
       .filter((id): id is number => Number.isInteger(id));
+    const assigned = seatingType === "assigned";
 
+    if (assigned && seatIds.length !== booking.lines.length) {
+      dispatch(toastPushed("error", t("detail.seatRequired")));
+      return;
+    }
+
+    let holdId: string | undefined;
     try {
+      if (assigned && seatIds.length > 0) {
+        const held = await holdSeats({
+          eventId: resolvedId,
+          seatIds,
+          ticketId: booking.typeId,
+          seats: seatIds.map((seatId) => ({
+            seatId,
+            ticketTypeId: booking.typeId,
+          })),
+        }).unwrap();
+        holdId = String(held.holdId ?? held.hold_id ?? "").trim() || undefined;
+        if (!holdId) {
+          dispatch(toastPushed("error", t("detail.seatHoldFailed")));
+          return;
+        }
+      }
+
       const created = await createOrder({
         eventId: resolvedId,
         body: {
@@ -432,13 +476,18 @@ export function EventDetailPage() {
           items: [
             { ticketId: booking.typeId, quantity: booking.lines.length },
           ],
-          ...(seatIds.length ? { seatIds } : {}),
+          ...(assigned && seatIds.length
+            ? { seatIds, holdId }
+            : {}),
           beneficiaries: booking.lines.map((line, index) => ({
             quantity_id: index + 1,
             name: line.name.trim(),
           })),
         },
       }).unwrap();
+
+      // Order creation consumes the hold — don't release on later pay errors.
+      holdId = undefined;
 
       const orderId = Number(created.id ?? created.orderId ?? created.order_id);
       if (!Number.isFinite(orderId) || orderId <= 0) {
@@ -459,12 +508,14 @@ export function EventDetailPage() {
         }
       }
 
+      const payBrand = toPaymentBrand(booking.method);
+      const returnUrl = buildPaymentReturnUrl(orderId);
       const paid = await payOrder({
         orderId,
-        brand: booking.method === "wallet" ? "WALLET" : "CREDIT",
+        brand: payBrand,
         // Gateway status page sends the buyer here with the order reference.
         // Host must be allow-listed on the API (https myticket.sa, or localhost).
-        returnUrl: buildPaymentReturnUrl(orderId),
+        returnUrl,
       }).unwrap();
 
       clearHoldSession();
@@ -487,8 +538,19 @@ export function EventDetailPage() {
       // Wallet (and any brand that settles inline) — no hosted page.
       navigate(`/order-confirmation?orderId=${orderId}`);
     } catch (error) {
+      if (holdId) {
+        void releaseHold({ eventId: resolvedId, holdId });
+      }
+      const message = apiErrorMessage(error, t("detail.claimFailed"));
       dispatch(
-        toastPushed("error", apiErrorMessage(error, t("detail.claimFailed"))),
+        toastPushed(
+          "error",
+          message === "seat_unavailable" || message === "hold_not_found"
+            ? t("detail.seatHoldFailed")
+            : message === "ticket_mismatch"
+              ? t("detail.pickTicketType")
+              : message,
+        ),
       );
     }
   }
@@ -686,8 +748,14 @@ export function EventDetailPage() {
             types={bookingTypeOptions}
             sessions={bookableSessions}
             seats={seatOptions}
+            seatsLoading={seatsLoading || seatsFetching}
             assignedSeating={seatingType === "assigned"}
-            busy={createState.isLoading || payState.isLoading}
+            onSessionChange={setBookingSessionId}
+            busy={
+              createState.isLoading ||
+              payState.isLoading ||
+              holdState.isLoading
+            }
             onConfirm={(booking) => void confirmBooking(booking)}
           />
         </div>

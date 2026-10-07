@@ -150,13 +150,14 @@ export function readHoldSession(): HoldSession | null {
 }
 
 export function writeHoldSession(session: HoldSession) {
-  sessionStorage.setItem(
-    HOLD_STORAGE_KEY,
-    JSON.stringify({
-      ...session,
-      heldAt: session.heldAt ?? Date.now(),
-    }),
-  );
+  const next = {
+    ...session,
+    heldAt: session.heldAt ?? Date.now(),
+  };
+  sessionStorage.setItem(HOLD_STORAGE_KEY, JSON.stringify(next));
+  if (Number.isInteger(next.sessionId)) {
+    sessionStorage.setItem("myticket.sessionId", String(next.sessionId));
+  }
 }
 
 export function clearHoldSession() {

@@ -17,6 +17,10 @@ import { isPaymentPending, isPaymentSettled } from "@/lib/purchase/paymentStatus
  * Outcome is read from the order on the server — never from URL flags the
  * gateway controls. On success we restore the page they left and leave a
  * session flag so that page can open the success modal.
+ *
+ * Always offer a way out while polling: if the buyer cancels Apple Pay / closes
+ * the gateway, resume logic can still land them here with a pending order, and
+ * a spinner-only screen traps them.
  */
 
 const SETTLE_TIMEOUT_MS = 45_000;
@@ -41,10 +45,33 @@ export function PaymentReturnPage() {
   });
 
   const status = String(
-    (order as Record<string, unknown> | undefined)?.paymentStatus ?? "",
+    (order as Record<string, unknown> | undefined)?.paymentStatus ??
+      (order as Record<string, unknown> | undefined)?.payment_status ??
+      "",
   ).toLowerCase();
   const settling = isPaymentPending(status);
   const paid = isPaymentSettled(status);
+
+  // #region agent log
+  useEffect(() => {
+    fetch("http://127.0.0.1:7585/ingest/e7c61862-ca01-4245-8388-3080d99a6b97", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "000302",
+      },
+      body: JSON.stringify({
+        sessionId: "000302",
+        runId: "post-fix",
+        hypothesisId: "F",
+        location: "PaymentReturnPage.tsx:status",
+        message: "payment-return poll",
+        data: { orderId, status, settling, paid, gaveUp, isError },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [orderId, status, settling, paid, gaveUp, isError]);
+  // #endregion
 
   useEffect(() => {
     if (settling || orderId == null) return;
@@ -64,38 +91,50 @@ export function PaymentReturnPage() {
     return () => window.clearTimeout(timer);
   }, [settling]);
 
+  function leaveWaiting(path: string) {
+    sessionStorage.removeItem(PAYING_ORDER_KEY);
+    navigate(path, { replace: true });
+  }
+
+  function tryAgain() {
+    sessionStorage.removeItem(PAYING_ORDER_KEY);
+    navigate(consumePaymentBackPath("/my-tickets"), { replace: true });
+  }
+
   if (orderId == null || isError) {
     return (
       <Shell title={t("checkout:payment.unknownTitle")}>
         <p className="text-[14px] text-ink-secondary">
           {t("checkout:payment.unknownBody")}
         </p>
-        <Button onClick={() => navigate("/my-tickets", { replace: true })}>
+        <Button onClick={() => leaveWaiting("/my-tickets")}>
           {t("checkout:payment.goToTickets")}
         </Button>
-      </Shell>
-    );
-  }
-
-  if (settling && !gaveUp) {
-    return (
-      <Shell title={t("checkout:confirmation.settlingTitle")} spinner>
-        <p className="text-[14px] text-ink-secondary">
-          {t("checkout:confirmation.settlingBody")}
-        </p>
       </Shell>
     );
   }
 
   if (settling) {
     return (
-      <Shell title={t("checkout:payment.slowTitle")}>
+      <Shell
+        title={
+          gaveUp
+            ? t("checkout:payment.slowTitle")
+            : t("checkout:confirmation.settlingTitle")
+        }
+        spinner={!gaveUp}
+      >
         <p className="text-[14px] text-ink-secondary">
-          {t("checkout:payment.slowBody")}
+          {gaveUp
+            ? t("checkout:payment.slowBody")
+            : t("checkout:confirmation.settlingBody")}
         </p>
-        <Button onClick={() => navigate("/my-tickets", { replace: true })}>
-          {t("checkout:payment.goToTickets")}
-        </Button>
+        <div className="mt-sm flex w-full flex-col gap-sm sm:flex-row sm:justify-center">
+          <Button onClick={tryAgain}>{t("checkout:payment.tryAgain")}</Button>
+          <Button variant="secondary" onClick={() => leaveWaiting("/my-tickets")}>
+            {t("checkout:payment.goToTickets")}
+          </Button>
+        </div>
       </Shell>
     );
   }
@@ -109,13 +148,7 @@ export function PaymentReturnPage() {
       <p className="text-[14px] text-ink-secondary">
         {t("checkout:payment.refusedBody")}
       </p>
-      <Button
-        onClick={() =>
-          navigate(consumePaymentBackPath("/my-tickets"), { replace: true })
-        }
-      >
-        {t("checkout:payment.tryAgain")}
-      </Button>
+      <Button onClick={tryAgain}>{t("checkout:payment.tryAgain")}</Button>
     </Shell>
   );
 }

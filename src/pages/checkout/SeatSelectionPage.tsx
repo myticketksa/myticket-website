@@ -598,6 +598,7 @@ export function SeatSelectionPage() {
       });
 
       continuingRef.current = true;
+      const sessionId = activeSessionId;
       writeHoldSession({
         seatIds: numericSeatIds,
         seats: selected,
@@ -606,6 +607,7 @@ export function SeatSelectionPage() {
         holdId: createdHoldId,
         holdIds: [createdHoldId],
         eventId: resolvedEventId,
+        sessionId,
         total: total ?? 0,
         subtotal: subtotal ?? 0,
         serviceFee: serviceFee ?? 0,
@@ -615,6 +617,9 @@ export function SeatSelectionPage() {
         seatingType: "assigned",
         quantity: items.reduce((sum, item) => sum + item.quantity, 0),
       });
+      if (Number.isInteger(sessionId)) {
+        sessionStorage.setItem("myticket.sessionId", String(sessionId));
+      }
       sessionStorage.setItem(
         "myticket.ticketId",
         String(items[0]?.ticketId ?? ""),

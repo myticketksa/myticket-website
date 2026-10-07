@@ -6,13 +6,31 @@ export type ApiRecord = Record<string, unknown>;
 
 export const seatsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    /** Probe shape: `{ data: Seat[] }` (may be empty until inventory is seeded). */
-    getEventSeats: build.query<unknown, string | number>({
-      query: (eventId) => `/seats/event/${eventId}`,
+    /**
+     * Live shape: `{ data: Seat[] }`. Optional `session` matches the app —
+     * seats are sold per showtime.
+     */
+    getEventSeats: build.query<
+      unknown,
+      string | number | { eventId: string | number; sessionId?: number }
+    >({
+      query: (arg) => {
+        const eventId = typeof arg === "object" ? arg.eventId : arg;
+        const sessionId =
+          typeof arg === "object" && Number.isInteger(arg.sessionId)
+            ? arg.sessionId
+            : undefined;
+        const qs =
+          sessionId != null ? `?session=${encodeURIComponent(String(sessionId))}` : "";
+        return `/seats/event/${eventId}${qs}`;
+      },
       transformResponse: (response: unknown) => response,
-      providesTags: (_r, _e, id) => [{ type: "Event", id: `seats-${id}` }],
+      providesTags: (_r, _e, arg) => {
+        const eventId = typeof arg === "object" ? arg.eventId : arg;
+        return [{ type: "Event", id: `seats-${eventId}` }];
+      },
     }),
-    /** Soft-wired from SeatSelection when seat ids are pure numeric + ticketId is known. */
+    /** Soft-hold before createOrder — same contract as the mobile app. */
     holdSeats: build.mutation<
       ApiRecord,
       {
@@ -37,6 +55,9 @@ export const seatsApi = baseApi.injectEndpoints({
         const holdId = unwrapHoldId(data);
         return holdId ? { ...data, holdId } : data;
       },
+      invalidatesTags: (_r, _e, arg) => [
+        { type: "Event", id: `seats-${arg.eventId}` },
+      ],
     }),
     releaseHold: build.mutation<
       ApiRecord,

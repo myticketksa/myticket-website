@@ -34,6 +34,7 @@ import {
   readSelectedSessionId,
   type HeldSeatSnapshot,
 } from "@/lib/purchase/holdSession";
+import { toPaymentBrand } from "@/lib/purchase/paymentBrand";
 
 type PaymentMethod = "card" | "apple" | "wallet";
 
@@ -358,7 +359,7 @@ export function CheckoutPage() {
       if (pendingOrderId) {
         await payOrder({
           orderId: pendingOrderId,
-          brand: method === "wallet" ? "WALLET" : "CREDIT",
+          brand: toPaymentBrand(method),
         }).unwrap();
         sessionStorage.setItem("myticket.lastOrderId", String(pendingOrderId));
         sessionStorage.removeItem("myticket.pendingOrderId");

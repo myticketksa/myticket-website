@@ -38,7 +38,7 @@ export const ordersApi = baseApi.injectEndpoints({
     }),
     payOrder: build.mutation<
       ApiRecord,
-      { orderId: number; brand: 'CREDIT' | 'WALLET'; returnUrl?: string }
+      { orderId: number; brand: 'CREDIT' | 'APPLE' | 'WALLET'; returnUrl?: string }
     >({
       query: (body) => ({
         url: '/tickets/orders/pay',
