@@ -1,0 +1,207 @@
+{
+  "capturedAt": "2026-10-06T12:59:41.773Z",
+  "baseUrl": "http://localhost:5173",
+  "totals": {
+    "pass": 24,
+    "blocker": 0,
+    "major": 0,
+    "minor": 0,
+    "info": 3
+  },
+  "findings": [
+    {
+      "id": "route-home",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/ loads",
+      "route": "/"
+    },
+    {
+      "id": "route-events",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/events loads",
+      "route": "/events"
+    },
+    {
+      "id": "route-experiences",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/experiences loads",
+      "route": "/experiences"
+    },
+    {
+      "id": "route-talents",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/talents loads",
+      "route": "/talents"
+    },
+    {
+      "id": "route-search",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/search?q=riyadh loads",
+      "route": "/search?q=riyadh"
+    },
+    {
+      "id": "route-about",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/about loads",
+      "route": "/about"
+    },
+    {
+      "id": "route-help",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/help loads",
+      "route": "/help"
+    },
+    {
+      "id": "route-sign-in",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/sign-in loads",
+      "route": "/sign-in"
+    },
+    {
+      "id": "route-auctions",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/auctions loads",
+      "route": "/auctions"
+    },
+    {
+      "id": "nav-desktop",
+      "severity": "pass",
+      "area": "nav",
+      "title": "Desktop main nav shows catalog destinations",
+      "detail": "Events · Attractions & Activities · Talents · Facilities"
+    },
+    {
+      "id": "nav-drawer",
+      "severity": "pass",
+      "area": "nav",
+      "title": "Mobile drawer lists Events / Experiences / Talents / Facilities"
+    },
+    {
+      "id": "events-category-dd",
+      "severity": "pass",
+      "area": "filters",
+      "title": "Events page has category dropdown",
+      "route": "/events"
+    },
+    {
+      "id": "events-city-dd",
+      "severity": "pass",
+      "area": "filters",
+      "title": "Events page has city dropdown",
+      "route": "/events"
+    },
+    {
+      "id": "events-search",
+      "severity": "pass",
+      "area": "filters",
+      "title": "Events nearest-search field present",
+      "route": "/events"
+    },
+    {
+      "id": "events-no-sidebar",
+      "severity": "pass",
+      "area": "filters",
+      "title": "Events page has no filter sidebar (matches app)",
+      "route": "/events"
+    },
+    {
+      "id": "talents-type",
+      "severity": "pass",
+      "area": "filters",
+      "title": "Talents has talent-type dropdown",
+      "route": "/talents"
+    },
+    {
+      "id": "talents-city",
+      "severity": "pass",
+      "area": "filters",
+      "title": "Talents has city dropdown",
+      "route": "/talents"
+    },
+    {
+      "id": "talents-rated",
+      "severity": "pass",
+      "area": "filters",
+      "title": "Talents has top-rated toggle",
+      "route": "/talents"
+    },
+    {
+      "id": "exp-category",
+      "severity": "pass",
+      "area": "filters",
+      "title": "Experiences has category dropdown",
+      "route": "/experiences"
+    },
+    {
+      "id": "exp-where",
+      "severity": "pass",
+      "area": "filters",
+      "title": "Experiences has no where search bar",
+      "route": "/experiences"
+    },
+    {
+      "id": "auth-apply-talent",
+      "severity": "pass",
+      "area": "auth",
+      "title": "/apply/talent is gated or redirects when signed out",
+      "detail": "url=http://localhost:5173/sign-in?next=%2Fapply%2Ftalent",
+      "route": "/apply/talent"
+    },
+    {
+      "id": "auth-apply-facilities",
+      "severity": "pass",
+      "area": "auth",
+      "title": "/apply/facilities is gated or redirects when signed out",
+      "detail": "url=http://localhost:5173/sign-in?next=%2Fapply%2Ffacilities",
+      "route": "/apply/facilities"
+    },
+    {
+      "id": "auth-my-tickets",
+      "severity": "info",
+      "area": "auth",
+      "title": "/my-tickets loaded signed-out — check gate manually",
+      "detail": "url=http://localhost:5173/my-tickets",
+      "route": "/my-tickets"
+    },
+    {
+      "id": "auth-profile",
+      "severity": "info",
+      "area": "auth",
+      "title": "/profile loaded signed-out — check gate manually",
+      "detail": "url=http://localhost:5173/profile",
+      "route": "/profile"
+    },
+    {
+      "id": "auth-favorites",
+      "severity": "info",
+      "area": "auth",
+      "title": "/favorites loaded signed-out — check gate manually",
+      "detail": "url=http://localhost:5173/favorites",
+      "route": "/favorites"
+    },
+    {
+      "id": "event-detail",
+      "severity": "pass",
+      "area": "catalog",
+      "title": "Event detail opens from catalog card",
+      "detail": "url=http://localhost:5173/events/comedy-nights; bookCtas=1",
+      "route": "/events/comedy-nights"
+    },
+    {
+      "id": "rtl",
+      "severity": "pass",
+      "area": "i18n",
+      "title": "Language toggle switches to RTL/Arabic",
+      "detail": "dir=rtl lang=ar"
+    }
+  ]
+}
