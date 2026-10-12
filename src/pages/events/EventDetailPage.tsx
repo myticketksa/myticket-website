@@ -620,7 +620,7 @@ export function EventDetailPage() {
       </PageSection>
 
       <PageSection padTop={16} padBottom={0}>
-        <FadeUp>
+        <FadeUp inView={false}>
           <DetailGallery
             category={display.category}
             flag={display.flag}

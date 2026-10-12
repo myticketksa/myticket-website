@@ -112,7 +112,7 @@ export function ExperiencesPage() {
       </PageSection>
 
       <PageSection padTop={14} padBottom={0}>
-        <FadeUp>
+        <FadeUp inView={false}>
           <h1 className="text-display-hero text-ink-primary">
             {t("pages.experiencesTitle")}
           </h1>

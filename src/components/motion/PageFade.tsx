@@ -1,31 +1,17 @@
 import { useEffect, type ReactNode } from 'react'
-import { motion, useReducedMotion } from 'motion/react'
 import { useLocation } from 'react-router-dom'
-import { motionTokens } from '@/lib/motion'
 
 /**
- * Guest route change — content opacity only. Header/footer stay mounted outside.
- * Scroll jumps to top instantly (not animated).
+ * Guest route change — remount page body and jump scroll to top.
+ * Intentionally no opacity-0 entrance: stacking that with FadeUp/StaggerGroup
+ * painted blank main content on cold navigations until scroll (QA #5/#7).
  */
 export function PageFade({ children }: { children: ReactNode }) {
   const { pathname } = useLocation()
-  const reduce = useReducedMotion()
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [pathname])
 
-  return (
-    <motion.div
-      key={pathname}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{
-        duration: reduce ? 0 : motionTokens.page.duration,
-        ease: motionTokens.page.ease,
-      }}
-    >
-      {children}
-    </motion.div>
-  )
+  return <div key={pathname}>{children}</div>
 }

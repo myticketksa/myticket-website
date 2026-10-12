@@ -168,7 +168,7 @@ export function EventsPage() {
       </PageSection>
 
       <PageSection padTop={14} padBottom={0}>
-        <FadeUp>
+        <FadeUp inView={false}>
           <div className="flex w-full flex-col gap-lg sm:flex-row sm:items-center sm:justify-between">
             <MultiSelectDropdown
               multi={false}

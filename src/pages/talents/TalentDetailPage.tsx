@@ -279,7 +279,7 @@ export function TalentDetailPage() {
       </PageSection>
 
       <PageSection padTop={20} padBottom={64}>
-        <FadeUp className="mx-auto flex w-full max-w-[720px] flex-col items-center px-0 text-center">
+        <FadeUp inView={false} className="mx-auto flex w-full max-w-[720px] flex-col items-center px-0 text-center">
           <div className="size-[120px] overflow-hidden rounded-full border border-border-default bg-bg-skeleton sm:size-[168px]">
             <img
               src={talent.image ?? TALENT_DETAIL_GALLERY.main}

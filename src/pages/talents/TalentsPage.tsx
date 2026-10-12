@@ -150,7 +150,7 @@ export function TalentsPage() {
   return (
     <>
       <PageSection padTop={14} padBottom={0}>
-        <FadeUp>
+        <FadeUp inView={false}>
           <div className="flex w-full flex-col gap-lg sm:flex-row sm:items-end sm:justify-between">
             <h1 className="text-display-hero text-ink-primary">
               {t("nav:talents")}

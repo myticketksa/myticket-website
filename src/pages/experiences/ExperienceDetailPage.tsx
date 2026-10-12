@@ -183,7 +183,7 @@ export function ExperienceDetailPage() {
       </PageSection>
 
       <PageSection padTop={16} padBottom={0}>
-        <FadeUp>
+        <FadeUp inView={false}>
           <DetailGallery
             category={experience.meta.split(' · ')[0]}
             moreLabel={moreLabel}
@@ -195,7 +195,7 @@ export function ExperienceDetailPage() {
 
       <PageSection padTop={34} padBottom={0}>
         <article className="min-w-0 max-w-[860px]">
-          <FadeUp>
+          <FadeUp inView={false}>
             <p className="text-label-overline text-ink-brand-mid">{experience.meta}</p>
             <h1 className="text-display-hero mt-sm text-ink-primary">{experience.title}</h1>
             <div className="mt-[14px] flex flex-wrap items-center gap-[18px] text-[15px]">

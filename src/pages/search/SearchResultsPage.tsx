@@ -383,7 +383,7 @@ export function SearchResultsPage() {
       </PageSection>
 
       <PageSection padTop={14} padBottom={0}>
-        <FadeUp>
+        <FadeUp inView={false}>
           <h1 className="text-heading-h2 text-ink-primary">
             {t("search.resultsFor", { query })}
           </h1>
