@@ -257,6 +257,7 @@ export function ExperienceDetailPage() {
                 rating={exp.rating}
                 guests={exp.guests}
                 price={exp.price}
+                priceLabel=""
                 image={i === 0 ? (exp.image ?? EXPERIENCE_DETAIL_NEARBY) : exp.image}
               />
             </LinkedCard>

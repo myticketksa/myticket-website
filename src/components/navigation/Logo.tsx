@@ -1,4 +1,5 @@
 import logoSrc from '@/assets/myticket-logo.png'
+import logoWhiteSrc from '@/assets/myticket-logo-white.png'
 import { cn } from '@/lib/cn'
 
 /**
@@ -19,12 +20,19 @@ export interface LogoProps {
   /** Accessible name. Pass an empty string when a nearby link already names it. */
   alt?: string
   className?: string
+  /** `white` uses the transparent white lockup. No color filter. */
+  variant?: 'default' | 'white'
 }
 
-export function Logo({ height = 40, alt = 'MyTicket', className }: LogoProps) {
+export function Logo({
+  height = 40,
+  alt = 'MyTicket',
+  className,
+  variant = 'default',
+}: LogoProps) {
   return (
     <img
-      src={logoSrc}
+      src={variant === 'white' ? logoWhiteSrc : logoSrc}
       alt={alt}
       style={{ height }}
       className={cn('aspect-[73/40] w-auto shrink-0 object-contain', className)}

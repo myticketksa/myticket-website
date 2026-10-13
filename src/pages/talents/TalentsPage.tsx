@@ -18,6 +18,13 @@ import { buildPageNumbers } from "@/lib/api/unwrap";
 import { catalogLabel } from "@/lib/i18n/catalogLabels";
 import { LinkedCard, slugify } from "@/pages/_guest";
 
+/** Ask the list for a full 4×3 grid. `perPage` is ignored today and the list returns 10. */
+const TALENT_SERVER_PAGE_SIZE = 12;
+/** 3 columns × 3 rows. Used when the API page size is not a multiple of 3. */
+const TALENT_CLIENT_PAGE_SIZE = 9;
+/** Observed list size when `perPage` is ignored. */
+const TALENT_API_PAGE_SIZE = 10;
+
 const TALENT_FALLBACK = [
   "Singers",
   "Bands",
@@ -28,6 +35,18 @@ const TALENT_FALLBACK = [
   "Hosts",
   "Dance troupes",
 ] as const;
+
+/**
+ * Which API pages hold one 9-card directory page when each API page has 10.
+ * Page 2 starts on the 10th card of API page 1 so no talent is dropped.
+ */
+function talentClientWindow(uiPage: number) {
+  const start = (Math.max(1, uiPage) - 1) * TALENT_CLIENT_PAGE_SIZE;
+  const first = Math.floor(start / TALENT_API_PAGE_SIZE) + 1;
+  const last =
+    Math.floor((start + TALENT_CLIENT_PAGE_SIZE - 1) / TALENT_API_PAGE_SIZE) + 1;
+  return { first, last, offset: start % TALENT_API_PAGE_SIZE };
+}
 
 /**
  * Talents directory — mobile only: search by name, talent type, city,
@@ -41,6 +60,8 @@ export function TalentsPage() {
   const [cityId, setCityId] = useState("");
   const [query, setQuery] = useState("");
   const [highestRated, setHighestRated] = useState(false);
+  /** True once a response page size divides evenly into the 3-column grid. */
+  const [serverPageFillsRows, setServerPageFillsRows] = useState(false);
 
   const { data: apiCategories } = useGetTalentCategoriesQuery();
   const { data: apiCities } = useGetCitiesQuery();
@@ -68,17 +89,62 @@ export function TalentsPage() {
     [apiCities, t],
   );
 
-  const {
-    data: talentsResult,
-    isFetching,
-    isError,
-  } = useGetTalentsQuery({
-    page,
+  const listFilters = {
+    perPage: TALENT_SERVER_PAGE_SIZE,
     categoryId: categoryId || undefined,
     cityId: cityId || undefined,
+  };
+  const clientWindow = talentClientWindow(page);
+  const requestedPage = serverPageFillsRows ? page : clientWindow.first;
+  const needsSecondPage =
+    !serverPageFillsRows && clientWindow.last !== clientWindow.first;
+
+  const {
+    data: talentsResult,
+    isFetching: primaryFetching,
+    isError: primaryError,
+  } = useGetTalentsQuery({
+    ...listFilters,
+    page: requestedPage,
   });
-  const apiTalents = talentsResult?.items;
+  const {
+    data: overflowResult,
+    isFetching: overflowFetching,
+    isError: overflowError,
+  } = useGetTalentsQuery(
+    {
+      ...listFilters,
+      page: clientWindow.last,
+    },
+    { skip: !needsSecondPage },
+  );
+
+  const responsePerPage = talentsResult?.pagination.perPage ?? 0;
+  const responseFillsRows = responsePerPage > 0 && responsePerPage % 3 === 0;
+  useEffect(() => {
+    if (responseFillsRows) setServerPageFillsRows(true);
+  }, [responseFillsRows]);
+
+  const serverPageReady = responseFillsRows && requestedPage === page;
+  const clientPageReady =
+    !responseFillsRows &&
+    Boolean(talentsResult) &&
+    (!needsSecondPage || Boolean(overflowResult) || overflowError);
+
+  const apiTalents = serverPageReady
+    ? talentsResult?.items
+    : clientPageReady
+      ? [
+          ...(talentsResult?.items ?? []),
+          ...(needsSecondPage ? (overflowResult?.items ?? []) : []),
+        ].slice(
+          clientWindow.offset,
+          clientWindow.offset + TALENT_CLIENT_PAGE_SIZE,
+        )
+      : undefined;
   const pagination = talentsResult?.pagination;
+  const isFetching = primaryFetching || (needsSecondPage && overflowFetching);
+  const isError = primaryError || (needsSecondPage && overflowError);
 
   const setPage = (next: number) => {
     const safe = Math.max(1, next);
@@ -136,7 +202,12 @@ export function TalentsPage() {
     return list;
   }, [catalog, highestRated, query]);
 
-  const lastPage = Math.max(1, pagination?.lastPage ?? 1);
+  const lastPage = serverPageReady
+    ? Math.max(1, pagination?.lastPage ?? 1)
+    : Math.max(
+        1,
+        Math.ceil((pagination?.total ?? 0) / TALENT_CLIENT_PAGE_SIZE) || 1,
+      );
   const currentPage = Math.min(page, lastPage);
   const pageNumbers = buildPageNumbers(currentPage, lastPage);
 

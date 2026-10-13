@@ -52,6 +52,11 @@ export interface BookingModalProps {
   seats: SeatOption[];
   /** Assigned seating asks for a seat per ticket; free seating does not. */
   assignedSeating: boolean;
+  /**
+   * Free entry, not free seating. The payment step then skips the method
+   * picker and the promo field — there is nothing to charge.
+   */
+  freeEntry?: boolean;
   seatsLoading?: boolean;
   /** Parent refetches seats for this showtime (app: `?session=`). */
   onSessionChange?: (sessionId: number | undefined) => void;
@@ -73,6 +78,7 @@ export function BookingModal({
   sessions,
   seats,
   assignedSeating,
+  freeEntry = false,
   seatsLoading,
   onSessionChange,
   busy,
@@ -214,7 +220,7 @@ export function BookingModal({
       typeId: typeId!,
       sessionId: sessionId!,
       lines,
-      promoCode: promoCode.trim(),
+      promoCode: freeEntry ? "" : promoCode.trim(),
       method,
     });
   }
@@ -434,7 +440,7 @@ export function BookingModal({
               );
             })}
 
-          {step === 2 && (
+          {step === 2 && !freeEntry && (
             <div className="mb-lg mt-sm flex items-center gap-xs">
               <TextInput
                 value={promoCode}
@@ -472,7 +478,7 @@ export function BookingModal({
             </div>
           )}
 
-          {step === 2 && (
+          {step === 2 && !freeEntry && (
             <fieldset className="mb-lg flex flex-col gap-xs">
               <legend className="mb-xs text-[13px] font-semibold text-ink-primary">
                 {t("checkout:checkout.paymentMethod")}

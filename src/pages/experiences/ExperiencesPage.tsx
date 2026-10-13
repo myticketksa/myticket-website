@@ -178,6 +178,7 @@ export function ExperiencesPage() {
                 rating={exp.rating}
                 guests={exp.guests}
                 price={exp.price}
+                priceLabel={exp.experienceType === "activity" ? "" : undefined}
                 flag={exp.flag}
                 image={exp.image}
               />

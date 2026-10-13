@@ -138,8 +138,7 @@ export function MyTicketsPage() {
                 variant="filters"
                 title={t('account:tickets.requestsEmptyTitle')}
                 body={t('account:tickets.requestsEmptyBody')}
-                ctaLabel={t('account:tickets.requestsEmptyCta')}
-                onCtaClick={() => navigate('/talents')}
+                showCta={false}
               />
             </div>
           )}

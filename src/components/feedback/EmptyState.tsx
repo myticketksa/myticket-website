@@ -70,6 +70,8 @@ export interface EmptyStateProps {
   /** Defaults to the label the source draws for the variant. */
   ctaLabel?: string
   onCtaClick?: () => void
+  /** Omit the action. The Requests empty state has no next step. */
+  showCta?: boolean
   className?: string
 }
 
@@ -79,6 +81,7 @@ export function EmptyState({
   variant = 'firstUse',
   ctaLabel,
   onCtaClick,
+  showCta = true,
   className,
 }: EmptyStateProps) {
   const { t } = useTranslation('common')
@@ -105,21 +108,23 @@ export function EmptyState({
         {body}
       </p>
 
-      <div className="flex shrink-0 items-center justify-center overflow-clip pt-xs">
-        {variant === 'filters' ? (
-          <button
-            type="button"
-            onClick={onCtaClick}
-            className="flex h-[36px] shrink-0 items-center justify-center overflow-clip rounded-btn-sm border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold whitespace-nowrap text-ink-primary"
-          >
-            {label}
-          </button>
-        ) : (
-          <Button variant="cardCta" size="sm" onClick={onCtaClick}>
-            {label}
-          </Button>
-        )}
-      </div>
+      {showCta ? (
+        <div className="flex shrink-0 items-center justify-center overflow-clip pt-xs">
+          {variant === 'filters' ? (
+            <button
+              type="button"
+              onClick={onCtaClick}
+              className="flex h-[36px] shrink-0 items-center justify-center overflow-clip rounded-btn-sm border-[1.5px] border-border-default bg-surface-default px-lg text-[13px] font-semibold whitespace-nowrap text-ink-primary"
+            >
+              {label}
+            </button>
+          ) : (
+            <Button variant="cardCta" size="sm" onClick={onCtaClick}>
+              {label}
+            </Button>
+          )}
+        </div>
+      ) : null}
     </div>
   )
 }

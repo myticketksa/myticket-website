@@ -225,15 +225,21 @@ export function ExperienceCard({
             </div>
           )}
 
-          {price && (
+          {/* {price && (
             <div className="mt-auto flex w-full items-baseline justify-between border-t border-border-divider pt-[12px]">
-              <span className="text-[13px] font-normal text-ink-muted">{priceLabel}</span>
+              {priceLabel ? (
+                <span className="text-[13px] font-normal text-ink-muted">
+                  {priceLabel}
+                </span>
+              ) : (
+                <span />
+              )}
               <MoneyAmount
                 value={price}
                 className="text-[18px] font-semibold text-ink-primary"
               />
             </div>
-          )}
+          )} */}
         </div>
       )}
     </article>

@@ -750,6 +750,7 @@ export function EventDetailPage() {
             seats={seatOptions}
             seatsLoading={seatsLoading || seatsFetching}
             assignedSeating={seatingType === "assigned"}
+            freeEntry={isFreeEntry}
             onSessionChange={setBookingSessionId}
             busy={
               createState.isLoading ||

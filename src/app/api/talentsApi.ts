@@ -15,6 +15,8 @@ export type TalentsListResult = {
 
 export type GetTalentsParams = {
   page?: number
+  /** Requested page size (`perPage`). */
+  perPage?: number
   /** `filters[category]` — talent type id */
   categoryId?: string | number
   /** `filters[in]` — city id where they perform */
@@ -33,6 +35,7 @@ export const talentsApi = baseApi.injectEndpoints({
     getTalents: build.query<TalentsListResult, void | GetTalentsParams>({
       query: (params) => {
         const page = params && 'page' in params ? params.page : undefined
+        const perPage = params && 'perPage' in params ? params.perPage : undefined
         const categoryId =
           params && 'categoryId' in params ? params.categoryId : undefined
         const cityId = params && 'cityId' in params ? params.cityId : undefined
@@ -41,6 +44,7 @@ export const talentsApi = baseApi.injectEndpoints({
           url: '/talents',
           params: {
             ...(page && page > 1 ? { page } : page === 1 ? { page: 1 } : {}),
+            ...(perPage && perPage > 0 ? { perPage } : {}),
             ...(categoryId != null && categoryId !== ''
               ? { 'filters[category]': categoryId }
               : {}),

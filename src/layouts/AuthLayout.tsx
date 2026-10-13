@@ -46,7 +46,7 @@ function AuthHeroPanel({
         className="absolute inset-0 bg-gradient-to-b from-[rgba(25,16,8,0.72)] via-[rgba(25,16,8,0.35)] via-[40%] to-[rgba(25,16,8,0.92)]"
       />
       <Link to="/" className="relative shrink-0">
-        <Logo height={40} className="brightness-0 invert" />
+        <Logo height={40} variant="white" />
       </Link>
       <div className="relative shrink-0">
         <h2 className="max-w-[460px] text-[46px] leading-[1.04] font-extrabold tracking-[-1.61px] text-bg-page">

@@ -404,7 +404,7 @@
   "notifications": {
     "title": "Notifications",
     "emptyTitle": "You’re all caught up",
-    "emptyBody": "Ticket alerts, auction bids, and application updates will land here.",
+    "emptyBody": "There are no notifications.",
     "noneTitle": "No notifications yet",
     "noneBody": "Ticket alerts, waitlist claims, and follows will land here.",
     "filterEmptyTitle": "Nothing in this filter",
