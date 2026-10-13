@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArrowRightIcon, HeartIcon, StarIcon } from '@/components/icons'
 import { FilterChip } from '@/components/data-display'
 import { EmptyState } from '@/components/feedback'
@@ -26,7 +26,6 @@ const FILTER_IDS = ['all', 'events', 'experiences', 'talents'] as const
 /** Favorites — Figma `207:8057`. Lists GET /favorites `{ type, item }` rows. */
 export function FavoritesPage() {
   const { t } = useTranslation(['account', 'common'])
-  const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const [filter, setFilter] = useState(0)
   const { data: favorites, isLoading } = useGetFavoritesQuery()
@@ -107,8 +106,7 @@ export function FavoritesPage() {
               variant="firstUse"
               title={t('account:favorites.emptyTitle')}
               body={t('account:favorites.emptyBody')}
-              ctaLabel={t('common:actions.browseEvents')}
-              onCtaClick={() => navigate('/events')}
+              showCta={false}
             />
           </div>
         )}

@@ -5,6 +5,7 @@ import { useAppSelector } from "@/app/hooks";
 import { ChatIcon, CloseIcon } from "@/components/icons";
 import { Button } from "@/components/ui";
 import { selectIsAuthenticated } from "@/features/auth/authSlice";
+import { cn } from "@/lib/cn";
 import { useSupportChat } from "@/lib/useSupportChat";
 import {
   SupportChatAgentBar,
@@ -60,7 +61,10 @@ export function SupportChatBubble() {
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         onClick={() => (open ? close() : setOpen(true))}
-        className="fixed end-[16px] bottom-[16px] z-40 flex size-[58px] items-center justify-center rounded-full bg-brand-gradient text-ink-inverse shadow-overlay transition-transform duration-normal ease-standard hover:scale-105 active:scale-95 motion-reduce:hover:scale-100 motion-reduce:active:scale-100 sm:end-[24px] sm:bottom-[24px]"
+        className={cn(
+          "fixed end-[16px] bottom-[16px] z-40 flex size-[58px] items-center justify-center rounded-full bg-brand-gradient text-ink-inverse shadow-overlay transition-transform duration-normal ease-standard hover:scale-105 active:scale-95 motion-reduce:hover:scale-100 motion-reduce:active:scale-100 sm:end-[24px] sm:bottom-[24px]",
+          !open && "support-bubble-pulse",
+        )}
       >
         {open ? <CloseIcon size={24} /> : <ChatIcon size={28} weight="fill" />}
       </button>

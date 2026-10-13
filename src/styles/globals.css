@@ -37,6 +37,31 @@
   animation: myticket-shimmer 1.4s linear infinite;
 }
 
+/* Support launcher: a ring that expands past the button so it reads at a glance.
+   Not `animate-ping` — that disc sits behind the button and stays invisible
+   when the OS asks for reduced motion. */
+@keyframes support-bubble-pulse {
+  0% {
+    box-shadow:
+      var(--shadow-overlay),
+      0 0 0 0 rgb(242 95 44 / 0.55);
+  }
+  70% {
+    box-shadow:
+      var(--shadow-overlay),
+      0 0 0 16px rgb(242 95 44 / 0);
+  }
+  100% {
+    box-shadow:
+      var(--shadow-overlay),
+      0 0 0 0 rgb(242 95 44 / 0);
+  }
+}
+
+.support-bubble-pulse {
+  animation: support-bubble-pulse 1.8s ease-out infinite;
+}
+
 @keyframes myticket-shimmer {
   from {
     background-position: 150% 0;
