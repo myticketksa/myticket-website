@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { EmptyState } from '@/components/feedback'
 import { StatusBadge, type StatusTone } from '@/components/data-display'
 import { AccountPageHead, AccountSplit } from '@/layouts'
@@ -11,6 +11,7 @@ import {
   type UserRequestCard,
 } from '@/pages/_account/mapApplication'
 import { ReservationStub } from '@/pages/_account/ReservationStub'
+import { TicketDetailsModal } from './TicketDetailsModal'
 import { useGetMyApplicationQuery } from '@/app/api/accountApis'
 import { useGetMyTalentRequestsQuery } from '@/app/api/talentsApi'
 import { useGetOrdersQuery } from '@/app/api/ordersApi'
@@ -59,6 +60,17 @@ export function MyTicketsPage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState(0)
   const { data: orders, isLoading } = useGetOrdersQuery()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const openTicketId = searchParams.get('ticket')
+  const closeTicket = () =>
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('ticket')
+        return next
+      },
+      { replace: true },
+    )
   const { data: applicationData } = useGetMyApplicationQuery()
   const { data: hireRequests } = useGetMyTalentRequestsQuery()
 
@@ -178,7 +190,8 @@ export function MyTicketsPage() {
               {visible.map((ticket) => (
                 <ReservationStub
                   key={ticket.id}
-                  to={`/my-tickets/${ticket.id}`}
+                  // Opens over the list (`?ticket=`), so Back closes it.
+                  to={`?ticket=${encodeURIComponent(ticket.id)}`}
                   title={ticket.title}
                   venue={ticket.city}
                   cover={ticket.cover}
@@ -195,6 +208,7 @@ export function MyTicketsPage() {
           )}
         </div>
       </AccountSplit>
+      <TicketDetailsModal id={openTicketId} onClose={closeTicket} />
     </>
   )
 }

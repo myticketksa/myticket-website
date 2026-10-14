@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
@@ -20,6 +20,7 @@ import {
 import { extractOrderId } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 import { cn } from '@/lib/cn'
+import { PrintableTicket, saveTicketsPdf } from './ticketPdf'
 
 function resolveOrderFromList(
   orders: Record<string, unknown>[] | undefined,
@@ -69,12 +70,48 @@ function TicketQr({ value }: { value: string }) {
 }
 
 /**
- * Ticket detail — QR, gift, cancel, download PDF + core order fields only.
+ * Ticket detail page — for direct links. From My Tickets the same details
+ * open in a dialog (`TicketDetailsModal`), as on the original site.
  */
 export function TicketPage() {
   const { t } = useTranslation('account')
   const { id = '' } = useParams()
   const navigate = useNavigate()
+
+  return (
+    <>
+      <TicketActionHeader
+        label={t('ticket.label')}
+        backHref="/my-tickets"
+        backLabel={t('ticket.backToTickets')}
+      />
+      <AccountSplit className="!gap-xl pt-[44px] lg:!gap-[40px]">
+        <div className="flex flex-col">
+          <TicketDetails id={id} onCancelled={() => navigate('/my-tickets')} />
+
+          <Link
+            to="/events"
+            className="mx-auto mt-[40px] text-[14px] font-semibold text-ink-secondary hover:text-ink-brand"
+          >
+            ← {t('ticket.backToBrowsing')}
+          </Link>
+        </div>
+      </AccountSplit>
+    </>
+  )
+}
+
+/** QR, gift, cancel, download PDF + core order fields — page and dialog alike. */
+export function TicketDetails({
+  id,
+  onCancelled,
+  headingLevel = 1,
+}: {
+  id: string
+  onCancelled: () => void
+  headingLevel?: 1 | 2
+}) {
+  const { t } = useTranslation('account')
   const dispatch = useAppDispatch()
   const user = useAppSelector(selectAuthUser)
   const { data: orders } = useGetOrdersQuery()
@@ -108,7 +145,7 @@ export function TicketPage() {
     try {
       await cancelOrder(orderId).unwrap()
       dispatch(toastPushed('success', t('ticket.cancelSuccess')))
-      navigate('/my-tickets')
+      onCancelled()
     } catch (error) {
       dispatch(toastPushed('error', apiErrorMessage(error, t('ticket.cancelError'))))
     }
@@ -118,122 +155,148 @@ export function TicketPage() {
   const title = detail?.title ?? t('tickets.title')
   const orderIdLabel = detail?.orderId ?? id
 
+  // The button did nothing before. The PDF is built here, one page per
+  // ticket, from cards drawn off screen while it runs.
+  const [printing, setPrinting] = useState(false)
+  const printRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  async function handleDownload() {
+    if (!detail || printing) return
+    printRefs.current = []
+    setPrinting(true)
+    // Two frames: the off-screen cards mount, then lay out.
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    try {
+      const nodes = printRefs.current.filter((node): node is HTMLDivElement => node != null)
+      await saveTicketsPdf(nodes, `myticket-${orderIdLabel}.pdf`)
+    } catch (error) {
+      console.error(error)
+      dispatch(toastPushed('error', t('ticket.downloadError')))
+    } finally {
+      setPrinting(false)
+    }
+  }
+
+  const Heading = headingLevel === 1 ? 'h1' : 'h2'
+
   return (
-    <>
-      <TicketActionHeader
-        label={t('ticket.label')}
-        backHref="/my-tickets"
-        backLabel={t('ticket.backToTickets')}
-      />
-      <AccountSplit className="!gap-xl pt-[44px] lg:!gap-[40px]">
-        <div className="flex flex-col">
-          <div className="flex flex-wrap items-center justify-between gap-md">
-            <h1 className="text-[24px] leading-[1.06] font-extrabold tracking-[-0.9px] text-ink-primary sm:text-[30px]">
-              {title}
-            </h1>
-            <Button
-              variant="secondary"
-              size="md"
-              className="h-[38px] rounded-[19px]"
-              disabled={!paid}
+    <div className="flex flex-col">
+      <div className="flex flex-wrap items-center justify-between gap-md">
+        <Heading className="text-[24px] leading-[1.06] font-extrabold tracking-[-0.9px] text-ink-primary sm:text-[30px]">
+          {title}
+        </Heading>
+        <Button
+          variant="secondary"
+          size="md"
+          className="h-[38px] rounded-[19px]"
+          disabled={!paid}
+          loading={printing}
+          onClick={() => void handleDownload()}
+        >
+          {t('ticket.downloadPdf')}
+        </Button>
+      </div>
+
+      {printing && detail ? (
+        <div aria-hidden="true" className="pointer-events-none fixed top-0 -left-[10000px] flex flex-col gap-lg">
+          {(tickets.length > 0 ? tickets : [undefined]).map((seat, seatIndex) => (
+            <PrintableTicket
+              key={seat?.id ?? seatIndex}
+              ref={(node) => {
+                printRefs.current[seatIndex] = node
+              }}
+              detail={detail}
+              seat={seat}
+              ticketNo={seat?.id ?? `${orderIdLabel}-${seatIndex + 1}`}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      <div className="mt-lg flex flex-col gap-lg">
+        {(tickets.length > 0 ? tickets : [undefined]).map((seat, seatIndex) => {
+          const ticketNo = seat?.id ?? `${orderIdLabel}-${seatIndex + 1}`
+          const qrValue = seat?.qrValue || ticketNo
+          return (
+            <article
+              key={seat?.id ?? seatIndex}
+              className="relative flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
             >
-              {t('ticket.downloadPdf')}
-            </Button>
-          </div>
-
-          <div className="mt-lg flex flex-col gap-lg">
-            {(tickets.length > 0 ? tickets : [undefined]).map((seat, seatIndex) => {
-              const ticketNo = seat?.id ?? `${orderIdLabel}-${seatIndex + 1}`
-              const qrValue = seat?.qrValue || ticketNo
-              return (
-                <article
-                  key={seat?.id ?? seatIndex}
-                  className="relative flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
-                >
-                  <div className="min-w-0 flex-1 px-lg py-[18px] sm:px-[24px] sm:py-[22px]">
-                    <div className="mt-0 grid grid-cols-2 gap-[12px] sm:grid-cols-3 sm:gap-[18px]">
-                      {[
-                        [t('ticket.fieldCity'), detail?.city ?? '—'],
-                        [t('ticket.fieldStartTime'), detail?.startTime ?? '—'],
-                        [t('ticket.fieldTicketNumber'), ticketNo],
-                        [t('ticket.fieldSeat'), seat?.seat ?? '—'],
-                        [t('ticket.fieldTicketType'), seat?.ticketTypeLabel ?? '—'],
-                        [t('ticket.fieldPaymentMethod'), detail?.paymentMethod ?? '—'],
-                        [t('ticket.fieldReservationDate'), detail?.purchasedAt ?? '—'],
-                      ].map(([label, value]) => (
-                        <div key={label} className="min-w-0">
-                          <p className="text-[11px] font-bold tracking-[0.77px] text-ink-muted uppercase">
-                            {label}
-                          </p>
-                          <p className="mt-[4px] text-[15px] font-semibold text-ink-primary">
-                            {value}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-[22px] flex flex-wrap gap-[10px] border-t border-dashed border-border-default pt-[18px]">
-                      {paid ? (
-                        <Link to={`/my-tickets/${detail?.id ?? id}/gift`}>
-                          <Button variant="secondary" size="md">
-                            {t('ticket.gift')}
-                          </Button>
-                        </Link>
-                      ) : (
-                        <Button variant="secondary" size="md" disabled>
-                          {t('ticket.gift')}
-                        </Button>
-                      )}
-                      {canCancel && (
-                        <Button
-                          variant="destructive"
-                          size="md"
-                          loading={cancelState.isLoading}
-                          onClick={() => void handleCancel()}
-                        >
-                          {t('ticket.cancelOrder')}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="relative flex w-full shrink-0 flex-col items-center justify-center gap-[14px] border-t-2 border-dashed border-border-default bg-bg-page px-[22px] py-[28px] sm:w-[260px] sm:border-t-0 sm:border-s-2 md:w-[280px]">
-                    <div
-                      className={cn(
-                        'rounded-[16px] border border-border-default bg-surface-default p-[14px]',
-                        !paid && 'opacity-40',
-                      )}
-                    >
-                      <TicketQr value={qrValue} />
-                    </div>
-                    <div className="text-center text-[13px] leading-[1.45]">
-                      <p className="font-semibold text-ink-secondary">
-                        {t('ticket.scanAtGate', {
-                          gate: seat?.gate && seat.gate !== '—' ? seat.gate : '—',
-                        })}
+              <div className="min-w-0 flex-1 px-lg py-[18px] sm:px-[24px] sm:py-[22px]">
+                <div className="mt-0 grid grid-cols-2 gap-[12px] sm:grid-cols-3 sm:gap-[18px]">
+                  {[
+                    [t('ticket.fieldCity'), detail?.city ?? '—'],
+                    [t('ticket.fieldStartTime'), detail?.startTime ?? '—'],
+                    [t('ticket.fieldTicketNumber'), ticketNo],
+                    [t('ticket.fieldSeat'), seat?.seat ?? '—'],
+                    [t('ticket.fieldTicketType'), seat?.ticketTypeLabel ?? '—'],
+                    [t('ticket.fieldPaymentMethod'), detail?.paymentMethod ?? '—'],
+                    [t('ticket.fieldReservationDate'), detail?.purchasedAt ?? '—'],
+                  ].map(([label, value]) => (
+                    <div key={label} className="min-w-0">
+                      <p className="text-[11px] font-bold tracking-[0.77px] text-ink-muted uppercase">
+                        {label}
+                      </p>
+                      <p className="mt-[4px] text-[15px] font-semibold text-ink-primary">
+                        {value}
                       </p>
                     </div>
-                    <span
-                      aria-hidden="true"
-                      className="absolute top-[-11px] start-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
-                    />
-                    <span
-                      aria-hidden="true"
-                      className="absolute bottom-[-11px] start-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
-                    />
-                  </div>
-                </article>
-              )
-            })}
-          </div>
+                  ))}
+                </div>
+                <div className="mt-[22px] flex flex-wrap gap-[10px] border-t border-dashed border-border-default pt-[18px]">
+                  {paid ? (
+                    <Link to={`/my-tickets/${detail?.id ?? id}/gift`}>
+                      <Button variant="secondary" size="md">
+                        {t('ticket.gift')}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button variant="secondary" size="md" disabled>
+                      {t('ticket.gift')}
+                    </Button>
+                  )}
+                  {canCancel && (
+                    <Button
+                      variant="destructive"
+                      size="md"
+                      loading={cancelState.isLoading}
+                      onClick={() => void handleCancel()}
+                    >
+                      {t('ticket.cancelOrder')}
+                    </Button>
+                  )}
+                </div>
+              </div>
 
-          <Link
-            to="/events"
-            className="mx-auto mt-[40px] text-[14px] font-semibold text-ink-secondary hover:text-ink-brand"
-          >
-            ← {t('ticket.backToBrowsing')}
-          </Link>
-        </div>
-      </AccountSplit>
-    </>
+              <div className="relative flex w-full shrink-0 flex-col items-center justify-center gap-[14px] border-t-2 border-dashed border-border-default bg-bg-page px-[22px] py-[28px] sm:w-[260px] sm:border-t-0 sm:border-s-2 md:w-[280px]">
+                <div
+                  className={cn(
+                    'rounded-[16px] border border-border-default bg-surface-default p-[14px]',
+                    !paid && 'opacity-40',
+                  )}
+                >
+                  <TicketQr value={qrValue} />
+                </div>
+                <div className="text-center text-[13px] leading-[1.45]">
+                  <p className="font-semibold text-ink-secondary">
+                    {t('ticket.scanAtGate', {
+                      gate: seat?.gate && seat.gate !== '—' ? seat.gate : '—',
+                    })}
+                  </p>
+                </div>
+                <span
+                  aria-hidden="true"
+                  className="absolute top-[-11px] start-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
+                />
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-[-11px] start-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"
+                />
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    </div>
   )
 }

@@ -216,7 +216,8 @@
       "qrBody": "Each guest needs their own code — transfer before you travel.",
       "camerasTitle": "No professional cameras",
       "camerasBody": "Phones are fine; detachable-lens cameras aren't admitted."
-    }
+    },
+    "downloadError": "Could not create the PDF. Please try again."
   },
   "gift": {
     "header": "Send a ticket",
