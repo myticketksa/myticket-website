@@ -429,6 +429,15 @@ export function isOrderPaid(order: ApiRecord | undefined): boolean {
   )
 }
 
+/**
+ * Whether an order belongs in My Tickets. As in the app, unpaid, abandoned and
+ * failed checkouts are not tickets yet — the website listed them too.
+ */
+export function isTicketOrder(order: ApiRecord): boolean {
+  const status = localizedString(order.orderStatus ?? order.order_status).toLowerCase()
+  return isOrderPaid(order) || status === 'approved'
+}
+
 function countdownFromStart(startTime: unknown): string | undefined {
   const raw = localizedString(startTime)
   if (!raw) return undefined

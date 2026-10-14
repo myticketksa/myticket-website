@@ -15,10 +15,9 @@ import {
 import { Avatar, MoneyAmount, StatusBadge } from '@/components/data-display'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
-import { ACCOUNT_USER } from '@/pages/_account/fixtures'
 import { AccountWalletCard } from '@/pages/_account/AccountAside'
 import { mapFavoriteRecord } from '@/lib/favorites/mapFavoriteRecord'
-import { mapOrderToMyTicket, type MyTicketCard } from '@/lib/api/mappers/orders'
+import { isTicketOrder, mapOrderToMyTicket, type MyTicketCard } from '@/lib/api/mappers/orders'
 import { useSignOut } from '@/lib/auth/useSignOut'
 
 const SETTINGS_TILE_KEYS = [
@@ -54,7 +53,7 @@ function initialsFromName(name: string): string {
       .split(/\s+/)
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase() ?? '')
-      .join('') || ACCOUNT_USER.initials
+      .join('')
   )
 }
 
@@ -91,9 +90,11 @@ export function ProfilePage() {
   const { data: orders, isLoading: ordersLoading } = useGetOrdersQuery(undefined, {
     skip: !isAuthenticated,
   })
-  const displayName = user?.name ?? ACCOUNT_USER.name
-  const initials = user?.name ? initialsFromName(user.name) : ACCOUNT_USER.initials
-  const walletLabel = formatAuthWalletBalance(user?.walletBalance, ACCOUNT_USER.wallet)
+  // The signed-in user's own data. Sample "Sara Al-Harbi" figures (Riyadh,
+  // 14 attended, 3 upcoming, a wallet balance) used to fill any gap.
+  const displayName = user?.name ?? ''
+  const initials = user?.name ? initialsFromName(user.name) : ''
+  const walletLabel = formatAuthWalletBalance(user?.walletBalance)
   const memberSince = formatMemberSince(user?.created_at, i18n.language)
 
   const savedItems = useMemo(() => {
@@ -108,10 +109,20 @@ export function ProfilePage() {
   const upcomingTickets = useMemo(() => {
     if (!orders?.length) return []
     return orders
+      .filter(isTicketOrder)
       .map(mapOrderToMyTicket)
       .filter((ticket) => ticket.status === 'UPCOMING' || ticket.status === 'AWAITING SEAT')
   }, [orders])
   const nextNights = upcomingTickets.slice(0, 3)
+  const attendedCount = useMemo(
+    () =>
+      (orders ?? [])
+        .filter(isTicketOrder)
+        .map(mapOrderToMyTicket)
+        .filter((ticket) => ticket.status === 'PAST').length,
+    [orders],
+  )
+  const countLabel = (value: number) => (ordersLoading ? '—' : String(value))
   const nearestDays = upcomingTickets.reduce<number | undefined>((nearest, ticket) => {
     const days = daysUntil(ticket.countdown)
     if (days == null) return nearest
@@ -134,25 +145,18 @@ export function ProfilePage() {
                 <h1 className="text-[24px] leading-[1.15] font-extrabold tracking-[-0.6px] text-balance break-words text-ink-primary sm:text-[32px] sm:tracking-[-0.8px]">
                   {displayName}
                 </h1>
-                <p className="mt-sm text-[13px] text-pretty text-ink-secondary sm:text-[14px]">
-                  {memberSince
-                    ? t('profile.memberMeta', {
-                        city: ACCOUNT_USER.city,
-                        since: memberSince,
-                        count: ACCOUNT_USER.eventsAttended,
-                      })
-                    : t('profile.memberMetaNoSince', {
-                        city: ACCOUNT_USER.city,
-                        count: ACCOUNT_USER.eventsAttended,
-                      })}
-                </p>
+                {memberSince ? (
+                  <p className="mt-sm text-[13px] text-pretty text-ink-secondary sm:text-[14px]">
+                    {t('profile.memberSince', { since: memberSince })}
+                  </p>
+                ) : null}
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-sm border-t border-border-divider pt-lg sm:flex sm:flex-wrap sm:items-center sm:gap-xl sm:border-0 sm:pt-0">
               <div className="min-w-0 text-center sm:text-start">
                 <p className="text-[18px] font-extrabold tabular-nums text-ink-primary sm:text-[22px]">
-                  {ACCOUNT_USER.upcoming}
+                  {countLabel(upcomingTickets.length)}
                 </p>
                 <p className="mt-[2px] text-[11px] text-ink-muted sm:text-[12px]">
                   {t('profile.upcoming')}
@@ -160,7 +164,7 @@ export function ProfilePage() {
               </div>
               <div className="min-w-0 text-center sm:text-start">
                 <p className="text-[18px] font-extrabold tabular-nums text-ink-primary sm:text-[22px]">
-                  {ACCOUNT_USER.eventsAttended}
+                  {countLabel(attendedCount)}
                 </p>
                 <p className="mt-[2px] text-[11px] text-ink-muted sm:text-[12px]">
                   {t('profile.attended')}
@@ -222,7 +226,6 @@ export function ProfilePage() {
             const Icon = tile.icon
             const title = t(`profile.settingsTiles.${tile.key}.title`)
             const desc = t(`profile.settingsTiles.${tile.key}.desc`)
-            const tag = t(`profile.settingsTiles.${tile.key}.tag`)
             return (
               <Link
                 key={tile.key}
@@ -235,17 +238,19 @@ export function ProfilePage() {
                 </div>
                 <p className="mt-md text-[16px] font-bold text-ink-primary">{title}</p>
                 <p className="mt-sm text-[13px] text-pretty text-ink-secondary">{desc}</p>
-                <div className="mt-lg">
-                  <StatusBadge tone="successTint">
-                    {tile.href === '/wallet' ? (
-                      <MoneyAmount value={walletLabel} />
-                    ) : tile.key === 'favorites' ? (
-                      String(savedCount)
-                    ) : (
-                      tag
-                    )}
-                  </StatusBadge>
-                </div>
+                {/* Only tiles with a real figure get a badge; the rest carried
+                    sample states ("3 saved", "2FA on", "2 confirmed"). */}
+                {tile.href === '/wallet' || tile.key === 'favorites' ? (
+                  <div className="mt-lg">
+                    <StatusBadge tone="successTint">
+                      {tile.href === '/wallet' ? (
+                        <MoneyAmount value={walletLabel} />
+                      ) : (
+                        String(savedCount)
+                      )}
+                    </StatusBadge>
+                  </div>
+                ) : null}
               </Link>
             )
           })}

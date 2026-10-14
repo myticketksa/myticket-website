@@ -48,8 +48,6 @@ import {
   LinkedCard,
   SimilarSection,
   slugify,
-  TALENT_DETAIL_GALLERY,
-  TALENT_SIMILAR_IMAGES,
 } from '@/pages/_guest'
 import { NotFoundPage } from '@/pages/system/NotFoundPage'
 
@@ -299,11 +297,9 @@ export function TalentDetailPage() {
       <PageSection padTop={20} padBottom={64}>
         <FadeUp inView={false} className="mx-auto flex w-full max-w-[720px] flex-col items-center px-0 text-center">
           <div className="size-[120px] overflow-hidden rounded-full border border-border-default bg-bg-skeleton sm:size-[168px]">
-            <img
-              src={talent.image ?? TALENT_DETAIL_GALLERY.main}
-              alt=""
-              className="size-full object-cover"
-            />
+            {talent.image ? (
+              <img src={talent.image} alt="" className="size-full object-cover" />
+            ) : null}
           </div>
 
           <h1 className="mt-xl min-w-0 max-w-full text-balance text-center text-display-hero text-ink-primary sm:mt-[22px]">
@@ -427,7 +423,7 @@ export function TalentDetailPage() {
           {catalog
             .filter((t) => t.name !== talent.name)
             .slice(0, 4)
-            .map((t, i) => (
+            .map((t) => (
               <LinkedCard
                 key={t.slug ?? t.name}
                 to={`/talents/${t.slug ?? slugify(t.name)}`}
@@ -438,7 +434,7 @@ export function TalentDetailPage() {
                   meta=""
                   rating={t.rating}
                   verified={t.verified}
-                  image={t.image ?? TALENT_SIMILAR_IMAGES[i] ?? undefined}
+                  image={t.image}
                   limited
                 />
               </LinkedCard>

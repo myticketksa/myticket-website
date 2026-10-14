@@ -419,7 +419,8 @@
     "freeActivity": "Free entry",
     "addToFavourites": "Add to favourites",
     "removeFromFavourites": "Remove from favourites",
-    "paymentNotCompleted": "Payment was not completed and nothing was charged. Your order is saved, so you can try again."
+    "paymentNotCompleted": "Payment was not completed and nothing was charged. Your order is saved, so you can try again.",
+    "bookingFailed": "Could not complete your booking. Please try again."
   },
   "search": {
     "title": "Search",

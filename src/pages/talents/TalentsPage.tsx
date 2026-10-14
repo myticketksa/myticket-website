@@ -25,16 +25,6 @@ const TALENT_CLIENT_PAGE_SIZE = 9;
 /** Observed list size when `perPage` is ignored. */
 const TALENT_API_PAGE_SIZE = 10;
 
-const TALENT_FALLBACK = [
-  "Singers",
-  "Bands",
-  "DJs",
-  "Musicians",
-  "Speakers",
-  "Comedians",
-  "Hosts",
-  "Dance troupes",
-] as const;
 
 /**
  * Which API pages hold one 9-card directory page when each API page has 10.
@@ -68,12 +58,9 @@ export function TalentsPage() {
 
   const categoryOptions = useMemo(
     () =>
-      mapCategoryOptions(apiCategories, {
-        fallback: TALENT_FALLBACK.map((label, index) => ({
-          value: String(index + 1),
-          label,
-        })),
-      }).map((option) => ({
+      // No invented categories: the fallback list had made-up ids (1–8) that
+      // filtered on the wrong thing.
+      mapCategoryOptions(apiCategories).map((option) => ({
         ...option,
         label: catalogLabel(t, option.label),
       })),

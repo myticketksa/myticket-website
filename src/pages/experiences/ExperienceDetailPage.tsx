@@ -32,8 +32,6 @@ import {
 } from '@/lib/api/mappers/experiences'
 import {
   DetailGallery,
-  EXPERIENCE_DETAIL_GALLERY,
-  EXPERIENCE_DETAIL_NEARBY,
   LinkedCard,
   SimilarSection,
   slugify,
@@ -109,18 +107,19 @@ export function ExperienceDetailPage() {
     }
   }, [resolvedExperience?.isFavorite])
 
+  // Only the place's own photos — no stock photos from the design file, and
+  // no repeating one photo to fill three thumbnails.
   const galleryMain =
     resolvedExperience?.banner ??
     resolvedExperience?.image ??
-    resolvedExperience?.photos?.[0] ??
-    EXPERIENCE_DETAIL_GALLERY.main
-  const galleryThumbs = useMemo(() => {
-    const photos = resolvedExperience?.photos?.filter(Boolean) ?? []
-    if (photos.length === 0) return [...EXPERIENCE_DETAIL_GALLERY.thumbs]
-    const rest = photos.filter((src) => src !== galleryMain)
-    const pool = rest.length > 0 ? rest : photos
-    return [0, 1, 2].map((i) => pool[i] ?? pool[0] ?? galleryMain)
-  }, [resolvedExperience?.photos, galleryMain])
+    resolvedExperience?.photos?.[0]
+  const galleryThumbs = useMemo(
+    () =>
+      (resolvedExperience?.photos ?? [])
+        .filter((src) => src && src !== galleryMain)
+        .slice(0, 3),
+    [resolvedExperience?.photos, galleryMain],
+  )
 
   if (!resolvedExperience) {
     if (listLoading || detailFetching) {
@@ -264,7 +263,7 @@ export function ExperienceDetailPage() {
         {catalog
           .filter((e) => e.title !== experience.title)
           .slice(0, 4)
-          .map((exp, i) => (
+          .map((exp) => (
             <LinkedCard
               key={exp.slug ?? exp.title}
               to={`/experiences/${exp.slug ?? slugify(exp.title)}`}
@@ -276,7 +275,7 @@ export function ExperienceDetailPage() {
                 context="catalog"
                 rating={exp.rating}
                 guests={exp.guests}
-                image={i === 0 ? (exp.image ?? EXPERIENCE_DETAIL_NEARBY) : exp.image}
+                image={exp.image}
               />
             </LinkedCard>
           ))}

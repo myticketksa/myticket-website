@@ -5,7 +5,7 @@ import { ArrowDownIcon, ArrowUpIcon, ClockIcon } from '@/components/icons'
 import { FilterChip, MoneyAmount } from '@/components/data-display'
 import { Button, Field, TextInput } from '@/components/ui'
 import { AccountPageHead, AccountSplit } from '@/layouts'
-import { ACCOUNT_USER, WALLET_TXNS, type WalletTxnFixture } from '@/pages/_account/fixtures'
+import type { WalletTxnFixture } from '@/pages/_account/fixtures'
 import { useGetWalletQuery, useTopUpWalletMutation } from '@/app/api/accountApis'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
@@ -66,10 +66,8 @@ function translateWalletType(t: AccountT, typeRaw: string): string {
 
 function mapWalletTxn(
   record: Record<string, unknown>,
-  index: number,
   t: AccountT,
 ): WalletTxnFixture {
-  const fallback = WALLET_TXNS[index % WALLET_TXNS.length]!
   const amountRaw = record.amount ?? record.value
   const typeRaw = String(
     record.transaction_type ?? record.tone ?? record.type ?? record.direction ?? '',
@@ -85,7 +83,7 @@ function mapWalletTxn(
         ? 'debit'
         : 'credit'
 
-  let amount = fallback.amount
+  let amount = '—'
   if (amountRaw != null) {
     const num = Number(amountRaw)
     const signed = tone === 'debit' ? -Math.abs(num) : Math.abs(num)
@@ -102,36 +100,20 @@ function mapWalletTxn(
     detailRaw ||
     (orderId != null && String(orderId)
       ? t('wallet.orderRef', { id: String(orderId) })
-      : fallback.detail)
+      : '')
 
   const statusRaw = String(
     record.status ?? (tone === 'pending' ? 'Pending' : 'Cleared'),
   )
 
   return {
-    label: title || typeLabel || fallback.label,
+    label: title || typeLabel,
     detail,
     date: formatWalletDate(record.date ?? record.created_at) ||
-      String(record.date ?? record.created_at ?? fallback.date),
+      String(record.date ?? record.created_at ?? ''),
     amount,
     status: translateWalletStatus(t, statusRaw, tone),
     tone,
-  }
-}
-
-function localizeFixtureTxn(txn: WalletTxnFixture, t: AccountT): WalletTxnFixture {
-  if (!txn.id) {
-    return {
-      ...txn,
-      status: translateWalletStatus(t, txn.status, txn.tone),
-    }
-  }
-  return {
-    ...txn,
-    label: t(`wallet.txns.${txn.id}.label`),
-    detail: t(`wallet.txns.${txn.id}.detail`),
-    date: t(`wallet.txns.${txn.id}.date`),
-    status: translateWalletStatus(t, txn.status, txn.tone),
   }
 }
 
@@ -149,20 +131,17 @@ export function WalletPage() {
   const [topUp, topUpState] = useTopUpWalletMutation()
 
   const balances = useMemo(
-    () => ({
-      available: formatAuthWalletBalance(user?.walletBalance, ACCOUNT_USER.walletBalance),
-      pending: ACCOUNT_USER.walletPending,
-      earnedYear: ACCOUNT_USER.walletEarnedYear,
-    }),
+    () => ({ available: formatAuthWalletBalance(user?.walletBalance) }),
     [user?.walletBalance],
   )
 
   const transactions = useMemo(() => {
     const list = wallet?.transactions
     if (Array.isArray(list) && list.length > 0) {
-      return list.map((row, index) => mapWalletTxn(row, index, t))
+      return list.map((row) => mapWalletTxn(row, t))
     }
-    return WALLET_TXNS.map((txn) => localizeFixtureTxn(txn, t))
+    // No transactions is the empty list; sample ones used to stand in.
+    return []
   }, [t, wallet])
 
   const filteredTxns = useMemo(() => {

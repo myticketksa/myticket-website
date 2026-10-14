@@ -138,6 +138,19 @@ export function apiErrorMessage(
   return fallback;
 }
 
+/** HTTP status and the API's own message (codes included) of a failed request. */
+export function apiErrorDetails(error: unknown): {
+  status?: number | string;
+  message?: string;
+} {
+  if (!error || typeof error !== "object") return {};
+  const err = error as { status?: number | string; data?: { message?: unknown } };
+  return {
+    status: err.status,
+    message: typeof err.data?.message === "string" ? err.data.message : undefined,
+  };
+}
+
 /**
  * True for API strings meant for machines, not people — `session_required`,
  * `application_already_exists`, `UNAUTHORIZED`. Showing these raw was a QA

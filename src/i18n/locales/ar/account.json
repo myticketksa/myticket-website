@@ -578,7 +578,8 @@
       "noBidsYet": "لا مزايدات بعد",
       "winning": "رابح",
       "outbid": "تم تجاوزك"
-    }
+    },
+    "memberSince": "عضو منذ {{since}}"
   },
   "aside": {
     "alsoInAccount": "أيضاً في حسابك",

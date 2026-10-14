@@ -51,11 +51,14 @@ export function DetailGallery({
     setIndex(found >= 0 ? found : Math.max(0, Math.min(fallbackIndex, slides.length - 1)))
   }
 
-  const remaining =
-    slides.length > 4 ? slides.length - 3 : Math.max(0, slides.length - 1)
+  // Thumbnails are only real photos past the main one — no empty placeholder
+  // boxes, and none at all when the item has a single photo.
+  const thumbList = (thumbs.length > 0 ? thumbs : slides.slice(1).map((slide) => slide.src))
+    .filter((src): src is string => Boolean(src) && src !== mainImage)
+    .slice(0, 3)
+  const hidden = slides.length - 1 - thumbList.length
   const resolvedMoreLabel =
-    moreLabel ??
-    (remaining > 0 ? t('detail.morePhotos', { count: remaining }) : t('detail.viewGallery'))
+    moreLabel ?? (hidden > 0 ? t('detail.morePhotos', { count: hidden }) : undefined)
 
   const categoryLabel = category ? catalogLabel(t, category) : undefined
   const flagLabel = flag ? catalogLabel(t, flag) : undefined
@@ -93,10 +96,10 @@ export function DetailGallery({
           </div>
         </button>
 
+        {thumbList.length > 0 && (
         <div className="flex h-[72px] w-full shrink-0 gap-md lg:h-full lg:w-[421px] lg:flex-col lg:gap-[14px]">
-          {[0, 1, 2].map((i) => {
-            const src = thumbs[i] ?? slides[i + 1]?.src
-            const isLast = i === 2
+          {thumbList.map((src, i) => {
+            const isLast = i === thumbList.length - 1
             return (
               <button
                 key={i}
@@ -105,12 +108,8 @@ export function DetailGallery({
                 onClick={() => openAt(src, i + 1)}
                 aria-label={t('detail.openGalleryAt', { n: i + 2 })}
               >
-                {src ? (
-                  <img src={src} alt="" className="size-full object-cover" />
-                ) : (
-                  <ImagePlaceholder ratio="fill" />
-                )}
-                {isLast && slides.length > 1 && (
+                <img src={src} alt="" className="size-full object-cover" />
+                {isLast && resolvedMoreLabel && (
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-ink-primary/60">
                     <p className="text-[13px] font-semibold text-bg-page sm:text-[15px]">
                       {resolvedMoreLabel}
@@ -121,6 +120,7 @@ export function DetailGallery({
             )
           })}
         </div>
+        )}
       </div>
 
       <Lightbox

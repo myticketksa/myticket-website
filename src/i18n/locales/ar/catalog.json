@@ -422,7 +422,8 @@
     "freeActivity": "دخول مجاني",
     "addToFavourites": "أضف للمفضلة",
     "removeFromFavourites": "إزالة من المفضلة",
-    "paymentNotCompleted": "لم يكتمل الدفع ولم يُخصم منك شيء. طلبك محفوظ ويمكنك المحاولة مجدداً."
+    "paymentNotCompleted": "لم يكتمل الدفع ولم يُخصم منك شيء. طلبك محفوظ ويمكنك المحاولة مجدداً.",
+    "bookingFailed": "تعذّر إتمام الحجز. حاول مرة أخرى."
   },
   "search": {
     "title": "بحث",

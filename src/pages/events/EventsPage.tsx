@@ -7,11 +7,7 @@ import { FadeUp, StaggerGroup } from "@/components/motion";
 import { Breadcrumbs, NumberedPagination } from "@/components/navigation";
 import { MultiSelectDropdown, SearchField } from "@/components/ui";
 import { PageSection } from "@/layouts";
-import {
-  EVENT_CATEGORY_CHIPS,
-  LinkedCard,
-  slugify,
-} from "@/pages/_guest";
+import { LinkedCard, slugify } from "@/pages/_guest";
 import { useGetCitiesQuery } from "@/app/api/accountApis";
 import {
   useGetEventCategoriesQuery,
@@ -51,14 +47,7 @@ export function EventsPage() {
 
   const categoryOptions = useMemo(
     () =>
-      mapCategoryOptions(apiCategories, {
-        fallback: EVENT_CATEGORY_CHIPS.filter(
-          (label) => label !== "All events",
-        ).map((label, index) => ({
-          value: String(index + 1),
-          label,
-        })),
-      }).map((option) => ({
+      mapCategoryOptions(apiCategories).map((option) => ({
         ...option,
         label: catalogLabel(t, option.label),
       })),

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { baseApi } from "@/app/api/baseApi";
 import {
   useApplyPromoCodeMutation,
+  useCancelOrderMutation,
   useCreateOrderMutation,
   usePayOrderMutation,
 } from "@/app/api/ordersApi";
@@ -17,7 +19,7 @@ import {
 } from "@/app/api/seatsApi";
 import { useAppDispatch } from "@/app/hooks";
 import { toastPushed } from "@/features/ui/uiSlice";
-import { apiErrorMessage } from "@/lib/api/unwrap";
+import { apiErrorDetails, apiErrorMessage } from "@/lib/api/unwrap";
 import { useRequireAuth } from "@/lib/auth/useRequireAuth";
 import { useEventFavorites } from "@/lib/favorites/useEventFavorites";
 import { formatMoneySar, localizedString } from "@/lib/api/locale";
@@ -59,7 +61,6 @@ import {
   BookingModal,
   type BookingLine,
   type SeatOption,
-  EVENT_DETAIL_GALLERY,
   SimilarSection,
   slugify,
 } from "@/pages/_guest";
@@ -123,6 +124,7 @@ export function EventDetailPage() {
   const [createOrder, createState] = useCreateOrderMutation();
   const [payOrder, payState] = usePayOrderMutation();
   const [applyPromo] = useApplyPromoCodeMutation();
+  const [cancelOrder] = useCancelOrderMutation();
   const [holdSeats, holdState] = useHoldSeatsMutation();
   const [releaseHold] = useReleaseHoldMutation();
   const slugOrId = slug ?? "";
@@ -228,9 +230,9 @@ export function EventDetailPage() {
           "about",
           "summary",
           "overview",
-        ]) ?? t("detail.fixtureAbout"),
+        ]),
     }),
-    [apiDetail, detailCard, listCard, t],
+    [apiDetail, detailCard, listCard],
   );
 
   const title = display.title;
@@ -256,23 +258,20 @@ export function EventDetailPage() {
       ? googleMapsQueryUrl(venueFromApi)
       : undefined;
 
-  const galleryImages = useMemo(() => {
-    const apiImages = collectGalleryImages(apiDetail);
-    const main =
-      detailCard?.image ?? listCard?.image ?? EVENT_DETAIL_GALLERY.main;
-    return [
-      ...apiImages,
-      main,
-      EVENT_DETAIL_GALLERY.main,
-      ...EVENT_DETAIL_GALLERY.thumbs,
-    ].filter((src): src is string => Boolean(src));
-  }, [apiDetail, detailCard?.image, listCard?.image]);
-
-  const galleryThumbs = useMemo(() => {
-    const apiImages = collectGalleryImages(apiDetail);
-    if (apiImages.length >= 3) return apiImages.slice(1, 4);
-    return [...EVENT_DETAIL_GALLERY.thumbs];
-  }, [apiDetail]);
+  // Only the event's own photos. The design file's stock photos used to be
+  // appended to every gallery and filled the thumbnails.
+  const mainImage = detailCard?.image ?? listCard?.image;
+  const galleryImages = useMemo(
+    () =>
+      [mainImage, ...collectGalleryImages(apiDetail)].filter(
+        (src): src is string => Boolean(src),
+      ),
+    [apiDetail, mainImage],
+  );
+  const galleryThumbs = useMemo(
+    () => galleryImages.filter((src) => src !== mainImage).slice(0, 3),
+    [galleryImages, mainImage],
+  );
 
   useEffect(() => {
     if (resolvedId)
@@ -449,6 +448,10 @@ export function EventDetailPage() {
     }
 
     let holdId: string | undefined;
+    // Set once an order exists and cleared once it is paid or handed to the
+    // payment page — an order left behind by a failed payment is cancelled.
+    let unpaidOrderId: number | undefined;
+    const failedLabel = isFreeEntry ? t("detail.claimFailed") : t("detail.bookingFailed");
     try {
       if (assigned && seatIds.length > 0) {
         const held = await holdSeats({
@@ -491,9 +494,10 @@ export function EventDetailPage() {
 
       const orderId = Number(created.id ?? created.orderId ?? created.order_id);
       if (!Number.isFinite(orderId) || orderId <= 0) {
-        dispatch(toastPushed("error", t("detail.claimFailed")));
+        dispatch(toastPushed("error", failedLabel));
         return;
       }
+      unpaidOrderId = orderId;
 
       // Free events come back already paid: the API completes the order and
       // issues the tickets on creation, and refuses a payment after that
@@ -529,6 +533,7 @@ export function EventDetailPage() {
         // Host must be allow-listed on the API (https myticket.sa, or localhost).
         returnUrl,
       }).unwrap();
+      unpaidOrderId = undefined;
 
       clearHoldSession();
       setBookingOpen(false);
@@ -553,15 +558,41 @@ export function EventDetailPage() {
       if (holdId) {
         void releaseHold({ eventId: resolvedId, holdId });
       }
-      const message = apiErrorMessage(error, t("detail.claimFailed"));
+      const { status, message: code } = apiErrorDetails(error);
+      // A payment that failed before any money moved leaves an unpaid order
+      // holding the seats: the seat showed as sold and the order sat in My
+      // Tickets. Cancel it so both are released. Not for "already paid" or
+      // "not active" (both 400) or a network error, where it may have gone
+      // through.
+      const unpaidForSure =
+        code === "insufficient_balance" ||
+        status === 409 ||
+        (typeof status === "number" && status >= 500);
+      if (unpaidOrderId && unpaidForSure) {
+        void cancelOrder(unpaidOrderId)
+          .unwrap()
+          .catch(() => undefined)
+          .finally(() => {
+            dispatch(
+              baseApi.util.invalidateTags([
+                { type: "Event", id: `seats-${resolvedId}` },
+                { type: "Event", id: String(resolvedId) },
+              ]),
+            );
+          });
+      }
+      // Codes come back raw: `apiErrorMessage` swaps them for the fallback, so
+      // comparing its result to "seat_unavailable" never matched.
       dispatch(
         toastPushed(
           "error",
-          message === "seat_unavailable" || message === "hold_not_found"
-            ? t("detail.seatHoldFailed")
-            : message === "ticket_mismatch"
-              ? t("detail.pickTicketType")
-              : message,
+          code === "insufficient_balance"
+            ? t("checkout:checkout.walletInsufficient")
+            : code === "seat_unavailable" || code === "hold_not_found"
+              ? t("detail.seatHoldFailed")
+              : code === "ticket_mismatch"
+                ? t("detail.pickTicketType")
+                : apiErrorMessage(error, failedLabel),
         ),
       );
     }
@@ -636,9 +667,7 @@ export function EventDetailPage() {
           <DetailGallery
             category={display.category}
             flag={display.flag}
-            mainImage={
-              detailCard?.image ?? listCard?.image ?? EVENT_DETAIL_GALLERY.main
-            }
+            mainImage={mainImage}
             thumbs={galleryThumbs}
             images={galleryImages}
           />
@@ -704,9 +733,11 @@ export function EventDetailPage() {
               </p>
             ) : null}
 
-            <p className="max-w-[720px] text-pretty text-[15px] leading-[1.6] text-ink-body sm:text-[16px]">
-              {display.about}
-            </p>
+            {display.about ? (
+              <p className="max-w-[720px] text-pretty text-[15px] leading-[1.6] text-ink-body sm:text-[16px]">
+                {display.about}
+              </p>
+            ) : null}
           </div>
 
           {apiTicketTypes.length > 0 ? (

@@ -13,7 +13,6 @@ import { Divider } from '@/components/data-display'
 import { Avatar } from '@/components/data-display'
 import { Button, Field, TextInput } from '@/components/ui'
 import { PageSection } from '@/layouts'
-import { ACCOUNT_USER } from '@/pages/_account/fixtures'
 import { cn } from '@/lib/cn'
 import { useDeleteAccountMutation, useUpdateGuestProfileMutation } from '@/app/api/accountApis'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
@@ -47,9 +46,11 @@ function profileFromUser(
   user: { name?: string; email?: string; phone?: string } | null | undefined,
 ): ProfileFormValues {
   return {
-    name: user?.name?.trim() ?? ACCOUNT_USER.name,
-    email: user?.email?.trim() ?? ACCOUNT_USER.email,
-    phone: phoneForInput(user?.phone?.trim() ?? ACCOUNT_USER.mobile),
+    // Empty when unknown: the sample user's name, email and mobile used to be
+    // filled in, and saving would have sent them.
+    name: user?.name?.trim() ?? '',
+    email: user?.email?.trim() ?? '',
+    phone: phoneForInput(user?.phone?.trim() ?? ''),
     currentPassword: '',
     password: '',
   }
@@ -171,7 +172,7 @@ function initialsFromName(name: string): string {
       .split(/\s+/)
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase() ?? '')
-      .join('') || ACCOUNT_USER.initials
+      .join('')
   )
 }
 
@@ -197,7 +198,7 @@ export function SettingsPage() {
     setSavedProfile(next)
   }, [user?.name, user?.email, user?.phone])
 
-  const initials = user?.name ? initialsFromName(user.name) : ACCOUNT_USER.initials
+  const initials = user?.name ? initialsFromName(user.name) : ''
 
   function patchProfile(partial: Partial<ProfileFormValues>) {
     setProfile((prev) => ({ ...prev, ...partial }))

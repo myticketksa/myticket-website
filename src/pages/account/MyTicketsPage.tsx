@@ -14,7 +14,7 @@ import { ReservationStub } from '@/pages/_account/ReservationStub'
 import { useGetMyApplicationQuery } from '@/app/api/accountApis'
 import { useGetMyTalentRequestsQuery } from '@/app/api/talentsApi'
 import { useGetOrdersQuery } from '@/app/api/ordersApi'
-import { mapOrderToMyTicket } from '@/lib/api/mappers/orders'
+import { isTicketOrder, mapOrderToMyTicket } from '@/lib/api/mappers/orders'
 import { useLocale } from '@/i18n/locale'
 
 function matchesTicketTab(status: string, tab: number): boolean {
@@ -63,7 +63,7 @@ export function MyTicketsPage() {
   const { data: hireRequests } = useGetMyTalentRequestsQuery()
 
   const tickets = useMemo(() => {
-    return orders && orders.length > 0 ? orders.map(mapOrderToMyTicket) : []
+    return (orders ?? []).filter(isTicketOrder).map(mapOrderToMyTicket)
   }, [orders])
 
   const userRequests = useMemo(() => {

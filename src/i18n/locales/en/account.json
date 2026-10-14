@@ -578,7 +578,8 @@
       "noBidsYet": "No bids yet",
       "winning": "Winning",
       "outbid": "Outbid"
-    }
+    },
+    "memberSince": "Member since {{since}}"
   },
   "aside": {
     "alsoInAccount": "Also in your account",

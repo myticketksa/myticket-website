@@ -16,14 +16,6 @@ import { catalogLabel } from "@/lib/i18n/catalogLabels";
 import { LinkedCard, slugify } from "@/pages/_guest";
 import { cn } from "@/lib/cn";
 
-const CATEGORY_FALLBACK = [
-  "Food & desert",
-  "Culture",
-  "Heritage",
-  "Outdoors",
-  "Workshops",
-  "Music",
-] as const;
 
 const TYPE_TABS = [
   { key: "", labelKey: "filters.any" as const },
@@ -51,12 +43,7 @@ export function ExperiencesPage() {
 
   const categoryOptions = useMemo(
     () =>
-      mapCategoryOptions(apiCategories, {
-        fallback: CATEGORY_FALLBACK.map((label, index) => ({
-          value: String(index + 1),
-          label,
-        })),
-      }).map((option) => ({
+      mapCategoryOptions(apiCategories).map((option) => ({
         ...option,
         label: catalogLabel(t, option.label),
       })),

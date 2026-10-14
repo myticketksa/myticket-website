@@ -1,10 +1,16 @@
 import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams, Link } from "react-router-dom";
+import { useGetCitiesQuery } from "@/app/api/accountApis";
 import { useGetEventsQuery } from "@/app/api/eventsApi";
 import { useGetExperiencesQuery } from "@/app/api/experiencesApi";
 import { useGetTalentsQuery } from "@/app/api/talentsApi";
-import { FilterChip, MoneyAmount, StatusBadge } from "@/components/data-display";
+import {
+  FilterChip,
+  ImagePlaceholder,
+  MoneyAmount,
+  StatusBadge,
+} from "@/components/data-display";
 import { StarFillIcon } from "@/components/icons";
 import { FadeUp, StaggerGroup } from "@/components/motion";
 import {
@@ -14,6 +20,7 @@ import {
 } from "@/components/navigation";
 import { Button, Checkbox } from "@/components/ui";
 import { PageSection } from "@/layouts";
+import { mapCityOptions } from "@/lib/api/mappers/cities";
 import { mapApiEventToCard } from "@/lib/api/mappers/events";
 import { mapApiExperienceToCard } from "@/lib/api/mappers/experiences";
 import { mapApiTalentToCard } from "@/lib/api/mappers/talents";
@@ -21,7 +28,6 @@ import {
   CatalogBody,
   FilterSidebar,
   ResultsToolbar,
-  SEARCH_RESULT_IMAGES,
 } from "@/pages/_guest";
 import type { TFunction } from "i18next";
 import { catalogLabel } from "@/lib/i18n/catalogLabels";
@@ -40,7 +46,7 @@ type SearchResult = {
   rating: string;
   cta: string;
   to: string;
-  image: string;
+  image?: string;
   mediaRounded: string;
   flag?: string;
 };
@@ -78,18 +84,6 @@ const SORT_LABEL_KEYS: Record<string, string> = {
   Price: "results.sortPrice",
 };
 
-const FILTER_GROUP_KEYS: Record<string, string> = {
-  When: "filters.when",
-  "Ticket price": "filters.ticketPrice",
-  "Good for": "filters.goodFor",
-};
-
-const CITY_OPTIONS = [
-  { label: "Riyadh", count: 5 },
-  { label: "Jeddah", count: 1 },
-  { label: "AlUla", count: 1 },
-  { label: "Dammam", count: 0 },
-] as const;
 
 function parsePrice(price: string): number {
   const n = Number.parseFloat(price.replace(/[^\d.]/g, ""));
@@ -122,9 +116,6 @@ function buildApiResults(
   apiExperiences: Record<string, unknown>[] | undefined,
 ): SearchResult[] {
   const items: SearchResult[] = [];
-  let imageIdx = 0;
-  const nextImage = () =>
-    SEARCH_RESULT_IMAGES[imageIdx++ % SEARCH_RESULT_IMAGES.length];
 
   if (apiEvents?.length) {
     for (const event of apiEvents) {
@@ -143,7 +134,7 @@ function buildApiResults(
         rating: mapped.rating,
         cta: "View event",
         to: `/events/${mapped.slug}`,
-        image: mapped.image ?? nextImage(),
+        image: mapped.image,
         mediaRounded: "rounded-[12px]",
       });
     }
@@ -181,7 +172,7 @@ function buildApiResults(
         rating: mapped.rating,
         cta: "View profile",
         to: `/talents/${mapped.slug}`,
-        image: mapped.image ?? nextImage(),
+        image: mapped.image,
         mediaRounded: "rounded-[59px]",
       });
     }
@@ -207,7 +198,7 @@ function buildApiResults(
         rating: (mapped.rating ?? "—").split(" ")[0] ?? "—",
         cta: "View experience",
         to: `/experiences/${mapped.slug}`,
-        image: mapped.image ?? nextImage(),
+        image: mapped.image,
         mediaRounded: "rounded-[12px]",
       });
     }
@@ -276,6 +267,26 @@ export function SearchResultsPage() {
   ]);
 
   const activeTab = TABS.find((t) => t.label === tab) ?? TABS[0];
+  // Cities in the page language, counted against what was actually found. The
+  // list used to be four fixed cities with made-up counts.
+  const { data: apiCities } = useGetCitiesQuery();
+  const cityFacets = useMemo(() => {
+    const scope = !activeTab.kinds
+      ? results
+      : results.filter((r) =>
+          (activeTab.kinds as readonly string[]).includes(r.kind),
+        );
+    return mapCityOptions(apiCities, [])
+      .map((city) => {
+        const needle = city.label.toLowerCase();
+        const count = scope.filter((r) =>
+          `${r.meta} ${r.title} ${r.blurb}`.toLowerCase().includes(needle),
+        ).length;
+        return { label: city.label, count };
+      })
+      .filter((city) => city.count > 0);
+  }, [activeTab, apiCities, results]);
+
   const filtered = useMemo(() => {
     let list = !activeTab.kinds
       ? [...results]
@@ -373,11 +384,11 @@ export function SearchResultsPage() {
                   {t("filters.city")}
                 </p>
                 <div className="mt-[11px] flex flex-col gap-[9px]">
-                  {CITY_OPTIONS.map((opt, i) => (
+                  {cityFacets.map((opt, i) => (
                     <Checkbox
                       key={opt.label}
                       id={`${baseId}-city-${i}`}
-                      label={catalogLabel(t, opt.label)}
+                      label={opt.label}
                       count={opt.count}
                       fullWidth
                       checked={cities.includes(opt.label)}
@@ -386,55 +397,6 @@ export function SearchResultsPage() {
                   ))}
                 </div>
               </div>
-              {(
-                [
-                  {
-                    label: "When",
-                    options: [
-                      { label: "Today", count: 1 },
-                      { label: "This week", count: 3 },
-                      { label: "This month", count: 5 },
-                      { label: "Any time" },
-                    ],
-                  },
-                  {
-                    label: "Ticket price",
-                    options: [
-                      { label: "Free", count: 1 },
-                      { label: "Under SAR 200", count: 2 },
-                      { label: "SAR 200–500", count: 3 },
-                      { label: "SAR 500+", count: 1 },
-                    ],
-                  },
-                  {
-                    label: "Good for",
-                    options: [
-                      { label: "Families", count: 2 },
-                      { label: "Date night", count: 2 },
-                      { label: "Groups", count: 4 },
-                      { label: "First-timers", count: 3 },
-                    ],
-                  },
-                ] as const
-              ).map((group) => (
-                <div key={group.label} title={t("results.filtersUnavailable")}>
-                  <p className="pt-[15px] text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
-                    {t(FILTER_GROUP_KEYS[group.label])}
-                  </p>
-                  <div className="mt-[11px] flex flex-col gap-[9px] opacity-55">
-                    {group.options.map((opt, i) => (
-                      <Checkbox
-                        key={opt.label}
-                        id={`${baseId}-${group.label}-${i}`}
-                        label={catalogLabel(t, opt.label)}
-                        count={"count" in opt ? opt.count : undefined}
-                        fullWidth
-                        disabled
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))}
             </FilterSidebar>
           }
         >
@@ -476,11 +438,15 @@ export function SearchResultsPage() {
                 <div
                   className={`m-[14px] h-[160px] w-[calc(100%-28px)] shrink-0 overflow-hidden sm:h-[118px] sm:w-[168px] ${result.mediaRounded}`}
                 >
-                  <img
-                    src={result.image}
-                    alt=""
-                    className="size-full object-cover"
-                  />
+                  {result.image ? (
+                    <img
+                      src={result.image}
+                      alt=""
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <ImagePlaceholder ratio="fill" />
+                  )}
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col justify-center px-[14px] pb-[14px] sm:py-[14px] sm:pe-[14px] sm:ps-0">
                   <div className="flex flex-wrap items-center gap-[8px]">
