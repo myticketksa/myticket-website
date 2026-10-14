@@ -1,4 +1,4 @@
-import { AttributeTag, ImagePlaceholder, MoneyAmount } from '@/components/data-display'
+import { AttributeTag, ImagePlaceholder } from '@/components/data-display'
 import { StarFillIcon } from '@/components/icons'
 import { cn } from '@/lib/cn'
 
@@ -9,9 +9,10 @@ import { cn } from '@/lib/cn'
  * agree on nothing else, so `context` is the variant axis.
  *
  * The Experiences directory (`207:6795`) draws Catalog cards with an optional rating
- * row and a bordered price footer beyond the DS documentation card (title / location /
- * tags). Those slots are opt-in via `rating` / `guests` / `price` so Home and Probe
- * keep the lean Catalog drawing when they omit them.
+ * row beyond the DS documentation card (title / location / tags). That slot is opt-in
+ * via `rating` / `guests` so Home and Probe keep the lean Catalog drawing when they
+ * omit them. Figma also draws a price footer; experiences carry no price, so it is
+ * not built.
  *
  * | | Catalog | Home |
  * | --- | --- | --- |
@@ -19,7 +20,7 @@ import { cn } from '@/lib/cn'
  * | body padding | 14 / 16 / 16 / 16 | 15 / 16 / 17 / 16 |
  * | title | 16px/700, line-height 1.25, no tracking | `Heading/Card` — 17px/700, 1.22, −0.255 |
  * | location line | 13px/400 `--ink-secondary` | 13px/600 `--brand-gradient-end` |
- * | below it | AttributeTag row; optional rating + price | summary, then a rating row |
+ * | below it | AttributeTag row; optional rating | summary, then a rating row |
  * | media overlays | none at all | a category chip, bottom-left |
  *
  * **Media is a fixed 200px band, and the description says it should not be.** Figma's
@@ -58,9 +59,6 @@ import { cn } from '@/lib/cn'
  * the summary and the `·grow`, so it is carried as `mb-[11px]` on the summary — a
  * minimum gap that `mt-auto` then expands.
  *
- * Catalog directory price footer: `border-t` on `--border-divider`, `pt-[12px]`,
- * "Per person" at 13/400 muted, price at 18/600 primary — from `207:6852`.
- *
  * The drawn 372px height and the 315/320px widths are that one instance. Height follows
  * the content and width belongs to the grid, so neither is fixed here.
  *
@@ -94,10 +92,6 @@ export interface ExperienceCardProps {
   reviews?: string
   /** Catalog directory only — e.g. "Max 12 guests", joined after rating with " · ". */
   guests?: string
-  /** Catalog directory only — e.g. "SAR 320". */
-  price?: string
-  /** Catalog directory only. Defaults to "Per person". */
-  priceLabel?: string
   /**
    * Catalog directory only — category · duration eyebrow, e.g. "Food & desert · 4 hrs".
    * Rendered uppercase at 12px / brand.
@@ -119,8 +113,6 @@ export function ExperienceCard({
   rating,
   reviews,
   guests,
-  price,
-  priceLabel = 'Per person',
   eyebrow,
   flag,
   image,
@@ -224,22 +216,6 @@ export function ExperienceCard({
               </span>
             </div>
           )}
-
-          {/* {price && (
-            <div className="mt-auto flex w-full items-baseline justify-between border-t border-border-divider pt-[12px]">
-              {priceLabel ? (
-                <span className="text-[13px] font-normal text-ink-muted">
-                  {priceLabel}
-                </span>
-              ) : (
-                <span />
-              )}
-              <MoneyAmount
-                value={price}
-                className="text-[18px] font-semibold text-ink-primary"
-              />
-            </div>
-          )} */}
         </div>
       )}
     </article>

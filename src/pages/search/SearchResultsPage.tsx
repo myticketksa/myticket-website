@@ -262,7 +262,7 @@ function buildApiResults(
         meta,
         blurb:
           mapped.summary || mapped.guests || "Guided experience on MyTicket.",
-        price: mapped.price ?? "SAR —",
+        price: "",
         rating: (mapped.rating ?? "—").split(" ")[0] ?? "—",
         cta: "View experience",
         to: `/experiences/${mapped.slug}`,
@@ -575,9 +575,11 @@ export function SearchResultsPage() {
                   </p>
                   <div className="mt-[10px] flex flex-col items-start gap-sm sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-[14px] text-[13px]">
-                      <span className="font-semibold text-ink-primary">
-                        {result.price}
-                      </span>
+                      {result.price && (
+                        <span className="font-semibold text-ink-primary">
+                          {result.price}
+                        </span>
+                      )}
                       <span className="flex items-center gap-[5px] text-ink-primary">
                         <StarFillIcon size={13} />
                         {result.rating}

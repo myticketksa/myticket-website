@@ -61,7 +61,7 @@ export function mapFavoriteRecord(record: Record<string, unknown>): MappedFavori
       kind: 'Experience',
       when: exp.meta || '',
       place: exp.place || exp.location || '',
-      price: exp.price || '',
+      price: '',
       cta: '',
       href: `/experiences/${exp.slug}`,
       cover: exp.image || '',

@@ -1,7 +1,6 @@
 import type { ExperienceCardProps } from '@/components/cards'
 import { slugify } from '@/pages/_guest/slugify'
 import {
-  formatMoneySar,
   localizedString,
   nestedValue,
   pickLocalized,
@@ -174,8 +173,6 @@ export function mapApiExperienceToCard(exp: ApiRecord): MappedExperience {
       ? `Max ${maxGuests} guests`
       : pickLocalized(exp, ['guests', 'guests_label'])
 
-  const price = formatMoneySar(exp.price ?? exp.from_price ?? exp.price_per_person)
-
   const tags = tagsFrom(exp)
   const includes = parseExperienceIncludes(exp.includes)
   const includeTags = includes.slice(0, 2)
@@ -213,7 +210,6 @@ export function mapApiExperienceToCard(exp: ApiRecord): MappedExperience {
     place: placeLabel,
     rating,
     guests,
-    price,
     flag: flag || undefined,
     tags: tags.length > 0 ? tags : includeTags,
     category: category || experienceType || undefined,

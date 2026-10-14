@@ -177,8 +177,6 @@ export function ExperiencesPage() {
                 eyebrow={exp.meta !== exp.experienceType ? exp.meta : undefined}
                 rating={exp.rating}
                 guests={exp.guests}
-                price={exp.price}
-                priceLabel={exp.experienceType === "activity" ? "" : undefined}
                 flag={exp.flag}
                 image={exp.image}
               />
