@@ -27,7 +27,14 @@ export function mapApiTalentToCard(talent: ApiRecord): MappedTalent {
     pickLocalized(performer, ['stageName', 'stage_name', 'name']) ||
     pickLocalized(talent, ['name', 'stage_name', 'stageName', 'display_name'], 'Unknown talent')
 
-  const slug = pickLocalized(talent, ['slug']) || slugify(name) || String(talent.id ?? '')
+  // The id leads the slug ("12-name"). The API has no slug and no lookup by
+  // name, and the list returns 10 a page, so a name alone can't find most
+  // talents from their profile URL.
+  const nameSlug = slugify(name)
+  const idPart = talent.id != null ? String(talent.id) : ''
+  const slug =
+    pickLocalized(talent, ['slug']) ||
+    (idPart ? (nameSlug ? `${idPart}-${nameSlug}` : idPart) : nameSlug)
 
   const categories = nestedValue(talent, ['categories', 'performanceCategories'])
   const firstCategory =
@@ -102,14 +109,21 @@ export function mapApiTalentToCard(talent: ApiRecord): MappedTalent {
   }
 }
 
+/** Talent id at the front of a profile URL segment — "12-name" or "12". */
+function idFromSlug(slugOrId: string): string | undefined {
+  return slugOrId.match(/^(\d+)(?:-|$)/)?.[1]
+}
+
 export function resolveTalentFromList(
   talents: ApiRecord[] | undefined,
   slugOrId: string,
 ): ApiRecord | undefined {
   if (!talents?.length) return undefined
-  if (/^\d+$/.test(slugOrId)) {
-    return talents.find((t) => String(t.id) === slugOrId)
+  const id = idFromSlug(slugOrId)
+  if (id) {
+    return talents.find((t) => String(t.id) === id)
   }
+  // Older name-only links still open talents on the first list page.
   return talents.find((t) => {
     const mapped = mapApiTalentToCard(t)
     return mapped.slug === slugOrId || slugify(mapped.name) === slugOrId
@@ -117,7 +131,8 @@ export function resolveTalentFromList(
 }
 
 export function resolveTalentId(talents: ApiRecord[] | undefined, slugOrId: string): string | undefined {
-  if (/^\d+$/.test(slugOrId)) return slugOrId
+  const id = idFromSlug(slugOrId)
+  if (id) return id
   const match = resolveTalentFromList(talents, slugOrId)
   return match?.id != null ? String(match.id) : undefined
 }

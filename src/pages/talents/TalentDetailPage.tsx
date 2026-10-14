@@ -51,6 +51,7 @@ import {
   TALENT_DETAIL_GALLERY,
   TALENT_SIMILAR_IMAGES,
 } from '@/pages/_guest'
+import { NotFoundPage } from '@/pages/system/NotFoundPage'
 
 const VIDEO_URL = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i
 
@@ -153,7 +154,7 @@ export function TalentDetailPage() {
   const [reviewOpen, setReviewOpen] = useState(false)
   const [activeVideo, setActiveVideo] = useState<string | null>(null)
 
-  const { data: talentsResult } = useGetTalentsQuery()
+  const { data: talentsResult, isLoading: listLoading } = useGetTalentsQuery()
   const apiTalents = talentsResult?.items
 
   const catalog = useMemo(() => {
@@ -169,32 +170,49 @@ export function TalentDetailPage() {
     [apiTalents, slugOrId],
   )
 
-  const { data: apiDetail } = useGetTalentDetailsQuery(resolvedId!, {
-    skip: !resolvedId,
-  })
+  // `currentData`, not `data`: moving to another talent must not show the
+  // previous one's profile while the new one loads.
+  const { currentData: apiDetail, isFetching: detailFetching } =
+    useGetTalentDetailsQuery(resolvedId!, {
+      skip: !resolvedId,
+    })
 
   const [followTalent, followState] = useFollowTalentMutation()
   const [unfollowTalent, unfollowState] = useUnfollowTalentMutation()
   const [requestTalent, requestState] = useRequestTalentMutation()
   const [submitReview, reviewState] = useSubmitReviewMutation()
 
-  const talent: MappedTalent = useMemo(() => {
-    const fromList: MappedTalent =
-      catalog.find((t) => t.slug === slugOrId || slugify(t.name) === slugOrId) ??
-      (apiTalents?.length
-        ? mapApiTalentToCard(resolveTalentFromList(apiTalents, slugOrId) ?? {})
-        : undefined) ??
-      catalog[0]!
+  // Undefined until the list or the profile answers. This used to fall back to
+  // the first catalogue entry, which is nothing before the list loads, and the
+  // page crashed reading `isFollowing` off it.
+  const resolvedTalent: MappedTalent | undefined = useMemo(() => {
+    const listRecord = resolveTalentFromList(apiTalents, slugOrId)
+    const fromList = listRecord ? mapApiTalentToCard(listRecord) : undefined
 
     if (apiDetail && Object.keys(apiDetail).length > 0) {
-      const mapped = mapApiTalentToCard(apiDetail)
-      return { ...fromList, ...mapped }
+      return { ...fromList, ...mapApiTalentToCard(apiDetail) }
     }
 
     return fromList
-  }, [apiDetail, apiTalents, catalog, slugOrId])
+  }, [apiDetail, apiTalents, slugOrId])
 
   const videos = useMemo(() => portfolioVideos(apiDetail), [apiDetail])
+
+  if (!resolvedTalent) {
+    if (listLoading || detailFetching) {
+      return (
+        <PageSection padTop={26} padBottom={64}>
+          <div
+            className="h-[420px] w-full animate-pulse rounded-xl bg-bg-skeleton"
+            role="status"
+            aria-label={t('common:states.loading')}
+          />
+        </PageSection>
+      )
+    }
+    return <NotFoundPage />
+  }
+  const talent: MappedTalent = resolvedTalent
 
   const following = Boolean(talent.isFollowing)
   const favourited = talent.id ? isFavourite(talent.id) : false
