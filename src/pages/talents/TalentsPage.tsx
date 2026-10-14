@@ -99,8 +99,12 @@ export function TalentsPage() {
   const needsSecondPage =
     !serverPageFillsRows && clientWindow.last !== clientWindow.first;
 
+  // `currentData` is only ever the answer for the page asked for. `data` keeps
+  // the previous request's rows while a new page loads, and slicing those with
+  // the new page's offset put the wrong talents on screen for a moment.
   const {
-    data: talentsResult,
+    currentData: talentsResult,
+    data: lastTalentsResult,
     isFetching: primaryFetching,
     isError: primaryError,
   } = useGetTalentsQuery({
@@ -108,7 +112,7 @@ export function TalentsPage() {
     page: requestedPage,
   });
   const {
-    data: overflowResult,
+    currentData: overflowResult,
     isFetching: overflowFetching,
     isError: overflowError,
   } = useGetTalentsQuery(
@@ -131,18 +135,36 @@ export function TalentsPage() {
     Boolean(talentsResult) &&
     (!needsSecondPage || Boolean(overflowResult) || overflowError);
 
-  const apiTalents = serverPageReady
-    ? talentsResult?.items
-    : clientPageReady
-      ? [
-          ...(talentsResult?.items ?? []),
-          ...(needsSecondPage ? (overflowResult?.items ?? []) : []),
-        ].slice(
-          clientWindow.offset,
-          clientWindow.offset + TALENT_CLIENT_PAGE_SIZE,
-        )
-      : undefined;
-  const pagination = talentsResult?.pagination;
+  const pageTalents = useMemo(
+    () =>
+      serverPageReady
+        ? talentsResult?.items
+        : clientPageReady
+          ? [
+              ...(talentsResult?.items ?? []),
+              ...(needsSecondPage ? (overflowResult?.items ?? []) : []),
+            ].slice(
+              clientWindow.offset,
+              clientWindow.offset + TALENT_CLIENT_PAGE_SIZE,
+            )
+          : undefined,
+    [
+      serverPageReady,
+      clientPageReady,
+      talentsResult,
+      overflowResult,
+      needsSecondPage,
+      clientWindow.offset,
+    ],
+  );
+  // The last complete page stays on screen until the next one is whole, so
+  // the grid neither empties nor mixes two pages while it loads.
+  const [heldTalents, setHeldTalents] = useState(pageTalents);
+  useEffect(() => {
+    if (pageTalents) setHeldTalents(pageTalents);
+  }, [pageTalents]);
+  const apiTalents = pageTalents ?? heldTalents;
+  const pagination = (talentsResult ?? lastTalentsResult)?.pagination;
   const isFetching = primaryFetching || (needsSecondPage && overflowFetching);
   const isError = primaryError || (needsSecondPage && overflowError);
 
