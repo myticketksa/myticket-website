@@ -495,6 +495,18 @@ export function EventDetailPage() {
         return;
       }
 
+      // Free events come back already paid: the API completes the order and
+      // issues the tickets on creation, and refuses a payment after that
+      // ("Payment already made"). Paying anyway showed an error over a ticket
+      // that was already issued, and a second press booked a second one.
+      const createdStatus = created.paymentStatus ?? created.payment_status;
+      if (createdStatus === "completed") {
+        clearHoldSession();
+        setBookingOpen(false);
+        navigate(`/order-confirmation?orderId=${orderId}`);
+        return;
+      }
+
       if (booking.promoCode) {
         try {
           await applyPromo({ orderId, promoCode: booking.promoCode }).unwrap();
