@@ -66,7 +66,10 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
       </FadeUp>
       <div className="relative mt-[26px]">
         <Carousel opts={{ align: 'start', loop: talents.length > 3 }}>
-          <CarouselContent>
+          {/* From lg up the five talents fit with room to spare, so the row is
+              centred rather than left-aligned with a gap at the end. Below lg
+              it scrolls and stays aligned with the heading. */}
+          <CarouselContent className="lg:justify-center">
             {talents.map((talent, i) => (
               <CarouselItem
                 key={talent.slug}
