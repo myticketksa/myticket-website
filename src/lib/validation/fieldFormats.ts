@@ -25,9 +25,26 @@ export function isValidSaudiPhone(value: string): boolean {
   return /^5\d{8}$/.test(digits)
 }
 
-/** Saudi commercial registration: ten digits. */
+/**
+ * Arabic-Indic (٠–٩) and Persian (۰–۹) digits as 0–9. A phone keypad set to
+ * Arabic types the former, and `\d` only matches 0–9, so a correct number
+ * typed that way was stripped to nothing and failed every check.
+ */
+export function toLatinDigits(value: string): string {
+  return value.replace(/[٠-٩۰-۹]/g, (ch) => {
+    const code = ch.charCodeAt(0)
+    return String(code - (code >= 0x06f0 ? 0x06f0 : 0x0660))
+  })
+}
+
+/** The digits of a commercial registration, in 0–9, separators dropped. */
+export function commercialRegistrationDigits(value: string): string {
+  return toLatinDigits(value).replace(/\D/g, '')
+}
+
+/** Saudi commercial registration: ten digits, in either digit style. */
 export function isValidCommercialRegistration(value: string): boolean {
-  return /^\d{10}$/.test(value.replace(/\D/g, ''))
+  return /^\d{10}$/.test(commercialRegistrationDigits(value))
 }
 
 /** A date that has already happened, and is not absurdly old. */

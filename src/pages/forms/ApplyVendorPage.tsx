@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
-import { isValidCommercialRegistration } from "@/lib/validation/fieldFormats";
+import {
+  commercialRegistrationDigits,
+  isValidCommercialRegistration,
+} from "@/lib/validation/fieldFormats";
 import {
   Field,
   FileDropButton,
@@ -124,7 +127,8 @@ export function ApplyVendorPage() {
     const centroid = CITY_CENTROIDS[cityId] ?? DEFAULT_CENTROID;
     const body = new FormData();
     body.append("business[tradeName]", tradeName.trim());
-    body.append("business[CRnumber]", crNumber.trim());
+    // Sent as plain 0–9 digits so the admin sees one format whatever was typed.
+    body.append("business[CRnumber]", commercialRegistrationDigits(crNumber));
     body.append("business[primaryCity]", cityId);
     body.append("business[address]", address.trim());
     body.append("business[latitude]", String(centroid.latitude));
