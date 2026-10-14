@@ -25,6 +25,7 @@ import {
 const NEXT_STEP_KEYS = ["offline", "share", "remind"] as const;
 
 function TicketQr({ value }: { value: string }) {
+  const { t } = useTranslation("common");
   return (
     <QRCodeSVG
       value={value}
@@ -33,7 +34,7 @@ function TicketQr({ value }: { value: string }) {
       marginSize={1}
       bgColor="#FFFFFF"
       fgColor="#0A0A0A"
-      aria-label="Ticket QR code"
+      aria-label={t("a11y.ticketQr")}
     />
   );
 }

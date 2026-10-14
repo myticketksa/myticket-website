@@ -4,7 +4,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { useGetEventsQuery } from "@/app/api/eventsApi";
 import { useGetExperiencesQuery } from "@/app/api/experiencesApi";
 import { useGetTalentsQuery } from "@/app/api/talentsApi";
-import { FilterChip, StatusBadge } from "@/components/data-display";
+import { FilterChip, MoneyAmount, StatusBadge } from "@/components/data-display";
 import { StarFillIcon } from "@/components/icons";
 import { FadeUp, StaggerGroup } from "@/components/motion";
 import {
@@ -22,7 +22,6 @@ import {
   FilterSidebar,
   ResultsToolbar,
   SEARCH_RESULT_IMAGES,
-  slugify,
 } from "@/pages/_guest";
 import type { TFunction } from "i18next";
 import { catalogLabel } from "@/lib/i18n/catalogLabels";
@@ -34,7 +33,10 @@ type SearchResult = {
   title: string;
   meta: string;
   blurb: string;
+  /** Event: the lowest ticket price, drawn "From <amount>". Empty for others. */
   price: string;
+  /** Talent: what's next for them, as a line of text. */
+  priceNote?: string;
   rating: string;
   cta: string;
   to: string;
@@ -82,66 +84,6 @@ const FILTER_GROUP_KEYS: Record<string, string> = {
   "Good for": "filters.goodFor",
 };
 
-const SUGGESTIONS = [
-  "Riyadh Season Opening Night",
-  "Soundstorm Festival",
-  "Boulevard",
-] as const;
-
-const RESULTS = [
-  {
-    kind: "Event",
-    flag: "Selling fast",
-    title: "Winter Nights: Live at King Abdullah Park",
-    meta: "Thu 8 Oct · King Abdullah Park, Riyadh",
-    blurb:
-      "Outdoor production with four acts and family seating on the eastern lawn.",
-    price: "From SAR 180",
-    rating: "4.8",
-    cta: "View event",
-    to: `/events/${slugify("Winter Nights: Live at King Abdullah Park")}`,
-    image: SEARCH_RESULT_IMAGES[0],
-    mediaRounded: "rounded-[12px]",
-  },
-  {
-    kind: "Talent",
-    title: "Layal Qasim",
-    meta: "Singer · Arabic pop · Riyadh",
-    blurb:
-      "Headline act for Winter Nights with 128 reviews and verified status.",
-    price: "Next show from SAR 180",
-    rating: "4.9",
-    cta: "View profile",
-    to: `/talents/${slugify("Layal Qasim")}`,
-    image: SEARCH_RESULT_IMAGES[1],
-    mediaRounded: "rounded-[59px]",
-  },
-  {
-    kind: "Event",
-    title: "Soundstorm Festival — Day 1",
-    meta: "Thu 22 Oct · Banban, Riyadh",
-    blurb: "Three-day electronic festival with early-bird and GA passes.",
-    price: "From SAR 450",
-    rating: "4.9",
-    cta: "View event",
-    to: `/events/${slugify("Soundstorm Festival — Day 1")}`,
-    image: SEARCH_RESULT_IMAGES[2],
-    mediaRounded: "rounded-[12px]",
-  },
-  {
-    kind: "Experience",
-    title: "Edge of the World hike and picnic",
-    meta: "Riyadh Region · Half day",
-    blurb: "Guided escarpment hike with sunset picnic and 4x4 transfer.",
-    price: "SAR 250",
-    rating: "4.9",
-    cta: "View experience",
-    to: `/experiences/${slugify("Edge of the World hike and picnic")}`,
-    image: SEARCH_RESULT_IMAGES[4],
-    mediaRounded: "rounded-[12px]",
-  },
-] as const;
-
 const CITY_OPTIONS = [
   { label: "Riyadh", count: 5 },
   { label: "Jeddah", count: 1 },
@@ -173,6 +115,7 @@ function matchesQuery(haystack: string, query: string): boolean {
 }
 
 function buildApiResults(
+  t: TFunction,
   query: string,
   apiEvents: Record<string, unknown>[] | undefined,
   apiTalents: Record<string, unknown>[] | undefined,
@@ -195,10 +138,8 @@ function buildApiResults(
         flag: mapped.flag,
         title: mapped.title,
         meta,
-        blurb: mapped.attendance || mapped.category || "Event on MyTicket.",
-        price: mapped.price.toLowerCase().startsWith("from")
-          ? mapped.price
-          : `From ${mapped.price}`,
+        blurb: mapped.attendance || mapped.category || t("search.eventBlurb"),
+        price: mapped.price,
         rating: mapped.rating,
         cta: "View event",
         to: `/events/${mapped.slug}`,
@@ -218,12 +159,9 @@ function buildApiResults(
       if (!matchesQuery(`${haystack} ${searchableText(talent, SEARCH_FIELDS)}`, query))
         continue;
 
-      const price = mapped.nextShow?.detail?.includes("from")
-        ? (mapped.nextShow.detail.split("·").pop()?.trim() ??
-          `Next show from ${mapped.nextShow.detail}`)
-        : mapped.nextShow
-          ? `Next show · ${mapped.nextShow.headline}`
-          : "View upcoming shows";
+      const priceNote = mapped.nextShow
+        ? t("search.nextShow", { when: mapped.nextShow.headline })
+        : t("search.upcomingShows");
 
       items.push({
         kind: "Talent",
@@ -231,12 +169,15 @@ function buildApiResults(
         meta,
         blurb:
           mapped.reviews && mapped.city
-            ? `${mapped.reviews} reviews · ${mapped.verified ? "verified" : mapped.city}`
-            : mapped.meta || "Performer on MyTicket.",
-        price:
-          price.startsWith("from") || price.startsWith("Next")
-            ? price
-            : `Next show ${price}`,
+            ? mapped.verified
+              ? t("common:labels.reviewsVerified", { reviews: mapped.reviews })
+              : t("common:labels.reviewsCity", {
+                  reviews: mapped.reviews,
+                  city: mapped.city,
+                })
+            : mapped.meta || t("search.talentBlurb"),
+        price: "",
+        priceNote,
         rating: mapped.rating,
         cta: "View profile",
         to: `/talents/${mapped.slug}`,
@@ -261,7 +202,7 @@ function buildApiResults(
         title: mapped.title,
         meta,
         blurb:
-          mapped.summary || mapped.guests || "Guided experience on MyTicket.",
+          mapped.summary || mapped.guests || t("search.experienceBlurb"),
         price: "",
         rating: (mapped.rating ?? "—").split(" ")[0] ?? "—",
         cta: "View experience",
@@ -282,7 +223,7 @@ function translateCta(t: TFunction, cta: string): string {
 
 /** Search results — Figma `207:5205`. */
 export function SearchResultsPage() {
-  const { t } = useTranslation(["catalog", "nav"]);
+  const { t } = useTranslation(["catalog", "nav", "common"]);
   const baseId = useId();
   const [params] = useSearchParams();
   const query = params.get("q") || "riyadh season";
@@ -312,11 +253,11 @@ export function SearchResultsPage() {
       (apiExperiences && apiExperiences.length > 0);
     const allErrored = eventsError && talentsError && experiencesError;
 
-    if (!hasApiData || allErrored) {
-      return RESULTS.map((r) => ({ ...r }));
-    }
+    // The sample results (English, made-up events) used to stand in here.
+    if (!hasApiData || allErrored) return [];
 
     const apiItems = buildApiResults(
+      t,
       query,
       apiEvents,
       apiTalents,
@@ -331,6 +272,7 @@ export function SearchResultsPage() {
     talentsError,
     experiencesError,
     query,
+    t,
   ]);
 
   const activeTab = TABS.find((t) => t.label === tab) ?? TABS[0];
@@ -390,19 +332,6 @@ export function SearchResultsPage() {
           <p className="mt-[6px] text-[15px] text-ink-secondary">
             {t("pages.searchMatches", { count: results.length })}
           </p>
-          <div className="mt-xl flex flex-wrap gap-[8px]">
-            {SUGGESTIONS.map((s) => (
-              <FilterChip
-                key={s}
-                className="h-[32px] rounded-[16px] px-md text-[13px]"
-                onClick={() => {
-                  window.location.href = `/search?q=${encodeURIComponent(s)}`;
-                }}
-              >
-                {s}
-              </FilterChip>
-            ))}
-          </div>
           {/*
             Entity tabs match detail-section metrics (15px / ink-brand / muted), not DS
             `Tab` (14.5px / ink-brand-mid). Count badges are local to this frame.
@@ -488,7 +417,7 @@ export function SearchResultsPage() {
                   },
                 ] as const
               ).map((group) => (
-                <div key={group.label} title="Not applied yet">
+                <div key={group.label} title={t("results.filtersUnavailable")}>
                   <p className="pt-[15px] text-[12px] font-bold tracking-[0.84px] text-ink-muted uppercase">
                     {t(FILTER_GROUP_KEYS[group.label])}
                   </p>
@@ -575,11 +504,18 @@ export function SearchResultsPage() {
                   </p>
                   <div className="mt-[10px] flex flex-col items-start gap-sm sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-[14px] text-[13px]">
-                      {result.price && (
-                        <span className="font-semibold text-ink-primary">
-                          {result.price}
+                      {result.price ? (
+                        <span className="inline-flex items-center gap-[4px] font-semibold text-ink-primary">
+                          {result.price !== "Free" && (
+                            <span>{t("common:labels.fromPrice")}</span>
+                          )}
+                          <MoneyAmount value={result.price} />
                         </span>
-                      )}
+                      ) : result.priceNote ? (
+                        <span className="font-semibold text-ink-primary">
+                          {result.priceNote}
+                        </span>
+                      ) : null}
                       <span className="flex items-center gap-[5px] text-ink-primary">
                         <StarFillIcon size={13} />
                         {result.rating}

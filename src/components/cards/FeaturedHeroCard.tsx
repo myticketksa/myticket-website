@@ -140,7 +140,7 @@ export function FeaturedHeroCard({
         {onToggleFavourite ? (
           <button
             type="button"
-            aria-label="Save event"
+            aria-label={t('a11y.saveEvent')}
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()

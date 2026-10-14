@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { CheckGlyphIcon, StarFillIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
@@ -30,6 +31,7 @@ export function DetailOrganizerBand({
   onAllEvents,
   className,
 }: DetailOrganizerBandProps) {
+  const { t } = useTranslation('catalog')
   return (
     <div
       className={cn(
@@ -62,14 +64,14 @@ export function DetailOrganizerBand({
 
       <div className="flex w-full shrink-0 flex-col gap-[9px] sm:w-auto">
         <Button className="h-[40px] w-full rounded-[20px] px-xl" onClick={onFollow}>
-          Follow
+          {t('organizer.follow')}
         </Button>
         <Button
           variant="secondary"
           className="h-[40px] w-full rounded-[20px] border px-xl"
           onClick={onAllEvents}
         >
-          All events
+          {t('organizer.allEvents')}
         </Button>
       </div>
     </div>

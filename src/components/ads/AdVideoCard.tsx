@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useRef, useState } from 'react'
 import { PauseIcon, PlayIcon } from '@/components/icons'
 import { cn } from '@/lib/cn'
@@ -19,6 +20,7 @@ export function AdVideoCard({
   className,
 }: AdVideoCardProps) {
   const ref = useRef<HTMLVideoElement>(null)
+  const { t } = useTranslation('common')
   const [playing, setPlaying] = useState(false)
 
   function togglePlay() {
@@ -80,7 +82,7 @@ export function AdVideoCard({
             ? 'opacity-0 hover:opacity-100 focus-visible:opacity-100'
             : 'opacity-100',
         )}
-        aria-label={playing ? 'Pause video' : 'Play video'}
+        aria-label={playing ? t('a11y.pauseVideo') : t('a11y.playVideo')}
       >
         <span className="flex size-12 items-center justify-center rounded-full bg-surface-default/95 text-ink-primary shadow-lift">
           {playing ? <PauseIcon size={18} weight="fill" /> : <PlayIcon size={18} weight="fill" />}

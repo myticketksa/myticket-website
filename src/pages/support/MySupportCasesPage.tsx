@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { StatusBadge, type StatusTone } from '@/components/data-display'
@@ -8,6 +9,7 @@ import { Button, TextInput } from '@/components/ui'
 import { AccountPageHead, PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
 import { useGetChatsQuery } from '@/app/api/accountApis'
+import { formatApiDate } from '@/lib/api/locale'
 
 type CaseKind = 'Case' | 'Complaint'
 
@@ -23,67 +25,28 @@ interface SupportCase {
   messages: { from: 'you' | 'agent'; body: string; meta: string }[]
 }
 
-const CASES: SupportCase[] = [
-  {
-    id: 'CS-88231',
-    kind: 'Case',
-    status: 'Waiting on you',
-    statusTone: 'brandTint',
-    subject: 'Refund not showing in wallet',
-    meta: 'Payments · updated 2h ago',
-    detailMeta: 'Case CS-88231 · Payments · opened 1 Aug · linked to order',
-    orderId: 'MT-2026-71204',
-    messages: [
-      {
-        from: 'you',
-        body: 'My refund for Layali Oud Sessions was approved on 28 Jul but the SAR 140 still isn’t in my wallet.',
-        meta: 'You · 1 Aug, 14:02',
-      },
-      {
-        from: 'agent',
-        body: "Thanks Sara — I can see the approval. The payout batch failed a check on our side, so I've re-issued it manually. It should appear within 24 hours. Could you confirm once you see it?",
-        meta: 'Noura · MyTicket Support · 1 Aug, 15:47',
-      },
-    ],
-  },
-  {
-    id: 'CS-87904',
-    kind: 'Case',
-    status: 'In progress',
-    statusTone: 'infoTint',
-    subject: "QR code won't load offline",
-    meta: 'App & tickets · updated yesterday',
-    detailMeta: 'Case CS-87904 · App & tickets · opened 28 Jul',
-    messages: [
-      {
-        from: 'you',
-        body: "My QR for Winter Nights won't open when I'm offline — it just spins.",
-        meta: 'You · 28 Jul, 19:10',
-      },
-    ],
-  },
-]
-
-function mapChatToCase(chat: Record<string, unknown>, index: number): SupportCase {
+function mapChatToCase(
+  chat: Record<string, unknown>,
+  index: number,
+  t: TFunction,
+): SupportCase {
   const id = String(chat.id ?? chat.chatId ?? `CHAT-${index + 1}`)
   const subject = String(
-    chat.subject ?? chat.title ?? chat.last_message ?? `Support chat ${id}`,
+    chat.subject ?? chat.title ?? chat.last_message ?? t('support.chatSubject', { id }),
   )
   return {
     id,
     kind: 'Case',
-    status: String(chat.status ?? 'Open'),
+    status: chat.status ? String(chat.status) : t('support.statusOpen'),
     statusTone: 'brandTint',
     subject,
-    meta: String(chat.updated_at ?? chat.meta ?? 'Support · chat'),
-    detailMeta: `Chat ${id}`,
+    meta: formatApiDate(chat.updated_at) || String(chat.meta ?? t('support.chatMeta')),
+    detailMeta: t('support.chatId', { id }),
     messages: [
       {
         from: 'agent',
-        body: String(
-          chat.last_message ?? chat.preview ?? 'Open chat to continue this conversation.',
-        ),
-        meta: 'MyTicket Support',
+        body: String(chat.last_message ?? chat.preview ?? t('support.openChatBody')),
+        meta: t('support.team'),
       },
     ],
   }
@@ -94,10 +57,14 @@ export function MySupportCasesPage() {
   const { t } = useTranslation('account')
   const navigate = useNavigate()
   const { data: chats } = useGetChatsQuery()
+  // No chats is the empty state. Two made-up English cases (a fake refund for
+  // "Sara") used to stand in for everyone without one.
   const cases = useMemo(() => {
-    if (chats && chats.length > 0) return chats.map(mapChatToCase)
-    return CASES
-  }, [chats])
+    if (chats && chats.length > 0) {
+      return chats.map((chat, index) => mapChatToCase(chat, index, t))
+    }
+    return []
+  }, [chats, t])
 
   const [activeId, setActiveId] = useState(cases[0]?.id ?? '')
   const active = cases.find((c) => c.id === activeId) ?? cases[0]
@@ -157,7 +124,9 @@ export function MySupportCasesPage() {
                           <StatusBadge
                             tone={item.kind === 'Complaint' ? 'dangerTint' : 'neutralOutline'}
                           >
-                            {item.kind}
+                            {item.kind === 'Complaint'
+                              ? t('support.kindComplaint')
+                              : t('support.kindCase')}
                           </StatusBadge>
                           <StatusBadge tone={item.statusTone}>{item.status}</StatusBadge>
                         </div>
@@ -180,7 +149,7 @@ export function MySupportCasesPage() {
                   <p className="mt-[3px] text-[13px] text-ink-secondary">{active.detailMeta}</p>
                 </div>
                 <Link to="/support/chat">
-                  <Button size="sm">Open chat</Button>
+                  <Button size="sm">{t('support.openChat')}</Button>
                 </Link>
               </div>
               <div className="flex flex-1 flex-col gap-[14px] overflow-y-auto px-[26px] py-[22px]">

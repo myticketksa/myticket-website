@@ -61,7 +61,7 @@ export function ResultsToolbar({
               type="button"
               disabled={!sortEnabled}
               onClick={onSortClick}
-              title={sortEnabled ? undefined : 'Sorting not available yet'}
+              title={sortEnabled ? undefined : t('results.sortUnavailable')}
               className={cn(
                 'flex h-[38px] items-center gap-sm rounded-[19px] border border-border-default bg-surface-default px-md',
                 !sortEnabled && 'cursor-not-allowed opacity-55',
@@ -78,7 +78,7 @@ export function ResultsToolbar({
                   'flex items-center gap-xs rounded-[19px] border border-border-default bg-surface-default p-xs',
                   !viewEnabled && 'cursor-not-allowed opacity-55',
                 )}
-                title={viewEnabled ? undefined : 'View toggle not available yet'}
+                title={viewEnabled ? undefined : t('results.viewUnavailable')}
               >
                 <button
                   type="button"

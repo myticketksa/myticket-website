@@ -25,7 +25,7 @@ import {
 import { PageSection } from '@/layouts'
 import {
   mapApiExperienceToCard,
-  MEETING_POINT_LABEL,
+  meetingPointLabel,
   resolveExperienceFromList,
   resolveExperienceId,
   type MappedExperience,
@@ -38,10 +38,11 @@ import {
   SimilarSection,
   slugify,
 } from '@/pages/_guest'
+import { NotFoundPage } from '@/pages/system/NotFoundPage'
 
-/** Experience detail — Figma `207:7048`. Experiences API with fixture fallback. */
+/** Experience detail — Figma `207:7048`. Experiences API; nothing invented when it is quiet. */
 export function ExperienceDetailPage() {
-  const { t } = useTranslation(['catalog', 'nav'])
+  const { t } = useTranslation(['catalog', 'nav', 'common'])
   const { slug } = useParams()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
@@ -49,7 +50,7 @@ export function ExperienceDetailPage() {
   const user = useAppSelector(selectAuthUser)
   const slugOrId = slug ?? ''
 
-  const { data: apiExperiences } = useGetExperiencesQuery()
+  const { data: apiExperiences, isLoading: listLoading } = useGetExperiencesQuery()
   const [favoriteExperience, favState] = useFavoriteExperienceMutation()
   const [unfavoriteExperience, unfavState] = useUnfavoriteExperienceMutation()
   const [submitReview, reviewState] = useSubmitReviewMutation()
@@ -69,64 +70,78 @@ export function ExperienceDetailPage() {
     [apiExperiences, slugOrId],
   )
 
-  const { data: apiDetail } = useGetExperienceDetailsQuery(resolvedId!, {
-    skip: !resolvedId,
-  })
+  // `currentData`: moving to another place must not show the previous one
+  // while the new one loads.
+  const { currentData: apiDetail, isFetching: detailFetching } =
+    useGetExperienceDetailsQuery(resolvedId!, {
+      skip: !resolvedId,
+    })
 
   const { data: apiReviews } = useGetExperienceReviewsQuery(resolvedId!, {
     skip: !resolvedId,
   })
 
-  const experience = useMemo((): MappedExperience => {
-    const fromList =
-      catalog.find((e) => e.slug === slugOrId || slugify(e.title) === slugOrId) ??
-      (apiExperiences?.length
-        ? mapApiExperienceToCard(resolveExperienceFromList(apiExperiences, slugOrId) ?? {})
-        : undefined) ??
-      catalog[0]!
+  // Undefined until the list or the detail answers. This used to fall back to
+  // the first catalogue entry, which is nothing before the list loads, and the
+  // page crashed reading `rating` off it.
+  const resolvedExperience = useMemo((): MappedExperience | undefined => {
+    const listRecord = resolveExperienceFromList(apiExperiences, slugOrId)
+    const fromList = listRecord ? mapApiExperienceToCard(listRecord) : undefined
 
     if (apiDetail && Object.keys(apiDetail).length > 0) {
-      const mapped = mapApiExperienceToCard(apiDetail)
-      return { ...fromList, ...mapped }
+      return { ...fromList, ...mapApiExperienceToCard(apiDetail) }
     }
 
     return fromList
-  }, [apiDetail, apiExperiences, catalog, slugOrId])
+  }, [apiDetail, apiExperiences, slugOrId])
 
   const ratingDisplay = useMemo(() => {
-    if (apiReviews && apiReviews.length > 0 && !experience.rating?.includes('(')) {
-      return `${experience.rating} (${apiReviews.length})`
+    const rating = resolvedExperience?.rating
+    if (apiReviews && apiReviews.length > 0 && !rating?.includes('(')) {
+      return `${rating} (${apiReviews.length})`
     }
-    return experience.rating
-  }, [apiReviews, experience.rating])
+    return rating
+  }, [apiReviews, resolvedExperience?.rating])
 
   useEffect(() => {
-    if (typeof experience.isFavorite === 'boolean') {
-      setSaved(experience.isFavorite)
+    if (typeof resolvedExperience?.isFavorite === 'boolean') {
+      setSaved(resolvedExperience.isFavorite)
     }
-  }, [experience.isFavorite])
-
-  const aboutText =
-    experience.about ??
-    experience.summary ??
-    'A hosted experience on MyTicket — small groups, verified hosts, and clear cancellation. Meet at the published pickup point; transfers and equipment are included unless noted otherwise.'
+  }, [resolvedExperience?.isFavorite])
 
   const galleryMain =
-    experience.banner ?? experience.image ?? experience.photos?.[0] ?? EXPERIENCE_DETAIL_GALLERY.main
+    resolvedExperience?.banner ??
+    resolvedExperience?.image ??
+    resolvedExperience?.photos?.[0] ??
+    EXPERIENCE_DETAIL_GALLERY.main
   const galleryThumbs = useMemo(() => {
-    const photos = experience.photos?.filter(Boolean) ?? []
+    const photos = resolvedExperience?.photos?.filter(Boolean) ?? []
     if (photos.length === 0) return [...EXPERIENCE_DETAIL_GALLERY.thumbs]
     const rest = photos.filter((src) => src !== galleryMain)
     const pool = rest.length > 0 ? rest : photos
     return [0, 1, 2].map((i) => pool[i] ?? pool[0] ?? galleryMain)
-  }, [experience.photos, galleryMain])
-  const moreLabel =
-    (experience.photos?.length ?? 0) > 4
-      ? `+${(experience.photos?.length ?? 0) - 4} photos`
-      : '+24 photos'
+  }, [resolvedExperience?.photos, galleryMain])
+
+  if (!resolvedExperience) {
+    if (listLoading || detailFetching) {
+      return (
+        <PageSection padTop={26} padBottom={64}>
+          <div
+            className="h-[420px] w-full animate-pulse rounded-xl bg-bg-skeleton"
+            role="status"
+            aria-label={t('common:states.loading')}
+          />
+        </PageSection>
+      )
+    }
+    return <NotFoundPage />
+  }
+  const experience: MappedExperience = resolvedExperience
+
+  const aboutText = experience.about ?? experience.summary
   const mapsQuery = experience.mapQuery ?? experience.place
   const numericId = resolvedId != null ? Number(resolvedId) : Number.NaN
-  const reviewerName = user?.name?.trim() || 'Guest'
+  const reviewerName = user?.name?.trim() || t('experience.guest')
 
   async function handleSave() {
     if (!isAuthenticated) {
@@ -134,21 +149,21 @@ export function ExperienceDetailPage() {
       return
     }
     if (!resolvedId) {
-      dispatch(toastPushed('error', 'Experience is not available to save yet'))
+      dispatch(toastPushed('error', t('experience.notAvailableToSave')))
       return
     }
     try {
       if (saved) {
         await unfavoriteExperience(resolvedId).unwrap()
         setSaved(false)
-        dispatch(toastPushed('success', 'Removed from saved'))
+        dispatch(toastPushed('success', t('detail.removedSaved')))
       } else {
         await favoriteExperience(resolvedId).unwrap()
         setSaved(true)
-        dispatch(toastPushed('success', 'Saved'))
+        dispatch(toastPushed('success', t('detail.saved')))
       }
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not update saved')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('detail.saveError'))))
     }
   }
 
@@ -164,9 +179,9 @@ export function ExperienceDetailPage() {
     try {
       await submitReview(payload).unwrap()
       setReviewOpen(false)
-      dispatch(toastPushed('success', 'Thanks — your rating was submitted'))
+      dispatch(toastPushed('success', t('experience.ratingSubmitted')))
     } catch (error) {
-      dispatch(toastPushed('error', apiErrorMessage(error, 'Could not submit rating')))
+      dispatch(toastPushed('error', apiErrorMessage(error, t('experience.ratingError'))))
     }
   }
 
@@ -175,7 +190,7 @@ export function ExperienceDetailPage() {
       <PageSection padTop={26} padBottom={0}>
         <Breadcrumbs
           items={[
-            { label: 'Home', href: '/' },
+            { label: t('detail.crumbHome'), href: '/' },
             { label: t('nav:experiences'), href: '/experiences' },
             { label: experience.title },
           ]}
@@ -186,7 +201,6 @@ export function ExperienceDetailPage() {
         <FadeUp inView={false}>
           <DetailGallery
             category={experience.meta.split(' · ')[0]}
-            moreLabel={moreLabel}
             mainImage={galleryMain}
             thumbs={galleryThumbs}
           />
@@ -203,7 +217,7 @@ export function ExperienceDetailPage() {
                 <StarFillIcon size={15} />
                 {ratingDisplay}
               </span>
-              {experience.place !== MEETING_POINT_LABEL && (
+              {experience.place !== meetingPointLabel() && (
                 <span className="text-ink-secondary">{experience.place}</span>
               )}
             </div>
@@ -214,10 +228,10 @@ export function ExperienceDetailPage() {
               loading={favState.isLoading || unfavState.isLoading}
               onClick={() => void handleSave()}
             >
-              {saved ? 'Saved' : 'Save'}
+              {saved ? t('experience.saved') : t('experience.save')}
             </Button>
             <Button variant="secondary" onClick={handleRateClick}>
-              Rate this experience
+              {t('experience.rate')}
             </Button>
             <Button
               variant="secondary"
@@ -233,14 +247,20 @@ export function ExperienceDetailPage() {
             </Button>
           </div>
 
-          <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">About</h2>
-          <p className="mt-[18px] max-w-[720px] text-[16px] leading-[1.6] text-ink-secondary">
-            {aboutText}
-          </p>
+          {aboutText ? (
+            <>
+              <h2 className="text-heading-h2-section mt-[44px] text-ink-primary">
+                {t('experience.about')}
+              </h2>
+              <p className="mt-[18px] max-w-[720px] text-[16px] leading-[1.6] text-ink-secondary">
+                {aboutText}
+              </p>
+            </>
+          ) : null}
         </article>
       </PageSection>
 
-      <SimilarSection heading={`Similar ${t('nav:experiences').toLowerCase()}`}>
+      <SimilarSection heading={t('experience.similar')}>
         {catalog
           .filter((e) => e.title !== experience.title)
           .slice(0, 4)

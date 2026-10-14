@@ -1,4 +1,5 @@
 import type { TalentCardProps, TalentDirectoryCardProps } from '@/components/cards'
+import i18n from '@/i18n/config'
 import { slugify } from '@/pages/_guest/slugify'
 import { localizedString, nestedValue, pickLocalized } from '@/lib/api/locale'
 
@@ -23,9 +24,15 @@ export type MappedTalent = TalentDirectoryCardProps &
 /** Map flexible talent API rows into card props; keep fixtures usable as fallback. */
 export function mapApiTalentToCard(talent: ApiRecord): MappedTalent {
   const performer = (talent.performer as ApiRecord | undefined) ?? {}
+  // `stageNameLocalized` carries both languages; `stageName` is whichever one
+  // was typed, so reading it first showed an Arabic name on the English site.
   const name =
-    pickLocalized(performer, ['stageName', 'stage_name', 'name']) ||
-    pickLocalized(talent, ['name', 'stage_name', 'stageName', 'display_name'], 'Unknown talent')
+    pickLocalized(performer, ['stageNameLocalized', 'stageName', 'stage_name', 'name']) ||
+    pickLocalized(
+      talent,
+      ['name', 'stage_name', 'stageName', 'display_name'],
+      i18n.t('common:labels.unknownTalent'),
+    )
 
   // The id leads the slug ("12-name"). The API has no slug and no lookup by
   // name, and the list returns 10 a page, so a name alone can't find most
@@ -37,18 +44,18 @@ export function mapApiTalentToCard(talent: ApiRecord): MappedTalent {
     (idPart ? (nameSlug ? `${idPart}-${nameSlug}` : idPart) : nameSlug)
 
   const categories = nestedValue(talent, ['categories', 'performanceCategories'])
+  // The whole `{ name_en, name_ar }` row, so the page language picks the name;
+  // reading `name_en` first showed English categories on the Arabic site.
   const firstCategory =
     Array.isArray(categories) && categories[0] && typeof categories[0] === 'object'
-      ? localizedString((categories[0] as ApiRecord).name_en) ||
-        localizedString((categories[0] as ApiRecord).name) ||
-        localizedString((categories[0] as ApiRecord).name_ar)
+      ? localizedString(categories[0])
       : ''
 
   const discipline =
     firstCategory ||
     pickLocalized(talent, ['discipline', 'craft', 'type', 'category_name', 'performance_category']) ||
     localizedString(nestedValue(talent, ['category', 'name'])) ||
-    'Performer'
+    i18n.t('common:labels.performer')
 
   const rating = formatRating(talent.rating ?? talent.average_rating ?? nestedValue(talent, ['stats', 'rating']))
 
@@ -64,9 +71,9 @@ export function mapApiTalentToCard(talent: ApiRecord): MappedTalent {
   const meta =
     pickLocalized(talent, ['meta']) ||
     (followers && shows
-      ? `${followers} followers · ${shows} shows`
+      ? i18n.t('common:labels.followersShows', { followers, shows })
       : reviews && city
-        ? `${reviews} reviews · ${city}`
+        ? i18n.t('common:labels.reviewsCity', { reviews, city })
         : city)
 
   const image =
@@ -75,7 +82,7 @@ export function mapApiTalentToCard(talent: ApiRecord): MappedTalent {
     undefined
 
   const biography =
-    pickLocalized(performer, ['biography', 'bio']) ||
+    pickLocalized(performer, ['biographyLocalized', 'biography', 'bio']) ||
     pickLocalized(talent, ['biography', 'bio']) ||
     undefined
 

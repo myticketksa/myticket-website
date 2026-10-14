@@ -323,14 +323,20 @@ export function HomeFeatured({
     if (fromAds.length >= 3) return fromAds
 
     const fromEvents = (apiEvents ?? []).slice(0, 3).map((event, i) => {
-      const fallback = HOME_FEATURED_PANELS[i]!
       const mapped = mapApiEventToCard(event)
+      // A real event's missing field stays empty; it used to borrow the sample
+      // panel's English date, venue and rating line.
       return {
-        date: mapped.date || fallback.date,
+        date: mapped.date,
         title: mapped.title,
-        venue: mapped.venue || fallback.venue,
-        price: mapped.price.startsWith('From') ? mapped.price : `From ${mapped.price}`,
-        meta: mapped.rating !== '—' ? `${mapped.rating} · ${mapped.attendance || 'going'}` : fallback.meta,
+        venue: mapped.venue,
+        price: mapped.price,
+        meta:
+          mapped.rating === '—'
+            ? ''
+            : mapped.attendance
+              ? `${mapped.rating} · ${mapped.attendance}`
+              : mapped.rating,
         image: mapped.image || HOME_FEATURED_PANEL_IMAGES[i],
         href: `/events/${mapped.slug}`,
       }

@@ -1,3 +1,4 @@
+import i18n from '@/i18n/config'
 import {
   formatApiDate,
   formatMoneySar,
@@ -79,9 +80,9 @@ function formatSeatLabel(seat: unknown, fallback = '—'): string {
   const row = localizedString(record.row)
   const number = record.number ?? record.seat_number ?? record.seatNumber
   if (row && number != null && String(number).trim()) {
-    return `Row ${row} · Seat ${number}`
+    return i18n.t('common:labels.rowSeat', { row, seat: number })
   }
-  if (row) return `Row ${row}`
+  if (row) return i18n.t('common:labels.row', { row })
   return fallback
 }
 
@@ -240,7 +241,7 @@ export function mapOrderConfirmation(
   const tierName =
     localizedString(ticketType?.name) ||
     localizedString(firstTicket?.ticketType) ||
-    'Ticket'
+    i18n.t('common:labels.ticket')
   const tierLabel = tierName.toUpperCase()
 
   const tickets = mapTickets(order, seatingType, tierName)
@@ -437,12 +438,12 @@ function countdownFromStart(startTime: unknown): string | undefined {
   if (diffMs <= 0) return undefined
   const days = Math.ceil(diffMs / (24 * 60 * 60 * 1000))
   if (days <= 0) return undefined
-  return `IN ${days} DAY${days === 1 ? '' : 'S'}`
+  return i18n.t('common:labels.inDays', { count: days })
 }
 
 function seatFacts(order: ApiRecord): { tier: string; row: string; seats: string } {
   const ticketType = asRecord(order.ticketType ?? order.ticket_type)
-  const tier = localizedString(ticketType?.name, 'Ticket')
+  const tier = localizedString(ticketType?.name, i18n.t('common:labels.ticket'))
 
   const seats = Array.isArray(order.seats) ? order.seats : []
   const ticketSeats = Array.isArray(order.tickets)
@@ -498,7 +499,10 @@ export function mapOrderToMyTicket(order: ApiRecord): MyTicketCard {
   const id = String(order.id ?? order.order_id ?? '')
   const title =
     (event && pickLocalized(event, ['title', 'name'])) ||
-    localizedString(order.event_title ?? order.title, `Order ${id || '—'}`)
+    localizedString(
+      order.event_title ?? order.title,
+      i18n.t('common:labels.orderNumber', { id: id || '—' }),
+    )
 
   const when = event
     ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
@@ -609,7 +613,10 @@ export function mapOrderToDetailView(
   const id = String(order.id ?? order.order_id ?? '')
   const title =
     (event && pickLocalized(event, ['title', 'name'])) ||
-    localizedString(order.event_title ?? order.title, `Order ${id || '—'}`)
+    localizedString(
+      order.event_title ?? order.title,
+      i18n.t('common:labels.orderNumber', { id: id || '—' }),
+    )
   const when = event
     ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
     : formatApiDate(order.created_at)
@@ -626,9 +633,9 @@ export function mapOrderToDetailView(
       order.payment_channel ??
       order.paymentChannel ??
       order.method,
-    paid ? 'Card' : '—',
+    paid ? i18n.t('common:labels.card') : '—',
   )
-  const tierName = localizedString(ticketType?.name, 'Ticket')
+  const tierName = localizedString(ticketType?.name, i18n.t('common:labels.ticket'))
 
   const rawTickets = Array.isArray(order.tickets) ? order.tickets : []
   const tickets: OrderTicketSeatView[] =
@@ -646,7 +653,7 @@ export function mapOrderToDetailView(
             block: hasSeat
               ? seatField(seat, 'block') || seatField(seat, 'section') || '—'
               : seatingType === 'free'
-                ? 'General'
+                ? i18n.t('common:labels.general')
                 : '—',
             row: hasSeat ? seatField(seat, 'row') || '—' : '—',
             seat: hasSeat
@@ -665,7 +672,7 @@ export function mapOrderToDetailView(
             ticketTypeLabel: tierName,
             scanStatus: payment,
             gate: '—',
-            block: seatingType === 'free' ? 'General' : '—',
+            block: seatingType === 'free' ? i18n.t('common:labels.general') : '—',
             row: '—',
             seat: seatingType === 'free' ? 'GA' : '—',
             qrValue: ticketQrValue(order, id || '1'),
@@ -686,7 +693,9 @@ export function mapOrderToDetailView(
     quantity: Number(order.quantity ?? tickets.length) || tickets.length || 1,
     paid,
     paymentStatus: payment,
-    paymentLabel: paid ? 'Paid' : 'Payment pending',
+    paymentLabel: paid
+      ? i18n.t('common:labels.paid')
+      : i18n.t('common:labels.paymentPending'),
     paymentMethod,
     purchasedAt: formatApiDate(order.created_at ?? order.placed_at) || '—',
     pricePaid: money(order.amount ?? order.total),
@@ -695,7 +704,7 @@ export function mapOrderToDetailView(
     tickets,
     organizerName: localizedString(
       asRecord(event?.organizer)?.name ?? order.organizer_name,
-      'Organizer',
+      i18n.t('common:labels.organizer'),
     ),
   }
 }

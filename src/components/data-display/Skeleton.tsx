@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { HTMLAttributes } from 'react'
 import { cn } from '@/lib/cn'
 
@@ -41,10 +42,11 @@ export function Skeleton({ className, variant = 'media', ...props }: SkeletonPro
  * `--space-row-gap` (10px) in the source, so it uses the token rather than a literal.
  */
 export function SkeletonStack({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  const { t } = useTranslation('common')
   return (
     <div
       role="status"
-      aria-label="Loading"
+      aria-label={t('states.loading')}
       className={cn('flex flex-col gap-row-gap', className)}
       {...props}
     />

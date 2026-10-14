@@ -1,4 +1,4 @@
-import { localizedString } from '@/lib/api/locale'
+import { flatLocalizedName, localizedString } from '@/lib/api/locale'
 
 /** Shared helpers so guest POST bodies match Postman field names and value shapes. */
 
@@ -36,7 +36,7 @@ export function mapApiIdLabelOptions(
         localizedString(row.name) ||
         localizedString(row.title) ||
         localizedString(row.label) ||
-        localizedString(row.name_en) ||
+        flatLocalizedName(row) ||
         localizedString(value)
       if (value == null || !label) return null
       return { value: String(value), label }

@@ -111,7 +111,10 @@
     "sortMostRelevant": "الأكثر صلة",
     "sortSoonest": "الأقرب",
     "sortPrice": "السعر",
-    "sortEndingSoon": "ينتهي قريباً"
+    "sortEndingSoon": "ينتهي قريباً",
+    "sortUnavailable": "الترتيب غير متاح بعد",
+    "viewUnavailable": "تبديل طريقة العرض غير متاح بعد",
+    "filtersUnavailable": "غير مفعّل بعد"
   },
   "filters": {
     "allEvents": "كل الفعاليات",
@@ -424,7 +427,12 @@
   "search": {
     "title": "بحث",
     "resultsFor": "نتائج “{{query}}”",
-    "noQuery": "ابحث عن فعاليات ومواهب وتجارب"
+    "noQuery": "ابحث عن فعاليات ومواهب وتجارب",
+    "eventBlurb": "فعالية على ماي تكت.",
+    "talentBlurb": "فنان على ماي تكت.",
+    "experienceBlurb": "مكان على ماي تكت.",
+    "upcomingShows": "عرض الحفلات القادمة",
+    "nextShow": "الحفلة القادمة {{when}}"
   },
   "stickyCta": {
     "fromLabel": "التذاكر من",
@@ -496,5 +504,20 @@
     "submitRating": "إرسال التقييم",
     "errorRatingRange": "اختر تقييماً من 1 إلى 5.",
     "errorRatingUnavailable": "هذا العنصر غير متاح للتقييم بعد."
+  },
+  "experience": {
+    "save": "حفظ",
+    "saved": "تم الحفظ",
+    "rate": "قيّم هذه التجربة",
+    "about": "نبذة",
+    "similar": "أماكن مشابهة",
+    "notAvailableToSave": "هذا المكان غير متاح للحفظ بعد",
+    "ratingSubmitted": "شكراً، تم إرسال تقييمك",
+    "ratingError": "تعذّر إرسال التقييم",
+    "guest": "زائر"
+  },
+  "organizer": {
+    "follow": "متابعة",
+    "allEvents": "كل الفعاليات"
   }
 }

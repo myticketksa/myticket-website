@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { StatusBadge, type StatusTone } from '@/components/data-display'
@@ -6,11 +7,14 @@ import { EmptyState } from '@/components/feedback'
 import { Button } from '@/components/ui'
 import { AccountPageHead } from '@/layouts'
 import { useGetMySubmissionsQuery } from '@/app/api/experiencesApi'
+import { formatApiDate, localizedString } from '@/lib/api/locale'
 
 interface SubmissionItem {
   id: string
   name: string
   status: string
+  /** API code behind `status`: active / pending / inactive. */
+  statusCode: string
   meta: string
   note: string
   cta: string
@@ -18,24 +22,30 @@ interface SubmissionItem {
   cover: string
 }
 
-function mapSubmission(record: Record<string, unknown>): SubmissionItem {
-  const status = String(record.status ?? record.state ?? 'Submitted')
+function mapSubmission(record: Record<string, unknown>, t: TFunction): SubmissionItem {
+  // The API sends a code (active / pending / inactive) and a bilingual title;
+  // both used to be printed as-is, the title as "[object Object]".
+  const code = String(record.status ?? record.state ?? 'submitted').toLowerCase()
+  const status = t(`submissions.status.${code}`, {
+    defaultValue: t('submissions.status.submitted'),
+  })
   return {
     id: String(record.id ?? record.reference ?? ''),
-    name: String(record.name ?? record.title ?? 'Submission'),
+    name: localizedString(record.name ?? record.title, t('submissions.untitled')),
     status,
-    meta: String(record.meta ?? record.location ?? record.submitted_at ?? ''),
-    note: String(record.note ?? record.message ?? ''),
-    cta: String(record.cta ?? 'View submission'),
+    statusCode: code,
+    meta: localizedString(record.meta ?? record.location, '') || formatApiDate(record.submitted_at ?? record.created_at) || '',
+    note: localizedString(record.note ?? record.message, ''),
+    cta: t('submissions.view'),
     aux: record.aux ? String(record.aux) : undefined,
-    cover: String(record.cover ?? record.image ?? record.image_url ?? ''),
+    cover: localizedString(record.cover ?? record.image ?? record.image_url, ''),
   }
 }
 
-function submissionTone(status: string): StatusTone {
-  if (status === 'Published') return 'successTint'
-  if (status === 'Under review') return 'brandTint'
-  if (status === 'Declined') return 'dangerTint'
+function submissionTone(code: string): StatusTone {
+  if (code === 'active') return 'successTint'
+  if (code === 'pending') return 'brandTint'
+  if (code === 'inactive') return 'dangerTint'
   return 'inactive'
 }
 
@@ -45,9 +55,11 @@ export function MySubmissionsPage() {
   const navigate = useNavigate()
   const { data: submissions, isLoading } = useGetMySubmissionsQuery()
   const items = useMemo(() => {
-    if (submissions && submissions.length > 0) return submissions.map(mapSubmission)
+    if (submissions && submissions.length > 0) {
+      return submissions.map((record) => mapSubmission(record, t))
+    }
     return []
-  }, [submissions])
+  }, [submissions, t])
 
   return (
     <>
@@ -87,14 +99,14 @@ export function MySubmissionsPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-[10px]">
                   <p className="text-[17px] font-bold text-ink-primary">{item.name}</p>
-                  <StatusBadge tone={submissionTone(item.status)}>{item.status}</StatusBadge>
+                  <StatusBadge tone={submissionTone(item.statusCode)}>{item.status}</StatusBadge>
                 </div>
                 <p className="mt-[4px] text-[13.5px] text-ink-secondary">{item.meta}</p>
                 <p
                   className={`mt-[5px] max-w-[560px] text-[13px] leading-[1.5] ${
-                    item.status === 'Published'
+                    item.statusCode === 'active'
                       ? 'text-state-success'
-                      : item.status === 'Declined'
+                      : item.statusCode === 'inactive'
                         ? 'text-state-danger-deep'
                         : 'text-ink-secondary'
                   }`}

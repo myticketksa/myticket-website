@@ -232,7 +232,7 @@
     "howClaimBefore": "Once they claim it, the ticket is theirs —",
     "howClaimEmphasis": "this can't be undone.",
     "howDeadlineBefore": "They have",
-    "howDeadlineEmphasis": "until Wed 7 Oct, 20:00",
+    "howDeadlineEmphasis": "30 days",
     "howDeadlineAfter": "to claim. Unclaimed, it comes straight back to you, still valid.",
     "howQr": "Your old QR code stops working the moment the transfer completes.",
     "sendingEyebrow": "You're sending",
@@ -259,7 +259,8 @@
     "error": "Could not claim this gift",
     "missingRef": "Missing gift reference",
     "missingToken": "Enter the claim token from your gift message",
-    "needAccount": "Need an account first?"
+    "needAccount": "Need an account first?",
+    "comeBack": "then come back to this link."
   },
   "resell": {
     "header": "List for resale",
@@ -642,7 +643,15 @@
     "subtitle": "Every experience you've submitted, and where it is in review.",
     "addPlace": "+ Add a place",
     "emptyTitle": "No places added yet",
-    "emptyBody": "Submit an experience and it will show up here while it's in review."
+    "emptyBody": "Submit an experience and it will show up here while it's in review.",
+    "view": "View submission",
+    "untitled": "Submission",
+    "status": {
+      "active": "Published",
+      "pending": "Under review",
+      "inactive": "Declined",
+      "submitted": "Submitted"
+    }
   },
   "applications": {
     "title": "My {{role}} application",
@@ -772,6 +781,14 @@
         "body": "Found it — order MT-2026-84193, 2 × Gold for Winter Nights. The email bounced, but your tickets are safe in your account under My tickets. I've re-sent the confirmation now. Anything else?",
         "time": "21:35"
       }
-    ]
+    ],
+    "chatSubject": "Support chat {{id}}",
+    "chatMeta": "Support · chat",
+    "chatId": "Chat {{id}}",
+    "openChatBody": "Open the chat to continue this conversation.",
+    "openChat": "Open chat",
+    "statusOpen": "Open",
+    "kindCase": "Case",
+    "kindComplaint": "Complaint"
   }
 }

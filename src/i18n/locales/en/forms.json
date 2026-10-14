@@ -168,7 +168,11 @@
       "bannerHint": "Wide hero for the detail page",
       "gallery": "Gallery photos",
       "galleryHint": "Up to several extras",
-      "ready": "Ready to submit"
+      "ready": "Ready to submit",
+      "categoryPlaceholder": "Choose a category",
+      "aboutCount": "{{count}} / 600 · min 80",
+      "filesSelected_one": "{{count}} file selected",
+      "filesSelected_other": "{{count}} files selected"
     },
     "types": {
       "activity": "Activity",
@@ -179,7 +183,20 @@
       "about": "Description needs at least 80 characters",
       "hours": "Add at least one opening day",
       "maxGuests": "Set a max guest count",
-      "contact": "Add an email or phone so guests can reach you"
+      "contact": "Add an email or phone so guests can reach you",
+      "category": "Choose a category"
+    },
+    "regions": {
+      "riyadh": "Riyadh Region",
+      "makkah": "Makkah Region"
+    },
+    "review": {
+      "photos": "Photos: {{list}}",
+      "cover": "cover",
+      "banner": "banner",
+      "gallery": "gallery",
+      "none": "none yet",
+      "separator": ", "
     }
   },
   "submitted": {

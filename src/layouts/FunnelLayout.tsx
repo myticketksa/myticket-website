@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
 import { Link, Outlet } from 'react-router-dom'
 import { ArrowLeftIcon } from '@/components/icons'
@@ -27,6 +28,7 @@ export function FunnelHeader({
   rightSlot,
   showLabel = true,
 }: FunnelHeaderProps) {
+  const { t } = useTranslation('common')
   return (
     <header
       className={cn(
@@ -35,7 +37,7 @@ export function FunnelHeader({
       )}
     >
       <div className="mx-auto grid h-full w-full max-w-[var(--container-page)] grid-cols-[1fr_auto_1fr] items-center gap-sm px-page-gutter sm:gap-lg">
-        <Link to="/" className="justify-self-start shrink-0" aria-label="MyTicket home">
+        <Link to="/" className="justify-self-start shrink-0" aria-label={t('a11y.home')}>
           <Logo height={36} />
         </Link>
         {showLabel ? (

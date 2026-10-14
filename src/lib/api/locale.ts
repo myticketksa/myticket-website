@@ -47,6 +47,15 @@ export function localizedString(
   return fallback
 }
 
+/**
+ * A row's name when the API sends it as flat `name_en` / `name_ar` (talent and
+ * performance categories) rather than `name: { en, ar }`. Reading `name_en`
+ * alone showed English on the Arabic site.
+ */
+export function flatLocalizedName(record: ApiRecord): string {
+  return localizedString({ en: record.name_en, ar: record.name_ar })
+}
+
 export function pickLocalized(
   record: ApiRecord,
   keys: string[],

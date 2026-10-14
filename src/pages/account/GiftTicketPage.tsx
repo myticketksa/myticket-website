@@ -2,11 +2,12 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button, Field, TextInput, Textarea } from '@/components/ui'
-import { FilterChip } from '@/components/data-display'
+import { FilterChip, MoneyAmount } from '@/components/data-display'
 import { TicketActionHeader } from '@/layouts'
-import { MY_TICKETS, type TicketFixture } from '@/pages/_account/fixtures'
+import { NotFoundPage } from '@/pages/system/NotFoundPage'
 import { useSendGiftTicketMutation } from '@/app/api/accountApis'
-import { useGetOrdersQuery } from '@/app/api/ordersApi'
+import { useGetOrderDetailsQuery, useGetOrdersQuery } from '@/app/api/ordersApi'
+import { mapOrderToDetailView, type OrderDetailView } from '@/lib/api/mappers/orders'
 import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
 import {
@@ -16,68 +17,89 @@ import {
 } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
-function mapOrderToTicket(order: Record<string, unknown>): TicketFixture {
-  const id = String(order.id ?? order.order_id ?? '')
-  const title = String(
-    order.title ?? order.event_title ?? order.name ?? `Order ${id || '—'}`,
-  )
-  return {
-    id: id || title,
-    orderId: String(order.reference ?? order.order_number ?? id),
-    title,
-    meta: String(order.meta ?? order.venue ?? order.status ?? ''),
-    status: String(order.status ?? 'UPCOMING') as TicketFixture['status'],
-    cover: String(order.cover ?? order.image ?? MY_TICKETS[0]?.cover ?? ''),
-    countdown: order.countdown ? String(order.countdown) : undefined,
-    facts: Array.isArray(order.facts)
-      ? (order.facts as { label: string; value: string }[])
-      : [
-          { label: 'When', value: String(order.starts_at ?? order.date ?? '—') },
-          { label: 'Seats', value: String(order.seats ?? order.quantity ?? '—') },
-        ],
-    actions: (order.actions as TicketFixture['actions']) ?? ['qr'],
-    note: order.note ? String(order.note) : undefined,
-  }
-}
-
-function resolveOrder(
+function findOrder(
   orders: Record<string, unknown>[] | undefined,
   id: string,
 ): Record<string, unknown> | undefined {
-  if (!orders?.length) return undefined
-  return (
-    orders.find(
-      (order) =>
-        String(order.id ?? '') === id ||
-        String(order.order_id ?? '') === id ||
-        String(order.reference ?? '') === id ||
-        String(order.order_number ?? '') === id,
-    ) ?? orders[0]
+  // No first-order fallback: an id that isn't in the list used to resolve to
+  // the newest order, so the gift went out with someone else's ticket.
+  return orders?.find(
+    (order) =>
+      String(order.id ?? '') === id ||
+      String(order.order_id ?? '') === id ||
+      String(order.reference ?? '') === id ||
+      String(order.order_number ?? '') === id,
   )
-}
-
-function resolveTicket(
-  orders: Record<string, unknown>[] | undefined,
-  id: string,
-): TicketFixture {
-  const match = resolveOrder(orders, id)
-  if (match) return mapOrderToTicket(match)
-  return MY_TICKETS.find((item) => item.id === id) ?? MY_TICKETS[0]
 }
 
 /** Gift / transfer ticket — Figma `207:9806`. */
 export function GiftTicketPage() {
   const { t } = useTranslation(['account', 'common'])
-  const { id = 'winter-nights' } = useParams()
+  const { id = '' } = useParams()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
-  const { data: orders } = useGetOrdersQuery()
-  const order = useMemo(() => resolveOrder(orders, id), [orders, id])
-  const ticket = useMemo(() => resolveTicket(orders, id), [orders, id])
+  const { data: orders, isLoading: ordersLoading } = useGetOrdersQuery()
+  const listOrder = useMemo(() => findOrder(orders, id), [orders, id])
+  const detailId = /^\d+$/.test(id) ? id : extractOrderId(listOrder) || ''
+  const { data: orderDetail, isFetching: detailFetching } = useGetOrderDetailsQuery(
+    detailId,
+    { skip: !/^\d+$/.test(String(detailId)) },
+  )
+  const order = useMemo(
+    () =>
+      orderDetail && Object.keys(orderDetail).length > 0 ? orderDetail : listOrder,
+    [orderDetail, listOrder],
+  )
+  // The summary is the real order; it used to be a fixed sample
+  // ("Thu 8 Oct · Riyadh", "Gold · Floor A · Row C · Seat 12", SAR 280).
+  const resolvedTicket = useMemo(
+    () => (order ? mapOrderToDetailView(order) : undefined),
+    [order],
+  )
   const [mode, setMode] = useState<'email' | 'phone'>('email')
   const [recipient, setRecipient] = useState('')
   const [note, setNote] = useState('')
   const [sendGift, sendState] = useSendGiftTicketMutation()
+
+  if (!resolvedTicket) {
+    if (ordersLoading || detailFetching) {
+      return (
+        <>
+          <TicketActionHeader label={t('account:gift.header')} />
+          <div className="mx-auto w-full max-w-[1040px] px-page-gutter pt-[48px] pb-[96px]">
+            <div
+              className="h-[420px] w-full animate-pulse rounded-xl bg-bg-skeleton"
+              role="status"
+              aria-label={t('common:states.loading')}
+            />
+          </div>
+        </>
+      )
+    }
+    return <NotFoundPage />
+  }
+  const ticket: OrderDetailView = resolvedTicket
+  const when = [ticket.startTime, ticket.city].filter((part) => part && part !== '—').join(' · ')
+  const seatLine = [
+    ...new Set(
+      ticket.tickets.map((item) => {
+        const hasRow = item.row && item.row !== '—'
+        const hasSeat = item.seat && item.seat !== '—'
+        return [
+          item.ticketTypeLabel,
+          item.block !== '—' ? item.block : '',
+          hasRow && hasSeat
+            ? t('common:labels.rowSeat', { row: item.row, seat: item.seat })
+            : hasRow
+              ? t('common:labels.row', { row: item.row })
+              : '',
+        ]
+          .filter(Boolean)
+          .join(' · ')
+      }),
+    ),
+  ].join(' / ')
+  const ticketNumbers = ticket.tickets.map((item) => item.id).join(', ') || ticket.orderId
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -214,11 +236,13 @@ export function GiftTicketPage() {
         <aside className="flex w-full shrink-0 flex-col gap-[14px] lg:w-[380px]">
           <div className="overflow-hidden rounded-[20px] border border-border-default bg-surface-default">
             <div className="relative h-[189px] bg-placeholder-gradient">
-              <img
-                src={ticket.cover}
-                alt=""
-                className="absolute inset-0 size-full object-cover"
-              />
+              {ticket.cover ? (
+                <img
+                  src={ticket.cover}
+                  alt=""
+                  className="absolute inset-0 size-full object-cover"
+                />
+              ) : null}
             </div>
             <div className="px-xl py-[18px]">
               <p className="text-[12px] font-bold tracking-[0.96px] text-ink-brand-mid uppercase">
@@ -227,21 +251,23 @@ export function GiftTicketPage() {
               <p className="mt-[5px] text-[20px] leading-[1.15] font-extrabold tracking-[-0.4px] text-ink-primary">
                 {ticket.title}
               </p>
-              <p className="mt-[6px] text-[13.5px] text-ink-secondary">Thu 8 Oct · 20:00 · Riyadh</p>
+              {when ? <p className="mt-[6px] text-[13.5px] text-ink-secondary">{when}</p> : null}
               <dl className="mt-[14px] flex flex-col gap-[7px] text-[13.5px]">
                 <div className="flex items-start justify-between gap-md">
                   <dt className="shrink-0 text-ink-secondary">{t('account:gift.sendingTicket')}</dt>
                   <dd className="min-w-0 max-w-[65%] text-end font-bold break-words text-ink-primary">
-                    Gold · Floor A · Row C · Seat 12
+                    {seatLine || '—'}
                   </dd>
                 </div>
                 <div className="flex items-start justify-between gap-md">
                   <dt className="shrink-0 text-ink-secondary">{t('account:gift.sendingTicketNo')}</dt>
-                  <dd className="min-w-0 text-end font-bold text-ink-primary">MT-84193-2</dd>
+                  <dd className="min-w-0 text-end font-bold break-all text-ink-primary">{ticketNumbers}</dd>
                 </div>
                 <div className="flex items-start justify-between gap-md">
                   <dt className="shrink-0 text-ink-secondary">{t('account:gift.sendingYouPaid')}</dt>
-                  <dd className="min-w-0 text-end font-bold text-ink-primary">SAR 280.00</dd>
+                  <dd className="min-w-0 text-end font-bold text-ink-primary">
+                    <MoneyAmount value={ticket.pricePaid} />
+                  </dd>
                 </div>
               </dl>
             </div>

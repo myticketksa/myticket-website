@@ -1,3 +1,4 @@
+import i18n from "@/i18n/config";
 import { parsePureNumericIds } from "@/lib/api/formPayload";
 
 /** Soft seat hold window shown in the purchase header. */
@@ -254,8 +255,8 @@ export function writeFreeSeatingSession(input: {
     (_, index) => ({
       label: input.label
         ? `${input.label} × ${index + 1}`
-        : `General admission ${index + 1}`,
-      meta: "Free seating",
+        : i18n.t("common:labels.generalAdmission", { n: index + 1 }),
+      meta: i18n.t("catalog:detail.freeSeating"),
       price: unitPrice,
     }),
   );

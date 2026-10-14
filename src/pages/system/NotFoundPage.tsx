@@ -1,13 +1,14 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import driftBlob from '@/assets/home/drift-blob.svg'
 import coverAlula from '@/assets/marketing/404-alula.png'
-import coverComedy from '@/assets/marketing/404-comedy.jpg'
-import coverOud from '@/assets/marketing/404-oud.jpg'
+import { useGetEventsQuery } from '@/app/api/eventsApi'
+import { MoneyAmount } from '@/components/data-display'
 import { MagnifyingGlassIcon } from '@/components/icons'
 import { Button } from '@/components/ui'
 import { PageSection } from '@/layouts'
+import { mapApiEventToCard } from '@/lib/api/mappers/events'
 
 const QUICK = [
   { id: 'events', href: '/events' },
@@ -17,35 +18,18 @@ const QUICK = [
   { id: 'help', href: '/help' },
 ] as const
 
-const TONIGHT = [
-  {
-    title: 'AlUla Sky Lantern Evening',
-    meta: 'TODAY · 19:30',
-    place: 'AlUla Old Town',
-    price: 'SAR 150',
-    cover: coverAlula,
-  },
-  {
-    title: 'Stand-up Night: Riyadh Comedy Club',
-    meta: 'TODAY · 21:30',
-    place: 'Boulevard City, Riyadh',
-    price: 'SAR 95',
-    cover: coverComedy,
-  },
-  {
-    title: 'Oud Night with Omar Farouk',
-    meta: 'TODAY · 20:00',
-    place: 'Bayt AlOud, Jeddah',
-    price: 'SAR 120',
-    cover: coverOud,
-  },
-] as const
-
 /** 404 Not Found — Figma `207:12542`. Under MainLayout. */
 export function NotFoundPage() {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+  // Real upcoming events. Three made-up English ones ("Oud Night with Omar
+  // Farouk") used to sit here for everyone.
+  const { data: eventsResult } = useGetEventsQuery({ upcoming: true })
+  const upcoming = useMemo(
+    () => (eventsResult?.items ?? []).slice(0, 3).map(mapApiEventToCard),
+    [eventsResult],
+  )
 
   function onSearch(e: FormEvent) {
     e.preventDefault()
@@ -108,39 +92,44 @@ export function NotFoundPage() {
         </div>
 
         <aside className="flex flex-col gap-[14px]">
-          <p className="text-[12px] font-extrabold tracking-[1.2px] text-ink-brand-mid uppercase">
-            {t('notFound.tonight')}
-          </p>
-          <ul className="flex flex-col gap-[14px]">
-            {TONIGHT.map((event) => (
-              <li key={event.title}>
-                <Link
-                  to="/events"
-                  className="flex items-center gap-[18px] rounded-[20px] border border-border-default bg-surface-default p-[14px] hover:border-border-brand"
-                >
-                  <img
-                    src={event.cover}
-                    alt=""
-                    className="h-[74px] w-[104px] shrink-0 rounded-[14px] object-cover"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[12px] font-extrabold tracking-[0.6px] text-ink-brand uppercase">
-                      {event.meta}
-                    </p>
-                    <p className="mt-[4px] text-[17px] font-bold tracking-[-0.255px] text-ink-primary">
-                      {event.title}
-                    </p>
-                    <p className="mt-[3px] text-[13px] font-medium text-ink-secondary">
-                      {event.place}
-                    </p>
-                  </div>
-                  <p className="shrink-0 pe-[6px] text-[18px] font-extrabold text-brand-identity-end">
-                    {event.price}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {upcoming.length > 0 && (
+            <>
+              <p className="text-[12px] font-extrabold tracking-[1.2px] text-ink-brand-mid uppercase">
+                {t('notFound.tonight')}
+              </p>
+              <ul className="flex flex-col gap-[14px]">
+                {upcoming.map((event) => (
+                  <li key={event.slug}>
+                    <Link
+                      to={`/events/${event.slug}`}
+                      className="flex items-center gap-[18px] rounded-[20px] border border-border-default bg-surface-default p-[14px] hover:border-border-brand"
+                    >
+                      <img
+                        src={event.image ?? coverAlula}
+                        alt=""
+                        className="h-[74px] w-[104px] shrink-0 rounded-[14px] object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[12px] font-extrabold tracking-[0.6px] text-ink-brand uppercase">
+                          {event.date}
+                        </p>
+                        <p className="mt-[4px] text-[17px] font-bold tracking-[-0.255px] text-ink-primary">
+                          {event.title}
+                        </p>
+                        <p className="mt-[3px] text-[13px] font-medium text-ink-secondary">
+                          {event.venue}
+                        </p>
+                      </div>
+                      <MoneyAmount
+                        value={event.price}
+                        className="shrink-0 pe-[6px] text-[18px] font-extrabold text-brand-identity-end"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
           <Link
             to="/support/new"
             className="mt-[2px] text-[14px] font-semibold text-ink-brand hover:text-ink-brand-mid"

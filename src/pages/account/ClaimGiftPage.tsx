@@ -113,7 +113,7 @@ export function ClaimGiftPage() {
               <Link to="/sign-in" className="font-semibold text-ink-brand">
                 {t('common:actions.signIn')}
               </Link>{' '}
-              then come back to this link.
+              {t('account:claim.comeBack')}
             </p>
           </form>
         </div>

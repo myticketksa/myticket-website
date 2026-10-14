@@ -77,7 +77,7 @@ export function DetailGallery({
           {mainImage ? (
             <img src={mainImage} alt="" className="size-full object-cover" />
           ) : (
-            <ImagePlaceholder ratio="fill" caption="Event imagery 16:10" />
+            <ImagePlaceholder ratio="fill" />
           )}
           <div className="pointer-events-none absolute top-[12px] start-[12px] flex max-w-[calc(100%-24px)] flex-wrap gap-sm lg:top-[18px] lg:start-[18px]">
             {categoryLabel && (
@@ -108,7 +108,7 @@ export function DetailGallery({
                 {src ? (
                   <img src={src} alt="" className="size-full object-cover" />
                 ) : (
-                  <ImagePlaceholder ratio="fill" caption="Gallery thumb" />
+                  <ImagePlaceholder ratio="fill" />
                 )}
                 {isLast && slides.length > 1 && (
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-ink-primary/60">

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
@@ -34,6 +35,7 @@ export function FilterChip({
   children,
   ...props
 }: FilterChipProps) {
+  const { t } = useTranslation('common')
   return (
     <button
       type="button"
@@ -59,7 +61,7 @@ export function FilterChip({
         <span
           role="button"
           tabIndex={-1}
-          aria-label="Remove filter"
+          aria-label={t('a11y.removeFilter')}
           onClick={(event) => {
             event.stopPropagation()
             onRemove?.()

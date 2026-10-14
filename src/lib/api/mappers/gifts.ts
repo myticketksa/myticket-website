@@ -1,3 +1,4 @@
+import i18n from '@/i18n/config'
 import {
   formatApiDate,
   localizedString,
@@ -32,15 +33,17 @@ function giftStatusNote(gift: ApiRecord): string | undefined {
   const note = localizedString(gift.note)
 
   if (status.includes('claim') || status.includes('accepted') || status.includes('completed')) {
-    return sender ? `Gift from ${sender}` : 'Gift claimed'
+    return sender
+      ? i18n.t('common:labels.giftFrom', { name: sender })
+      : i18n.t('common:labels.giftClaimed')
   }
   if (status.includes('cancel') || status.includes('expired') || status.includes('return')) {
-    return 'Gift returned'
+    return i18n.t('common:labels.giftReturned')
   }
   if (status.includes('pending') || status.includes('await') || status.includes('sent') || !status) {
-    if (recipient) return `Gift pending · ${recipient}`
-    if (sender) return `Gift from ${sender}`
-    return 'Gift pending'
+    if (recipient) return i18n.t('common:labels.giftPendingTo', { name: recipient })
+    if (sender) return i18n.t('common:labels.giftFrom', { name: sender })
+    return i18n.t('common:labels.giftPending')
   }
   return note || undefined
 }

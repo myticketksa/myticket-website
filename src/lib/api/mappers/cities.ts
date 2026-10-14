@@ -1,4 +1,4 @@
-import { localizedString } from '@/lib/api/locale'
+import { flatLocalizedName, localizedString } from '@/lib/api/locale'
 import type { IdLabelOption } from '@/lib/api/formPayload'
 
 type ApiRecord = Record<string, unknown>
@@ -66,7 +66,7 @@ export function mapCategoryOptions(
         localizedString(row.name) ||
         localizedString(row.title) ||
         localizedString(row.label) ||
-        localizedString(row.name_en) ||
+        flatLocalizedName(row) ||
         value
       return { value, label }
     })

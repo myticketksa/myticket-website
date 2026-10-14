@@ -1,5 +1,7 @@
 /** Shared API envelope helpers — Postman samples use `{ success, message, data }`. */
 
+import i18n from "@/i18n/config";
+
 export interface ApiEnvelope<T = unknown> {
   success?: boolean;
   message?: string;
@@ -112,7 +114,7 @@ export function buildPageNumbers(current: number, lastPage: number): number[] {
 
 export function apiErrorMessage(
   error: unknown,
-  fallback = "Something went wrong",
+  fallback = i18n.t("common:errors.generic"),
 ): string {
   if (!error || typeof error !== "object") return fallback;
   const err = error as {
@@ -124,8 +126,7 @@ export function apiErrorMessage(
     error?: string;
     status?: number;
   };
-  if (err.status === 413)
-    return "Uploaded files are too large. Please choose smaller files and try again.";
+  if (err.status === 413) return i18n.t("common:errors.uploadTooLarge");
   if (err.data?.message && !isMachineCode(err.data.message))
     return err.data.message;
   if (err.data?.errors) {

@@ -64,7 +64,15 @@
     "accountSections": "Account sections",
     "closeFilters": "Close filters",
     "dismiss": "Dismiss",
-    "attachFile": "Attach file"
+    "attachFile": "Attach file",
+    "home": "MyTicket home",
+    "saveEvent": "Save event",
+    "removeFilter": "Remove filter",
+    "ticketQr": "Ticket QR code",
+    "playVideo": "Play video",
+    "pauseVideo": "Pause video",
+    "opens": "Opens",
+    "closes": "Closes"
   },
   "time": {
     "daysShort": "{{count}}d",
@@ -96,7 +104,7 @@
     "title": "This page has left the venue.",
     "body": "The link may be old, the event may have finished, or we've simply moved it. Search for what you were after, or start again from the home page.",
     "try": "Try",
-    "tonight": "On tonight instead",
+    "tonight": "Coming up instead",
     "support": "Something's broken? Tell support →",
     "quick": {
       "events": "All events",
@@ -105,5 +113,53 @@
       "tickets": "My reservation",
       "help": "Help centre"
     }
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "uploadTooLarge": "Uploaded files are too large. Please choose smaller files and try again.",
+    "pageTitle": "This page hit an unexpected error.",
+    "pageBody": "We've logged the problem. Try again, or go back to the home page.",
+    "routeBody": "This page couldn't be loaded. Try again in a moment.",
+    "pageNotFound": "Page not found",
+    "statusTitle": "Error {{status}}",
+    "tryAgain": "Try again",
+    "reload": "Reload",
+    "goHome": "Go home"
+  },
+  "labels": {
+    "meetingPoint": "Meeting point",
+    "closed": "Closed",
+    "maxGuests": "Max {{count}} guests",
+    "reviews": "{{count}} reviews",
+    "followersShows": "{{followers}} followers · {{shows}} shows",
+    "reviewsCity": "{{reviews}} reviews · {{city}}",
+    "reviewsVerified": "{{reviews}} reviews · verified",
+    "performer": "Performer",
+    "unknownTalent": "Unknown talent",
+    "untitledExperience": "Untitled experience",
+    "untitledPlace": "Untitled place",
+    "giftFrom": "Gift from {{name}}",
+    "giftClaimed": "Gift claimed",
+    "giftReturned": "Gift returned",
+    "giftPendingTo": "Gift pending · {{name}}",
+    "giftPending": "Gift pending",
+    "rowSeat": "Row {{row}} · Seat {{seat}}",
+    "row": "Row {{row}}",
+    "ticket": "Ticket",
+    "card": "Card",
+    "general": "General",
+    "organizer": "Organizer",
+    "paid": "Paid",
+    "paymentPending": "Payment pending",
+    "inDays_one": "IN {{count}} DAY",
+    "inDays_other": "IN {{count}} DAYS",
+    "generalAdmission": "General admission {{n}}",
+    "fromPrice": "From",
+    "going": "going",
+    "experienceType": {
+      "attraction": "Attraction",
+      "activity": "Activity"
+    },
+    "orderNumber": "Order {{id}}"
   }
 }

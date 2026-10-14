@@ -1,4 +1,4 @@
-import { localizedString } from '@/lib/api/locale'
+import { flatLocalizedName, localizedString } from '@/lib/api/locale'
 
 type ApiRecord = Record<string, unknown>
 
@@ -9,7 +9,7 @@ export function mapCategoryLabel(record: ApiRecord, fallback = ''): string {
     localizedString(record.title) ||
     localizedString(record.label) ||
     localizedString(record.category) ||
-    localizedString(record.name_en) ||
+    flatLocalizedName(record) ||
     fallback
   )
 }

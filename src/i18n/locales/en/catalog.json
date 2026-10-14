@@ -111,7 +111,10 @@
     "sortMostRelevant": "Most relevant",
     "sortSoonest": "Soonest",
     "sortPrice": "Price",
-    "sortEndingSoon": "Ending soon"
+    "sortEndingSoon": "Ending soon",
+    "sortUnavailable": "Sorting not available yet",
+    "viewUnavailable": "View toggle not available yet",
+    "filtersUnavailable": "Not applied yet"
   },
   "filters": {
     "allEvents": "All events",
@@ -421,7 +424,12 @@
   "search": {
     "title": "Search",
     "resultsFor": "Results for “{{query}}”",
-    "noQuery": "Search events, talents, and experiences"
+    "noQuery": "Search events, talents, and experiences",
+    "eventBlurb": "Event on MyTicket.",
+    "talentBlurb": "Performer on MyTicket.",
+    "experienceBlurb": "Place on MyTicket.",
+    "upcomingShows": "View upcoming shows",
+    "nextShow": "Next show {{when}}"
   },
   "stickyCta": {
     "fromLabel": "Tickets from",
@@ -493,5 +501,20 @@
     "submitRating": "Submit rating",
     "errorRatingRange": "Pick a rating from 1 to 5.",
     "errorRatingUnavailable": "This item is not available to rate yet."
+  },
+  "experience": {
+    "save": "Save",
+    "saved": "Saved",
+    "rate": "Rate this experience",
+    "about": "About",
+    "similar": "Similar places",
+    "notAvailableToSave": "This place is not available to save yet",
+    "ratingSubmitted": "Thanks — your rating was submitted",
+    "ratingError": "Could not submit rating",
+    "guest": "Guest"
+  },
+  "organizer": {
+    "follow": "Follow",
+    "allEvents": "All events"
   }
 }

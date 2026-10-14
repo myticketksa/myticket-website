@@ -37,10 +37,6 @@ export function ApplicationSubmittedPage() {
           <p className="mt-[12px] text-[16.5px] leading-[1.6] text-ink-secondary">
             {t('submitted.body', { role })}
           </p>
-          <p className="mt-[10px] text-[13.5px] font-bold text-ink-muted">
-            {t('submitted.reference')}{' '}
-            <span className="text-ink-primary">APP-2026-1187</span>
-          </p>
 
           <div className="mt-[32px] w-full rounded-[20px] border border-border-default bg-surface-default px-[26px] py-[24px] text-start">
             <p className="text-[15px] font-bold text-ink-primary">{t('submitted.whileYouWait')}</p>

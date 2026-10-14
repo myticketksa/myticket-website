@@ -149,7 +149,7 @@ export function ExperienceCard({
             className="size-full object-cover transition-transform duration-slow ease-standard group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
           />
         ) : (
-          <ImagePlaceholder ratio="fill" caption="Event imagery 16:10" />
+          <ImagePlaceholder ratio="fill" />
         )}
 
         {isHome && category && (

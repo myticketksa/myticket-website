@@ -64,7 +64,15 @@
     "accountSections": "أقسام الحساب",
     "closeFilters": "إغلاق الفلاتر",
     "dismiss": "تجاهل",
-    "attachFile": "إرفاق ملف"
+    "attachFile": "إرفاق ملف",
+    "home": "الصفحة الرئيسية",
+    "saveEvent": "حفظ الفعالية",
+    "removeFilter": "إزالة الفلتر",
+    "ticketQr": "رمز QR للتذكرة",
+    "playVideo": "تشغيل الفيديو",
+    "pauseVideo": "إيقاف الفيديو مؤقتاً",
+    "opens": "يفتح",
+    "closes": "يغلق"
   },
   "time": {
     "daysShort": "{{count}}ي",
@@ -96,7 +104,7 @@
     "title": "هذه الصفحة غادرت المكان.",
     "body": "قد يكون الرابط قديماً، أو انتهت الفعالية، أو نقلناها. ابحث عما تريد، أو ابدأ من جديد من الصفحة الرئيسية.",
     "try": "جرّب",
-    "tonight": "الليلة بدلاً من ذلك",
+    "tonight": "فعاليات قادمة",
     "support": "شيء معطل؟ أخبر الدعم ←",
     "quick": {
       "events": "كل الفعاليات",
@@ -105,5 +113,53 @@
       "tickets": "حجوزاتي",
       "help": "مركز المساعدة"
     }
+  },
+  "errors": {
+    "generic": "حدث خطأ ما",
+    "uploadTooLarge": "الملفات المرفوعة كبيرة جداً. اختر ملفات أصغر وحاول مرة أخرى.",
+    "pageTitle": "حدث خطأ غير متوقع في هذه الصفحة.",
+    "pageBody": "سجّلنا المشكلة. حاول مرة أخرى أو عُد إلى الصفحة الرئيسية.",
+    "routeBody": "تعذّر تحميل هذه الصفحة. حاول مرة أخرى بعد قليل.",
+    "pageNotFound": "الصفحة غير موجودة",
+    "statusTitle": "خطأ {{status}}",
+    "tryAgain": "حاول مرة أخرى",
+    "reload": "إعادة التحميل",
+    "goHome": "الصفحة الرئيسية"
+  },
+  "labels": {
+    "meetingPoint": "نقطة التجمع",
+    "closed": "مغلق",
+    "maxGuests": "حتى {{count}} ضيوف",
+    "reviews": "{{count}} تقييم",
+    "followersShows": "{{followers}} متابع · {{shows}} عروض",
+    "reviewsCity": "{{reviews}} تقييم · {{city}}",
+    "reviewsVerified": "{{reviews}} تقييم · موثّق",
+    "performer": "فنان",
+    "unknownTalent": "موهبة غير معروفة",
+    "untitledExperience": "تجربة بدون عنوان",
+    "untitledPlace": "مكان بدون اسم",
+    "giftFrom": "هدية من {{name}}",
+    "giftClaimed": "تم استلام الهدية",
+    "giftReturned": "أُعيدت الهدية",
+    "giftPendingTo": "هدية بانتظار الاستلام · {{name}}",
+    "giftPending": "هدية بانتظار الاستلام",
+    "rowSeat": "الصف {{row}} · المقعد {{seat}}",
+    "row": "الصف {{row}}",
+    "ticket": "تذكرة",
+    "card": "بطاقة",
+    "general": "عام",
+    "organizer": "المنظّم",
+    "paid": "مدفوع",
+    "paymentPending": "بانتظار الدفع",
+    "inDays_one": "بعد يوم واحد",
+    "inDays_other": "بعد {{count}} أيام",
+    "generalAdmission": "دخول عام {{n}}",
+    "fromPrice": "من",
+    "going": "سيحضرون",
+    "experienceType": {
+      "attraction": "معلم",
+      "activity": "نشاط"
+    },
+    "orderNumber": "طلب {{id}}"
   }
 }

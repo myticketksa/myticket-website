@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import i18n from '@/i18n/config'
 import { reportErrorAsync } from '@/lib/errorLogging'
 import { Button } from '@/components/ui'
 
@@ -45,21 +46,23 @@ export class AppErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.error) return this.props.children
     if (this.props.fallback) return this.props.fallback
+    // A class component can't use the hook; the instance follows the language.
+    const t = i18n.t.bind(i18n)
 
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-lg bg-bg-page px-page-gutter py-3xl text-center">
         <p className="text-[13px] font-bold tracking-[0.84px] text-ink-brand uppercase">
-          Something went wrong
+          {t('common:errors.generic')}
         </p>
         <h1 className="max-w-[28ch] text-[32px] leading-[1.05] font-extrabold tracking-[-1.2px] text-ink-primary sm:text-[40px]">
-          This page hit an unexpected error.
+          {t('common:errors.pageTitle')}
         </h1>
         <p className="max-w-[42ch] text-[15px] leading-normal text-ink-secondary">
-          The issue was logged. You can try again or head back home.
+          {t('common:errors.pageBody')}
         </p>
         <div className="mt-sm flex flex-wrap items-center justify-center gap-md">
           <Button size="lg" onClick={this.reset}>
-            Try again
+            {t('common:errors.tryAgain')}
           </Button>
           <Button
             size="lg"
@@ -68,7 +71,7 @@ export class AppErrorBoundary extends Component<Props, State> {
               window.location.assign('/')
             }}
           >
-            Go home
+            {t('common:errors.goHome')}
           </Button>
         </div>
       </div>
