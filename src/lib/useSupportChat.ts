@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAppSelector } from "@/app/hooks";
+import { selectAuthUser } from "@/features/auth/authSlice";
 import {
   useGetChatMessagesQuery,
   useGetChatsQuery,
@@ -38,20 +40,35 @@ export function formatChatTimestamp(value: unknown): string {
 function mapChatMessage(
   record: Record<string, unknown>,
   labels: { you: string; agent: string },
+  userId: number | undefined,
 ): ChatMessage {
-  const sender = String(
-    record.sender ?? record.from ?? record.role ?? "",
+  // The API sends `sender: { id, name }`. Turned into a string that was
+  // "[object Object]", which never matched "user", so every message — the
+  // customer's own too — was drawn as support's. Compare ids instead.
+  const senderRecord =
+    record.sender && typeof record.sender === "object"
+      ? (record.sender as Record<string, unknown>)
+      : undefined;
+  const senderId = senderRecord?.id ?? record.sender_id ?? record.senderId;
+  const legacySender = String(
+    (senderRecord ? "" : record.sender) ?? record.from ?? record.role ?? "",
   ).toLowerCase();
   const from: ChatMessage["from"] =
-    sender.includes("user") ||
-    sender.includes("you") ||
-    sender.includes("guest")
-      ? "you"
-      : "agent";
+    senderId != null && userId != null
+      ? String(senderId) === String(userId)
+        ? "you"
+        : "agent"
+      : legacySender.includes("user") ||
+          legacySender.includes("you") ||
+          legacySender.includes("guest")
+        ? "you"
+        : "agent";
+  const senderName =
+    typeof senderRecord?.name === "string" ? senderRecord.name.trim() : "";
   const author = String(
     record.author ??
       record.agent_name ??
-      (from === "you" ? labels.you : labels.agent),
+      (from === "you" ? labels.you : senderName || labels.agent),
   );
   const time = formatChatTimestamp(
     record.created_at ?? record.createdAt ?? record.time,
@@ -120,6 +137,7 @@ function getChatAgentName(
  */
 export function useSupportChat(enabled: boolean) {
   const { t } = useTranslation("account");
+  const user = useAppSelector(selectAuthUser);
   const { data: chats } = useGetChatsQuery(undefined, { skip: !enabled });
   const supportChat = useMemo(
     () => (chats && chats.length > 0 ? pickSupportChat(chats) : undefined),
@@ -148,9 +166,9 @@ export function useSupportChat(enabled: boolean) {
   const messages = useMemo(
     () =>
       (apiMessages ?? []).map((record) =>
-        mapChatMessage(record, { you: youLabel, agent: agentLabel }),
+        mapChatMessage(record, { you: youLabel, agent: agentLabel }, user?.id),
       ),
-    [agentLabel, apiMessages, youLabel],
+    [agentLabel, apiMessages, user?.id, youLabel],
   );
 
   /** Resolves false when the API rejects the message, so the draft can stay. */

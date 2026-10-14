@@ -68,6 +68,18 @@ export interface BookingModalProps {
     promoCode: string;
     method: BookingPaymentMethod;
   }) => void;
+  /**
+   * Apply: the parent makes the order and applies the code, as the app does,
+   * and answers with the new total (null when it was refused).
+   */
+  onApplyPromo?: (
+    booking: { typeId: number; sessionId: number; lines: BookingLine[] },
+    code: string,
+  ) => Promise<number | null>;
+  /** The applied code is taken off: the parent cancels the order it made. */
+  onDiscardPromo?: () => void;
+  /** Changes when the parent dropped that order, so the applied code goes too. */
+  promoResetSignal?: number;
 }
 
 export function BookingModal({
@@ -83,6 +95,9 @@ export function BookingModal({
   onSessionChange,
   busy,
   onConfirm,
+  onApplyPromo,
+  onDiscardPromo,
+  promoResetSignal,
 }: BookingModalProps) {
   const { t } = useTranslation(["catalog", "checkout", "common"]);
   const selectableTypes = types.filter((type) => !type.disabled);
@@ -91,6 +106,9 @@ export function BookingModal({
   const [sessionId, setSessionId] = useState<number | undefined>();
   const [lines, setLines] = useState<BookingLine[]>([]);
   const [promoCode, setPromoCode] = useState("");
+  /** The code the API accepted and the order's total after it. */
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; amount: number } | null>(null);
+  const [applyingPromo, setApplyingPromo] = useState(false);
   const [method, setMethod] = useState<BookingPaymentMethod>("card");
   const [error, setError] = useState("");
   const [step, setStep] = useState(0);
@@ -105,11 +123,16 @@ export function BookingModal({
     setSessionId(initialSession);
     setLines([]);
     setPromoCode("");
+    setAppliedPromo(null);
     setError("");
     setStep(0);
     onSessionChange?.(initialSession);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  useEffect(() => {
+    if (promoResetSignal) setAppliedPromo(null);
+  }, [promoResetSignal]);
 
   // Changing the date clears the seats chosen under the old one, as the
   // original does — a seat belongs to one showtime.
@@ -161,6 +184,10 @@ export function BookingModal({
   // never applied twice.
   const subtotal = unitPrice * lines.length;
   const offerDiscount = 0;
+  const beforePromo = Math.max(0, subtotal - offerDiscount);
+  // After Apply the API's own total is what gets charged.
+  const totalDue = appliedPromo ? appliedPromo.amount : beforePromo;
+  const promoDiscount = appliedPromo ? Math.max(0, beforePromo - appliedPromo.amount) : 0;
 
   const remaining = activeSession ? sessionRemaining(activeSession) : undefined;
   const ceiling = Math.min(MAX_TICKETS, remaining ?? MAX_TICKETS);
@@ -204,7 +231,33 @@ export function BookingModal({
 
   function back() {
     setError("");
+    // The applied code belongs to an order for these exact tickets; changing
+    // them gives that order back.
+    if (appliedPromo) removePromo();
     setStep((current) => Math.max(0, current - 1));
+  }
+
+  function removePromo() {
+    onDiscardPromo?.();
+    setAppliedPromo(null);
+    setPromoCode("");
+  }
+
+  async function applyPromo() {
+    const code = promoCode.trim();
+    if (!code || !onApplyPromo || applyingPromo) return;
+    for (let index = 0; index < STEPS.length - 1; index += 1) {
+      const message = validate(index);
+      if (message) {
+        setStep(index);
+        return setError(message);
+      }
+    }
+    setError("");
+    setApplyingPromo(true);
+    const amount = await onApplyPromo({ typeId: typeId!, sessionId: sessionId!, lines }, code);
+    setApplyingPromo(false);
+    if (amount != null) setAppliedPromo({ code, amount });
   }
 
   function submit() {
@@ -220,7 +273,7 @@ export function BookingModal({
       typeId: typeId!,
       sessionId: sessionId!,
       lines,
-      promoCode: freeEntry ? "" : promoCode.trim(),
+      promoCode: freeEntry ? "" : (appliedPromo?.code ?? promoCode.trim()),
       method,
     });
   }
@@ -441,14 +494,44 @@ export function BookingModal({
             })}
 
           {step === 2 && !freeEntry && (
-            <div className="mb-lg mt-sm flex items-center gap-xs">
-              <TextInput
-                value={promoCode}
-                onChange={(event) => setPromoCode(event.target.value)}
-                placeholder={t("checkout:checkout.promoPlaceholder")}
-                aria-label={t("checkout:checkout.promoLabel")}
-                className="bg-surface-default"
-              />
+            <div className="mb-lg mt-sm flex flex-col gap-[6px]">
+              <div className="flex items-center gap-xs">
+                <TextInput
+                  value={promoCode}
+                  onChange={(event) => setPromoCode(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void applyPromo();
+                    }
+                  }}
+                  disabled={Boolean(appliedPromo) || applyingPromo}
+                  placeholder={t("checkout:checkout.promoPlaceholder")}
+                  aria-label={t("checkout:checkout.promoLabel")}
+                  className="bg-surface-default"
+                />
+                {appliedPromo ? (
+                  <Button variant="secondary" size="md" className="shrink-0" onClick={removePromo}>
+                    {t("common:actions.remove")}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    className="shrink-0"
+                    loading={applyingPromo}
+                    disabled={!promoCode.trim() || busy}
+                    onClick={() => void applyPromo()}
+                  >
+                    {t("checkout:checkout.promoApply")}
+                  </Button>
+                )}
+              </div>
+              {appliedPromo ? (
+                <p className="text-[12.5px] font-semibold text-state-success">
+                  {t("checkout:checkout.promoApplied")}
+                </p>
+              ) : null}
             </div>
           )}
 
@@ -464,12 +547,18 @@ export function BookingModal({
                   value={`− ${formatMoneySar(offerDiscount)}`}
                 />
               )}
+              {appliedPromo && promoDiscount > 0 && (
+                <Row
+                  label={t("checkout:checkout.promoDiscount")}
+                  value={`− ${formatMoneySar(promoDiscount)}`}
+                />
+              )}
               <div className="mt-[4px] flex items-center justify-between gap-md">
                 <span className="text-[15px] font-semibold text-ink-primary">
                   {t("checkout:checkout.total")}
                 </span>
                 <span className="ltr-run text-[18px] font-semibold text-ink-primary">
-                  {formatMoneySar(Math.max(0, subtotal - offerDiscount))}
+                  {formatMoneySar(totalDue)}
                 </span>
               </div>
               <span className="text-[12px] text-ink-muted">
@@ -534,11 +623,7 @@ export function BookingModal({
               <Button onClick={submit} disabled={busy} className="flex-1">
                 {busy
                   ? t("detail.claiming")
-                  : t("detail.payNow", {
-                      total: formatMoneySar(
-                        Math.max(0, subtotal - offerDiscount),
-                      ),
-                    })}
+                  : t("detail.payNow", { total: formatMoneySar(totalDue) })}
               </Button>
             )}
           </div>

@@ -44,7 +44,9 @@ export function NotificationsMenu() {
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   const { data, isLoading } = useGetNotificationsQuery();
-  const rows = (Array.isArray(data) ? data : [])
+  // The list comes as `{ items, pagination }` since 4 Oct; checking for a bare
+  // array left the bell empty for every notification, approvals included.
+  const rows = (data?.items ?? [])
     .map((record, index) => toRow(record as Record<string, unknown>, index))
     .slice(0, SHOWN);
   const unread = rows.filter((row) => row.unread).length;

@@ -138,7 +138,8 @@
     "vatIncluded": "شامل ضريبة القيمة المضافة",
     "originalAmount": "المبلغ الأصلي",
     "offerDiscount": "خصم العرض",
-    "walletInsufficient": "رصيد محفظتك غير كافٍ. اشحن المحفظة أو اختر طريقة دفع أخرى."
+    "walletInsufficient": "رصيد محفظتك غير كافٍ. اشحن المحفظة أو اختر طريقة دفع أخرى.",
+    "promoDiscount": "الخصم"
   },
   "confirmation": {
     "title": "أنت ذاهب.",

@@ -138,7 +138,8 @@
     "vatIncluded": "VAT included",
     "originalAmount": "Original amount",
     "offerDiscount": "Offer discount",
-    "walletInsufficient": "Not enough balance in your wallet. Top it up or choose another payment method."
+    "walletInsufficient": "Not enough balance in your wallet. Top it up or choose another payment method.",
+    "promoDiscount": "Promo discount"
   },
   "confirmation": {
     "title": "You're going.",

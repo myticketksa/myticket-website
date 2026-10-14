@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { baseApi } from "@/app/api/baseApi";
@@ -418,25 +418,57 @@ export function EventDetailPage() {
 
 
 
-  /**
-   * Same sequence as the mobile app: soft-hold assigned seats, create order
-   * with `holdId` + `seatIds`, optional promo, then pay.
-   */
-  async function confirmBooking(booking: {
+  type BookingBase = {
     typeId: number;
     sessionId: number;
     lines: BookingLine[];
-    promoCode: string;
-    method: BookingPaymentMethod;
-  }): Promise<void> {
-    if (!resolvedId) return;
+  };
 
+  /**
+   * An order made for this booking before paying — Apply on a promo code makes
+   * it, as the app does, so the discount can be shown. Pay then uses it
+   * rather than making a second one; closing the dialog or going back to
+   * change the tickets cancels it so its seats go back on sale.
+   */
+  const pendingOrderRef = useRef<{ orderId: number; promoApplied: boolean } | null>(null);
+  /** Bumped when the pending order is cancelled, so the dialog drops its promo. */
+  const [promoResetSignal, setPromoResetSignal] = useState(0);
+
+  function cancelUnpaidOrder(orderId: number) {
+    void cancelOrder(orderId)
+      .unwrap()
+      .catch(() => undefined)
+      .finally(() => {
+        dispatch(
+          baseApi.util.invalidateTags([
+            { type: "Event", id: `seats-${resolvedId}` },
+            { type: "Event", id: String(resolvedId) },
+          ]),
+        );
+      });
+  }
+
+  function discardPendingOrder() {
+    const pending = pendingOrderRef.current;
+    pendingOrderRef.current = null;
+    if (pending) cancelUnpaidOrder(pending.orderId);
+  }
+
+  function signedIn(): boolean {
     let allowed = false;
     requireAuth(() => {
       allowed = true;
     });
-    if (!allowed) return;
+    return allowed;
+  }
 
+  /**
+   * Same sequence as the mobile app: soft-hold assigned seats, then create the
+   * order with `holdId` + `seatIds`. A free event's order comes back already
+   * paid and goes straight to the confirmation (returns null).
+   */
+  async function startOrder(booking: BookingBase): Promise<number | null> {
+    if (!resolvedId) return null;
     const seatIds = booking.lines
       .map((line) => line.seatId)
       .filter((id): id is number => Number.isInteger(id));
@@ -444,14 +476,10 @@ export function EventDetailPage() {
 
     if (assigned && seatIds.length !== booking.lines.length) {
       dispatch(toastPushed("error", t("detail.seatRequired")));
-      return;
+      return null;
     }
 
     let holdId: string | undefined;
-    // Set once an order exists and cleared once it is paid or handed to the
-    // payment page — an order left behind by a failed payment is cancelled.
-    let unpaidOrderId: number | undefined;
-    const failedLabel = isFreeEntry ? t("detail.claimFailed") : t("detail.bookingFailed");
     try {
       if (assigned && seatIds.length > 0) {
         const held = await holdSeats({
@@ -466,7 +494,7 @@ export function EventDetailPage() {
         holdId = String(held.holdId ?? held.hold_id ?? "").trim() || undefined;
         if (!holdId) {
           dispatch(toastPushed("error", t("detail.seatHoldFailed")));
-          return;
+          return null;
         }
       }
 
@@ -488,16 +516,14 @@ export function EventDetailPage() {
           })),
         },
       }).unwrap();
-
-      // Order creation consumes the hold — don't release on later pay errors.
+      // Order creation consumes the hold.
       holdId = undefined;
 
       const orderId = Number(created.id ?? created.orderId ?? created.order_id);
       if (!Number.isFinite(orderId) || orderId <= 0) {
-        dispatch(toastPushed("error", failedLabel));
-        return;
+        dispatch(toastPushed("error", failedBookingLabel()));
+        return null;
       }
-      unpaidOrderId = orderId;
 
       // Free events come back already paid: the API completes the order and
       // issues the tickets on creation, and refuses a payment after that
@@ -508,12 +534,89 @@ export function EventDetailPage() {
         clearHoldSession();
         setBookingOpen(false);
         navigate(`/order-confirmation?orderId=${orderId}`);
-        return;
+        return null;
       }
 
-      if (booking.promoCode) {
+      return orderId;
+    } catch (error) {
+      if (holdId) {
+        void releaseHold({ eventId: resolvedId, holdId });
+      }
+      throw error;
+    }
+  }
+
+  function failedBookingLabel() {
+    return isFreeEntry ? t("detail.claimFailed") : t("detail.bookingFailed");
+  }
+
+  function bookingErrorMessage(error: unknown): string {
+    const { message: code } = apiErrorDetails(error);
+    // Codes come back raw: `apiErrorMessage` swaps them for the fallback, so
+    // comparing its result to "seat_unavailable" never matched.
+    return code === "insufficient_balance"
+      ? t("checkout:checkout.walletInsufficient")
+      : code === "seat_unavailable" || code === "hold_not_found"
+        ? t("detail.seatHoldFailed")
+        : code === "ticket_mismatch"
+          ? t("detail.pickTicketType")
+          : apiErrorMessage(error, failedBookingLabel());
+  }
+
+  /** Apply in the dialog: make the order if there isn't one, apply the code, return the new total. */
+  async function applyPromoForBooking(
+    booking: BookingBase,
+    code: string,
+  ): Promise<number | null> {
+    if (!resolvedId || !signedIn()) return null;
+    try {
+      let pending = pendingOrderRef.current;
+      if (!pending) {
+        const orderId = await startOrder(booking);
+        if (orderId == null) return null;
+        pending = { orderId, promoApplied: false };
+        pendingOrderRef.current = pending;
+      }
+      const result = await applyPromo({ orderId: pending.orderId, promoCode: code }).unwrap();
+      pendingOrderRef.current = { ...pending, promoApplied: true };
+      dispatch(toastPushed("success", t("checkout:checkout.promoApplied")));
+      const amount = Number(result.amount);
+      return Number.isFinite(amount) ? amount : null;
+    } catch (error) {
+      // The API explains a refused code in words (expired, for another event…).
+      dispatch(
+        toastPushed(
+          "error",
+          apiErrorDetails(error).status === 422
+            ? apiErrorMessage(error, t("checkout:checkout.promoFailed"))
+            : bookingErrorMessage(error),
+        ),
+      );
+      return null;
+    }
+  }
+
+  async function confirmBooking(booking: BookingBase & {
+    promoCode: string;
+    method: BookingPaymentMethod;
+  }): Promise<void> {
+    if (!resolvedId || !signedIn()) return;
+
+    // Set once an order exists and cleared once it is paid or handed to the
+    // payment page — an order left behind by a failed payment is cancelled.
+    let unpaidOrderId: number | undefined;
+    try {
+      const pending = pendingOrderRef.current;
+      const orderId = pending ? pending.orderId : await startOrder(booking);
+      if (orderId == null) return;
+      unpaidOrderId = orderId;
+      pendingOrderRef.current = { orderId, promoApplied: pending?.promoApplied ?? false };
+
+      // A code typed but not applied still counts, as before Apply existed.
+      if (booking.promoCode && !pending?.promoApplied) {
         try {
           await applyPromo({ orderId, promoCode: booking.promoCode }).unwrap();
+          pendingOrderRef.current = { orderId, promoApplied: true };
         } catch (error) {
           dispatch(
             toastPushed(
@@ -534,6 +637,7 @@ export function EventDetailPage() {
         returnUrl,
       }).unwrap();
       unpaidOrderId = undefined;
+      pendingOrderRef.current = null;
 
       clearHoldSession();
       setBookingOpen(false);
@@ -555,50 +659,24 @@ export function EventDetailPage() {
       // Wallet (and any brand that settles inline) — no hosted page.
       navigate(`/order-confirmation?orderId=${orderId}`);
     } catch (error) {
-      if (holdId) {
-        void releaseHold({ eventId: resolvedId, holdId });
-      }
       const { status, message: code } = apiErrorDetails(error);
       // A payment that failed before any money moved leaves an unpaid order
       // holding the seats: the seat showed as sold and the order sat in My
       // Tickets. Cancel it so both are released. Not for "already paid" or
       // "not active" (both 400) or a network error, where it may have gone
-      // through.
+      // through — that order stays, and paying again reuses it.
       const unpaidForSure =
         code === "insufficient_balance" ||
         status === 409 ||
         (typeof status === "number" && status >= 500);
       if (unpaidOrderId && unpaidForSure) {
-        void cancelOrder(unpaidOrderId)
-          .unwrap()
-          .catch(() => undefined)
-          .finally(() => {
-            dispatch(
-              baseApi.util.invalidateTags([
-                { type: "Event", id: `seats-${resolvedId}` },
-                { type: "Event", id: String(resolvedId) },
-              ]),
-            );
-          });
+        pendingOrderRef.current = null;
+        setPromoResetSignal((value) => value + 1);
+        cancelUnpaidOrder(unpaidOrderId);
       }
-      // Codes come back raw: `apiErrorMessage` swaps them for the fallback, so
-      // comparing its result to "seat_unavailable" never matched.
-      dispatch(
-        toastPushed(
-          "error",
-          code === "insufficient_balance"
-            ? t("checkout:checkout.walletInsufficient")
-            : code === "seat_unavailable" || code === "hold_not_found"
-              ? t("detail.seatHoldFailed")
-              : code === "ticket_mismatch"
-                ? t("detail.pickTicketType")
-                : apiErrorMessage(error, failedLabel),
-        ),
-      );
+      dispatch(toastPushed("error", bookingErrorMessage(error)));
     }
   }
-
-
 
   /** Offer on the default showtime, shown beside the price list. */
   const sessionOffer = (() => {
@@ -786,7 +864,11 @@ export function EventDetailPage() {
 
           <BookingModal
             open={bookingOpen}
-            onOpenChange={setBookingOpen}
+            onOpenChange={(open) => {
+              // Closing without paying gives back the order Apply made.
+              if (!open) discardPendingOrder();
+              setBookingOpen(open);
+            }}
             eventTitle={title}
             types={bookingTypeOptions}
             sessions={bookableSessions}
@@ -801,6 +883,9 @@ export function EventDetailPage() {
               holdState.isLoading
             }
             onConfirm={(booking) => void confirmBooking(booking)}
+            onApplyPromo={applyPromoForBooking}
+            onDiscardPromo={discardPendingOrder}
+            promoResetSignal={promoResetSignal}
           />
         </div>
       </PageSection>
