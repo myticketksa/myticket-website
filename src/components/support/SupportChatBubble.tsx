@@ -62,11 +62,21 @@ export function SupportChatBubble() {
         aria-controls={open ? panelId : undefined}
         onClick={() => (open ? close() : setOpen(true))}
         className={cn(
-          "fixed end-[16px] bottom-[16px] z-40 flex size-[58px] items-center justify-center rounded-full bg-brand-gradient text-ink-inverse shadow-overlay transition-transform duration-normal ease-standard hover:scale-105 active:scale-95 motion-reduce:hover:scale-100 motion-reduce:active:scale-100 sm:end-[24px] sm:bottom-[24px]",
-          !open && "support-bubble-pulse",
+          "fixed end-[16px] bottom-[16px] z-40 flex h-[58px] items-center justify-center gap-[10px] rounded-full bg-brand-gradient text-ink-inverse shadow-overlay transition-transform duration-normal ease-standard hover:scale-105 active:scale-95 motion-reduce:hover:scale-100 motion-reduce:active:scale-100 sm:end-[24px] sm:bottom-[24px]",
+          // Closed, it says what it is: an icon alone was easy to miss.
+          open ? "w-[58px]" : "support-bubble-pulse ps-[18px] pe-[22px]",
         )}
       >
-        {open ? <CloseIcon size={24} /> : <ChatIcon size={28} weight="fill" />}
+        {open ? (
+          <CloseIcon size={24} />
+        ) : (
+          <>
+            <ChatIcon size={26} weight="fill" />
+            <span className="text-[15px] font-bold whitespace-nowrap">
+              {t("support.chatWithUs")}
+            </span>
+          </>
+        )}
       </button>
     </>
   );

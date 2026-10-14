@@ -62,6 +62,13 @@
   animation: support-bubble-pulse 1.8s ease-out infinite;
 }
 
+/* The label carries it when the OS asks for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .support-bubble-pulse {
+    animation: none;
+  }
+}
+
 @keyframes myticket-shimmer {
   from {
     background-position: 150% 0;
