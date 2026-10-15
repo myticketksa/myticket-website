@@ -32,6 +32,8 @@ import {
   resolveEventId,
   resolveDefaultSessionId,
   resolveSeatingType,
+  listSessions,
+  sessionIsOver,
 } from "@/lib/api/mappers/events";
 import { mapApiSeatsToRows } from "@/lib/api/mappers/seats";
 import {
@@ -414,11 +416,17 @@ export function EventDetailPage() {
     apiDetail?.datetime ??
     (listCard && "startTime" in listCard ? listCard.startTime : undefined);
   const eventStart = eventStartRaw ? new Date(String(eventStartRaw)) : null;
-  const isPastEvent = Boolean(
-    eventStart &&
-    !Number.isNaN(eventStart.getTime()) &&
-    eventStart.getTime() <= Date.now(),
-  );
+  // Ended once every date is over — a running event is still on sale. With
+  // no dates listed, fall back to its start.
+  const allSessions = listSessions(eventSource ?? resolveEventFromList(apiEvents, slugOrId));
+  const isPastEvent =
+    allSessions.length > 0
+      ? allSessions.every((session) => sessionIsOver(session))
+      : Boolean(
+          eventStart &&
+            !Number.isNaN(eventStart.getTime()) &&
+            eventStart.getTime() <= Date.now(),
+        );
 
 
 

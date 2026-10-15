@@ -69,13 +69,31 @@ export function listSessions(event: ApiRecord | undefined): EventSession[] {
   });
 }
 
+const RIYADH_OFFSET_MS = 3 * 60 * 60 * 1000;
+
 /**
- * Showtimes a buyer can still book, soonest first.
- *
- * The app drops any date that has already started and keeps today if its time
- * has not passed yet; the web does the same so the two agree on what is on sale.
- * If every session is in the past we return them all rather than an empty
- * picker, so the page explains itself instead of looking broken.
+ * Whether a showtime is over: past its end time, or — with none set — past
+ * midnight Riyadh on its day. The same rule as the API: a date stays listed
+ * and on sale while it runs, not only until it starts.
+ */
+export function sessionIsOver(session: EventSession, now = Date.now()): boolean {
+  const ends = session.endsAt ? Date.parse(session.endsAt) : NaN;
+  if (Number.isFinite(ends)) return ends < now;
+  const starts = session.startsAt ? Date.parse(session.startsAt) : NaN;
+  if (!Number.isFinite(starts)) return false;
+  // Riyadh has no daylight saving: its day ends at 21:00 UTC.
+  const local = new Date(starts + RIYADH_OFFSET_MS);
+  const endOfDay =
+    Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate(), 23, 59, 59, 999) -
+    RIYADH_OFFSET_MS;
+  return endOfDay < now;
+}
+
+/**
+ * Showtimes a buyer can still book, soonest first — every date not over yet,
+ * including one running now. If every session is over we return them all
+ * rather than an empty picker, so the page explains itself instead of
+ * looking broken.
  */
 export function listBookableSessions(
   event: ApiRecord | undefined,
@@ -86,10 +104,7 @@ export function listBookableSessions(
   const byTime = [...sessions].sort(
     (a, b) => sessionTime(a) - sessionTime(b),
   );
-  const upcoming = byTime.filter((session) => {
-    const starts = sessionTime(session);
-    return !Number.isFinite(starts) || starts >= now;
-  });
+  const upcoming = byTime.filter((session) => !sessionIsOver(session, now));
   return upcoming.length > 0 ? upcoming : byTime;
 }
 
@@ -108,8 +123,8 @@ export function sessionRemaining(session: EventSession): number | undefined {
 }
 
 /**
- * The session a buyer lands on by default: the next one that has not started,
- * falling back to the first listed when every session is in the past.
+ * The session a buyer lands on by default: the soonest one that isn't over
+ * (running now, or next), falling back to the first listed when all are.
  */
 export function resolveDefaultSessionId(
   event: ApiRecord | undefined,
@@ -118,10 +133,7 @@ export function resolveDefaultSessionId(
   if (sessions.length === 0) return undefined;
   const now = Date.now();
   const upcoming = sessions
-    .filter((session) => {
-      const starts = session.startsAt ? Date.parse(session.startsAt) : NaN;
-      return Number.isFinite(starts) && starts >= now;
-    })
+    .filter((session) => session.startsAt && !sessionIsOver(session, now))
     .sort((a, b) => Date.parse(a.startsAt!) - Date.parse(b.startsAt!));
   return (upcoming[0] ?? sessions[0])!.id;
 }
