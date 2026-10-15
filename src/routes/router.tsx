@@ -11,6 +11,7 @@ import { SiteDocumentMeta } from "@/components/navigation";
 import { RequireAuth } from "@/lib/auth/RequireAuth";
 import { ProbeRoute } from "./ProbeRoute";
 import { RouteErrorPage } from "./RouteErrorPage";
+import { AppLinkPage } from "@/pages/system/AppLinkPage";
 import {
   HomePage,
   EventsPage,
@@ -107,6 +108,7 @@ export const router = createBrowserRouter([
             path: "/delete-account",
             element: <Navigate to="/Delete_Account" replace />,
           },
+          { path: "/app", element: <AppLinkPage /> },
           { path: "*", element: <NotFoundPage /> },
         ],
       },
