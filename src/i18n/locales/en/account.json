@@ -218,7 +218,8 @@
       "camerasTitle": "No professional cameras",
       "camerasBody": "Phones are fine; detachable-lens cameras aren't admitted."
     },
-    "downloadError": "Could not create the PDF. Please try again."
+    "downloadError": "Could not create the PDF. Please try again.",
+    "fieldName": "Name"
   },
   "gift": {
     "header": "Send a ticket",

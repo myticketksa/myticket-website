@@ -580,6 +580,8 @@ export type OrderTicketSeatView = {
   seat: string
   /** Value encoded into the QR (ticket id / qr code from API). */
   qrValue: string
+  /** The name typed for this ticket at booking; empty when none was. */
+  holderName: string
 }
 
 export type OrderDetailView = {
@@ -673,6 +675,7 @@ export function mapOrderToDetailView(
                 ? 'GA'
                 : '—',
             qrValue: ticketQrValue(ticket, ticketId),
+            holderName: localizedString(ticket.holderName ?? ticket.holder_name),
           }
         })
       : [
@@ -685,6 +688,7 @@ export function mapOrderToDetailView(
             row: '—',
             seat: seatingType === 'free' ? 'GA' : '—',
             qrValue: ticketQrValue(order, id || '1'),
+            holderName: '',
           },
         ]
 

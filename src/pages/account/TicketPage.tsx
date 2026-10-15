@@ -225,6 +225,8 @@ export function TicketDetails({
               <div className="min-w-0 flex-1 px-lg py-[18px] sm:px-[24px] sm:py-[22px]">
                 <div className="mt-0 grid grid-cols-2 gap-[12px] sm:grid-cols-3 sm:gap-[18px]">
                   {[
+                    // The name typed for this ticket at booking, as the app shows it.
+                    ...(seat?.holderName ? [[t('ticket.fieldName'), seat.holderName]] : []),
                     [t('ticket.fieldCity'), detail?.city ?? '—'],
                     [t('ticket.fieldStartTime'), detail?.startTime ?? '—'],
                     [t('ticket.fieldTicketNumber'), ticketNo],

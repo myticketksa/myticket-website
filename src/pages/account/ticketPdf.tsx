@@ -16,6 +16,7 @@ export const PrintableTicket = forwardRef<
 >(function PrintableTicket({ detail, seat, ticketNo }, ref) {
   const { t } = useTranslation('account')
   const fields = [
+    [t('ticket.fieldName'), seat?.holderName],
     [t('ticket.fieldTicketNumber'), ticketNo],
     [t('ticket.fieldTicketType'), seat?.ticketTypeLabel],
     [t('ticket.fieldBlock'), seat?.block],
