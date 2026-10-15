@@ -484,7 +484,13 @@ function resolveTicketStatus(order: ApiRecord): MyTicketCard['status'] {
   const event = asRecord(order.event)
   const startRaw = event?.startTime ?? event?.starts_at ?? order.starts_at
   const start = startRaw ? new Date(String(startRaw)) : null
-  const isPast = start != null && !Number.isNaN(start.getTime()) && start.getTime() < Date.now()
+  // The API says when every date of the order is over (end time, or midnight
+  // Riyadh with none). Going by the start filed a ticket bought for a running
+  // festival under Past. The start is only a fallback for older replies.
+  const isPast =
+    typeof order.isOver === 'boolean'
+      ? order.isOver
+      : start != null && !Number.isNaN(start.getTime()) && start.getTime() < Date.now()
 
   if (orderStatus.includes('transfer')) return 'TRANSFERRED'
   if (orderStatus.includes('list') || orderStatus.includes('resale')) return 'LISTED'
