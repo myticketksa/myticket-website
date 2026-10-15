@@ -102,20 +102,25 @@ export function SupportChatThread({
     >
       {messages.length === 0 && empty}
       {messages.map((msg) => (
+        // Yours on the right and support's on the left in both languages, as
+        // chat apps place them. The logical sides flipped them on the Arabic
+        // site; text inside still runs in its own direction.
         <div
           key={msg.meta + msg.body}
+          dir="ltr"
           className={`flex flex-col ${msg.from === "you" ? "items-end" : "items-start"}`}
         >
           <div
+            dir="auto"
             className={
               msg.from === "you"
-                ? "max-w-[90%] rounded-ss-[16px] rounded-se-[16px] rounded-ee-[4px] rounded-es-[16px] bg-brand-gradient px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-inverse"
-                : "max-w-[448px] rounded-ss-[16px] rounded-se-[16px] rounded-ee-[16px] rounded-es-[4px] border border-border-default bg-surface-default px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-primary"
+                ? "max-w-[90%] rounded-[16px] rounded-br-[4px] bg-brand-gradient px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-inverse"
+                : "max-w-[448px] rounded-[16px] rounded-bl-[4px] border border-border-default bg-surface-default px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-primary"
             }
           >
             {msg.body}
           </div>
-          <p className="mt-[5px] text-[11.5px] text-ink-muted">{msg.meta}</p>
+          <p dir="auto" className="mt-[5px] text-[11.5px] text-ink-muted">{msg.meta}</p>
         </div>
       ))}
     </div>

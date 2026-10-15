@@ -159,8 +159,8 @@ export function MySupportCasesPage() {
                     className={cn(
                       'max-w-[85%] rounded-[16px] px-[16px] py-[12px]',
                       message.from === 'you'
-                        ? 'ms-auto bg-brand-gradient text-ink-inverse'
-                        : 'bg-bg-page text-ink-primary',
+                        ? 'ml-auto bg-brand-gradient text-ink-inverse'
+                        : 'mr-auto bg-bg-page text-ink-primary',
                     )}
                   >
                     <p className="text-[14px] leading-[1.5]">{message.body}</p>
