@@ -17,7 +17,7 @@ export type MappedTalent = TalentDirectoryCardProps &
     slug: string
     biography?: string
     isFollowing?: boolean
-    /** When false, show “Myticket Discovery” badge. When true, hide discovery badge. */
+    /** True for a "MyTicket Discovery" talent (set in the admin); shows the badge. */
     ownDiscovery?: boolean
   }
 
@@ -111,8 +111,9 @@ export function mapApiTalentToCard(talent: ApiRecord): MappedTalent {
     biography,
     isFollowing,
     ownDiscovery,
-    /** Discovery badge replaces verified — only when ownDiscovery is explicitly false. */
-    verified: ownDiscovery === false,
+    // "MyTicket Discovery" badge for talents the admin marked as one. It was
+    // read the other way round, so every talent (all unmarked) wore it.
+    verified: ownDiscovery === true,
   }
 }
 
