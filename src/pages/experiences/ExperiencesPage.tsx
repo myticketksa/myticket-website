@@ -100,12 +100,9 @@ export function ExperiencesPage() {
 
       <PageSection padTop={14} padBottom={0}>
         <FadeUp inView={false}>
-          <h1 className="text-display-hero text-ink-primary">
-            {t("pages.experiencesTitle")}
-          </h1>
-          <p className="mt-[10px] max-w-[620px] text-[17px] leading-[1.45] text-ink-secondary">
-            {t("pages.experiencesSubtitle")}
-          </p>
+          {/* Owner's call: no marketing heading or blurb here. The page keeps a
+              heading for screen readers. */}
+          <h1 className="sr-only">{t("nav:experiences")}</h1>
           {statusLine ? (
             <p className="mt-md text-[14px] text-ink-secondary">{statusLine}</p>
           ) : null}
