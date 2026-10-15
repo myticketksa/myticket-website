@@ -5,9 +5,10 @@ import { CloseIcon, MinusIcon, PlusIcon } from "@/components/icons";
 import { Button, TextInput } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { formatMoneySar } from "@/lib/api/locale";
+import { getActiveLocale } from "@/i18n/config";
 import type { EventSession } from "@/lib/api/mappers/events";
 import { sessionRemaining } from "@/lib/api/mappers/events";
-import { SessionPicker } from "./SessionPicker";
+import { formatRange, SessionPicker } from "./SessionPicker";
 import type { BookingPaymentMethod } from "@/lib/purchase/paymentBrand";
 
 export type { BookingPaymentMethod } from "@/lib/purchase/paymentBrand";
@@ -75,7 +76,7 @@ export interface BookingModalProps {
   onApplyPromo?: (
     booking: { typeId: number; sessionId: number; lines: BookingLine[] },
     code: string,
-  ) => Promise<number | null>;
+  ) => Promise<{ amount: number; before: number } | null>;
   /** The applied code is taken off: the parent cancels the order it made. */
   onDiscardPromo?: () => void;
   /** Changes when the parent dropped that order, so the applied code goes too. */
@@ -100,6 +101,7 @@ export function BookingModal({
   promoResetSignal,
 }: BookingModalProps) {
   const { t } = useTranslation(["catalog", "checkout", "common"]);
+  const locale = getActiveLocale() === "ar" ? "ar-SA" : "en-SA";
   const selectableTypes = types.filter((type) => !type.disabled);
 
   const [typeId, setTypeId] = useState<number | undefined>();
@@ -107,7 +109,12 @@ export function BookingModal({
   const [lines, setLines] = useState<BookingLine[]>([]);
   const [promoCode, setPromoCode] = useState("");
   /** The code the API accepted and the order's total after it. */
-  const [appliedPromo, setAppliedPromo] = useState<{ code: string; amount: number } | null>(null);
+  /** The code the API accepted, the order's total before it and after it. */
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    amount: number;
+    before: number;
+  } | null>(null);
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [method, setMethod] = useState<BookingPaymentMethod>("card");
   const [error, setError] = useState("");
@@ -184,8 +191,9 @@ export function BookingModal({
   // never applied twice.
   const subtotal = unitPrice * lines.length;
   const offerDiscount = 0;
-  const beforePromo = Math.max(0, subtotal - offerDiscount);
-  // After Apply the API's own total is what gets charged.
+  // After Apply the API's own figures are used: what the order cost and what
+  // it costs now are what will be charged.
+  const beforePromo = appliedPromo ? appliedPromo.before : Math.max(0, subtotal - offerDiscount);
   const totalDue = appliedPromo ? appliedPromo.amount : beforePromo;
   const promoDiscount = appliedPromo ? Math.max(0, beforePromo - appliedPromo.amount) : 0;
 
@@ -255,12 +263,18 @@ export function BookingModal({
     }
     setError("");
     setApplyingPromo(true);
-    const amount = await onApplyPromo({ typeId: typeId!, sessionId: sessionId!, lines }, code);
+    const result = await onApplyPromo({ typeId: typeId!, sessionId: sessionId!, lines }, code);
     setApplyingPromo(false);
-    if (amount != null) setAppliedPromo({ code, amount });
+    if (result) setAppliedPromo({ code, ...result });
   }
 
   function submit() {
+    // A code typed but not applied is applied first, so the buyer sees the
+    // new total before paying it.
+    if (!freeEntry && !appliedPromo && promoCode.trim() && onApplyPromo) {
+      void applyPromo();
+      return;
+    }
     for (let index = 0; index < STEPS.length; index += 1) {
       const message = validate(index);
       if (message) {
@@ -493,6 +507,36 @@ export function BookingModal({
               );
             })}
 
+          {step === 2 && (
+            <section className="mb-lg flex flex-col gap-[8px] rounded-[16px] border border-border-default bg-surface-default p-md">
+              <p className="text-[15px] font-bold text-ink-primary">{eventTitle}</p>
+              {activeSession ? (
+                <p className="ltr-run text-[13px] text-ink-secondary">
+                  {formatRange(activeSession, locale)}
+                </p>
+              ) : null}
+              <div className="flex items-center justify-between gap-md text-[14px]">
+                <span className="text-ink-primary">
+                  {types.find((type) => type.id === typeId)?.name ?? ""}
+                </span>
+                <span className="ltr-run text-ink-secondary">
+                  {lines.length} × {formatMoneySar(unitPrice)}
+                </span>
+              </div>
+              <ul className="flex flex-col gap-[4px] border-t border-border-default pt-[8px] text-[13px] text-ink-secondary">
+                {lines.map((line, index) => {
+                  const seat = seats.find((option) => option.id === line.seatId);
+                  return (
+                    <li key={index} className="flex items-center justify-between gap-md">
+                      <span className="min-w-0 truncate">{line.name}</span>
+                      {seat ? <span className="ltr-run shrink-0">{seat.label}</span> : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
           {step === 2 && !freeEntry && (
             <div className="mb-lg mt-sm flex flex-col gap-[6px]">
               <div className="flex items-center gap-xs">
@@ -539,7 +583,7 @@ export function BookingModal({
             <div className="mb-lg flex flex-col gap-[6px] border-t border-border-default pt-md">
               <Row
                 label={t("checkout:checkout.originalAmount")}
-                value={formatMoneySar(subtotal)}
+                value={formatMoneySar(beforePromo)}
               />
               {offerDiscount > 0 && (
                 <Row
@@ -548,17 +592,28 @@ export function BookingModal({
                 />
               )}
               {appliedPromo && promoDiscount > 0 && (
-                <Row
-                  label={t("checkout:checkout.promoDiscount")}
-                  value={`− ${formatMoneySar(promoDiscount)}`}
-                />
+                <div className="flex items-center justify-between gap-md">
+                  <span className="text-[14px] text-state-success">
+                    {t("checkout:checkout.promoDiscount")} · {appliedPromo.code}
+                  </span>
+                  <span className="ltr-run text-[14px] font-semibold text-state-success">
+                    − {formatMoneySar(promoDiscount)}
+                  </span>
+                </div>
               )}
               <div className="mt-[4px] flex items-center justify-between gap-md">
                 <span className="text-[15px] font-semibold text-ink-primary">
                   {t("checkout:checkout.total")}
                 </span>
-                <span className="ltr-run text-[18px] font-semibold text-ink-primary">
-                  {formatMoneySar(totalDue)}
+                <span className="flex items-baseline gap-[8px]">
+                  {appliedPromo && promoDiscount > 0 ? (
+                    <span className="ltr-run text-[14px] text-ink-muted line-through">
+                      {formatMoneySar(beforePromo)}
+                    </span>
+                  ) : null}
+                  <span className="ltr-run text-[18px] font-semibold text-ink-primary">
+                    {formatMoneySar(totalDue)}
+                  </span>
                 </span>
               </div>
               <span className="text-[12px] text-ink-muted">

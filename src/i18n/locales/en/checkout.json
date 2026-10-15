@@ -219,6 +219,10 @@
     "successTitle": "Payment successful",
     "successBody": "Your tickets are ready. Reference #{{orderId}}.",
     "viewTicket": "View ticket",
-    "giftTicket": "Gift this ticket"
+    "giftTicket": "Gift this ticket",
+    "topUpWaitingTitle": "Confirming your top-up…",
+    "topUpNotYetTitle": "This top-up hasn’t arrived yet",
+    "topUpNotYetBody": "If you paid, it can take a minute to show in your wallet.",
+    "goToWallet": "Go to wallet"
   }
 }

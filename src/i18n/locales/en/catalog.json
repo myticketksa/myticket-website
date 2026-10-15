@@ -412,7 +412,7 @@
     "seatHoldFailed": "Could not hold those seats — try again",
     "stepWhen": "When",
     "stepWho": "Tickets",
-    "stepPay": "Payment",
+    "stepPay": "Checkout",
     "percentOff": "{{value}}% off",
     "amountOff": "SAR {{value}} off",
     "ticketPrices": "Ticket prices",

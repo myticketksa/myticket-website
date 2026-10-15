@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useGetWalletQuery } from "@/app/api/accountApis";
 import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
+import { selectAuthUser, userUpdated } from "@/features/auth/authSlice";
+import { toastPushed } from "@/features/ui/uiSlice";
 import { Button } from "@/components/ui";
 import { PageSection } from "@/layouts";
 import {
@@ -10,6 +14,12 @@ import {
   markPaymentSuccess,
 } from "@/lib/purchase/paymentReturn";
 import { isPaymentPending, isPaymentSettled } from "@/lib/purchase/paymentStatus";
+import {
+  clearPendingTopUp,
+  hasTopUpEntry,
+  readPendingTopUp,
+  type PendingTopUp,
+} from "@/lib/purchase/walletTopUp";
 
 /**
  * Where the payment gateway drops the buyer after paying.
@@ -33,6 +43,70 @@ function readOrderId(params: URLSearchParams): number | undefined {
 }
 
 export function PaymentReturnPage() {
+  const [searchParams] = useSearchParams();
+  const [topUp] = useState(() =>
+    readOrderId(searchParams) == null ? readPendingTopUp() : null,
+  );
+  // A wallet top-up comes back here with no order id.
+  if (topUp) return <TopUpReturn pending={topUp} />;
+  return <OrderPaymentReturn />;
+}
+
+/**
+ * Back from paying a wallet top-up. Paid once the wallet history shows the
+ * top-up; the balance on screen comes from sign-in, so it is raised here.
+ */
+function TopUpReturn({ pending }: { pending: PendingTopUp }) {
+  const { t } = useTranslation(["checkout", "account"]);
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectAuthUser);
+  const [gaveUp, setGaveUp] = useState(false);
+  const { data: wallet } = useGetWalletQuery(undefined, {
+    pollingInterval: gaveUp ? 0 : 2500,
+  });
+  const arrived = hasTopUpEntry(wallet?.transactions, pending);
+
+  useEffect(() => {
+    if (!arrived) return;
+    clearPendingTopUp();
+    if (user) {
+      dispatch(
+        userUpdated({ ...user, walletBalance: (user.walletBalance ?? 0) + pending.amount }),
+      );
+    }
+    dispatch(toastPushed("success", t("account:wallet.topUpDone")));
+    navigate("/wallet", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [arrived]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setGaveUp(true), SETTLE_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  if (!gaveUp || arrived) {
+    return <Shell title={t("checkout:payment.topUpWaitingTitle")} spinner />;
+  }
+
+  return (
+    <Shell title={t("checkout:payment.topUpNotYetTitle")}>
+      <p className="text-[14px] text-ink-secondary">
+        {t("checkout:payment.topUpNotYetBody")}
+      </p>
+      <Button
+        onClick={() => {
+          clearPendingTopUp();
+          navigate("/wallet", { replace: true });
+        }}
+      >
+        {t("checkout:payment.goToWallet")}
+      </Button>
+    </Shell>
+  );
+}
+
+function OrderPaymentReturn() {
   const { t } = useTranslation(["checkout", "common"]);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -52,26 +126,6 @@ export function PaymentReturnPage() {
   const settling = isPaymentPending(status);
   const paid = isPaymentSettled(status);
 
-  // #region agent log
-  useEffect(() => {
-    fetch("http://127.0.0.1:7585/ingest/e7c61862-ca01-4245-8388-3080d99a6b97", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "000302",
-      },
-      body: JSON.stringify({
-        sessionId: "000302",
-        runId: "post-fix",
-        hypothesisId: "F",
-        location: "PaymentReturnPage.tsx:status",
-        message: "payment-return poll",
-        data: { orderId, status, settling, paid, gaveUp, isError },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }, [orderId, status, settling, paid, gaveUp, isError]);
-  // #endregion
 
   useEffect(() => {
     if (settling || orderId == null) return;

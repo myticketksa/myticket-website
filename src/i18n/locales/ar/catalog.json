@@ -415,7 +415,7 @@
     "seatHoldFailed": "تعذر حجز هذه المقاعد — حاول مرة أخرى",
     "stepWhen": "الموعد",
     "stepWho": "التذاكر",
-    "stepPay": "الدفع",
+    "stepPay": "إتمام الطلب",
     "percentOff": "خصم {{value}}%",
     "amountOff": "خصم {{value}} ر.س",
     "ticketPrices": "أسعار التذاكر",

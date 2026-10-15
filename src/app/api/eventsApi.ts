@@ -80,7 +80,11 @@ export const eventsApi = baseApi.injectEndpoints({
       query: (eventId) => `/tickets/events/${eventId}`,
       transformResponse: (response: unknown) =>
         unwrapData<ApiRecord>(response) ?? {},
-      providesTags: (_r, _e, id) => [{ type: "Event", id: String(id) }],
+      // Asked for by slug or id; tagged with both so either invalidates it.
+      providesTags: (result, _e, id) => [
+        { type: "Event", id: String(id) },
+        ...(result?.id != null ? [{ type: "Event" as const, id: String(result.id) }] : []),
+      ],
     }),
   }),
 });

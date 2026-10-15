@@ -100,7 +100,8 @@
         "detail": "Order MT-2026-69011",
         "date": "2 Feb 2026"
       }
-    }
+    },
+    "topUpDone": "Your wallet was topped up"
   },
   "tickets": {
     "title": "My reservation",

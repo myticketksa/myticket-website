@@ -10,6 +10,7 @@ import { useGetWalletQuery, useTopUpWalletMutation } from '@/app/api/accountApis
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
+import { beginTopUpRedirect } from '@/lib/purchase/walletTopUp'
 import { getActiveLocale } from '@/i18n/config'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 import { localizedString } from '@/lib/api/locale'
@@ -160,9 +161,22 @@ export function WalletPage() {
       return
     }
     try {
-      await topUp({ amount: topUpValue, paymentMethod: 'CREDIT' }).unwrap()
-      dispatch(toastPushed('success', t('wallet.topUpSuccess')))
-      setShowTopUp(false)
+      // The API only opens a payment: the money is taken on the payment page
+      // it answers with. This used to say "top-up successful" here and never
+      // go there, so nothing was charged and the wallet stayed empty.
+      const result = await topUp({ amount: topUpValue, paymentMethod: 'CREDIT' }).unwrap()
+      const redirectUrl =
+        typeof result.redirectUrl === 'string'
+          ? result.redirectUrl
+          : typeof result.redirect_url === 'string'
+            ? result.redirect_url
+            : undefined
+      if (!redirectUrl) {
+        dispatch(toastPushed('error', t('wallet.topUpFailed')))
+        return
+      }
+      beginTopUpRedirect(topUpValue)
+      window.location.assign(redirectUrl)
     } catch (error) {
       dispatch(toastPushed('error', apiErrorMessage(error, t('wallet.topUpFailed'))))
     }

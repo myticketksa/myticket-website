@@ -17,7 +17,8 @@ import {
   useHoldSeatsMutation,
   useReleaseHoldMutation,
 } from "@/app/api/seatsApi";
-import { useAppDispatch } from "@/app/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
+import { selectAuthUser, userUpdated } from "@/features/auth/authSlice";
 import { toastPushed } from "@/features/ui/uiSlice";
 import { apiErrorDetails, apiErrorMessage } from "@/lib/api/unwrap";
 import { useRequireAuth } from "@/lib/auth/useRequireAuth";
@@ -141,18 +142,24 @@ export function EventDetailPage() {
     return [];
   }, [apiEvents]);
 
-  const resolvedId = useMemo(
-    () => resolveEventId(apiEvents, slugOrId),
-    [apiEvents, slugOrId],
-  );
-
+  // The detail is asked for by the address's own slug (or id): the API finds
+  // an event either way. Resolving it through the list first meant only the
+  // first page of 10 could open — 25 of 35 events showed "page not found".
   const {
     data: apiDetail,
     isLoading: detailLoading,
     isError: detailError,
-  } = useGetEventDetailsQuery(resolvedId!, {
-    skip: !resolvedId,
+  } = useGetEventDetailsQuery(slugOrId, {
+    skip: !slugOrId,
   });
+
+  /** The event's numeric id, which seats, holds, orders and favourites need. */
+  const resolvedId = useMemo(
+    () =>
+      resolveEventId(apiEvents, slugOrId) ??
+      (apiDetail?.id != null ? String(apiDetail.id) : undefined),
+    [apiDetail?.id, apiEvents, slugOrId],
+  );
   const { isLoading: eventsLoading } = useGetEventsQuery();
 
   const isSaved = isFavourite(resolvedId);
@@ -430,7 +437,15 @@ export function EventDetailPage() {
    * rather than making a second one; closing the dialog or going back to
    * change the tickets cancels it so its seats go back on sale.
    */
-  const pendingOrderRef = useRef<{ orderId: number; promoApplied: boolean } | null>(null);
+  const authUser = useAppSelector(selectAuthUser);
+  const pendingOrderRef = useRef<{
+    orderId: number;
+    promoApplied: boolean;
+    /** What the order costs now — after the code, once applied. */
+    amount: number;
+    /** What it cost before any code. */
+    before: number;
+  } | null>(null);
   /** Bumped when the pending order is cancelled, so the dialog drops its promo. */
   const [promoResetSignal, setPromoResetSignal] = useState(0);
 
@@ -467,7 +482,9 @@ export function EventDetailPage() {
    * order with `holdId` + `seatIds`. A free event's order comes back already
    * paid and goes straight to the confirmation (returns null).
    */
-  async function startOrder(booking: BookingBase): Promise<number | null> {
+  async function startOrder(
+    booking: BookingBase,
+  ): Promise<{ orderId: number; amount: number; before: number } | null> {
     if (!resolvedId) return null;
     const seatIds = booking.lines
       .map((line) => line.seatId)
@@ -537,7 +554,8 @@ export function EventDetailPage() {
         return null;
       }
 
-      return orderId;
+      const amount = Number(created.amount) || 0;
+      return { orderId, amount, before: amount };
     } catch (error) {
       if (holdId) {
         void releaseHold({ eventId: resolvedId, holdId });
@@ -567,21 +585,30 @@ export function EventDetailPage() {
   async function applyPromoForBooking(
     booking: BookingBase,
     code: string,
-  ): Promise<number | null> {
+  ): Promise<{ amount: number; before: number } | null> {
     if (!resolvedId || !signedIn()) return null;
     try {
       let pending = pendingOrderRef.current;
       if (!pending) {
-        const orderId = await startOrder(booking);
-        if (orderId == null) return null;
-        pending = { orderId, promoApplied: false };
+        const started = await startOrder(booking);
+        if (!started) return null;
+        pending = { ...started, promoApplied: false };
         pendingOrderRef.current = pending;
       }
+      // Already on this order (a Pay that failed after applying it): the API
+      // would refuse it twice, so answer with what it did the first time.
+      if (pending.promoApplied) {
+        return { amount: pending.amount, before: pending.before };
+      }
       const result = await applyPromo({ orderId: pending.orderId, promoCode: code }).unwrap();
-      pendingOrderRef.current = { ...pending, promoApplied: true };
-      dispatch(toastPushed("success", t("checkout:checkout.promoApplied")));
       const amount = Number(result.amount);
-      return Number.isFinite(amount) ? amount : null;
+      pendingOrderRef.current = {
+        ...pending,
+        promoApplied: true,
+        amount: Number.isFinite(amount) ? amount : pending.amount,
+      };
+      dispatch(toastPushed("success", t("checkout:checkout.promoApplied")));
+      return Number.isFinite(amount) ? { amount, before: pending.amount } : null;
     } catch (error) {
       // The API explains a refused code in words (expired, for another event…).
       dispatch(
@@ -606,17 +633,24 @@ export function EventDetailPage() {
     // payment page — an order left behind by a failed payment is cancelled.
     let unpaidOrderId: number | undefined;
     try {
-      const pending = pendingOrderRef.current;
-      const orderId = pending ? pending.orderId : await startOrder(booking);
-      if (orderId == null) return;
+      let pending = pendingOrderRef.current;
+      if (!pending) {
+        const started = await startOrder(booking);
+        if (!started) return;
+        pending = { ...started, promoApplied: false };
+      }
+      const { orderId } = pending;
       unpaidOrderId = orderId;
-      pendingOrderRef.current = { orderId, promoApplied: pending?.promoApplied ?? false };
+      pendingOrderRef.current = pending;
+      let amountDue = pending.amount;
 
       // A code typed but not applied still counts, as before Apply existed.
-      if (booking.promoCode && !pending?.promoApplied) {
+      if (booking.promoCode && !pending.promoApplied) {
         try {
-          await applyPromo({ orderId, promoCode: booking.promoCode }).unwrap();
-          pendingOrderRef.current = { orderId, promoApplied: true };
+          const applied = await applyPromo({ orderId, promoCode: booking.promoCode }).unwrap();
+          const amount = Number(applied.amount);
+          if (Number.isFinite(amount)) amountDue = amount;
+          pendingOrderRef.current = { ...pending, promoApplied: true, amount: amountDue };
         } catch (error) {
           dispatch(
             toastPushed(
@@ -656,7 +690,16 @@ export function EventDetailPage() {
         return;
       }
 
-      // Wallet (and any brand that settles inline) — no hosted page.
+      // Wallet (and any brand that settles inline) — no hosted page. The
+      // balance on screen comes from sign-in; take the payment off it.
+      if (booking.method === "wallet" && authUser) {
+        dispatch(
+          userUpdated({
+            ...authUser,
+            walletBalance: Math.max(0, (authUser.walletBalance ?? 0) - amountDue),
+          }),
+        );
+      }
       navigate(`/order-confirmation?orderId=${orderId}`);
     } catch (error) {
       const { status, message: code } = apiErrorDetails(error);

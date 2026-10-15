@@ -19,7 +19,7 @@ export interface SessionPickerProps {
   className?: string;
 }
 
-function formatRange(session: EventSession, locale: string): string {
+export function formatRange(session: EventSession, locale: string): string {
   const start = session.startsAt ? new Date(session.startsAt) : undefined;
   if (!start || Number.isNaN(start.getTime())) return "";
   const day = start.toLocaleDateString(locale, {

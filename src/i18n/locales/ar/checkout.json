@@ -219,6 +219,10 @@
     "successTitle": "تم الدفع بنجاح",
     "successBody": "تذاكرك جاهزة. رقم المرجع #{{orderId}}.",
     "viewTicket": "عرض التذكرة",
-    "giftTicket": "إهداء هذه التذكرة"
+    "giftTicket": "إهداء هذه التذكرة",
+    "topUpWaitingTitle": "جارٍ تأكيد شحن المحفظة…",
+    "topUpNotYetTitle": "لم يصل هذا الشحن بعد",
+    "topUpNotYetBody": "إذا أتممت الدفع فقد يستغرق ظهوره في محفظتك دقيقة.",
+    "goToWallet": "الذهاب إلى المحفظة"
   }
 }
