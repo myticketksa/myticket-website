@@ -77,6 +77,36 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
   )
 }
 
+/** "Tickets and shows": the events an admin switched onto the home screen; hidden when none. */
+export function HomeTicketsAndShows({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
+  const { t } = useTranslation(['catalog', 'common'])
+  const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
+
+  const events = useMemo(
+    () => (apiEvents ?? []).map(mapApiEventToCard).slice(0, HOME_EVENT_COUNT),
+    [apiEvents],
+  )
+
+  if (events.length === 0) return null
+
+  return (
+    <PageSection padTop={72} padBottom={0}>
+      <FadeUp>
+        <HomeSectionHeader
+          heading={t('home.ticketsAndShowsHeading')}
+          link={{ label: t('common:actions.viewAll'), to: '/events?featured=1' }}
+        />
+      </FadeUp>
+      <EventCarousel
+        events={events}
+        isFavourite={isFavourite}
+        toggleFavourite={toggleFavourite}
+        canFavourite={canFavourite}
+      />
+    </PageSection>
+  )
+}
+
 /** Newest paid events first — free events live in their own rail. */
 export function HomeRecentlyAdded({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
   const { t } = useTranslation(['catalog', 'common'])

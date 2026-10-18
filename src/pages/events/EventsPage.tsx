@@ -36,6 +36,9 @@ export function EventsPage() {
       : freeParam === "0" || freeParam === "false"
         ? false
         : undefined;
+  // "View all" from the home page's "Tickets and shows" and "Recently added".
+  const featured = searchParams.get("featured") === "1";
+  const newest = searchParams.get("sort") === "newest";
 
   const [categoryId, setCategoryId] = useState("");
   const [cityId, setCityId] = useState("");
@@ -72,6 +75,8 @@ export function EventsPage() {
     categoryId: categoryId || undefined,
     cityId: cityId || undefined,
     free: freeOnly,
+    featured,
+    newest,
     upcoming: true,
   });
   const apiEvents = eventsResult?.items;
@@ -131,11 +136,12 @@ export function EventsPage() {
   const currentPage = Math.min(page, lastPage);
   const pageNumbers = buildPageNumbers(currentPage, lastPage);
 
-  const title =
-    freeOnly === true
-      ? t("pages.freeTickets", { defaultValue: "Free tickets" })
-      : freeOnly === false
-        ? t("pages.upcomingEvents", { defaultValue: "Upcoming events" })
+  const title = featured
+    ? t("home.ticketsAndShowsHeading")
+    : newest
+      ? t("home.recentlyAddedHeading")
+      : freeOnly === true
+        ? t("pages.freeTickets", { defaultValue: "Free tickets" })
         : t("pages.upcomingEvents", { defaultValue: "Upcoming events" });
 
   const statusLine = [

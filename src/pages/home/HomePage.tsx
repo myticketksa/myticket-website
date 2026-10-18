@@ -10,14 +10,17 @@ import {
   HomeFreeEvents,
   HomeRecentlyAdded,
   HomeTalents,
+  HomeTicketsAndShows,
 } from './HomeSections'
 
 /**
- * Home — Hero → Recently added (paid) → Talents → Free events → Video ads → Experiences.
+ * Home — Hero → Tickets and shows → Recently added (paid) → Talents → Free events → Video ads → Experiences.
  */
 export function HomePage() {
   const { data: eventsResult } = useGetEventsQuery()
   const apiEvents = eventsResult?.items
+  const { data: pickedResult } = useGetEventsQuery({ featured: true })
+  const { data: newestResult } = useGetEventsQuery({ newest: true })
   const { data: apiAds } = useGetAdvertisementsQuery()
   const { data: talentsResult } = useGetTalentsQuery()
   const apiTalents = talentsResult?.items
@@ -26,7 +29,8 @@ export function HomePage() {
   return (
     <>
       <HomeHero apiAds={apiAds} />
-      <HomeRecentlyAdded apiEvents={apiEvents} />
+      <HomeTicketsAndShows apiEvents={pickedResult?.items} />
+      <HomeRecentlyAdded apiEvents={newestResult?.items} />
       <HomeTalents apiTalents={apiTalents} />
       <HomeFreeEvents apiEvents={apiEvents} />
       <HomeVideoAdsSection ads={apiAds} />

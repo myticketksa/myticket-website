@@ -23,6 +23,10 @@ export type GetEventsParams = {
   upcoming?: boolean;
   from?: string;
   to?: string;
+  /** "Tickets and shows": the events an admin put on the home screen. */
+  featured?: boolean;
+  /** "Recently added": the newest first. */
+  newest?: boolean;
 };
 
 function eventsFilterParams(params: GetEventsParams | void) {
@@ -43,7 +47,10 @@ function eventsFilterParams(params: GetEventsParams | void) {
   if (params.rating != null && params.rating !== "") {
     query["filters[rating]"] = params.rating;
   }
-  if (params.free) query["filters[free]"] = 1;
+  // The server only reads "true"; 1 used to be ignored, so the free list showed every event.
+  if (params.free) query["filters[free]"] = "true";
+  if (params.featured) query["filters[featured]"] = "true";
+  if (params.newest) query["filters[newest]"] = "true";
   if (params.from) query["filters[from]"] = params.from;
   if (params.to) query["filters[to]"] = params.to;
   return query;
