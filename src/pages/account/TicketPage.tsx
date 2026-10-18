@@ -6,7 +6,9 @@ import {
   useCancelOrderMutation,
   useGetOrderDetailsQuery,
   useGetOrdersQuery,
+  useRequestRefundMutation,
 } from '@/app/api/ordersApi'
+import { FormDialog } from '@/components/feedback'
 import { Button } from '@/components/ui'
 import { AccountSplit, TicketActionHeader } from '@/layouts'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
@@ -116,6 +118,10 @@ export function TicketDetails({
   const user = useAppSelector(selectAuthUser)
   const { data: orders } = useGetOrdersQuery()
   const [cancelOrder, cancelState] = useCancelOrderMutation()
+  const [requestRefund, refundState] = useRequestRefundMutation()
+  const [confirmingRefund, setConfirmingRefund] = useState(false)
+  // 'refunded' when it went through at once (paid from the wallet), else 'requested'.
+  const [refundSent, setRefundSent] = useState<'requested' | 'refunded' | null>(null)
 
   const listOrder = useMemo(() => resolveOrderFromList(orders, id), [orders, id])
   const detailId = /^\d+$/.test(id) ? id : extractOrderId(listOrder) || id
@@ -135,6 +141,28 @@ export function TicketDetails({
 
   const paid = detail?.paid ?? false
   const canCancel = isCancellable(orderRecord)
+  // Refunds are for the whole order; the server says when one may be asked
+  // for (window open, nothing scanned or given away), as in the app.
+  const refundStatus =
+    refundSent ??
+    (orderRecord?.refundStatus === 'requested' || orderRecord?.refundStatus === 'refunded'
+      ? (orderRecord.refundStatus as 'requested' | 'refunded')
+      : orderRecord?.refundedAt
+        ? 'refunded'
+        : null)
+  const canRefund = orderRecord?.canRequestRefund === true && !refundStatus
+
+  async function handleRefund() {
+    const orderId = extractOrderId(orderRecord)
+    setConfirmingRefund(false)
+    if (!orderId) return
+    try {
+      const result = await requestRefund(orderId).unwrap()
+      setRefundSent(result?.refundStatus === 'refunded' ? 'refunded' : 'requested')
+    } catch (error) {
+      dispatch(toastPushed('error', apiErrorMessage(error, t('ticket.refundFailed'))))
+    }
+  }
 
   async function handleCancel() {
     const orderId = extractOrderId(orderRecord)
@@ -213,6 +241,12 @@ export function TicketDetails({
         </div>
       ) : null}
 
+      {refundStatus ? (
+        <p className="mt-lg rounded-[14px] bg-bg-tint-brand px-[16px] py-[12px] text-[14px] font-bold text-ink-brand-strong">
+          {refundStatus === 'refunded' ? t('ticket.refunded') : t('ticket.refundRequested')}
+        </p>
+      ) : null}
+
       <div className="mt-lg flex flex-col gap-lg">
         {(tickets.length > 0 ? tickets : [undefined]).map((seat, seatIndex) => {
           const ticketNo = seat?.id ?? `${orderIdLabel}-${seatIndex + 1}`
@@ -257,6 +291,16 @@ export function TicketDetails({
                       {t('ticket.gift')}
                     </Button>
                   )}
+                  {canRefund && (
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      loading={refundState.isLoading}
+                      onClick={() => setConfirmingRefund(true)}
+                    >
+                      {t('ticket.requestRefund')}
+                    </Button>
+                  )}
                   {canCancel && (
                     <Button
                       variant="destructive"
@@ -299,6 +343,22 @@ export function TicketDetails({
           )
         })}
       </div>
+
+      <FormDialog
+        open={confirmingRefund}
+        onOpenChange={setConfirmingRefund}
+        title={t('ticket.requestRefund')}
+        description={t('ticket.refundConfirmBody')}
+      >
+        <div className="mt-lg flex flex-wrap justify-end gap-[10px]">
+          <Button variant="secondary" size="md" onClick={() => setConfirmingRefund(false)}>
+            {t('ticket.refundKeep')}
+          </Button>
+          <Button size="md" onClick={() => void handleRefund()}>
+            {t('ticket.refundConfirm')}
+          </Button>
+        </div>
+      </FormDialog>
     </div>
   )
 }

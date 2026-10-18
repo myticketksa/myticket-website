@@ -36,6 +36,16 @@ export const ordersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Order', 'Ticket'],
     }),
+    // The whole order back, while the event's refund window is open; the
+    // server checks the same rule it reports as `canRequestRefund`.
+    requestRefund: build.mutation<ApiRecord, string | number>({
+      query: (orderId) => ({
+        url: `/tickets/orders/${orderId}/refund-request`,
+        method: 'POST',
+      }),
+      transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
+      invalidatesTags: ['Order', 'Ticket'],
+    }),
     payOrder: build.mutation<
       ApiRecord,
       { orderId: number; brand: 'CREDIT' | 'APPLE' | 'WALLET'; returnUrl?: string }
@@ -73,6 +83,7 @@ export const ordersApi = baseApi.injectEndpoints({
 export const {
   useCreateOrderMutation,
   useCancelOrderMutation,
+  useRequestRefundMutation,
   usePayOrderMutation,
   useGetOrdersQuery,
   useGetOrderDetailsQuery,

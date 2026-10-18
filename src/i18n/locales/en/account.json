@@ -219,7 +219,13 @@
       "camerasBody": "Phones are fine; detachable-lens cameras aren't admitted."
     },
     "downloadError": "Could not create the PDF. Please try again.",
-    "fieldName": "Name"
+    "fieldName": "Name",
+    "refundRequested": "Refund requested",
+    "refunded": "Refunded",
+    "refundConfirmBody": "Refund the whole order? This can’t be undone.",
+    "refundConfirm": "Request refund",
+    "refundKeep": "Keep my tickets",
+    "refundFailed": "Couldn’t send the refund request. Try again or contact support."
   },
   "gift": {
     "header": "Send a ticket",
