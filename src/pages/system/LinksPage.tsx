@@ -38,7 +38,7 @@ export function LinksPage() {
           {t('links.title')}
         </h1>
 
-        <div className="mt-[32px] flex w-full flex-col items-center gap-[12px]">
+        <div className="mt-[32px] flex w-full flex-wrap items-center justify-center gap-[10px]">
           {stores.map((store) => (
             <a
               key={store.name}
@@ -48,7 +48,7 @@ export function LinksPage() {
               aria-label={store.name}
               className="transition-transform duration-micro ease-micro active:scale-[0.97]"
             >
-              <img src={store.badge} alt={store.name} className="h-[56px] w-auto" />
+              <img src={store.badge} alt={store.name} className="h-[48px] w-auto" />
             </a>
           ))}
         </div>
