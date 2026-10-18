@@ -1,11 +1,5 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import facebookIcon from "@/assets/social/facebook.svg";
-import instagramIcon from "@/assets/social/instagram.svg";
-import snapchatIcon from "@/assets/social/snapchat.svg";
-import tiktokIcon from "@/assets/social/tiktok.svg";
-import xIcon from "@/assets/social/x.svg";
-import youtubeIcon from "@/assets/social/youtube.svg";
 import appStoreBadge from "@/assets/store/app-store-badge.svg";
 import googlePlayBadge from "@/assets/store/google-play-badge.png";
 import { cn } from "@/lib/cn";
@@ -18,39 +12,7 @@ import {
   SITE_PHONE_HREF,
 } from "@/lib/site";
 import { Logo } from "./Logo";
-
-const SOCIAL = [
-  {
-    name: "Instagram",
-    href: "https://www.instagram.com/myticketapp_official/",
-    icon: instagramIcon,
-  },
-  {
-    name: "X",
-    href: "https://x.com/myticketapp01?t=m1L48zEBQ67Nlf-YyAvCgg&s=09",
-    icon: xIcon,
-  },
-  {
-    name: "TikTok",
-    href: "https://vm.tiktok.com/ZSFKEFCKp/",
-    icon: tiktokIcon,
-  },
-  {
-    name: "Snapchat",
-    href: "https://www.snapchat.com/add/myticketapp01",
-    icon: snapchatIcon,
-  },
-  {
-    name: "YouTube",
-    href: "https://youtube.com/@myticketapp0122?si=6Ykddnhw-ELQHwVL",
-    icon: youtubeIcon,
-  },
-  {
-    name: "Facebook",
-    href: "https://www.facebook.com/myticketapp01?mibextid=ZbWKwL",
-    icon: facebookIcon,
-  },
-] as const;
+import { SOCIAL_LINKS } from "./socialLinks";
 
 const LEGAL = [
   { key: "terms" as const, href: "/legal" },
@@ -106,7 +68,7 @@ export function SiteFooter({ size = "full", className }: SiteFooterProps) {
               aria-label={t("footer.social", { defaultValue: "Follow us" })}
               className="order-2 flex flex-wrap items-center gap-sm lg:order-none"
             >
-              {SOCIAL.map(({ name, href, icon }) => (
+              {SOCIAL_LINKS.map(({ name, href, icon }) => (
                 <a
                   key={name}
                   href={href}

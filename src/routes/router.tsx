@@ -12,6 +12,7 @@ import { RequireAuth } from "@/lib/auth/RequireAuth";
 import { ProbeRoute } from "./ProbeRoute";
 import { RouteErrorPage } from "./RouteErrorPage";
 import { AppLinkPage } from "@/pages/system/AppLinkPage";
+import { LinksPage } from "@/pages/system/LinksPage";
 import {
   HomePage,
   EventsPage,
@@ -115,6 +116,11 @@ export const router = createBrowserRouter([
       {
         path: "/maintenance",
         element: <MaintenancePage />,
+      },
+      {
+        // The Instagram bio page: standalone, no site header or footer.
+        path: "/links",
+        element: <LinksPage />,
       },
       {
         element: <AuthLayout />,

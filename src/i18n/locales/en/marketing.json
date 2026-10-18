@@ -794,5 +794,9 @@
       "genericError": "Something went wrong. Please try again in a moment, or email us instead.",
       "mailFallback": "Still stuck? Email us:"
     }
+  },
+  "links": {
+    "title": "Tickets for concerts, festivals and events across Saudi Arabia",
+    "website": "Book on myticket.sa"
   }
 }

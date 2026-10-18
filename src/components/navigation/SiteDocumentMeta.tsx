@@ -11,6 +11,7 @@ import { absoluteUrl, formatDocumentTitle } from "@/lib/site";
  */
 const TITLE_RULES: { pattern: string; titleKey: string }[] = [
   { pattern: "/", titleKey: "titles.home" },
+  { pattern: "/links", titleKey: "titles.links" },
   { pattern: "/events", titleKey: "titles.events" },
   { pattern: "/events/:slug/seats", titleKey: "titles.chooseSeats" },
   { pattern: "/events/:slug", titleKey: "titles.event" },
