@@ -118,6 +118,7 @@
     "filtersUnavailable": "غير مفعّل بعد"
   },
   "filters": {
+    "showAll": "الكل",
     "allEvents": "كل الفعاليات",
     "anyDate": "أي تاريخ",
     "today": "اليوم",

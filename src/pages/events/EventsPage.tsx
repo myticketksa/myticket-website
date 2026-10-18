@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { EventCard } from "@/components/cards";
+import { FilterChip } from "@/components/data-display";
 import { MapPinIcon } from "@/components/icons";
 import { FadeUp, StaggerGroup } from "@/components/motion";
 import { Breadcrumbs, NumberedPagination } from "@/components/navigation";
@@ -29,16 +30,26 @@ export function EventsPage() {
   const { t } = useTranslation(["catalog", "nav", "common"]);
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Math.max(1, Number(searchParams.get("page") || 1) || 1);
+  // Which events: all, "Tickets and shows" (put on the home screen by an
+  // admin), "Recently added" (newest first) or free ones — kept in the
+  // address, so "View all" on a home rail opens the list on that filter.
   const freeParam = searchParams.get("free");
-  const freeOnly =
-    freeParam === "1" || freeParam === "true"
-      ? true
-      : freeParam === "0" || freeParam === "false"
-        ? false
-        : undefined;
-  // "View all" from the home page's "Tickets and shows" and "Recently added".
+  const freeOnly = freeParam === "1" || freeParam === "true" ? true : undefined;
   const featured = searchParams.get("featured") === "1";
   const newest = searchParams.get("sort") === "newest";
+  const show = featured ? "featured" : newest ? "newest" : freeOnly ? "free" : "all";
+  const setShow = (next: "all" | "featured" | "newest" | "free") =>
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        for (const key of ["featured", "sort", "free", "page"]) params.delete(key);
+        if (next === "featured") params.set("featured", "1");
+        if (next === "newest") params.set("sort", "newest");
+        if (next === "free") params.set("free", "1");
+        return params;
+      },
+      { replace: true },
+    );
 
   const [categoryId, setCategoryId] = useState("");
   const [cityId, setCityId] = useState("");
@@ -136,13 +147,13 @@ export function EventsPage() {
   const currentPage = Math.min(page, lastPage);
   const pageNumbers = buildPageNumbers(currentPage, lastPage);
 
-  const title = featured
-    ? t("home.ticketsAndShowsHeading")
-    : newest
-      ? t("home.recentlyAddedHeading")
-      : freeOnly === true
-        ? t("pages.freeTickets", { defaultValue: "Free tickets" })
-        : t("pages.upcomingEvents", { defaultValue: "Upcoming events" });
+  const title = t("nav:events");
+  const chips = [
+    ["all", t("filters.showAll")],
+    ["featured", t("home.ticketsAndShowsHeading")],
+    ["newest", t("home.recentlyAddedHeading")],
+    ["free", t("pages.freeTickets", { defaultValue: "Free tickets" })],
+  ] as const;
 
   const statusLine = [
     isError ? t("pages.apiPreview") : null,
@@ -216,6 +227,14 @@ export function EventsPage() {
             value={cityId ? [cityId] : []}
             onChange={(next) => setCityId(next[0] ?? "")}
           />
+
+          <div className="flex flex-wrap gap-[8px]">
+            {chips.map(([key, label]) => (
+              <FilterChip key={key} selected={show === key} onClick={() => setShow(key)}>
+                {label}
+              </FilterChip>
+            ))}
+          </div>
         </div>
       </PageSection>
 

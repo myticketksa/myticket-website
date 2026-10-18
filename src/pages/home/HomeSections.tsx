@@ -153,41 +153,6 @@ export function HomeRecentlyAdded({ apiEvents }: { apiEvents?: EventApiRecord[] 
   )
 }
 
-/** Free events rail — directly under upcoming; hidden when empty. */
-export function HomeFreeEvents({ apiEvents }: { apiEvents?: EventApiRecord[] }) {
-  const { t } = useTranslation(['catalog', 'common'])
-  const { isFavourite, toggleFavourite, canFavourite } = useEventFavorites()
-
-  const freeEvents = useMemo(() => {
-    if (apiEvents && apiEvents.length > 0) {
-      return apiEvents
-        .map(mapApiEventToCard)
-        .filter((event) => event.isFree)
-        .slice(0, HOME_EVENT_COUNT)
-    }
-    return []
-  }, [apiEvents])
-
-  if (freeEvents.length === 0) return null
-
-  return (
-    <PageSection padTop={60} padBottom={0}>
-      <FadeUp>
-        <HomeSectionHeader
-          heading={t('home.freeEventsHeading')}
-          link={{ label: t('common:actions.viewAll'), to: '/events?free=1' }}
-        />
-      </FadeUp>
-      <EventCarousel
-        events={freeEvents}
-        isFavourite={isFavourite}
-        toggleFavourite={toggleFavourite}
-        canFavourite={canFavourite}
-      />
-    </PageSection>
-  )
-}
-
 type CarouselEvent = ReturnType<typeof mapApiEventToCard> | {
   slug: string
   date: string

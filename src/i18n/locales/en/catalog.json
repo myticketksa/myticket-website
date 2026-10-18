@@ -118,6 +118,7 @@
     "filtersUnavailable": "Not applied yet"
   },
   "filters": {
+    "showAll": "All",
     "allEvents": "All events",
     "anyDate": "Any date",
     "today": "Today",
