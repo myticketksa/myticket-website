@@ -117,6 +117,8 @@ export function CheckoutPage() {
   const serviceFee = hold?.serviceFee ?? 0;
   const vat = hold?.vat ?? 0;
   const total = hold?.total ?? subtotal + serviceFee + vat;
+  // The 15% VAT inside the total (Saudi VAT, as the server works it out).
+  const vatIncluded = Math.round(((Number(total) * 15) / 115) * 100) / 100;
 
   // Do not release on unmount — Strict Mode remounts were clearing holdId before pay.
   // Only release when the tab is actually closed / navigated away from the site.
@@ -647,11 +649,21 @@ export function CheckoutPage() {
                     <PriceDisplay context="row" value={serviceFee} />
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-ink-secondary">
-                    {t("checkout.vatIncluded")}
-                  </span>
-                </div>
+                {/* Prices include 15% VAT; the total is split the way a tax invoice shows it. */}
+                {total > 0 && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-ink-secondary">
+                        {t("checkout.priceBeforeVat")}
+                      </span>
+                      <PriceDisplay context="row" value={total - vatIncluded} />
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-ink-secondary">{t("checkout.vat")}</span>
+                      <PriceDisplay context="row" value={vatIncluded} />
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="mt-[12px] flex items-baseline justify-between border-t border-border-divider pt-[12px]">

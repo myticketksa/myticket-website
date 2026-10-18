@@ -139,7 +139,8 @@
     "originalAmount": "المبلغ الأصلي",
     "offerDiscount": "خصم العرض",
     "walletInsufficient": "رصيد محفظتك غير كافٍ. اشحن المحفظة أو اختر طريقة دفع أخرى.",
-    "promoDiscount": "الخصم"
+    "promoDiscount": "الخصم",
+    "priceBeforeVat": "السعر قبل الضريبة"
   },
   "confirmation": {
     "title": "أنت ذاهب.",
