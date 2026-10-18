@@ -217,7 +217,7 @@ export function TicketDetails({
           variant="secondary"
           size="md"
           className="h-[38px] rounded-[19px]"
-          disabled={!paid}
+          disabled={!paid || (tickets.length > 0 && tickets.every((seat) => seat.gifted))}
           loading={printing}
           onClick={() => void handleDownload()}
         >
@@ -227,7 +227,7 @@ export function TicketDetails({
 
       {printing && detail ? (
         <div aria-hidden="true" className="pointer-events-none fixed top-0 -left-[10000px] flex flex-col gap-lg">
-          {(tickets.length > 0 ? tickets : [undefined]).map((seat, seatIndex) => (
+          {(tickets.length > 0 ? tickets.filter((seat) => !seat.gifted) : [undefined]).map((seat, seatIndex) => (
             <PrintableTicket
               key={seat?.id ?? seatIndex}
               ref={(node) => {
@@ -315,21 +315,30 @@ export function TicketDetails({
               </div>
 
               <div className="relative flex w-full shrink-0 flex-col items-center justify-center gap-[14px] border-t-2 border-dashed border-border-default bg-bg-page px-[22px] py-[28px] sm:w-[260px] sm:border-t-0 sm:border-s-2 md:w-[280px]">
-                <div
-                  className={cn(
-                    'rounded-[16px] border border-border-default bg-surface-default p-[14px]',
-                    !paid && 'opacity-40',
-                  )}
-                >
-                  <TicketQr value={qrValue} />
-                </div>
-                <div className="text-center text-[13px] leading-[1.45]">
-                  <p className="font-semibold text-ink-secondary">
-                    {t('ticket.scanAtGate', {
-                      gate: seat?.gate && seat.gate !== '—' ? seat.gate : '—',
-                    })}
+                {seat?.gifted ? (
+                  // Given away: the code is the recipient's now, never shown here.
+                  <p className="rounded-[14px] bg-bg-tint-brand px-[16px] py-[12px] text-center text-[14px] font-bold text-ink-brand-strong">
+                    {seat.giftedTo ? t('ticket.giftedTo', { name: seat.giftedTo }) : t('ticket.gifted')}
                   </p>
-                </div>
+                ) : (
+                  <>
+                    <div
+                      className={cn(
+                        'rounded-[16px] border border-border-default bg-surface-default p-[14px]',
+                        !paid && 'opacity-40',
+                      )}
+                    >
+                      <TicketQr value={qrValue} />
+                    </div>
+                    <div className="text-center text-[13px] leading-[1.45]">
+                      <p className="font-semibold text-ink-secondary">
+                        {t('ticket.scanAtGate', {
+                          gate: seat?.gate && seat.gate !== '—' ? seat.gate : '—',
+                        })}
+                      </p>
+                    </div>
+                  </>
+                )}
                 <span
                   aria-hidden="true"
                   className="absolute top-[-11px] start-[-13px] size-[22px] rounded-[11px] border border-border-default bg-bg-page"

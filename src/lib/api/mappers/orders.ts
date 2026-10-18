@@ -588,6 +588,9 @@ export type OrderTicketSeatView = {
   qrValue: string
   /** The name typed for this ticket at booking; empty when none was. */
   holderName: string
+  /** Given away: no code here (it's the recipient's), and who has it. */
+  gifted?: boolean
+  giftedTo?: string | null
 }
 
 export type OrderDetailView = {
@@ -655,35 +658,71 @@ export function mapOrderToDetailView(
   const tierName = localizedString(ticketType?.name, i18n.t('common:labels.ticket'))
 
   const rawTickets = Array.isArray(order.tickets) ? order.tickets : []
-  const tickets: OrderTicketSeatView[] =
-    rawTickets.length > 0
-      ? rawTickets.map((item, index) => {
-          const ticket = asRecord(item) ?? {}
-          const seat = ticket.seat
-          const hasSeat = seat != null && typeof seat === 'object'
-          const ticketId = String(ticket.id ?? `${id}-${index + 1}`)
-          return {
-            id: ticketId,
-            ticketTypeLabel: localizedString(ticket.ticketType ?? ticket.ticket_type, tierName),
-            scanStatus: localizedString(ticket.scanStatus ?? ticket.scan_status, payment),
-            gate: hasSeat ? seatField(seat, 'gate') || '—' : '—',
-            block: hasSeat
-              ? seatField(seat, 'block') || seatField(seat, 'section') || '—'
-              : seatingType === 'free'
-                ? i18n.t('common:labels.general')
-                : '—',
-            row: hasSeat ? seatField(seat, 'row') || '—' : '—',
-            seat: hasSeat
-              ? seatField(seat, 'number') ||
-                seatField(seat, 'seat_number') ||
-                formatSeatLabel(seat, '—')
-              : seatingType === 'free'
-                ? 'GA'
-                : '—',
-            qrValue: ticketQrValue(ticket, ticketId),
-            holderName: localizedString(ticket.holderName ?? ticket.holder_name),
-          }
+  // Who has each ticket given away (the account's name, or the address it was
+  // sent to). A claimed gift's tickets have left the order; they're listed too.
+  const gifts = Array.isArray(order.gifts) ? order.gifts.map((g) => asRecord(g) ?? {}) : []
+  const giftedTo = new Map<string, string | null>()
+  const giftedAway: OrderTicketSeatView[] = []
+  const present = new Set(rawTickets.map((t) => String(asRecord(t)?.id ?? '')))
+  for (const gift of gifts) {
+    const to = localizedString(gift.to) || null
+    for (const raw of Array.isArray(gift.tickets) ? gift.tickets : []) {
+      const t = asRecord(raw) ?? {}
+      const tid = String(t.id ?? '')
+      giftedTo.set(tid, to)
+      if (tid && !present.has(tid)) {
+        giftedAway.push({
+          id: tid,
+          ticketTypeLabel: localizedString(t.ticketType, tierName),
+          scanStatus: 'gifted',
+          gate: '—',
+          block: seatingType === 'free' ? i18n.t('common:labels.general') : '—',
+          row: '—',
+          seat: seatingType === 'free' ? 'GA' : '—',
+          qrValue: '',
+          holderName: localizedString(t.holderName),
+          gifted: true,
+          giftedTo: to,
         })
+      }
+    }
+  }
+  const mapped: OrderTicketSeatView[] = [
+    ...rawTickets.map((item, index) => {
+      const ticket = asRecord(item) ?? {}
+      const seat = ticket.seat
+      const hasSeat = seat != null && typeof seat === 'object'
+      const ticketId = String(ticket.id ?? `${id}-${index + 1}`)
+      const gifted = String(ticket.scanStatus ?? ticket.scan_status ?? '') === 'gifted'
+      return {
+        id: ticketId,
+        ticketTypeLabel: localizedString(ticket.ticketType ?? ticket.ticket_type, tierName),
+        scanStatus: localizedString(ticket.scanStatus ?? ticket.scan_status, payment),
+        gate: hasSeat ? seatField(seat, 'gate') || '—' : '—',
+        block: hasSeat
+          ? seatField(seat, 'block') || seatField(seat, 'section') || '—'
+          : seatingType === 'free'
+            ? i18n.t('common:labels.general')
+            : '—',
+        row: hasSeat ? seatField(seat, 'row') || '—' : '—',
+        seat: hasSeat
+          ? seatField(seat, 'number') ||
+            seatField(seat, 'seat_number') ||
+            formatSeatLabel(seat, '—')
+          : seatingType === 'free'
+            ? 'GA'
+            : '—',
+        qrValue: gifted ? '' : ticketQrValue(ticket, ticketId),
+        holderName: localizedString(ticket.holderName ?? ticket.holder_name),
+        gifted,
+        giftedTo: gifted ? giftedTo.get(ticketId) ?? null : null,
+      }
+    }),
+    ...giftedAway,
+  ]
+  const tickets: OrderTicketSeatView[] =
+    mapped.length > 0
+      ? mapped
       : [
           {
             id: id || '1',

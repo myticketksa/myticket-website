@@ -225,7 +225,9 @@
     "refundConfirmBody": "Refund the whole order? This can’t be undone.",
     "refundConfirm": "Request refund",
     "refundKeep": "Keep my tickets",
-    "refundFailed": "Couldn’t send the refund request. Try again or contact support."
+    "refundFailed": "Couldn’t send the refund request. Try again or contact support.",
+    "gifted": "Gifted",
+    "giftedTo": "Gifted to {{name}}"
   },
   "gift": {
     "header": "Send a ticket",
