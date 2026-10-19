@@ -423,7 +423,8 @@
     "addToFavourites": "أضف للمفضلة",
     "removeFromFavourites": "إزالة من المفضلة",
     "paymentNotCompleted": "لم يكتمل الدفع ولم يُخصم منك شيء. طلبك محفوظ ويمكنك المحاولة مجدداً.",
-    "bookingFailed": "تعذّر إتمام الحجز. حاول مرة أخرى."
+    "bookingFailed": "تعذّر إتمام الحجز. حاول مرة أخرى.",
+    "alreadyHeld": "لديك {{count}} تذكرة لهذه الفعالية في هذا اليوم."
   },
   "search": {
     "title": "بحث",

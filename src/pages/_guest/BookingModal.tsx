@@ -81,6 +81,8 @@ export interface BookingModalProps {
   onDiscardPromo?: () => void;
   /** Changes when the parent dropped that order, so the applied code goes too. */
   promoResetSignal?: number;
+  /** Valid tickets the person already holds for this event on the chosen day. */
+  alreadyHeld?: number;
 }
 
 export function BookingModal({
@@ -99,6 +101,7 @@ export function BookingModal({
   onApplyPromo,
   onDiscardPromo,
   promoResetSignal,
+  alreadyHeld = 0,
 }: BookingModalProps) {
   const { t } = useTranslation(["catalog", "checkout", "common"]);
   const locale = getActiveLocale() === "ar" ? "ar-SA" : "en-SA";
@@ -118,6 +121,8 @@ export function BookingModal({
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [method, setMethod] = useState<BookingPaymentMethod>("card");
   const [error, setError] = useState("");
+  // The ticket whose name is missing: marked, and the cursor put in it.
+  const [badName, setBadName] = useState<number | null>(null);
   const [step, setStep] = useState(0);
 
   // Reopening starts clean; a half-filled booking from last time is worse than
@@ -232,7 +237,19 @@ export function BookingModal({
 
   function next() {
     const message = validate(step);
-    if (message) return setError(message);
+    if (message) {
+      if (step === 1) {
+        const index = lines.findIndex((line) => !line.name.trim());
+        if (index !== -1) {
+          setBadName(index);
+          const input = document.querySelector<HTMLInputElement>(`[data-ticket-name="${index}"]`);
+          input?.scrollIntoView({ block: "center", behavior: "smooth" });
+          input?.focus();
+        }
+      }
+      return setError(message);
+    }
+    setBadName(null);
     setError("");
     setStep((current) => Math.min(STEPS.length - 1, current + 1));
   }
@@ -457,15 +474,18 @@ export function BookingModal({
                     value={line.name}
                     placeholder={t("detail.attendeeName")}
                     aria-label={t("detail.attendeeNameFor", { n: index + 1 })}
-                    onChange={(event) =>
+                    data-ticket-name={index}
+                    invalid={badName === index}
+                    onChange={(event) => {
+                      if (badName === index) setBadName(null);
                       setLines((current) =>
                         current.map((item, i) =>
                           i === index
                             ? { ...item, name: event.target.value }
                             : item,
                         ),
-                      )
-                    }
+                      );
+                    }}
                     className="bg-bg-page"
                   />
                   {assignedSeating && (
@@ -506,6 +526,13 @@ export function BookingModal({
                 </div>
               );
             })}
+
+          {step === 2 && alreadyHeld > 0 && (
+            // Someone unsure a payment went through used to book again (19 Oct sim).
+            <p className="mb-sm rounded-[12px] bg-bg-tint-brand px-[14px] py-[10px] text-[13px] font-semibold text-ink-brand-strong">
+              {t("detail.alreadyHeld", { count: alreadyHeld })}
+            </p>
+          )}
 
           {step === 2 && (
             <section className="mb-lg flex flex-col gap-[8px] rounded-[16px] border border-border-default bg-surface-default p-md">

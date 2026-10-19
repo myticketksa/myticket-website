@@ -224,6 +224,10 @@
     "topUpWaitingTitle": "Confirming your top-up…",
     "topUpNotYetTitle": "This top-up hasn’t arrived yet",
     "topUpNotYetBody": "If you paid, it can take a minute to show in your wallet.",
-    "goToWallet": "Go to wallet"
+    "goToWallet": "Go to wallet",
+    "reason_declined": "Your bank declined the payment. Try another card, or Apple Pay.",
+    "reason_verification": "The bank's verification step wasn't completed. Try again, or use another card.",
+    "reason_cancelled": "The payment was cancelled. Nothing was charged.",
+    "reason_refunded": "The tickets sold out while you were paying, so your payment was refunded."
   }
 }

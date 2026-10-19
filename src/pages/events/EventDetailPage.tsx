@@ -6,6 +6,7 @@ import {
   useApplyPromoCodeMutation,
   useCancelOrderMutation,
   useCreateOrderMutation,
+  useGetOrdersQuery,
   usePayOrderMutation,
 } from "@/app/api/ordersApi";
 import {
@@ -446,6 +447,28 @@ export function EventDetailPage() {
    * change the tickets cancels it so its seats go back on sale.
    */
   const authUser = useAppSelector(selectAuthUser);
+  // Valid tickets already held for this event on the chosen day: the booking
+  // says so before paying (people unsure a payment went through booked again).
+  const { data: myOrders } = useGetOrdersQuery(undefined, { skip: !authUser });
+  const alreadyHeld = useMemo(() => {
+    const chosenId = bookingSessionId ?? selectedSessionId;
+    const chosen = bookableSessions.find((session) => session.id === chosenId);
+    const day = (at: unknown) => (at ? String(at).slice(0, 10) : null);
+    const chosenDay = day(chosen?.startsAt);
+    return (myOrders ?? [])
+      .filter((order) => {
+        const o = order as Record<string, unknown>;
+        const event = o.event as Record<string, unknown> | undefined;
+        return String(event?.id ?? "") === String(resolvedId ?? "")
+          && String(o.paymentStatus ?? "") === "completed"
+          && !o.refundedAt && o.isOver !== true;
+      })
+      .flatMap((order) => (Array.isArray((order as Record<string, unknown>).tickets)
+        ? ((order as Record<string, unknown>).tickets as Record<string, unknown>[])
+        : []))
+      .filter((ticket) => !["gifted", "cancelled"].includes(String(ticket.scanStatus ?? ""))
+        && (!chosenDay || day(ticket.startsAt) === chosenDay)).length;
+  }, [myOrders, bookableSessions, bookingSessionId, selectedSessionId, resolvedId]);
   const pendingOrderRef = useRef<{
     orderId: number;
     promoApplied: boolean;
@@ -928,6 +951,7 @@ export function EventDetailPage() {
             assignedSeating={seatingType === "assigned"}
             freeEntry={isFreeEntry}
             onSessionChange={setBookingSessionId}
+            alreadyHeld={alreadyHeld}
             busy={
               createState.isLoading ||
               payState.isLoading ||

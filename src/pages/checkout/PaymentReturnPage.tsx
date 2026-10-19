@@ -197,12 +197,18 @@ function OrderPaymentReturn() {
     return <Shell title={t("checkout:confirmation.settlingTitle")} spinner />;
   }
 
+  // Why it didn't go through, when the gateway said (19 Oct booking sim).
+  const reason = searchParams.get("reason");
+  const why = reason && ["declined", "verification", "cancelled", "refunded"].includes(reason)
+    ? t(`checkout:payment.reason_${reason}`)
+    : t("checkout:payment.refusedBody");
+
   return (
     <Shell title={t("checkout:payment.refusedTitle")}>
-      <p className="text-[14px] text-ink-secondary">
-        {t("checkout:payment.refusedBody")}
-      </p>
-      <Button onClick={tryAgain}>{t("checkout:payment.tryAgain")}</Button>
+      <p className="text-[14px] text-ink-secondary">{why}</p>
+      {reason !== "refunded" && (
+        <Button onClick={tryAgain}>{t("checkout:payment.tryAgain")}</Button>
+      )}
     </Shell>
   );
 }
