@@ -179,9 +179,18 @@ export const accountApis = baseApi.injectEndpoints({
     }),
     sendChatMessage: build.mutation<
       ApiRecord,
-      { chatId?: number; channel: 'support'; message: string }
+      { chatId?: number; channel: 'support'; message: string; image?: File | null }
     >({
-      query: (body) => ({ url: '/chats/send', method: 'POST', body }),
+      // Text, a photo, or both; a photo goes as a form upload.
+      query: ({ image, ...body }) => {
+        if (!image) return { url: '/chats/send', method: 'POST', body }
+        const form = new FormData()
+        if (body.chatId != null) form.append('chatId', String(body.chatId))
+        form.append('channel', body.channel)
+        if (body.message) form.append('message', body.message)
+        form.append('image', image)
+        return { url: '/chats/send', method: 'POST', body: form }
+      },
       transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
       invalidatesTags: ['SupportCase'],
     }),

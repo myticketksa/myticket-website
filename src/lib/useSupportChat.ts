@@ -18,6 +18,8 @@ export type ChatMessage = {
   from: "you" | "agent";
   body: string;
   meta: string;
+  /** A signed link to a photo sent with the message. */
+  image?: string;
 };
 
 export function formatChatTimestamp(value: unknown): string {
@@ -77,6 +79,7 @@ function mapChatMessage(
     from,
     body: String(record.body ?? record.message ?? record.content ?? ""),
     meta: time ? `${author} · ${time}` : author,
+    image: typeof record.image === "string" && record.image ? record.image : undefined,
   };
 }
 
@@ -173,12 +176,13 @@ export function useSupportChat(enabled: boolean) {
 
   /** Resolves false when the API rejects the message, so the draft can stay. */
   const send = useCallback(
-    async (message: string) => {
+    async (message: string, image?: File | null) => {
       try {
         await sendMessage({
           chatId: chatId != null ? Number(chatId) : undefined,
           channel: "support",
           message,
+          image,
         }).unwrap();
         return true;
       } catch {

@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -6,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { CloseIcon, ImageIcon } from "@/components/icons";
 import { Button, TextInput } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import type { SupportChatConnectionState } from "@/lib/supportChatRealtime";
@@ -69,6 +71,7 @@ export function SupportChatThread({
   empty?: ReactNode;
   className?: string;
 }) {
+  const { t } = useTranslation("account");
   const viewportRef = useRef<HTMLDivElement>(null);
   const followLatestRef = useRef(true);
 
@@ -106,7 +109,7 @@ export function SupportChatThread({
         // chat apps place them. The logical sides flipped them on the Arabic
         // site; text inside still runs in its own direction.
         <div
-          key={msg.meta + msg.body}
+          key={msg.meta + msg.body + (msg.image ?? "")}
           dir="ltr"
           className={`flex flex-col ${msg.from === "you" ? "items-end" : "items-start"}`}
         >
@@ -118,6 +121,20 @@ export function SupportChatThread({
                 : "max-w-[448px] rounded-[16px] rounded-bl-[4px] border border-border-default bg-surface-default px-[16px] py-[13px] text-[14px] leading-[1.55] text-ink-primary"
             }
           >
+            {msg.image && (
+              <a
+                href={msg.image}
+                target="_blank"
+                rel="noreferrer"
+                className={cn("block", msg.body && "mb-[8px]")}
+              >
+                <img
+                  src={msg.image}
+                  alt={t("support.photo")}
+                  className="max-h-[280px] w-full max-w-[320px] rounded-[10px] object-cover"
+                />
+              </a>
+            )}
             {msg.body}
           </div>
           <p dir="auto" className="mt-[5px] text-[11.5px] text-ink-muted">{msg.meta}</p>
@@ -127,46 +144,133 @@ export function SupportChatThread({
   );
 }
 
-/** Message box and Send. Keeps the draft when sending fails so it can be retried. */
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Message box, a photo button and Send. Keeps the draft and the photo when
+ * sending fails so it can be retried. A photo can also be pasted in.
+ */
 export function SupportChatComposer({
   onSend,
   sending,
   autoFocus,
   className,
 }: {
-  onSend: (message: string) => Promise<boolean>;
+  onSend: (message: string, image?: File | null) => Promise<boolean>;
   sending: boolean;
   autoFocus?: boolean;
   className?: string;
 }) {
   const { t } = useTranslation("account");
   const [draft, setDraft] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [tooBig, setTooBig] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(
+    () => () => {
+      if (preview) URL.revokeObjectURL(preview);
+    },
+    [preview],
+  );
+
+  function pick(file: File | undefined) {
+    if (!file) return;
+    if (file.size > MAX_PHOTO_BYTES) {
+      setTooBig(true);
+      return;
+    }
+    setTooBig(false);
+    setPhoto(file);
+    setPreview(URL.createObjectURL(file));
+  }
+
+  function clearPhoto() {
+    setPhoto(null);
+    setPreview(null);
+    if (fileRef.current) fileRef.current.value = "";
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const message = draft.trim();
-    if (!message) return;
-    if (await onSend(message)) setDraft("");
+    if (!message && !photo) return;
+    if (await onSend(message, photo)) {
+      setDraft("");
+      clearPhoto();
+    }
   }
 
   return (
     <form
-      className={cn(
-        "flex items-center gap-[10px] border-t border-border-divider",
-        className,
-      )}
+      className={cn("flex flex-col gap-[10px] border-t border-border-divider", className)}
       onSubmit={(event) => void handleSubmit(event)}
     >
-      <TextInput
-        className="flex-1 !rounded-[22px]"
-        placeholder={t("support.chatPlaceholder")}
-        value={draft}
-        autoFocus={autoFocus}
-        onChange={(event) => setDraft(event.target.value)}
-      />
-      <Button size="md" type="submit" disabled={sending || !draft.trim()}>
-        {t("support.send")}
-      </Button>
+      {(preview || tooBig) && (
+        <div className="flex items-center gap-[12px]">
+          {preview && (
+            <div className="relative">
+              <img
+                src={preview}
+                alt={t("support.photo")}
+                className="size-[64px] rounded-[10px] object-cover"
+              />
+              <button
+                type="button"
+                onClick={clearPhoto}
+                aria-label={t("support.removePhoto")}
+                title={t("support.removePhoto")}
+                className="absolute -end-[8px] -top-[8px] flex size-[22px] items-center justify-center rounded-full bg-ink-primary text-ink-inverse"
+              >
+                <CloseIcon size={12} />
+              </button>
+            </div>
+          )}
+          {tooBig && (
+            <p className="text-[12.5px] text-state-danger" role="alert">
+              {t("support.photoTooBig")}
+            </p>
+          )}
+        </div>
+      )}
+      <div className="flex items-center gap-[10px]">
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={(event) => pick(event.target.files?.[0])}
+        />
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          aria-label={t("support.attachPhoto")}
+          title={t("support.attachPhoto")}
+          className="flex size-[44px] shrink-0 items-center justify-center rounded-full border border-border-default text-ink-secondary transition-colors hover:border-border-brand hover:text-ink-brand"
+        >
+          <ImageIcon size={20} />
+        </button>
+        <TextInput
+          className="flex-1 !rounded-[22px]"
+          placeholder={t("support.chatPlaceholder")}
+          value={draft}
+          autoFocus={autoFocus}
+          onChange={(event) => setDraft(event.target.value)}
+          onPaste={(event) => {
+            const file = Array.from(event.clipboardData.files).find((f) =>
+              f.type.startsWith("image/"),
+            );
+            if (file) {
+              event.preventDefault();
+              pick(file);
+            }
+          }}
+        />
+        <Button size="md" type="submit" disabled={sending || (!draft.trim() && !photo)}>
+          {t("support.send")}
+        </Button>
+      </div>
     </form>
   );
 }

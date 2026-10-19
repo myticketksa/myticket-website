@@ -801,6 +801,10 @@
     "openChat": "Open chat",
     "statusOpen": "Open",
     "kindCase": "Case",
-    "kindComplaint": "Complaint"
+    "kindComplaint": "Complaint",
+    "attachPhoto": "Attach a photo",
+    "removePhoto": "Remove photo",
+    "photo": "Photo",
+    "photoTooBig": "The photo is larger than 10 MB."
   }
 }

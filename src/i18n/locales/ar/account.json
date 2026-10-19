@@ -801,6 +801,10 @@
     "openChat": "فتح المحادثة",
     "statusOpen": "مفتوحة",
     "kindCase": "طلب دعم",
-    "kindComplaint": "شكوى"
+    "kindComplaint": "شكوى",
+    "attachPhoto": "إرفاق صورة",
+    "removePhoto": "إزالة الصورة",
+    "photo": "صورة",
+    "photoTooBig": "حجم الصورة أكبر من 10 ميجابايت."
   }
 }
