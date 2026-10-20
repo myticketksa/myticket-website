@@ -72,7 +72,9 @@
     "playVideo": "تشغيل الفيديو",
     "pauseVideo": "إيقاف الفيديو مؤقتاً",
     "opens": "يفتح",
-    "closes": "يغلق"
+    "closes": "يغلق",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور"
   },
   "time": {
     "daysShort": "{{count}}ي",

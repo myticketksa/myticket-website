@@ -11,7 +11,7 @@ import {
 } from '@/components/icons'
 import { Divider } from '@/components/data-display'
 import { Avatar } from '@/components/data-display'
-import { Button, Field, TextInput } from '@/components/ui'
+import { Button, Field, TextInput, PasswordInput } from '@/components/ui'
 import { PageSection } from '@/layouts'
 import { cn } from '@/lib/cn'
 import { useDeleteAccountMutation, useUpdateGuestProfileMutation } from '@/app/api/accountApis'
@@ -424,9 +424,8 @@ export function SettingsPage() {
                   label={t('settings.currentPassword')}
                   htmlFor="profile-current-password"
                 >
-                  <TextInput
+                  <PasswordInput
                     id="profile-current-password"
-                    type="password"
                     value={profile.currentPassword}
                     onChange={(event) => patchProfile({ currentPassword: event.target.value })}
                     autoComplete="current-password"
@@ -434,9 +433,8 @@ export function SettingsPage() {
                   />
                 </Field>
                 <Field label={t('settings.newPassword')} htmlFor="profile-new-password">
-                  <TextInput
+                  <PasswordInput
                     id="profile-new-password"
-                    type="password"
                     value={profile.password}
                     onChange={(event) => patchProfile({ password: event.target.value })}
                     placeholder={t('settings.newPasswordPlaceholder')}
@@ -476,9 +474,8 @@ export function SettingsPage() {
                   htmlFor="delete-password"
                   className="min-w-[220px] flex-1"
                 >
-                  <TextInput
+                  <PasswordInput
                     id="delete-password"
-                    type="password"
                     autoComplete="current-password"
                     value={deletePassword}
                     onChange={(event) => setDeletePassword(event.target.value)}

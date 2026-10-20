@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Checkbox, Field, TextInput } from '@/components/ui'
+import { Button, Checkbox, Field, TextInput, PasswordInput } from '@/components/ui'
 import { MoneyAmount } from '@/components/data-display/MoneyAmount'
 import { PageSection } from '@/layouts'
 import { useLocale } from '@/i18n/locale'
@@ -153,9 +153,8 @@ export function DeleteAccountPage() {
                 label={t('deleteAccount.form.passwordLabel', { lng: 'en' })}
                 htmlFor="delete-password"
               >
-                <TextInput
+                <PasswordInput
                   id="delete-password"
-                  type="password"
                   autoComplete="current-password"
                   placeholder={t('deleteAccount.form.passwordPlaceholder', { lng: 'en' }) ?? undefined}
                   value={password}

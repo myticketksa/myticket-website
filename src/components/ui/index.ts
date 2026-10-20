@@ -1,6 +1,7 @@
 export { Button, type ButtonProps } from './Button'
 export { Spinner, type SpinnerProps } from './Spinner'
 export { TextInput, fieldShell, fieldError, type TextInputProps } from './TextInput'
+export { PasswordInput } from './PasswordInput'
 export { Textarea, type TextareaProps } from './Textarea'
 export { Select, type SelectProps } from './Select'
 export { SearchField, type SearchFieldProps } from './SearchField'

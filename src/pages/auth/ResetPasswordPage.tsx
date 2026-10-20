@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { ArrowLeftIcon } from '@/components/icons'
 import { Logo } from '@/components/navigation'
-import { Button, Field, TextInput } from '@/components/ui'
+import { Button, Field, TextInput, PasswordInput } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import {
   useForgotPasswordMutation,
@@ -210,9 +210,8 @@ export function ResetPasswordPage() {
                     htmlFor="reset-new-password"
                     error={resetForm.formState.errors.password?.message}
                   >
-                    <TextInput
+                    <PasswordInput
                       id="reset-new-password"
-                      type="password"
                       autoComplete="new-password"
                       className="h-[48px]"
                       {...resetForm.register('password')}
@@ -223,9 +222,8 @@ export function ResetPasswordPage() {
                     htmlFor="reset-confirm-password"
                     error={resetForm.formState.errors.password_confirmation?.message}
                   >
-                    <TextInput
+                    <PasswordInput
                       id="reset-confirm-password"
-                      type="password"
                       autoComplete="new-password"
                       className="h-[48px]"
                       {...resetForm.register('password_confirmation')}

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { ArrowLeftIcon } from "@/components/icons";
-import { Button, Checkbox, Field, TextInput } from "@/components/ui";
+import { Button, Checkbox, Field, TextInput, PasswordInput } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { useLoginMutation } from "@/app/api/authApi";
 import { useAppDispatch } from "@/app/hooks";
@@ -118,9 +118,8 @@ export function SignInPage() {
               </Link>
             }
           >
-            <TextInput
+            <PasswordInput
               id="sign-in-password"
-              type="password"
               autoComplete="current-password"
               className="h-[50px]"
               invalid={Boolean(passwordForm.formState.errors.password)}

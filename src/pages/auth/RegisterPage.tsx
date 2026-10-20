@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Divider } from "@/components/data-display";
-import { Button, Checkbox, Field, TextInput } from "@/components/ui";
+import { Button, Checkbox, Field, TextInput, PasswordInput } from "@/components/ui";
 import { useRegisterMutation, useVerifyEmailMutation } from "@/app/api/authApi";
 import { useAppDispatch } from "@/app/hooks";
 import { credentialsSet } from "@/features/auth/authSlice";
@@ -199,9 +199,8 @@ export function RegisterPage() {
               htmlFor="register-password"
               error={form.formState.errors.password?.message}
             >
-              <TextInput
+              <PasswordInput
                 id="register-password"
-                type="password"
                 autoComplete="new-password"
                 className="h-[50px]"
                 {...form.register("password")}

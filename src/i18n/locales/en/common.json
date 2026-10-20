@@ -72,7 +72,9 @@
     "playVideo": "Play video",
     "pauseVideo": "Pause video",
     "opens": "Opens",
-    "closes": "Closes"
+    "closes": "Closes",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "time": {
     "daysShort": "{{count}}d",
