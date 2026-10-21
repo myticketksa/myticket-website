@@ -19,7 +19,8 @@ export function HomePage() {
   const { data: pickedResult } = useGetEventsQuery({ featured: true })
   const { data: newestResult } = useGetEventsQuery({ newest: true })
   const { data: apiAds } = useGetAdvertisementsQuery()
-  const { data: talentsResult } = useGetTalentsQuery()
+  // The top 5 rated: highest average review first.
+  const { data: talentsResult } = useGetTalentsQuery({ sort: 'top_rated', perPage: 5 })
   const apiTalents = talentsResult?.items
   const { data: apiExperiences } = useGetExperiencesQuery()
 

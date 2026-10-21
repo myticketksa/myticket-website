@@ -23,6 +23,8 @@ export type GetTalentsParams = {
   cityId?: string | number
   /** `filters[rating]` — minimum rating */
   rating?: string | number
+  /** `top_rated`: highest average review first (the home rail's top 5). */
+  sort?: 'top_rated'
 }
 
 export const talentsApi = baseApi.injectEndpoints({
@@ -40,6 +42,7 @@ export const talentsApi = baseApi.injectEndpoints({
           params && 'categoryId' in params ? params.categoryId : undefined
         const cityId = params && 'cityId' in params ? params.cityId : undefined
         const rating = params && 'rating' in params ? params.rating : undefined
+        const sort = params && 'sort' in params ? params.sort : undefined
         return {
           url: '/talents',
           params: {
@@ -54,6 +57,7 @@ export const talentsApi = baseApi.injectEndpoints({
             ...(rating != null && rating !== ''
               ? { 'filters[rating]': rating }
               : {}),
+            ...(sort ? { sort } : {}),
           },
         }
       },
