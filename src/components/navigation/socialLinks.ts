@@ -19,7 +19,7 @@ export const SOCIAL_LINKS = [
   },
   {
     name: "TikTok",
-    href: "https://vm.tiktok.com/ZSFKEFCKp/",
+    href: "https://www.tiktok.com/@myticketapp_official",
     icon: tiktokIcon,
   },
   {
