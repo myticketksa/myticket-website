@@ -6,7 +6,7 @@ import { FilterChip, MoneyAmount } from '@/components/data-display'
 import { Button, Field, TextInput } from '@/components/ui'
 import { AccountPageHead, AccountSplit } from '@/layouts'
 import type { WalletTxnFixture } from '@/pages/_account/fixtures'
-import { useGetWalletQuery, useTopUpWalletMutation } from '@/app/api/accountApis'
+import { useGetMeQuery, useGetWalletQuery, useTopUpWalletMutation } from '@/app/api/accountApis'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { formatAuthWalletBalance, selectAuthUser } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
@@ -128,7 +128,10 @@ export function WalletPage() {
   const [showTopUp, setShowTopUp] = useState(false)
   const dispatch = useAppDispatch()
   const user = useAppSelector(selectAuthUser)
-  const { data: wallet } = useGetWalletQuery()
+  const { data: wallet } = useGetWalletQuery(undefined, { refetchOnMountOrArgChange: true })
+  // Reload the account (its balance) each time the wallet opens; AccountSync
+  // puts the fresh balance into the signed-in user shown below.
+  useGetMeQuery(undefined, { refetchOnMountOrArgChange: true })
   const [topUp, topUpState] = useTopUpWalletMutation()
 
   const balances = useMemo(

@@ -6,6 +6,12 @@ export type ApiRecord = Record<string, unknown>
 
 export const accountApis = baseApi.injectEndpoints({
   endpoints: (build) => ({
+    /** The signed-in account as it is now (its wallet balance changes on the server). */
+    getMe: build.query<ApiRecord, void>({
+      query: () => '/me',
+      transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
+      keepUnusedDataFor: 0,
+    }),
     getFavorites: build.query<ApiRecord[], void>({
       query: () => '/favorites',
       transformResponse: (response: unknown) => asList<ApiRecord>(response),
@@ -231,6 +237,7 @@ export const accountApis = baseApi.injectEndpoints({
 })
 
 export const {
+  useGetMeQuery,
   useGetFavoritesQuery,
   useAddFavoriteMutation,
   useDeleteFavoriteMutation,

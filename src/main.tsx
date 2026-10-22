@@ -7,6 +7,7 @@ import { AppErrorBoundary } from '@/components/feedback/AppErrorBoundary'
 import { ToastViewport } from '@/components/feedback/ToastViewport'
 import '@/i18n/config'
 import { LocaleProvider } from '@/i18n/locale'
+import { AccountSync } from '@/features/auth/AccountSync'
 import {
   installGlobalErrorLogging,
   setErrorLoggingUserProvider,
@@ -31,6 +32,7 @@ createRoot(document.getElementById('root')!).render(
     <AppErrorBoundary>
       <Provider store={store}>
         <LocaleProvider>
+          <AccountSync />
           <RouterProvider router={router} />
           <ToastViewport />
         </LocaleProvider>
