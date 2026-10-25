@@ -9,14 +9,17 @@ import { Button, Field, TextInput, PasswordInput } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import {
   useForgotPasswordMutation,
+  useLoginMutation,
   useResetPasswordMutation,
 } from '@/app/api/authApi'
 import { useAppDispatch } from '@/app/hooks'
+import { credentialsSet } from '@/features/auth/authSlice'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 import {
   createForgotPasswordSchema,
   createResetPasswordSchema,
+  toLoginIdentifier,
   type ForgotPasswordValues,
   type ResetPasswordValues,
 } from '@/lib/validation/authSchemas'
@@ -32,6 +35,7 @@ export function ResetPasswordPage() {
   const [step, setStep] = useState<1 | 2>(1)
   const [forgot, forgotState] = useForgotPasswordMutation()
   const [reset, resetState] = useResetPasswordMutation()
+  const [login, loginState] = useLoginMutation()
 
   const forgotResolver = useMemo(
     () => yupResolver(createForgotPasswordSchema((key) => tv(key))),
@@ -71,14 +75,27 @@ export function ResetPasswordPage() {
   async function onReset(values: ResetPasswordValues) {
     try {
       await reset(values).unwrap()
-      dispatch(toastPushed('success', t('auth:reset.success')))
-      navigate('/sign-in')
     } catch (error) {
       dispatch(toastPushed('error', apiErrorMessage(error, t('auth:reset.error'))))
+      return
+    }
+    // The reset hands back no session, so sign straight in with the new
+    // password; only if that fails is the user sent to the sign-in page.
+    try {
+      const session = await login({
+        identifier: toLoginIdentifier(values.email),
+        password: values.password,
+      }).unwrap()
+      dispatch(credentialsSet({ token: session.access_token, user: session.user, persist: true }))
+      dispatch(toastPushed('success', t('auth:reset.successSignedIn')))
+      navigate('/')
+    } catch {
+      dispatch(toastPushed('success', t('auth:reset.success')))
+      navigate('/sign-in')
     }
   }
 
-  const busy = forgotState.isLoading || resetState.isLoading
+  const busy = forgotState.isLoading || resetState.isLoading || loginState.isLoading
 
   return (
     <>
