@@ -8,6 +8,7 @@ import { FadeUp, StaggerGroup } from "@/components/motion";
 import { Breadcrumbs, NumberedPagination } from "@/components/navigation";
 import { MultiSelectDropdown, SearchField } from "@/components/ui";
 import { PageSection } from "@/layouts";
+import { EventsComingSoon } from "@/pages/home/HomeSections";
 import { LinkedCard, slugify } from "@/pages/_guest";
 import { useGetCitiesQuery } from "@/app/api/accountApis";
 import {
@@ -239,6 +240,14 @@ export function EventsPage() {
       </PageSection>
 
       <PageSection padTop={28} padBottom={64}>
+        {eventsResult !== undefined &&
+        shown.length === 0 &&
+        !query &&
+        !categoryId &&
+        !cityId &&
+        show === "all" ? (
+          <EventsComingSoon />
+        ) : null}
         <StaggerGroup
           className={cn(
             "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3",

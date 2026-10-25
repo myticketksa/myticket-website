@@ -5,6 +5,7 @@ import type { ApiRecord as EventApiRecord } from '@/app/api/eventsApi'
 import type { ApiRecord as ExperienceApiRecord } from '@/app/api/experiencesApi'
 import type { ApiRecord as TalentApiRecord } from '@/app/api/talentsApi'
 import { EventCard, ExperienceCard, TalentCard } from '@/components/cards'
+import { TicketIcon } from '@/components/icons'
 import { FadeUp } from '@/components/motion'
 import {
   Carousel,
@@ -74,6 +75,19 @@ export function HomeTalents({ apiTalents }: { apiTalents?: TalentApiRecord[] }) 
         </Carousel>
       </div>
     </PageSection>
+  )
+}
+
+/** "Events coming soon" — stands in for the event rows while nothing is on sale, as in the app. */
+export function EventsComingSoon() {
+  const { t } = useTranslation('catalog')
+  return (
+    <div className="flex w-full flex-col items-center gap-md rounded-[20px] border border-border-default bg-surface-default py-[40px]">
+      <TicketIcon size={30} className="text-ink-brand" aria-hidden />
+      <p className="text-center text-[16px] font-bold text-ink-primary">
+        {t('home.eventsComingSoon')}
+      </p>
+    </div>
   )
 }
 
