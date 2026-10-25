@@ -8,6 +8,7 @@ import { Button, Checkbox, Field, TextInput, PasswordInput } from "@/components/
 import { useRegisterMutation, useVerifyEmailMutation } from "@/app/api/authApi";
 import { useAppDispatch } from "@/app/hooks";
 import { credentialsSet } from "@/features/auth/authSlice";
+import { GoogleSignInButton, OrDivider } from "@/components/auth/GoogleSignInButton";
 import { toastPushed } from "@/features/ui/uiSlice";
 import { apiErrorMessage } from "@/lib/api/unwrap";
 import {
@@ -242,6 +243,10 @@ export function RegisterPage() {
           >
             {t("auth:register.submit")}
           </Button>
+
+          {/* Or skip the form: Google makes the account, no code step. */}
+          <OrDivider />
+          <GoogleSignInButton />
         </form>
       ) : (
         <form

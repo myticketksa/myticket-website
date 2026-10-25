@@ -36,6 +36,15 @@ export const authApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: unknown) => unwrapData<AuthSessionPayload>(response),
     }),
+    // Google sign-in: the Firebase ID token from the Google popup.
+    firebaseLogin: build.mutation<AuthSessionPayload, { idToken: string }>({
+      query: (body) => ({
+        url: '/auth/login/firebase',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: unknown) => unwrapData<AuthSessionPayload>(response),
+    }),
     forgotPassword: build.mutation<unknown, { email: string }>({
       query: (body) => ({
         url: '/auth/login/password/forgot',
@@ -81,6 +90,7 @@ export const {
   useRegisterMutation,
   useVerifyEmailMutation,
   useLoginMutation,
+  useFirebaseLoginMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useRequestLoginCodeMutation,

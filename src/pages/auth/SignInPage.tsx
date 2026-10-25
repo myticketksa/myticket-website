@@ -7,6 +7,7 @@ import { ArrowLeftIcon } from "@/components/icons";
 import { Button, Checkbox, Field, TextInput, PasswordInput } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { useLoginMutation } from "@/app/api/authApi";
+import { GoogleSignInButton, OrDivider } from "@/components/auth/GoogleSignInButton";
 import { useAppDispatch } from "@/app/hooks";
 import { credentialsSet } from "@/features/auth/authSlice";
 import { toastPushed } from "@/features/ui/uiSlice";
@@ -18,7 +19,7 @@ import {
 } from "@/lib/validation/authSchemas";
 
 /**
- * Sign In — email + password only; SSO (Apple, Google, Nafath) kept as entry points.
+ * Sign In — email + password, or Google (through Firebase, 25 Oct 2026).
  */
 export function SignInPage() {
   const { t } = useTranslation(["auth", "validation", "common"]);
@@ -147,6 +148,9 @@ export function SignInPage() {
           {t("auth:signIn.submit")}
         </Button>
       </form>
+
+      <OrDivider />
+      <GoogleSignInButton nextPath={nextPath} persist={passwordForm.watch("keepSignedIn") !== false} />
 
       <Link
         to="/"
