@@ -50,6 +50,7 @@ import {
   HelpPage,
   LegalPage,
   PrivacyPolicyPage,
+  TermsOfServicePage,
   DeleteAccountPage,
   MaintenancePage,
   NotFoundPage,
@@ -104,6 +105,7 @@ export const router = createBrowserRouter([
           { path: "/help", element: <HelpPage /> },
           { path: "/legal", element: <LegalPage /> },
           { path: "/Privacy_Policy_My_Ticket", element: <PrivacyPolicyPage /> },
+          { path: "/Terms_of_Service_My_Ticket", element: <TermsOfServicePage /> },
           { path: "/Delete_Account", element: <DeleteAccountPage /> },
           {
             path: "/delete-account",

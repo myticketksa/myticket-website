@@ -36,6 +36,7 @@ export { AboutPage } from "./marketing/AboutPage";
 export { HelpPage } from "./marketing/HelpPage";
 export { LegalPage } from "./marketing/LegalPage";
 export { PrivacyPolicyPage } from "./marketing/PrivacyPolicyPage";
+export { TermsOfServicePage } from "./marketing/TermsOfServicePage";
 export { DeleteAccountPage } from "./marketing/DeleteAccountPage";
 export { MaintenancePage } from "./system/MaintenancePage";
 export { NotFoundPage } from "./system/NotFoundPage";
