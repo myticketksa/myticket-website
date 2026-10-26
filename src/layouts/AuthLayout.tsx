@@ -52,6 +52,7 @@ function AuthHeroPanel({
         <h2 className="max-w-[460px] text-[46px] leading-[1.04] font-extrabold tracking-[-1.61px] text-bg-page">
           {headline}
         </h2>
+        {benefits.length > 0 && (
         <ul className="mt-lg flex max-w-[420px] flex-col gap-md">
           {benefits.map((benefit) => (
             <li key={benefit} className="flex items-start gap-[11px]">
@@ -66,8 +67,9 @@ function AuthHeroPanel({
             </li>
           ))}
         </ul>
+        )}
       </div>
-      <p className="relative shrink-0 text-[13px] text-bg-page">{footer}</p>
+      {footer ? <p className="relative shrink-0 text-[13px] text-bg-page">{footer}</p> : <span />}
     </div>
   );
 }
@@ -101,8 +103,12 @@ export function AuthLayout({ hero }: AuthLayoutProps) {
   }
 
   const heroKey = isRegister ? "register" : "signIn";
+  // Only true, current claims here — the old list promised cashback, offline
+  // QR codes, waitlist alerts and resale that the product doesn't offer, with
+  // made-up "people going" counts under it (owner, 26 Oct 2026). Empty now.
   const benefits = t(`hero.${heroKey}.benefits`, {
     returnObjects: true,
+    defaultValue: [],
   }) as string[];
 
   const defaultHero = (
@@ -110,7 +116,7 @@ export function AuthLayout({ hero }: AuthLayoutProps) {
       image={isRegister ? registerHero : signInHero}
       headline={t(`hero.${heroKey}.headline`)}
       benefits={Array.isArray(benefits) ? benefits : []}
-      footer={t(`hero.${heroKey}.footer`)}
+      footer={t(`hero.${heroKey}.footer`, { defaultValue: "" })}
     />
   );
 
