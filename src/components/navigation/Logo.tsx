@@ -1,5 +1,6 @@
 import logoSrc from '@/assets/myticket-logo.png'
 import logoWhiteSrc from '@/assets/myticket-logo-white.png'
+import logoOnDarkSrc from '@/assets/myticket-logo-on-dark.png'
 import { cn } from '@/lib/cn'
 
 /**
@@ -20,8 +21,11 @@ export interface LogoProps {
   /** Accessible name. Pass an empty string when a nearby link already names it. */
   alt?: string
   className?: string
-  /** `white` uses the transparent white lockup. No color filter. */
-  variant?: 'default' | 'white'
+  /**
+   * `white` uses the transparent all-white lockup. `onDark` is the app's version for
+   * dark backgrounds: white letters, the orange "my" / "ماي" tags kept. No color filter.
+   */
+  variant?: 'default' | 'white' | 'onDark'
 }
 
 export function Logo({
@@ -32,7 +36,7 @@ export function Logo({
 }: LogoProps) {
   return (
     <img
-      src={variant === 'white' ? logoWhiteSrc : logoSrc}
+      src={variant === 'white' ? logoWhiteSrc : variant === 'onDark' ? logoOnDarkSrc : logoSrc}
       alt={alt}
       style={{ height }}
       className={cn('aspect-[73/40] w-auto shrink-0 object-contain', className)}
