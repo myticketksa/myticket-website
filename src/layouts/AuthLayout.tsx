@@ -45,8 +45,9 @@ function AuthHeroPanel({
         aria-hidden
         className="absolute inset-0 bg-gradient-to-b from-[rgba(25,16,8,0.72)] via-[rgba(25,16,8,0.35)] via-[40%] to-[rgba(25,16,8,0.92)]"
       />
-      <Link to="/" className="relative shrink-0">
-        <Logo height={40} variant="white" />
+      {/* The original (black) lockup on a white tile, so it reads on the dark photo. */}
+      <Link to="/" className="relative shrink-0 self-start rounded-[14px] bg-bg-page px-[14px] py-[10px]">
+        <Logo height={40} />
       </Link>
       <div className="relative shrink-0">
         <h2 className="max-w-[460px] text-[46px] leading-[1.04] font-extrabold tracking-[-1.61px] text-bg-page">
