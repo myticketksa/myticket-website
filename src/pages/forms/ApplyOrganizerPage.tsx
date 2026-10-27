@@ -1,10 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { CheckIcon } from '@/components/icons'
 import { Button, Field, MultiSelectDropdown, TextInput, Textarea } from '@/components/ui'
-import { useLocale } from '@/i18n/locale'
-import { FunnelHeader, PageSection } from '@/layouts'
+import { PageSection } from '@/layouts'
 import { useApplyOrganizerMutation, useGetCitiesQuery, useGetMyApplicationQuery } from '@/app/api/accountApis'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { selectAuthUser } from '@/features/auth/authSlice'
@@ -14,6 +11,7 @@ import { mapCityOptions } from '@/lib/api/mappers/cities'
 import type { IdLabelOption } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 import { catalogLabel } from '@/lib/i18n/catalogLabels'
+import { FacilitiesTabs, FacilitiesTopBar } from './apply-shared'
 
 const STEP_KEYS = ['request', 'call', 'dashboard'] as const
 const DASHBOARD_URL = 'https://business.myticket.sa'
@@ -43,8 +41,6 @@ type Application = { type?: string; application?: Record<string, unknown> }
 export function ApplyOrganizerPage() {
   const { t } = useTranslation('forms')
   const { t: tCatalog } = useTranslation('catalog')
-  const { roleLabel } = useLocale()
-  const organizer = roleLabel('organizer')
   const dispatch = useAppDispatch()
   const user = useAppSelector(selectAuthUser)
   const { isAuthenticated, requireAuth } = useRequireAuth()
@@ -177,16 +173,19 @@ export function ApplyOrganizerPage() {
 
   return (
     <>
-      <FunnelHeader label={t('organizer.eyebrow', { role: organizer })} backHref="/for-organizers" backLabel={t('organizer.backLabel')} />
+      <FacilitiesTopBar />
 
-      <PageSection padTop={48} padBottom={96}>
-        <div className="mx-auto max-w-[620px]">
-          <h1 className="text-[28px] leading-[1.04] font-extrabold tracking-[-1.47px] text-ink-primary sm:text-[36px] lg:text-[42px]">
-            {t('organizer.title', { role: organizer })}
+      <PageSection padTop={28} padBottom={64}>
+        <div className="mx-auto w-full max-w-[560px]">
+          <h1 className="text-[26px] leading-[1.08] font-extrabold tracking-[-1.2px] text-ink-primary sm:text-[32px]">
+            {t('vendor.title')}
           </h1>
-          <p className="mt-[12px] text-[16.5px] leading-[1.6] text-ink-secondary">{t('organizer.subtitle')}</p>
+          <div className="mt-md">
+            <FacilitiesTabs active="organizer" />
+          </div>
+          <p className="mt-lg text-[15px] leading-[1.6] text-ink-secondary">{t('organizer.subtitle')}</p>
 
-          <ol className="mt-[28px] flex flex-col gap-[12px]">
+          <ol className="mt-lg flex flex-col gap-[12px]">
             {steps.map((step, index) => (
               <li key={step.title} className="flex gap-[14px] rounded-[18px] border border-border-default bg-surface-default px-[20px] py-[16px]">
                 <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[12px] bg-bg-tint-brand text-[14px] font-extrabold text-ink-brand">
@@ -200,18 +199,7 @@ export function ApplyOrganizerPage() {
             ))}
           </ol>
 
-          <div className="mt-[24px]">{body}</div>
-
-          <p className="mt-[20px] flex items-start gap-[8px] text-[13px] text-ink-secondary">
-            <CheckIcon size={14} weight="bold" className="mt-[3px] shrink-0 text-ink-brand" />
-            <span>
-              {t('organizer.learnMorePrefix')}{' '}
-              <Link to="/for-organizers" className="font-semibold text-ink-brand">
-                {t('organizer.forRole', { role: organizer })}
-              </Link>
-              .
-            </span>
-          </p>
+          <div className="mt-lg">{body}</div>
         </div>
       </PageSection>
     </>

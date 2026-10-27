@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link, useNavigate } from 'react-router-dom'
+import { Logo } from '@/components/navigation'
 import { Checkbox } from '@/components/ui'
 import { useAppSelector } from '@/app/hooks'
 import { selectAuthUser } from '@/features/auth/authSlice'
@@ -96,4 +98,54 @@ export function joinOrDash(values: string[], empty?: string) {
   return values.length > 0
     ? values.join(', ')
     : (empty ?? i18n.t('forms:review.notSet'))
+}
+
+/** The two kinds of facility request, as the app's Facilities tabs: a service provider or an event organizer. */
+export function FacilitiesTabs({ active }: { active: 'vendor' | 'organizer' }) {
+  const { t } = useTranslation('forms')
+  const tabs = [
+    { key: 'vendor', to: '/apply/facilities', label: t('facilitiesTabs.vendor') },
+    { key: 'organizer', to: '/apply/organizer', label: t('facilitiesTabs.organizer') },
+  ] as const
+  return (
+    <nav aria-label={t('facilitiesTabs.label')} className="flex gap-[4px] rounded-[14px] border border-border-default bg-surface-default p-[4px]">
+      {tabs.map((tab) => (
+        <Link
+          key={tab.key}
+          to={tab.to}
+          replace
+          aria-current={tab.key === active ? 'page' : undefined}
+          className={
+            tab.key === active
+              ? 'flex-1 rounded-[10px] bg-bg-tint-brand px-[12px] py-[9px] text-center text-[14px] font-bold text-ink-brand'
+              : 'flex-1 rounded-[10px] px-[12px] py-[9px] text-center text-[14px] font-semibold text-ink-secondary hover:text-ink-primary'
+          }
+        >
+          {tab.label}
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
+/** The facilities pages' top bar: the logo home, and back. */
+export function FacilitiesTopBar() {
+  const { t } = useTranslation(['common', 'nav'])
+  const navigate = useNavigate()
+  return (
+    <div className="border-b border-border-default bg-bg-page">
+      <div className="mx-auto flex h-[64px] w-full max-w-[var(--container-page)] items-center justify-between gap-md px-page-gutter sm:h-[72px]">
+        <Link to="/" className="shrink-0" aria-label={t('nav:home')}>
+          <Logo height={34} />
+        </Link>
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="shrink-0 text-[13px] font-semibold text-ink-secondary hover:text-ink-brand"
+        >
+          {t('common:actions.back')}
+        </button>
+      </div>
+    </div>
+  )
 }

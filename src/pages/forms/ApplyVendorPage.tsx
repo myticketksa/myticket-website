@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   commercialRegistrationDigits,
   isValidCommercialRegistration,
@@ -13,7 +13,7 @@ import {
   Button,
   MultiSelectDropdown,
 } from "@/components/ui";
-import { Logo } from "@/components/navigation";
+import { FacilitiesTabs, FacilitiesTopBar } from "./apply-shared";
 import { PageSection } from "@/layouts";
 import { useGetCitiesQuery, useApplyVendorMutation } from "@/app/api/accountApis";
 import { useAppDispatch } from "@/app/hooks";
@@ -153,20 +153,7 @@ export function ApplyVendorPage() {
 
   return (
     <>
-      <div className="border-b border-border-default bg-bg-page">
-        <div className="mx-auto flex h-[64px] w-full max-w-[var(--container-page)] items-center justify-between gap-md px-page-gutter sm:h-[72px]">
-          <Link to="/" className="shrink-0" aria-label={t("nav:home")}>
-            <Logo height={34} />
-          </Link>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="shrink-0 text-[13px] font-semibold text-ink-secondary hover:text-ink-brand"
-          >
-            {t("common:actions.back")}
-          </button>
-        </div>
-      </div>
+      <FacilitiesTopBar />
 
       <PageSection padTop={28} padBottom={64}>
         <form
@@ -177,6 +164,9 @@ export function ApplyVendorPage() {
             <h1 className="text-[26px] leading-[1.08] font-extrabold tracking-[-1.2px] text-ink-primary sm:text-[32px]">
               {t("forms:vendor.title")}
             </h1>
+            <div className="mt-md">
+              <FacilitiesTabs active="vendor" />
+            </div>
             <p className="mt-sm text-[15px] text-ink-secondary">
               {t("forms:vendor.notice")}
             </p>

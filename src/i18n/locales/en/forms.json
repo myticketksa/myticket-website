@@ -100,16 +100,11 @@
     }
   },
   "organizer": {
-    "eyebrow": "{{role}} partnership",
-    "title": "Sell tickets on MyTicket as an {{role}}.",
     "subtitle": "Send a short request. Our team calls you to agree the terms, then your organizer dashboard opens with the same account.",
     "signInToApply": "Sign in to send a request",
     "submit": "Send request",
     "success": "Request sent. The MyTicket team will contact you soon.",
     "error": "Could not send the request",
-    "backLabel": "Back to for organizers",
-    "learnMorePrefix": "Learn more on",
-    "forRole": "For {{role}}",
     "emailNote": "We'll email you at {{email}}.",
     "pendingTitle": "Your request is under review",
     "pendingBody": "We've got the request for “{{name}}”. The MyTicket team will contact you to agree the terms, then open your organizer dashboard.",
@@ -240,5 +235,10 @@
     "subtitle": "Your guest account stays a guest. Tickets, wallet and reviews stay untouched — this form is a request only.",
     "title": "This part's already done — you're signed in as {{name}}.",
     "fallbackName": "your account"
+  },
+  "facilitiesTabs": {
+    "label": "Kind of facility",
+    "vendor": "Service provider",
+    "organizer": "Event organizer"
   }
 }

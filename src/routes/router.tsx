@@ -42,6 +42,7 @@ import {
   ClaimGiftPage,
   SubmitExperiencePage,
   ApplyVendorPage,
+  ApplyOrganizerPage,
   ApplyTalentPage,
   ApplicationSubmittedPage,
   MySupportCasesPage,
@@ -180,6 +181,7 @@ export const router = createBrowserRouter([
           },
           { path: "/gift/claim/:giftTicketId", element: <ClaimGiftPage /> },
           { path: "/apply/facilities", element: <ApplyVendorPage /> },
+          { path: "/apply/organizer", element: <ApplyOrganizerPage /> },
           {
             path: "/apply/vendor",
             element: <Navigate to="/apply/facilities" replace />,

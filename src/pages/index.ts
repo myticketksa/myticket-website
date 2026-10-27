@@ -30,6 +30,7 @@ export { MySupportCasesPage } from "./support/MySupportCasesPage";
 export { SupportChatPage } from "./support/SupportChatPage";
 export { SubmitExperiencePage } from "./forms/SubmitExperiencePage";
 export { ApplyVendorPage } from "./forms/ApplyVendorPage";
+export { ApplyOrganizerPage } from "./forms/ApplyOrganizerPage";
 export { ApplyTalentPage } from "./forms/ApplyTalentPage";
 export { ApplicationSubmittedPage } from "./forms/ApplicationSubmittedPage";
 export { AboutPage } from "./marketing/AboutPage";
