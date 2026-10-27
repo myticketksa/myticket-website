@@ -425,7 +425,18 @@
     "removeFromFavourites": "إزالة من المفضلة",
     "paymentNotCompleted": "لم يكتمل الدفع ولم يُخصم منك شيء. طلبك محفوظ ويمكنك المحاولة مجدداً.",
     "bookingFailed": "تعذّر إتمام الحجز. حاول مرة أخرى.",
-    "alreadyHeld": "لديك {{count}} تذكرة لهذه الفعالية في هذا اليوم."
+    "alreadyHeld": "لديك {{count}} تذكرة لهذه الفعالية في هذا اليوم.",
+    "activitiesTitle": "فئات التذاكر",
+    "activityBook": "احجز",
+    "activityEveryDay": "كل يوم",
+    "activityEveryDayExcept": "كل يوم عدا {{days}}",
+    "bookingSlot": "موعد الحجز",
+    "bookingTime": "الوقت",
+    "pickTime": "اختر الوقت",
+    "pickDay": "اختر اليوم",
+    "placesLeft": "متبقي {{count}}",
+    "noSlots": "لا توجد مواعيد متاحة حالياً.",
+    "activityFrom": "من {{price}}"
   },
   "search": {
     "title": "بحث",

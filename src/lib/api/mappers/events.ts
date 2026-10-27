@@ -33,6 +33,43 @@ export type EventSession = {
   }>;
 };
 
+/** Something to book inside the event, on its own days and times (27 Oct 2026). */
+export type EventActivity = {
+  id: number;
+  name: string;
+  description?: string;
+  /** 0 = Sunday … 6 = Saturday (Riyadh); empty = every day. */
+  weekdays: number[];
+  startTimes: string[];
+  durationMinutes?: number;
+  capacity?: number;
+  ticketTypeIds: number[];
+};
+
+export function listActivities(event: ApiRecord | undefined): EventActivity[] {
+  const rows = event?.activities;
+  if (!Array.isArray(rows)) return [];
+  return rows.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const record = row as ApiRecord;
+    const id = Number(record.id);
+    if (!Number.isInteger(id)) return [];
+    const numbers = (value: unknown) => (Array.isArray(value) ? value.map(Number).filter(Number.isFinite) : []);
+    return [
+      {
+        id,
+        name: localizedString(record.name, ""),
+        description: localizedString(record.description) || undefined,
+        weekdays: numbers(record.weekdays),
+        startTimes: Array.isArray(record.startTimes) ? record.startTimes.map(String) : [],
+        durationMinutes: numberOrUndefined(record.durationMinutes),
+        capacity: numberOrUndefined(record.capacity),
+        ticketTypeIds: numbers(record.ticketTypeIds),
+      },
+    ];
+  });
+}
+
 export function listSessions(event: ApiRecord | undefined): EventSession[] {
   const rows = event?.sessions;
   if (!Array.isArray(rows)) return [];

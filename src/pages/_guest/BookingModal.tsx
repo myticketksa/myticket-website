@@ -9,6 +9,8 @@ import { getActiveLocale } from "@/i18n/config";
 import type { EventSession } from "@/lib/api/mappers/events";
 import { sessionRemaining } from "@/lib/api/mappers/events";
 import { formatRange, SessionPicker } from "./SessionPicker";
+import { ActivitySlotPicker } from "./ActivitySlotPicker";
+import type { ActivitySlot } from "@/app/api/eventsApi";
 import type { BookingPaymentMethod } from "@/lib/purchase/paymentBrand";
 
 export type { BookingPaymentMethod } from "@/lib/purchase/paymentBrand";
@@ -65,6 +67,7 @@ export interface BookingModalProps {
   onConfirm: (booking: {
     typeId: number;
     sessionId: number;
+    time: string | null;
     lines: BookingLine[];
     promoCode: string;
     method: BookingPaymentMethod;
@@ -74,7 +77,7 @@ export interface BookingModalProps {
    * and answers with the new total (null when it was refused).
    */
   onApplyPromo?: (
-    booking: { typeId: number; sessionId: number; lines: BookingLine[] },
+    booking: { typeId: number; sessionId: number; time: string | null; lines: BookingLine[] },
     code: string,
   ) => Promise<{ amount: number; before: number } | null>;
   /** The applied code is taken off: the parent cancels the order it made. */
@@ -83,6 +86,12 @@ export interface BookingModalProps {
   promoResetSignal?: number;
   /** Valid tickets the person already holds for this event on the chosen day. */
   alreadyHeld?: number;
+  /**
+   * Booking one activity of the event (27 Oct 2026): its days and times
+   * replace the showtime list, and the chosen time goes with the order.
+   */
+  activitySlots?: ActivitySlot[];
+  activitySlotsLoading?: boolean;
 }
 
 export function BookingModal({
@@ -102,13 +111,17 @@ export function BookingModal({
   onDiscardPromo,
   promoResetSignal,
   alreadyHeld = 0,
+  activitySlots,
+  activitySlotsLoading,
 }: BookingModalProps) {
+  const isActivity = activitySlots !== undefined;
   const { t } = useTranslation(["catalog", "checkout", "common"]);
   const locale = getActiveLocale() === "ar" ? "ar-SA" : "en-SA";
   const selectableTypes = types.filter((type) => !type.disabled);
 
   const [typeId, setTypeId] = useState<number | undefined>();
   const [sessionId, setSessionId] = useState<number | undefined>();
+  const [time, setTime] = useState<string | null>(null);
   const [lines, setLines] = useState<BookingLine[]>([]);
   const [promoCode, setPromoCode] = useState("");
   /** The code the API accepted and the order's total after it. */
@@ -132,7 +145,8 @@ export function BookingModal({
     const initialSession =
       sessions.length === 1 ? sessions[0]?.id : undefined;
     setTypeId(selectableTypes[0]?.id);
-    setSessionId(initialSession);
+    setSessionId(isActivity ? undefined : initialSession);
+    setTime(null);
     setLines([]);
     setPromoCode("");
     setAppliedPromo(null);
@@ -202,7 +216,12 @@ export function BookingModal({
   const totalDue = appliedPromo ? appliedPromo.amount : beforePromo;
   const promoDiscount = appliedPromo ? Math.max(0, beforePromo - appliedPromo.amount) : 0;
 
-  const remaining = activeSession ? sessionRemaining(activeSession) : undefined;
+  const activeSlot = isActivity
+    ? activitySlots.find((slot) => slot.sessionId === sessionId && (slot.time ?? null) === time)
+    : undefined;
+  const remaining = isActivity
+    ? (activeSlot?.left ?? undefined)
+    : activeSession ? sessionRemaining(activeSession) : undefined;
   const ceiling = Math.min(MAX_TICKETS, remaining ?? MAX_TICKETS);
   const canAdd = Boolean(sessionId) && lines.length < ceiling;
   const canRemove = lines.length > 0;
@@ -217,7 +236,8 @@ export function BookingModal({
   function validate(index: number): string {
     if (index === 0) {
       if (!typeId) return t("detail.pickTicketType");
-      if (!sessionId) return t("detail.pickShowtime");
+      if (!sessionId) return isActivity ? t("detail.pickDay") : t("detail.pickShowtime");
+      if (isActivity && activitySlots.some((slot) => slot.time) && !time) return t("detail.pickTime");
       return "";
     }
     if (index === 1) {
@@ -280,7 +300,7 @@ export function BookingModal({
     }
     setError("");
     setApplyingPromo(true);
-    const result = await onApplyPromo({ typeId: typeId!, sessionId: sessionId!, lines }, code);
+    const result = await onApplyPromo({ typeId: typeId!, sessionId: sessionId!, time, lines }, code);
     setApplyingPromo(false);
     if (result) setAppliedPromo({ code, ...result });
   }
@@ -303,6 +323,7 @@ export function BookingModal({
     onConfirm({
       typeId: typeId!,
       sessionId: sessionId!,
+      time,
       lines,
       promoCode: freeEntry ? "" : (appliedPromo?.code ?? promoCode.trim()),
       method,
@@ -399,7 +420,23 @@ export function BookingModal({
             </fieldset>
           )}
 
-          {step === 0 && (
+          {step === 0 && isActivity && (
+            <ActivitySlotPicker
+              className="mb-lg"
+              slots={activitySlots}
+              loading={activitySlotsLoading}
+              sessionId={sessionId}
+              time={time}
+              needed={lines.length}
+              onSelect={(nextSession, nextTime) => {
+                setSessionId(nextSession);
+                setTime(nextTime);
+                setError("");
+              }}
+            />
+          )}
+
+          {step === 0 && !isActivity && (
             <SessionPicker
               className="mb-lg"
               sessions={sessions}

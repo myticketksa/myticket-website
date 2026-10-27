@@ -10,6 +10,7 @@ import {
   usePayOrderMutation,
 } from "@/app/api/ordersApi";
 import {
+  useGetActivitySlotsQuery,
   useGetEventDetailsQuery,
   useGetEventsQuery,
 } from "@/app/api/eventsApi";
@@ -34,7 +35,9 @@ import {
   resolveDefaultSessionId,
   resolveSeatingType,
   listSessions,
+  listActivities,
   sessionIsOver,
+  type EventActivity,
 } from "@/lib/api/mappers/events";
 import { mapApiSeatsToRows } from "@/lib/api/mappers/seats";
 import {
@@ -47,6 +50,7 @@ import {
   startPurchaseForEvent,
 } from "@/lib/purchase/holdSession";
 import { catalogLabel } from "@/lib/i18n/catalogLabels";
+import { getActiveLocale } from "@/i18n/config";
 import { MoneyAmount, parseMoneyDisplay } from "@/components/data-display";
 import {
   HeartGlyphIcon,
@@ -394,16 +398,31 @@ export function EventDetailPage() {
     return options;
   }, [apiSeats, seatsSessionId]);
 
+  // Things to book inside the event (27 Oct 2026): listed as their own rows,
+  // each booked on its own days and times.
+  const activities = useMemo(
+    () => listActivities(eventSource ?? resolveEventFromList(apiEvents, slugOrId)),
+    [apiEvents, eventSource, slugOrId],
+  );
+  const [activityId, setActivityId] = useState<number | undefined>();
+  const bookingActivity = activities.find((activity) => activity.id === activityId);
+  const { data: activitySlots, isFetching: activitySlotsLoading } = useGetActivitySlotsQuery(
+    { eventId: resolvedId!, activityId: activityId! },
+    { skip: !resolvedId || !bookingActivity || !bookingOpen, refetchOnMountOrArgChange: true },
+  );
+
   const bookingTypeOptions = useMemo(
     () =>
-      bookingTicketTypes.map((tier) => ({
+      bookingTicketTypes
+        .filter((tier) => !bookingActivity || bookingActivity.ticketTypeIds.includes(tier.id))
+        .map((tier) => ({
         id: tier.id,
         name: tier.name,
         price: tier.price,
         remaining: tier.remaining,
         disabled: tier.remaining === 0,
       })),
-    [bookingTicketTypes],
+    [bookingTicketTypes, bookingActivity],
   );
 
 
@@ -437,6 +456,8 @@ export function EventDetailPage() {
   type BookingBase = {
     typeId: number;
     sessionId: number;
+    /** An activity's start time ("09:00"), when it has times. */
+    time?: string | null;
     lines: BookingLine[];
   };
 
@@ -553,7 +574,11 @@ export function EventDetailPage() {
           ticketId: booking.typeId,
           quantity: booking.lines.length,
           items: [
-            { ticketId: booking.typeId, quantity: booking.lines.length },
+            {
+              ticketId: booking.typeId,
+              quantity: booking.lines.length,
+              ...(booking.time ? { sessionId: booking.sessionId, time: booking.time } : {}),
+            },
           ],
           ...(assigned && seatIds.length
             ? { seatIds, holdId }
@@ -892,7 +917,17 @@ export function EventDetailPage() {
             ) : null}
           </div>
 
-          {apiTicketTypes.length > 0 ? (
+          {activities.length > 0 ? (
+            <ActivityList
+              activities={activities}
+              types={apiTicketTypes}
+              onBook={(id) => {
+                setActivityId(id);
+                setBookingOpen(true);
+              }}
+              disabled={isPastEvent}
+            />
+          ) : apiTicketTypes.length > 0 ? (
             <section className="overflow-hidden rounded-[18px] border border-border-default bg-surface-default">
               <div className="flex items-center justify-between gap-md border-b border-border-default px-lg py-md">
                 <h2 className="text-[15px] font-semibold text-ink-primary">
@@ -926,15 +961,17 @@ export function EventDetailPage() {
             </p>
           ) : null}
 
-          <div className="flex flex-col gap-md sm:flex-row">
-            <Button
-              className="w-full sm:w-auto"
-              disabled={isPastEvent}
-              onClick={() => setBookingOpen(true)}
-            >
-              {isPastEvent ? t("detail.eventEnded") : primaryLabel}
-            </Button>
-          </div>
+          {activities.length === 0 ? (
+            <div className="flex flex-col gap-md sm:flex-row">
+              <Button
+                className="w-full sm:w-auto"
+                disabled={isPastEvent}
+                onClick={() => setBookingOpen(true)}
+              >
+                {isPastEvent ? t("detail.eventEnded") : primaryLabel}
+              </Button>
+            </div>
+          ) : null}
 
           <BookingModal
             open={bookingOpen}
@@ -943,8 +980,10 @@ export function EventDetailPage() {
               if (!open) discardPendingOrder();
               setBookingOpen(open);
             }}
-            eventTitle={title}
+            eventTitle={bookingActivity ? `${bookingActivity.name} — ${title}` : title}
             types={bookingTypeOptions}
+            activitySlots={bookingActivity ? (activitySlots ?? []) : undefined}
+            activitySlotsLoading={activitySlotsLoading}
             sessions={bookableSessions}
             seats={seatOptions}
             seatsLoading={seatsLoading || seatsFetching}
@@ -1053,5 +1092,86 @@ function SimilarEventCard({
         </div>
       </div>
     </Link>
+  );
+}
+
+/** "Every day except Friday · 09:00 – 16:00" — Riyadh days and its first time to its last one's end. */
+function activitySchedule(activity: EventActivity, t: (key: string, options?: Record<string, unknown>) => string, locale: string) {
+  const dayName = (day: number) =>
+    new Date(Date.UTC(2024, 0, 7 + day)).toLocaleDateString(locale, { weekday: "long", timeZone: "UTC" });
+  const days = activity.weekdays;
+  const dayText =
+    days.length === 0 || days.length === 7
+      ? t("detail.activityEveryDay")
+      : days.length >= 5
+        ? t("detail.activityEveryDayExcept", {
+            days: [0, 1, 2, 3, 4, 5, 6].filter((d) => !days.includes(d)).map(dayName).join(locale.startsWith("ar") ? "، " : ", "),
+          })
+        : days.map(dayName).join(locale.startsWith("ar") ? "، " : ", ");
+  const times = activity.startTimes;
+  if (!times.length) return dayText;
+  const [h, m] = times[times.length - 1]!.split(":").map(Number);
+  const endMinutes = h! * 60 + m! + (activity.durationMinutes ?? 60);
+  const clock = (minutes: number) =>
+    new Date(Date.UTC(2024, 0, 1, Math.floor(minutes / 60) % 24, minutes % 60)).toLocaleTimeString(locale, {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "UTC",
+      numberingSystem: "latn",
+    });
+  const [fh, fm] = times[0]!.split(":").map(Number);
+  return `${dayText} · ${clock(fh! * 60 + fm!)} – ${clock(endMinutes)}`;
+}
+
+/**
+ * The event's activities ("فئات التذاكر"), each with its days, its ticket
+ * types and prices, and its own Book button — the app lists them the same way.
+ */
+function ActivityList({
+  activities,
+  types,
+  onBook,
+  disabled,
+}: {
+  activities: EventActivity[];
+  types: { id: number; name: string; price: number; detail?: string }[];
+  onBook: (activityId: number) => void;
+  disabled?: boolean;
+}) {
+  const { t } = useTranslation(["catalog", "common"]);
+  const locale = getActiveLocale() === "ar" ? "ar-SA" : "en-SA";
+  return (
+    <section className="flex flex-col gap-md">
+      <h2 className="text-[18px] font-bold text-ink-primary">{t("detail.activitiesTitle")}</h2>
+      {activities.map((activity) => {
+        const own = types.filter((type) => activity.ticketTypeIds.includes(type.id));
+        return (
+          <div key={activity.id} className="overflow-hidden rounded-[18px] border border-border-default bg-surface-default">
+            <div className="flex flex-wrap items-center justify-between gap-md border-b border-border-default px-lg py-md">
+              <div className="min-w-0">
+                <h3 className="text-[16px] font-semibold text-ink-brand">{activity.name}</h3>
+                <p className="ltr-run text-[13px] text-ink-secondary">{activitySchedule(activity, t, locale)}</p>
+                {activity.description ? <p className="mt-xs text-[13px] text-ink-body">{activity.description}</p> : null}
+              </div>
+              <Button className="shrink-0" disabled={disabled} onClick={() => onBook(activity.id)}>
+                {disabled ? t("detail.eventEnded") : t("detail.activityBook")}
+              </Button>
+            </div>
+            <ul>
+              {own.map((type) => (
+                <li key={type.id} className="flex items-center justify-between gap-md px-lg py-sm odd:bg-bg-warm/60">
+                  <span className="text-[14px] text-ink-primary">
+                    {type.name}
+                    {type.detail ? <span className="block text-[12px] text-ink-secondary">{type.detail}</span> : null}
+                  </span>
+                  <span className="ltr-run text-[14px] font-semibold text-ink-brand">{formatMoneySar(type.price)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </section>
   );
 }
