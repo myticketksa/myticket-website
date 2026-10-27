@@ -2,7 +2,7 @@
   "about": {
     "eyebrow": "About MyTicket",
     "title": "Saudi Arabia is going out. We hold the tickets.",
-    "lede": "MyTicket is where people across the Kingdom find live experiences — concerts, sports, festivals, theatre, family days, and places worth the drive — and buy their way in with one tap. Behind the curtain we partner with organizers through our office, and review facility and talent requests from guest accounts.",
+    "lede": "MyTicket is where people across the Kingdom find live experiences — concerts, sports, festivals, theatre, family days, and places worth the drive — and buy their way in with one tap. Organizers apply with a short request and we agree the terms with them; facility and talent requests come from guest accounts.",
     "ctaText": "The best way to understand MyTicket is to find your next night out.",
     "ctaLabel": "Browse what's on",
     "stats": [
@@ -30,7 +30,7 @@
       },
       {
         "title": "For the people making the nights",
-        "body": "Organizers partner with us through an office contract — we create their account after agreement. Performers and service businesses submit a request from a guest account; our team reviews it, and contact happens outside the platform when there is a fit."
+        "body": "Organizers send a short request from their account; our team calls to agree the terms and then opens their organizer dashboard. Performers and service businesses submit a request from a guest account; our team reviews it, and contact happens outside the platform when there is a fit."
       },
       {
         "title": "How we make money",
@@ -215,7 +215,7 @@
           },
           {
             "q": "How does an organizer partnership work?",
-            "a": "Organizer accounts are created after an office contract. Contact partnerships from the help or support flow — there is no self-serve apply form."
+            "a": "Send a short request from “Become an organizer” (your name, city and mobile). Our team calls you to agree the terms, then your organizer dashboard opens with the same account."
           }
         ]
       }
@@ -442,7 +442,7 @@
   },
   "forOrganizers": {
     "title": "You make the night. We'll fill it.",
-    "lede": "Sell tickets to the audience already browsing MyTicket. {{role}} accounts are created after an office contract — not through a self-serve form.",
+    "lede": "Sell tickets to the audience already browsing MyTicket. Send a short request — we call to agree the terms, then your {{role}} dashboard opens.",
     "imageryLabel": "Imagery — organizer at a sold-out show",
     "stats": [
       {
@@ -455,7 +455,7 @@
       },
       {
         "value": "Office",
-        "label": "contract then account"
+        "label": "request, call, dashboard"
       }
     ],
     "benefits": [
@@ -475,7 +475,7 @@
     "steps": [
       {
         "title": "Talk to us",
-        "body": "Reach partnerships — office visit and contract come first."
+        "body": "Send a short request: your name, city and mobile."
       },
       {
         "title": "Sign the agreement",
@@ -483,7 +483,7 @@
       },
       {
         "title": "We create your account",
-        "body": "Admin provisions the organizer workspace after the contract."
+        "body": "Once approved, sign in to the organizer dashboard with the same account."
       },
       {
         "title": "Build your event",
@@ -514,16 +514,16 @@
     ],
     "moneyFootnote": "All ticket money flows through MyTicket — buyers never pay you directly, and every riyal is accounted for in your dashboard.",
     "needItems": [
-      "Office meeting and signed partnership contract",
+      "A short request, then a call to agree the terms",
       "Government ID — national ID, iqama or passport",
       "Commercial registration or event licence where required",
       "Operating region and business contact details"
     ],
-    "needNoteBody": "There is no online organizer application. Accounts are created by admin after the office agreement.",
+    "needNoteBody": "Apply online in a minute. Our team calls you to agree the terms before your dashboard opens.",
     "faqs": [
       {
         "question": "Can I apply online as an organizer?",
-        "answer": "No self-serve form. Contact partnerships, complete the office contract, then our admin team creates your account."
+        "answer": "Send a short request (name, city, mobile). Our team calls you to agree the terms, then your organizer dashboard opens with the same account."
       },
       {
         "question": "Who sets ticket prices and the refund policy?",
@@ -539,7 +539,7 @@
       }
     ],
     "closingTitle": "Ready to partner?",
-    "closingSubtitle": "Start with a conversation — office contract first, account next.",
+    "closingSubtitle": "Start with a short request — we'll call you.",
     "closingCta": "Contact partnerships"
   },
   "forVendors": {

@@ -73,6 +73,11 @@ export const accountApis = baseApi.injectEndpoints({
       query: (body) => ({ url: '/applications/talent', method: 'POST', body }),
       invalidatesTags: ['Application'],
     }),
+    // A short request to become an organizer (27 Oct 2026): name, city, mobile.
+    applyOrganizer: build.mutation<ApiRecord, FormData>({
+      query: (body) => ({ url: '/applications/organizer', method: 'POST', body }),
+      invalidatesTags: ['Application'],
+    }),
     applyVendor: build.mutation<ApiRecord, FormData>({
       query: (body) => ({ url: '/applications/vendor', method: 'POST', body }),
       invalidatesTags: ['Application'],
@@ -250,6 +255,7 @@ export const {
   useGetMyApplicationQuery,
   useApplyTalentMutation,
   useApplyVendorMutation,
+  useApplyOrganizerMutation,
   useGetCitiesQuery,
   useGetOfferedServicesQuery,
   useGetPerformanceCategoriesQuery,

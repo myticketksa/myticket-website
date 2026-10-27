@@ -101,30 +101,48 @@
   },
   "organizer": {
     "eyebrow": "{{role}} partnership",
-    "officeEyebrow": "Office partnership",
-    "title": "Become a {{role}} through our office.",
-    "subtitle": "There is no self-serve application. Organizer accounts are created by MyTicket after a contract is signed at our office. Guests keep buying tickets as usual until then.",
-    "notice": "Ready to talk? Open a support case or email the partnerships desk — we'll schedule the office visit.",
-    "track": "Track your {{role}} request",
-    "submit": "Contact partnerships",
-    "emailCta": "Email partnerships@myticket.sa",
+    "title": "Sell tickets on MyTicket as an {{role}}.",
+    "subtitle": "Send a short request. Our team calls you to agree the terms, then your organizer dashboard opens with the same account.",
+    "signInToApply": "Sign in to send a request",
+    "submit": "Send request",
+    "success": "Request sent. The MyTicket team will contact you soon.",
+    "error": "Could not send the request",
     "backLabel": "Back to for organizers",
     "learnMorePrefix": "Learn more on",
     "forRole": "For {{role}}",
-    "success": "Partnership inquiry noted",
-    "error": "Could not reach partnerships",
+    "emailNote": "We'll email you at {{email}}.",
+    "pendingTitle": "Your request is under review",
+    "pendingBody": "We've got the request for “{{name}}”. The MyTicket team will contact you to agree the terms, then open your organizer dashboard.",
+    "approvedTitle": "You're an organizer on MyTicket",
+    "approvedBody": "Create your event and follow its sales from the organizer dashboard.",
+    "openDashboard": "Open the organizer dashboard",
+    "dashboardHint": "business.myticket.sa — sign in with the same email and password. Signed up with Google? Use “Forgot password” there to set one.",
+    "rejectedTitle": "Your request wasn't approved",
+    "rejectedReason": "Reason: {{reason}}",
+    "applyAgain": "Send a new request",
+    "otherRequest": "This account already has another request (service provider or talent). One account has one role.",
+    "fields": {
+      "name": "Organization or your name",
+      "city": "City",
+      "phone": "Mobile number",
+      "cr": "Commercial registration no. (optional)",
+      "about": "What kind of events do you organise? (optional)",
+      "nameRequired": "Add your organization's name or yours",
+      "cityRequired": "Choose a city",
+      "phoneInvalid": "Enter a Saudi mobile number, like 05XXXXXXXX"
+    },
     "steps": {
-      "meet": {
-        "title": "Meet at the office",
-        "body": "Partnership starts with a real conversation and a signed contract — not an online form."
+      "request": {
+        "title": "Send a short request",
+        "body": "Your name, city and mobile — nothing else to start."
       },
-      "agreement": {
-        "title": "Agreement in place",
-        "body": "Once terms are set, our team prepares your organizer workspace behind the scenes."
+      "call": {
+        "title": "We agree the terms",
+        "body": "The MyTicket team calls you to agree the terms and the commission."
       },
-      "account": {
-        "title": "Admin creates your account",
-        "body": "You do not self-register as an organizer. We create the account after the office agreement."
+      "dashboard": {
+        "title": "Your dashboard opens",
+        "body": "Sign in to business.myticket.sa with this same account and create your event."
       }
     }
   },
