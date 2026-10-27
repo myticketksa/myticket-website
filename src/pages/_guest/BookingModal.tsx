@@ -92,6 +92,10 @@ export interface BookingModalProps {
    */
   activitySlots?: ActivitySlot[];
   activitySlotsLoading?: boolean;
+  /** Goes on any ticket left without a name. */
+  accountName?: string;
+  /** Hours before the start that refunds close; null = no refunds. Shown at checkout only. */
+  refundUntilHours?: number | null;
 }
 
 export function BookingModal({
@@ -113,6 +117,8 @@ export function BookingModal({
   alreadyHeld = 0,
   activitySlots,
   activitySlotsLoading,
+  accountName,
+  refundUntilHours,
 }: BookingModalProps) {
   const isActivity = activitySlots !== undefined;
   const { t } = useTranslation(["catalog", "checkout", "common"]);
@@ -134,8 +140,6 @@ export function BookingModal({
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [method, setMethod] = useState<BookingPaymentMethod>("card");
   const [error, setError] = useState("");
-  // The ticket whose name is missing: marked, and the cursor put in it.
-  const [badName, setBadName] = useState<number | null>(null);
   const [step, setStep] = useState(0);
 
   // Reopening starts clean; a half-filled booking from last time is worse than
@@ -242,8 +246,6 @@ export function BookingModal({
     }
     if (index === 1) {
       if (lines.length === 0) return t("detail.addAtLeastOne");
-      if (lines.some((line) => !line.name.trim()))
-        return t("detail.nameRequired");
       if (assignedSeating) {
         if (lines.some((line) => line.seatId == null))
           return t("detail.seatRequired");
@@ -257,19 +259,7 @@ export function BookingModal({
 
   function next() {
     const message = validate(step);
-    if (message) {
-      if (step === 1) {
-        const index = lines.findIndex((line) => !line.name.trim());
-        if (index !== -1) {
-          setBadName(index);
-          const input = document.querySelector<HTMLInputElement>(`[data-ticket-name="${index}"]`);
-          input?.scrollIntoView({ block: "center", behavior: "smooth" });
-          input?.focus();
-        }
-      }
-      return setError(message);
-    }
-    setBadName(null);
+    if (message) return setError(message);
     setError("");
     setStep((current) => Math.min(STEPS.length - 1, current + 1));
   }
@@ -509,12 +499,9 @@ export function BookingModal({
                   </span>
                   <TextInput
                     value={line.name}
-                    placeholder={t("detail.attendeeName")}
+                    placeholder={t("detail.attendeeNameOptional")}
                     aria-label={t("detail.attendeeNameFor", { n: index + 1 })}
-                    data-ticket-name={index}
-                    invalid={badName === index}
                     onChange={(event) => {
-                      if (badName === index) setBadName(null);
                       setLines((current) =>
                         current.map((item, i) =>
                           i === index
@@ -525,6 +512,11 @@ export function BookingModal({
                     }}
                     className="bg-bg-page"
                   />
+                  {accountName && !line.name.trim() ? (
+                    <span className="text-[12px] text-ink-secondary">
+                      {t("detail.attendeeNameDefault", { name: accountName })}
+                    </span>
+                  ) : null}
                   {assignedSeating && (
                     <div className="mt-xs rounded-[11px] bg-white px-[12px] py-[12px]">
                       <div className="mb-sm flex items-center justify-between gap-md">
@@ -592,7 +584,7 @@ export function BookingModal({
                   const seat = seats.find((option) => option.id === line.seatId);
                   return (
                     <li key={index} className="flex items-center justify-between gap-md">
-                      <span className="min-w-0 truncate">{line.name}</span>
+                      <span className="min-w-0 truncate">{line.name.trim() || accountName}</span>
                       {seat ? <span className="ltr-run shrink-0">{seat.label}</span> : null}
                     </li>
                   );
@@ -684,6 +676,17 @@ export function BookingModal({
                 {t("checkout:checkout.vatIncluded")}
               </span>
             </div>
+          )}
+
+          {/* The refund policy appears here, at checkout, and nowhere else. */}
+          {step === 2 && !freeEntry && refundUntilHours !== undefined && (
+            <p className="mb-lg text-[13px] text-ink-secondary">
+              {refundUntilHours == null
+                ? t("checkout:checkout.refundPolicyNone")
+                : refundUntilHours % 24 === 0 && refundUntilHours > 24
+                  ? t("checkout:checkout.refundPolicyDays", { count: refundUntilHours / 24 })
+                  : t("checkout:checkout.refundPolicyHours", { count: refundUntilHours })}
+            </p>
           )}
 
           {step === 2 && !freeEntry && (

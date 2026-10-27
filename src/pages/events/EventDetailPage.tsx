@@ -595,7 +595,8 @@ export function EventDetailPage() {
             : {}),
           beneficiaries: booking.lines.map((line, index) => ({
             quantity_id: index + 1,
-            name: line.name.trim(),
+            // Optional: a ticket left without a name carries the account's.
+            name: line.name.trim() || authUser?.name || "",
           })),
         },
       }).unwrap();
@@ -1008,6 +1009,12 @@ export function EventDetailPage() {
             types={bookingTypeOptions}
             activitySlots={bookingActivity ? (activitySlots ?? []) : undefined}
             activitySlotsLoading={activitySlotsLoading}
+            accountName={authUser?.name ?? undefined}
+            refundUntilHours={
+              eventSource && "refundUntilHours" in eventSource
+                ? ((eventSource as { refundUntilHours?: number | null }).refundUntilHours ?? null)
+                : undefined
+            }
             sessions={bookableSessions}
             seats={seatOptions}
             seatsLoading={seatsLoading || seatsFetching}
