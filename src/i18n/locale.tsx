@@ -9,6 +9,8 @@ import {
 } from 'react'
 import { Direction } from 'radix-ui'
 import { useTranslation } from 'react-i18next'
+import { useDispatch } from 'react-redux'
+import { baseApi } from '@/app/api/baseApi'
 import i18n, { STORAGE_KEY, readStoredLocale, type Locale } from './config'
 
 export type { Locale }
@@ -41,6 +43,7 @@ const LocaleContext = createContext<LocaleContextValue | null>(null)
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => readStoredLocale())
+  const dispatch = useDispatch()
   const { t } = useTranslation('common')
   const dir = locale === 'ar' ? 'rtl' : 'ltr'
 
@@ -62,9 +65,12 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       await i18n.changeLanguage(next)
       applyDocumentLocale(next)
       persistLocale(next)
+      // Names and descriptions come from the API in the reader's language
+      // (Accept-Language); what's cached was fetched in the other one.
+      dispatch(baseApi.util.resetApiState())
       setLocaleState(next)
     })()
-  }, [])
+  }, [dispatch])
 
   const toggleLocale = useCallback(() => {
     const current =

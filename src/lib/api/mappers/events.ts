@@ -1,5 +1,6 @@
 import { slugify } from "@/pages/_guest/slugify";
 import type { EventCardProps } from "@/components/cards";
+import { getActiveLocale } from "@/i18n/config";
 import {
   firstTicketTypeId,
   formatApiDate,
@@ -33,6 +34,23 @@ export type EventSession = {
   }>;
 };
 
+/**
+ * A field in the reader's language: the API sends `nameEn`/`nameAr` (and
+ * descriptions) next to `name`, which is already in the language the page
+ * was fetched in — reading the pair directly stays right after a switch.
+ */
+function inReaderLanguage(record: ApiRecord, field: "name" | "description"): string {
+  const ar = getActiveLocale() === "ar";
+  const en = record[`${field}En`];
+  const arValue = record[`${field}Ar`];
+  const first = ar ? arValue : en;
+  const second = ar ? en : arValue;
+  for (const value of [first, second]) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return localizedString(record[field], "");
+}
+
 /** Something to book inside the event, on its own days and times (27 Oct 2026). */
 export type EventActivity = {
   id: number;
@@ -58,8 +76,8 @@ export function listActivities(event: ApiRecord | undefined): EventActivity[] {
     return [
       {
         id,
-        name: localizedString(record.name, ""),
-        description: localizedString(record.description) || undefined,
+        name: inReaderLanguage(record, "name"),
+        description: inReaderLanguage(record, "description") || undefined,
         weekdays: numbers(record.weekdays),
         startTimes: Array.isArray(record.startTimes) ? record.startTimes.map(String) : [],
         durationMinutes: numberOrUndefined(record.durationMinutes),
@@ -245,11 +263,11 @@ export function listTicketTypes(
     return [
       {
         id: Number(idRaw),
-        name: localizedString(record.name ?? record.title, `Ticket ${idRaw}`),
+        name: inReaderLanguage(record, "name") || localizedString(record.title, `Ticket ${idRaw}`),
         price: Number.isFinite(price) ? price : 0,
-        detail: localizedString(
-          record.description ?? record.detail ?? record.zone,
-        ),
+        detail:
+          inReaderLanguage(record, "description") ||
+          localizedString(record.detail ?? record.zone),
         remaining: remainingByType.get(Number(idRaw)),
         isSpecialNeeds:
           record.isSpecialNeeds === true ||

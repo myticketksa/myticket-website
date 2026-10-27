@@ -38,6 +38,7 @@ import {
   listActivities,
   sessionIsOver,
   type EventActivity,
+  type EventSession,
 } from "@/lib/api/mappers/events";
 import { mapApiSeatsToRows } from "@/lib/api/mappers/seats";
 import {
@@ -909,7 +910,8 @@ export function EventDetailPage() {
               ) : null}
             </div>
 
-            {display.when ? (
+            {/* With activities, each has its own days and times (listed below). */}
+            {display.when && !listsActivities ? (
               <p className="ltr-run text-[14px] font-bold text-ink-primary">
                 {display.when}
               </p>
@@ -925,6 +927,7 @@ export function EventDetailPage() {
           {listsActivities ? (
             <ActivityList
               activities={activities}
+              sessions={allSessions}
               types={apiTicketTypes}
               onBook={(id) => {
                 setActivityId(id);
@@ -1129,17 +1132,43 @@ function activitySchedule(activity: EventActivity, t: (key: string, options?: Re
   return `${dayText} · ${clock(fh! * 60 + fm!)} – ${clock(endMinutes)}`;
 }
 
+/** The next day (and time) an activity runs, Riyadh time, from the event's dates — the app's date badge. */
+function nextOpening(activity: EventActivity, sessions: EventSession[]): Date | null {
+  const now = Date.now();
+  const riyadhDay = (iso: string) => {
+    const d = new Date(new Date(iso).getTime() + 3 * 3600 * 1000);
+    return { date: d.toISOString().slice(0, 10), weekday: d.getUTCDay() };
+  };
+  for (const session of [...sessions].sort((a, b) => String(a.startsAt).localeCompare(String(b.startsAt)))) {
+    if (!session.startsAt) continue;
+    const { date, weekday } = riyadhDay(session.startsAt);
+    if (activity.weekdays.length && !activity.weekdays.includes(weekday)) continue;
+    if (!activity.startTimes.length) {
+      if (new Date(session.endsAt ?? session.startsAt).getTime() > now) return new Date(`${date}T12:00:00+03:00`);
+      continue;
+    }
+    for (const time of activity.startTimes) {
+      const start = new Date(`${date}T${time}:00+03:00`);
+      if (start.getTime() > now) return start;
+    }
+  }
+  return null;
+}
+
 /**
- * The event's activities ("فئات التذاكر"), each with its days, its ticket
- * types and prices, and its own Book button — the app lists them the same way.
+ * The event's activities ("فئات التذاكر"), as the app lists them: a date
+ * badge with the next day it runs beside a card with its name, days and
+ * times, and its lowest price. A row opens the booking for that activity.
  */
 function ActivityList({
   activities,
+  sessions,
   types,
   onBook,
   disabled,
 }: {
   activities: EventActivity[];
+  sessions: EventSession[];
   types: { id: number; name: string; price: number; detail?: string }[];
   onBook: (activityId: number) => void;
   disabled?: boolean;
@@ -1148,33 +1177,45 @@ function ActivityList({
   const locale = getActiveLocale() === "ar" ? "ar-SA" : "en-SA";
   return (
     <section className="flex flex-col gap-md">
-      <h2 className="text-[18px] font-bold text-ink-primary">{t("detail.activitiesTitle")}</h2>
+      <h2 className="text-[20px] font-bold text-ink-primary">{t("detail.activitiesTitle")}</h2>
       {activities.map((activity) => {
         const own = types.filter((type) => activity.ticketTypeIds.includes(type.id));
+        const next = nextOpening(activity, sessions);
+        const from = own.length ? Math.min(...own.map((type) => type.price)) : null;
         return (
-          <div key={activity.id} className="overflow-hidden rounded-[18px] border border-border-default bg-surface-default">
-            <div className="flex flex-wrap items-center justify-between gap-md border-b border-border-default px-lg py-md">
-              <div className="min-w-0">
-                <h3 className="text-[16px] font-semibold text-ink-brand">{activity.name}</h3>
-                <p className="ltr-run text-[13px] text-ink-secondary">{activitySchedule(activity, t, locale)}</p>
-                {activity.description ? <p className="mt-xs text-[13px] text-ink-body">{activity.description}</p> : null}
-              </div>
-              <Button className="shrink-0" disabled={disabled} onClick={() => onBook(activity.id)}>
-                {disabled ? t("detail.eventEnded") : t("detail.activityBook")}
-              </Button>
-            </div>
-            <ul>
-              {own.map((type) => (
-                <li key={type.id} className="flex items-center justify-between gap-md px-lg py-sm odd:bg-bg-warm/60">
-                  <span className="text-[14px] text-ink-primary">
-                    {type.name}
-                    {type.detail ? <span className="block text-[12px] text-ink-secondary">{type.detail}</span> : null}
+          <button
+            key={activity.id}
+            type="button"
+            disabled={disabled}
+            onClick={() => onBook(activity.id)}
+            className="group flex items-stretch gap-[10px] text-start disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span className="bg-brand-gradient flex w-[68px] shrink-0 flex-col items-center justify-center rounded-[16px] py-sm text-white">
+              <span className="ltr-run text-[22px] font-bold leading-none">
+                {next ? next.toLocaleDateString("en-US", { day: "numeric", timeZone: "Asia/Riyadh" }) : "—"}
+              </span>
+              <span className="mt-[2px] text-[12px]">
+                {next ? next.toLocaleDateString(locale, { month: "long", timeZone: "Asia/Riyadh" }) : ""}
+              </span>
+            </span>
+            <span className="flex min-w-0 flex-1 items-center gap-md rounded-[18px] border border-border-default bg-surface-default px-lg py-md transition-colors group-hover:border-border-brand">
+              <span className="min-w-0 flex-1">
+                <span className="block text-[16px] font-bold text-ink-brand">{activity.name}</span>
+                <span className="block text-[13px] text-ink-secondary">{activitySchedule(activity, t, locale)}</span>
+                {activity.description ? (
+                  <span className="mt-[2px] block text-[13px] text-ink-body">{activity.description}</span>
+                ) : null}
+                {from != null ? (
+                  <span className="mt-[2px] block text-[13px] font-semibold text-ink-primary">
+                    {t("detail.activityFrom", { price: formatMoneySar(from) })}
                   </span>
-                  <span className="ltr-run text-[14px] font-semibold text-ink-brand">{formatMoneySar(type.price)}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+                ) : null}
+              </span>
+              <span aria-hidden className="text-[22px] text-ink-brand">
+                {getActiveLocale() === "ar" ? "‹" : "›"}
+              </span>
+            </span>
+          </button>
         );
       })}
     </section>
