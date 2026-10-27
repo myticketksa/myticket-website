@@ -405,9 +405,14 @@ export function EventDetailPage() {
     [apiEvents, eventSource, slugOrId],
   );
   const [activityId, setActivityId] = useState<number | undefined>();
-  const bookingActivity = activities.find((activity) => activity.id === activityId);
+  // Every event has at least one; an ordinary event's single one is hidden.
+  // Several are listed; a single one with times is booked by day and time.
+  const listsActivities = activities.length > 1;
+  const bookingActivity =
+    activities.find((activity) => activity.id === activityId) ??
+    (activities.length === 1 && activities[0]!.startTimes.length > 0 ? activities[0] : undefined);
   const { data: activitySlots, isFetching: activitySlotsLoading } = useGetActivitySlotsQuery(
-    { eventId: resolvedId!, activityId: activityId! },
+    { eventId: resolvedId!, activityId: bookingActivity?.id ?? 0 },
     { skip: !resolvedId || !bookingActivity || !bookingOpen, refetchOnMountOrArgChange: true },
   );
 
@@ -917,7 +922,7 @@ export function EventDetailPage() {
             ) : null}
           </div>
 
-          {activities.length > 0 ? (
+          {listsActivities ? (
             <ActivityList
               activities={activities}
               types={apiTicketTypes}
@@ -961,7 +966,7 @@ export function EventDetailPage() {
             </p>
           ) : null}
 
-          {activities.length === 0 ? (
+          {!listsActivities ? (
             <div className="flex flex-col gap-md sm:flex-row">
               <Button
                 className="w-full sm:w-auto"
@@ -980,7 +985,7 @@ export function EventDetailPage() {
               if (!open) discardPendingOrder();
               setBookingOpen(open);
             }}
-            eventTitle={bookingActivity ? `${bookingActivity.name} — ${title}` : title}
+            eventTitle={bookingActivity && listsActivities ? `${bookingActivity.name} — ${title}` : title}
             types={bookingTypeOptions}
             activitySlots={bookingActivity ? (activitySlots ?? []) : undefined}
             activitySlotsLoading={activitySlotsLoading}
