@@ -409,9 +409,13 @@ export function EventDetailPage() {
   // Every event has at least one; an ordinary event's single one is hidden.
   // Several are listed; a single one with times is booked by day and time.
   const listsActivities = activities.length > 1;
+  // Always open (27 Oct 2026): no dates of its own to list — booked by day
+  // (and time) like an activity, never as a list of every open day.
+  const isPermanent = Boolean((eventSource ?? resolveEventFromList(apiEvents, slugOrId))?.isPermanent);
+  const openWeekdays = ((eventSource ?? resolveEventFromList(apiEvents, slugOrId))?.openWeekdays ?? null) as number[] | null;
   const bookingActivity =
     activities.find((activity) => activity.id === activityId) ??
-    (activities.length === 1 && activities[0]!.startTimes.length > 0 ? activities[0] : undefined);
+    (activities.length === 1 && (activities[0]!.startTimes.length > 0 || isPermanent) ? activities[0] : undefined);
   const { data: activitySlots, isFetching: activitySlotsLoading } = useGetActivitySlotsQuery(
     { eventId: resolvedId!, activityId: bookingActivity?.id ?? 0 },
     { skip: !resolvedId || !bookingActivity || !bookingOpen, refetchOnMountOrArgChange: true },
@@ -910,8 +914,20 @@ export function EventDetailPage() {
               ) : null}
             </div>
 
+            {/* Always open: its days, not a date. */}
+            {isPermanent ? (
+              <p className="text-[14px] font-bold text-ink-primary">
+                {t("detail.alwaysOpen")} ·{" "}
+                {activitySchedule(
+                  { id: 0, name: "", weekdays: openWeekdays ?? [], startTimes: [], ticketTypeIds: [] },
+                  t,
+                  getActiveLocale() === "ar" ? "ar-SA" : "en-SA",
+                )}
+              </p>
+            ) : null}
+
             {/* With activities, each has its own days and times (listed below). */}
-            {display.when && !listsActivities ? (
+            {display.when && !listsActivities && !isPermanent ? (
               <p className="ltr-run text-[14px] font-bold text-ink-primary">
                 {display.when}
               </p>

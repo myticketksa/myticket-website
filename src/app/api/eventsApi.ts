@@ -86,7 +86,8 @@ export const eventsApi = baseApi.injectEndpoints({
     // An activity's next days and times with places left (activities inside
     // one event, 27 Oct 2026).
     getActivitySlots: build.query<ActivitySlot[], { eventId: string | number; activityId: number }>({
-      query: ({ eventId, activityId }) => `/tickets/events/${eventId}/activities/${activityId}/slots`,
+      // Four weeks ahead: a Fridays-only course still offers a few dates.
+      query: ({ eventId, activityId }) => `/tickets/events/${eventId}/activities/${activityId}/slots?days=30`,
       transformResponse: (response: unknown) => (unwrapData<ActivitySlot[]>(response) ?? []) as ActivitySlot[],
       keepUnusedDataFor: 30,
     }),

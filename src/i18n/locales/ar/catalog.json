@@ -436,7 +436,8 @@
     "pickDay": "اختر اليوم",
     "placesLeft": "متبقي {{count}}",
     "noSlots": "لا توجد مواعيد متاحة حالياً.",
-    "activityFrom": "من {{price}}"
+    "activityFrom": "من {{price}}",
+    "alwaysOpen": "مفتوح دائماً"
   },
   "search": {
     "title": "بحث",

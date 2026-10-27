@@ -433,7 +433,8 @@
     "pickDay": "Choose a day",
     "placesLeft": "{{count}} left",
     "noSlots": "No times available right now.",
-    "activityFrom": "From {{price}}"
+    "activityFrom": "From {{price}}",
+    "alwaysOpen": "Always open"
   },
   "search": {
     "title": "Search",
