@@ -1,0 +1,340 @@
+{
+  "capturedAt": "2026-10-08T07:55:15.672Z",
+  "baseUrl": "https://myticket.sa",
+  "signedInPass": true,
+  "notes": [],
+  "totals": {
+    "pass": 43,
+    "blocker": 0,
+    "major": 0,
+    "minor": 1,
+    "fail": 0,
+    "info": 0
+  },
+  "findings": [
+    {
+      "id": "route-/",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/ loads",
+      "route": "/"
+    },
+    {
+      "id": "route-/events",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/events loads",
+      "route": "/events"
+    },
+    {
+      "id": "route-/experiences",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/experiences loads",
+      "route": "/experiences"
+    },
+    {
+      "id": "route-/talents",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/talents loads",
+      "route": "/talents"
+    },
+    {
+      "id": "route-/search?q=riyadh",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/search?q=riyadh loads",
+      "route": "/search?q=riyadh"
+    },
+    {
+      "id": "route-/about",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/about loads",
+      "route": "/about"
+    },
+    {
+      "id": "route-/help",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/help loads",
+      "route": "/help"
+    },
+    {
+      "id": "route-/legal",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/legal loads",
+      "route": "/legal"
+    },
+    {
+      "id": "route-/Privacy_Policy_My_Ticket",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/Privacy_Policy_My_Ticket loads",
+      "route": "/Privacy_Policy_My_Ticket"
+    },
+    {
+      "id": "route-/Delete_Account",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/Delete_Account loads",
+      "route": "/Delete_Account"
+    },
+    {
+      "id": "route-/sign-in",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/sign-in loads",
+      "route": "/sign-in"
+    },
+    {
+      "id": "route-/register",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/register loads",
+      "route": "/register"
+    },
+    {
+      "id": "route-/reset-password",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/reset-password loads",
+      "route": "/reset-password"
+    },
+    {
+      "id": "route-/for-vendors",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/for-vendors loads",
+      "route": "/for-vendors"
+    },
+    {
+      "id": "route-/auctions",
+      "severity": "pass",
+      "area": "routing",
+      "title": "/auctions loads",
+      "route": "/auctions"
+    },
+    {
+      "id": "route-404",
+      "severity": "pass",
+      "area": "routing",
+      "title": "Unknown route shows 404 UI",
+      "detail": "http=200 body=Events\nAttractions & Activities\nTalents\nFacilities\nLogin\n\n404\n\nThis page has left the venue.\n\nThe link may be old, the e",
+      "route": "/does-not-exist-404-check"
+    },
+    {
+      "id": "nav-desktop",
+      "severity": "pass",
+      "area": "nav",
+      "title": "Desktop main nav has catalog links",
+      "detail": "Events · Attractions & Activities · Talents · Facilities"
+    },
+    {
+      "id": "nav-drawer",
+      "severity": "pass",
+      "area": "nav",
+      "title": "Mobile drawer lists catalog destinations",
+      "detail": "Menu\nEvents\nAttractions & Activities\nTalents\nFacilities\nLogin"
+    },
+    {
+      "id": "auth-empty",
+      "severity": "pass",
+      "area": "auth",
+      "title": "Sign-in empty submit shows validation"
+    },
+    {
+      "id": "auth-bad-creds",
+      "severity": "pass",
+      "area": "auth",
+      "title": "Bad credentials stay on sign-in / show error",
+      "detail": "https://myticket.sa/sign-in"
+    },
+    {
+      "id": "register-empty",
+      "severity": "minor",
+      "area": "auth",
+      "title": "Register empty submit — weak/no client validation"
+    },
+    {
+      "id": "gate-/my-tickets",
+      "severity": "pass",
+      "area": "auth",
+      "title": "/my-tickets gated when signed out",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Fmy-tickets",
+      "route": "/my-tickets"
+    },
+    {
+      "id": "gate-/profile",
+      "severity": "pass",
+      "area": "auth",
+      "title": "/profile gated when signed out",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Fprofile",
+      "route": "/profile"
+    },
+    {
+      "id": "gate-/favorites",
+      "severity": "pass",
+      "area": "auth",
+      "title": "/favorites gated when signed out",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Ffavorites",
+      "route": "/favorites"
+    },
+    {
+      "id": "gate-/wallet",
+      "severity": "pass",
+      "area": "auth",
+      "title": "/wallet gated when signed out",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Fwallet",
+      "route": "/wallet"
+    },
+    {
+      "id": "gate-/settings",
+      "severity": "pass",
+      "area": "auth",
+      "title": "/settings gated when signed out",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Fsettings",
+      "route": "/settings"
+    },
+    {
+      "id": "gate-/apply/talent",
+      "severity": "pass",
+      "area": "auth",
+      "title": "/apply/talent gated when signed out",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Fapply%2Ftalent",
+      "route": "/apply/talent"
+    },
+    {
+      "id": "gate-/apply/facilities",
+      "severity": "pass",
+      "area": "auth",
+      "title": "/apply/facilities gated when signed out",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Fapply%2Ffacilities",
+      "route": "/apply/facilities"
+    },
+    {
+      "id": "gate-/checkout",
+      "severity": "pass",
+      "area": "auth",
+      "title": "/checkout gated when signed out",
+      "detail": "url=https://myticket.sa/",
+      "route": "/checkout"
+    },
+    {
+      "id": "event-detail",
+      "severity": "pass",
+      "area": "catalog",
+      "title": "event detail opens from list",
+      "detail": "https://myticket.sa/events/comedy-nights",
+      "route": "/events/comedy-nights"
+    },
+    {
+      "id": "talent-detail",
+      "severity": "pass",
+      "area": "catalog",
+      "title": "talent detail opens from list",
+      "detail": "https://myticket.sa/talents/pw-test-act",
+      "route": "/talents/pw-test-act"
+    },
+    {
+      "id": "experience-detail",
+      "severity": "pass",
+      "area": "catalog",
+      "title": "experience detail opens from list",
+      "detail": "https://myticket.sa/experiences/rawdat-khuraim",
+      "route": "/experiences/rawdat-khuraim"
+    },
+    {
+      "id": "event-book-cta",
+      "severity": "pass",
+      "area": "checkout",
+      "title": "Event detail shows book/buy CTA",
+      "detail": "https://myticket.sa/events/comedy-nights"
+    },
+    {
+      "id": "event-book-click",
+      "severity": "pass",
+      "area": "checkout",
+      "title": "Book CTA opens dialog, seats, checkout, or sign-in",
+      "detail": "url=https://myticket.sa/events/comedy-nights dialogs=1"
+    },
+    {
+      "id": "search",
+      "severity": "pass",
+      "area": "search",
+      "title": "Search page renders results or empty state",
+      "detail": "Events\nAttractions & Activities\nTalents\nFacilities\nLogin\nMain\n/\nSearch\n/\nriyadh\nResults for “riyadh”\n\n2 matches across events, talents, experiences and auctions.\n\nRiyadh Season Opening Night\nSoundstor",
+      "route": "/search?q=riyadh"
+    },
+    {
+      "id": "footer",
+      "severity": "pass",
+      "area": "marketing",
+      "title": "Footer renders on home",
+      "detail": "+966 59 347 4747\nbusiness@myticket.sa\nTerms of service\nPrivacy policy\nCookie policy\n\n© 2026 MyTicket. All prices in Saudi Riyals (SAR).\n\nRiyadh, Kingdom of Saudi Arabia"
+    },
+    {
+      "id": "footer-instagram",
+      "severity": "pass",
+      "area": "marketing",
+      "title": "Footer Instagram link",
+      "detail": "https://www.instagram.com/myticketapp_official/"
+    },
+    {
+      "id": "rtl",
+      "severity": "pass",
+      "area": "i18n",
+      "title": "Language toggle reaches Arabic/RTL",
+      "detail": "dir=rtl lang=ar"
+    },
+    {
+      "id": "auth-login",
+      "severity": "pass",
+      "area": "auth",
+      "title": "Sign-in succeeded with provided credentials",
+      "detail": "https://myticket.sa/"
+    },
+    {
+      "id": "authed-/my-tickets",
+      "severity": "pass",
+      "area": "account",
+      "title": "/my-tickets loads while authenticated",
+      "detail": "https://myticket.sa/my-tickets",
+      "route": "/my-tickets"
+    },
+    {
+      "id": "authed-/profile",
+      "severity": "pass",
+      "area": "account",
+      "title": "/profile loads while authenticated",
+      "detail": "https://myticket.sa/profile",
+      "route": "/profile"
+    },
+    {
+      "id": "authed-/favorites",
+      "severity": "pass",
+      "area": "account",
+      "title": "/favorites loads while authenticated",
+      "detail": "https://myticket.sa/favorites",
+      "route": "/favorites"
+    },
+    {
+      "id": "authed-/wallet",
+      "severity": "pass",
+      "area": "account",
+      "title": "/wallet loads while authenticated",
+      "detail": "https://myticket.sa/wallet",
+      "route": "/wallet"
+    },
+    {
+      "id": "authed-/settings",
+      "severity": "pass",
+      "area": "account",
+      "title": "/settings loads while authenticated",
+      "detail": "https://myticket.sa/settings",
+      "route": "/settings"
+    }
+  ]
+}

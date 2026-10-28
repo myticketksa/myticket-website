@@ -1,12 +1,12 @@
 {
-  "capturedAt": "2026-10-06T12:59:41.773Z",
-  "baseUrl": "http://localhost:5173",
+  "capturedAt": "2026-10-08T07:52:45.084Z",
+  "baseUrl": "https://myticket.sa",
   "totals": {
-    "pass": 24,
+    "pass": 27,
     "blocker": 0,
     "major": 0,
     "minor": 0,
-    "info": 3
+    "info": 0
   },
   "findings": [
     {
@@ -153,7 +153,7 @@
       "severity": "pass",
       "area": "auth",
       "title": "/apply/talent is gated or redirects when signed out",
-      "detail": "url=http://localhost:5173/sign-in?next=%2Fapply%2Ftalent",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Fapply%2Ftalent",
       "route": "/apply/talent"
     },
     {
@@ -161,31 +161,31 @@
       "severity": "pass",
       "area": "auth",
       "title": "/apply/facilities is gated or redirects when signed out",
-      "detail": "url=http://localhost:5173/sign-in?next=%2Fapply%2Ffacilities",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Fapply%2Ffacilities",
       "route": "/apply/facilities"
     },
     {
       "id": "auth-my-tickets",
-      "severity": "info",
+      "severity": "pass",
       "area": "auth",
-      "title": "/my-tickets loaded signed-out — check gate manually",
-      "detail": "url=http://localhost:5173/my-tickets",
+      "title": "/my-tickets is gated or redirects when signed out",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Fmy-tickets",
       "route": "/my-tickets"
     },
     {
       "id": "auth-profile",
-      "severity": "info",
+      "severity": "pass",
       "area": "auth",
-      "title": "/profile loaded signed-out — check gate manually",
-      "detail": "url=http://localhost:5173/profile",
+      "title": "/profile is gated or redirects when signed out",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Fprofile",
       "route": "/profile"
     },
     {
       "id": "auth-favorites",
-      "severity": "info",
+      "severity": "pass",
       "area": "auth",
-      "title": "/favorites loaded signed-out — check gate manually",
-      "detail": "url=http://localhost:5173/favorites",
+      "title": "/favorites is gated or redirects when signed out",
+      "detail": "url=https://myticket.sa/sign-in?next=%2Ffavorites",
       "route": "/favorites"
     },
     {
@@ -193,7 +193,7 @@
       "severity": "pass",
       "area": "catalog",
       "title": "Event detail opens from catalog card",
-      "detail": "url=http://localhost:5173/events/comedy-nights; bookCtas=1",
+      "detail": "url=https://myticket.sa/events/comedy-nights; bookCtas=1",
       "route": "/events/comedy-nights"
     },
     {

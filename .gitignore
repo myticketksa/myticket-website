@@ -32,3 +32,6 @@ websocket-test.html
 .env
 .env.local
 .env.*.local
+
+# Screenshots from live QA runs (some signed in) — never in this public repo (28 Oct 2026).
+qa/live/*.png

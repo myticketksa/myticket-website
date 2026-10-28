@@ -1,0 +1,16 @@
+FAIL  signed in — https://myticket.sa/sign-in
+PASS  event title rendered
+PASS  no map on the page
+PASS  price list shows the showtime's prices — General 84 / VIP 175 — the discounted prices for this night
+PASS  the night's offer is shown
+PASS  does not claim the event is free
+PASS  book button present
+PASS  dialog opened
+PASS  step 1 asks for the date
+PASS  step 1 does not ask for names yet
+FAIL  run completed without throwing — TimeoutError: locator.selectOption: Timeout 30000ms exceeded.
+Call log:
+  - waiting for getByRole('dialog').locator('select').first()
+
+
+9/11 passed

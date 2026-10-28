@@ -1,0 +1,13 @@
+PASS  signed in — https://myticket.sa/
+PASS  event title rendered
+PASS  no map on the page
+FAIL  price list shows the showtime's prices — General 84 / VIP 175 — the discounted prices for this night
+FAIL  the night's offer is shown
+PASS  does not claim the event is free
+FAIL  book button present
+FAIL  run completed without throwing — TimeoutError: locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for getByRole('button', { name: /book now|احجز/i }).first()
+
+
+4/8 passed
