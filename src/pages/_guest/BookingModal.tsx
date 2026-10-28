@@ -745,7 +745,9 @@ export function BookingModal({
               <Button onClick={submit} disabled={busy} className="flex-1">
                 {busy
                   ? t("detail.claiming")
-                  : t("detail.payNow", { total: formatMoneySar(totalDue) })}
+                  : freeEntry
+                    ? t("detail.getFree", { count: lines.length })
+                    : t("detail.payNow", { total: formatMoneySar(totalDue) })}
               </Button>
             )}
           </div>

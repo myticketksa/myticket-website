@@ -1,6 +1,7 @@
 import i18n from '@/i18n/config'
 import {
   formatApiDate,
+  formatEventDate,
   formatMoneySar,
   localizedString,
   pickLocalized,
@@ -251,7 +252,7 @@ export function mapOrderConfirmation(
     localizedString(order.event_title ?? order.title, 'Your event')
 
   const eventStart = event
-    ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
+    ? formatEventDate(event.startTime ?? event.starts_at ?? event.date)
     : ''
   const eventPlace =
     (event && pickLocalized(event, ['place', 'venue', 'location'])) ||
@@ -520,7 +521,7 @@ export function mapOrderToMyTicket(order: ApiRecord): MyTicketCard {
     )
 
   const when = event
-    ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
+    ? formatEventDate(event.startTime ?? event.starts_at ?? event.date)
     : formatApiDate(order.starts_at ?? order.date)
   const place =
     (event && pickLocalized(event, ['place', 'venue', 'location', 'city'])) ||
@@ -638,7 +639,7 @@ export function mapOrderToDetailView(
       i18n.t('common:labels.orderNumber', { id: id || '—' }),
     )
   const when = event
-    ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
+    ? formatEventDate(event.startTime ?? event.starts_at ?? event.date)
     : formatApiDate(order.created_at)
   const place =
     (event && pickLocalized(event, ['place', 'venue', 'location', 'city'])) ||

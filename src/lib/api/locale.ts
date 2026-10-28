@@ -146,6 +146,34 @@ export function formatApiDate(value: unknown, localeArg?: Locale): string {
 }
 
 /**
+ * An event's date, in Saudi time. A day that starts at midnight is a whole
+ * day (its hours are on the tickets, or it's an activity's day), so it shows
+ * no time — it used to say "12:00 AM" (28 Oct 2026).
+ */
+export function formatEventDate(value: unknown, localeArg?: Locale): string {
+  const locale = localeArg ?? getActiveLocale()
+  const raw = localizedString(value, { locale })
+  if (!raw) return ''
+  const date = new Date(raw)
+  if (Number.isNaN(date.getTime())) return raw
+  const clock = date.toLocaleTimeString('en-GB', { timeZone: 'Asia/Riyadh', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+  return date.toLocaleString(bcp47(locale), {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    ...(clock === '00:00' ? {} : { hour: '2-digit', minute: '2-digit' }),
+    timeZone: 'Asia/Riyadh',
+    numberingSystem: 'latn',
+  })
+}
+
+/** What a place that's always open shows where a date would be. */
+export function alwaysOpenLabel(localeArg?: Locale): string {
+  return (localeArg ?? getActiveLocale()) === 'ar' ? 'مفتوح دائماً' : 'Always open'
+}
+
+/**
  * Human-friendly notification timestamps:
  * recent → relative ("3 hours ago"); yesterday → "Yesterday, 08:06"; else short date + time.
  */

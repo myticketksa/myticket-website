@@ -19,6 +19,11 @@ export interface SessionPickerProps {
   className?: string;
 }
 
+/**
+ * In Saudi time, as the app shows it (28 Oct 2026: these read UTC, so a whole
+ * day showed as "9:00 PM – 8:59 PM" on the day before). A whole day —
+ * midnight to 23:59, its hours on the tickets — shows only the day.
+ */
 export function formatRange(session: EventSession, locale: string): string {
   const start = session.startsAt ? new Date(session.startsAt) : undefined;
   if (!start || Number.isNaN(start.getTime())) return "";
@@ -26,7 +31,7 @@ export function formatRange(session: EventSession, locale: string): string {
     weekday: "long",
     day: "2-digit",
     month: "2-digit",
-    timeZone: "UTC",
+    timeZone: "Asia/Riyadh",
     numberingSystem: "latn",
   });
   const time = (value: Date) =>
@@ -34,13 +39,15 @@ export function formatRange(session: EventSession, locale: string): string {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
-      timeZone: "UTC",
+      timeZone: "Asia/Riyadh",
       numberingSystem: "latn",
     });
+  const clock = (value: Date) =>
+    value.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Asia/Riyadh" });
   const end = session.endsAt ? new Date(session.endsAt) : undefined;
-  return end && !Number.isNaN(end.getTime())
-    ? `${day} · ${time(start)} – ${time(end)}`
-    : `${day} · ${time(start)}`;
+  const hasEnd = end && !Number.isNaN(end.getTime());
+  if (clock(start) === "00:00" && (!hasEnd || clock(end) === "23:59")) return day;
+  return hasEnd ? `${day} · ${time(start)} – ${time(end)}` : `${day} · ${time(start)}`;
 }
 
 export function SessionPicker({

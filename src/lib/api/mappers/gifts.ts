@@ -1,6 +1,7 @@
 import i18n from '@/i18n/config'
 import {
   formatApiDate,
+  formatEventDate,
   localizedString,
   pickLocalized,
 } from '@/lib/api/locale'
@@ -88,8 +89,8 @@ export function mapGiftTicketToMyTicket(gift: ApiRecord): MyTicketCard & {
     localizedString(gift.event_title ?? gift.title ?? gift.name, `Gift ${giftTicketId || '—'}`)
 
   const when = event
-    ? formatApiDate(event.startTime ?? event.starts_at ?? event.date)
-    : formatApiDate(gift.startTime ?? gift.starts_at ?? gift.date)
+    ? formatEventDate(event.startTime ?? event.starts_at ?? event.date)
+    : formatEventDate(gift.startTime ?? gift.starts_at ?? gift.date)
   const place =
     (event ? pickLocalized(event, ['place', 'venue', 'location', 'city']) : '') ||
     localizedString(gift.venue ?? gift.place ?? gift.city ?? order?.venue)

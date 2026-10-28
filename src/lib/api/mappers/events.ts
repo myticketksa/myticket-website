@@ -3,7 +3,8 @@ import type { EventCardProps } from "@/components/cards";
 import { getActiveLocale } from "@/i18n/config";
 import {
   firstTicketTypeId,
-  formatApiDate,
+  formatEventDate,
+  alwaysOpenLabel,
   formatMoneySar,
   localizedString,
   nestedValue,
@@ -330,7 +331,8 @@ export function mapApiEventToCard(event: ApiRecord): EventCardProps & {
     ]) || undefined;
 
   const date =
-    formatApiDate(
+    (event.isPermanent === true ? alwaysOpenLabel() : "") ||
+    formatEventDate(
       event.startTime ??
         event.starts_at ??
         event.start_at ??
