@@ -162,7 +162,6 @@ export function ApplyOrganizerPage() {
           <Field label={t('organizer.fields.about')} htmlFor="org-about">
             <Textarea id="org-about" rows={3} maxLength={600} value={about} onChange={(e) => setAbout(e.target.value)} placeholder={t('organizer.fields.about')} />
           </Field>
-          {user?.email ? <p className="text-[13px] text-ink-secondary">{t('organizer.emailNote', { email: user.email })}</p> : null}
         </div>
         <Button type="submit" size="lg" className="w-full" loading={applyState.isLoading}>
           {t('organizer.submit')}
