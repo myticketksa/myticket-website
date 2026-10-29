@@ -426,7 +426,7 @@
     "paymentNotCompleted": "Payment was not completed and nothing was charged. Your order is saved, so you can try again.",
     "bookingFailed": "Could not complete your booking. Please try again.",
     "alreadyHeld": "You already have {{count}} ticket(s) for this event on this day.",
-    "activitiesTitle": "Ticket categories",
+    "activitiesTitle": "Activities",
     "activityBook": "Book",
     "activityEveryDay": "Every day",
     "activityEveryDayExcept": "Every day except {{days}}",

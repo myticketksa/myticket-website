@@ -433,7 +433,7 @@
     "paymentNotCompleted": "لم يكتمل الدفع ولم يُخصم منك شيء. طلبك محفوظ ويمكنك المحاولة مجدداً.",
     "bookingFailed": "تعذّر إتمام الحجز. حاول مرة أخرى.",
     "alreadyHeld": "لديك {{count}} تذكرة لهذه الفعالية في هذا اليوم.",
-    "activitiesTitle": "فئات التذاكر",
+    "activitiesTitle": "الأنشطة",
     "activityBook": "احجز",
     "activityEveryDay": "كل يوم",
     "activityEveryDayExcept": "كل يوم عدا {{days}}",
