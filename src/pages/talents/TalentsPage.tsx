@@ -47,9 +47,9 @@ const SPONSORS = [
   { src: "/sponsors/ministry-of-media.svg", name: "Ministry of Media" },
   { src: "/sponsors/vision-2030.png", name: "Saudi Vision 2030" },
   { src: "/sponsors/public-transport-authority.png", name: "Public Transport Authority" },
-  { src: "/sponsors/human-rights-commission.png", name: "Human Rights Commission" },
+  { src: "/sponsors/human-rights-commission.svg", name: "Human Rights Commission" },
   { src: "/sponsors/ministry-of-culture.svg", name: "Ministry of Culture" },
-  { src: "/sponsors/tourism-national-heritage.png", name: "Saudi Commission for Tourism and National Heritage" },
+  { src: "/sponsors/tourism-national-heritage.svg", name: "Saudi Commission for Tourism and National Heritage" },
   { src: "/sponsors/general-entertainment-authority.svg", name: "General Entertainment Authority" },
   { src: "/sponsors/ministry-of-sport.png", name: "Ministry of Sport" },
 ];
