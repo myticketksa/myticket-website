@@ -31,6 +31,8 @@ export const PLAY_STORE_URL =
 /** Public contact — shown in the site footer. */
 export const SITE_PHONE = "+966 59 347 4747";
 export const SITE_PHONE_HREF = "tel:+966593474747";
+/** The same number on WhatsApp: where a guest's "contact us" goes (support chat needs an account). */
+export const SITE_WHATSAPP_URL = "https://wa.me/966593474747";
 export const SITE_EMAIL = "info@myticket.sa";
 export const SITE_EMAIL_HREF = "mailto:info@myticket.sa";
 

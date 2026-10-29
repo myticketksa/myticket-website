@@ -8,6 +8,7 @@ import {
   FunnelLayout,
 } from "@/layouts";
 import { SiteDocumentMeta } from "@/components/navigation";
+import { SupportGate } from "@/lib/auth/SupportGate";
 import { RequireAuth } from "@/lib/auth/RequireAuth";
 import { ProbeRoute } from "./ProbeRoute";
 import { RouteErrorPage } from "./RouteErrorPage";
@@ -163,15 +164,20 @@ export const router = createBrowserRouter([
         element: <FunnelLayout />,
         children: [
           {
-            element: <RequireAuth />,
+            element: <SupportGate />,
             children: [
-              { path: "/my-tickets/:id", element: <TicketPage /> },
-              { path: "/my-tickets/:id/gift", element: <GiftTicketPage /> },
               {
                 path: "/support/new",
                 element: <Navigate to="/support/chat" replace />,
               },
               { path: "/support/chat", element: <SupportChatPage /> },
+            ],
+          },
+          {
+            element: <RequireAuth />,
+            children: [
+              { path: "/my-tickets/:id", element: <TicketPage /> },
+              { path: "/my-tickets/:id/gift", element: <GiftTicketPage /> },
               { path: "/submit-experience", element: <SubmitExperiencePage /> },
               {
                 path: "/application-submitted",
