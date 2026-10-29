@@ -12,8 +12,8 @@ import type { IdLabelOption } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 import { catalogLabel } from '@/lib/i18n/catalogLabels'
 import { FacilitiesTabs, FacilitiesTopBar } from './apply-shared'
+import { commercialRegistrationDigits, isValidCommercialRegistration } from '@/lib/validation/fieldFormats'
 
-const STEP_KEYS = ['request', 'call', 'dashboard'] as const
 const DASHBOARD_URL = 'https://business.myticket.sa'
 const FALLBACK_CITIES: IdLabelOption[] = [
   { value: '1', label: 'Riyadh' },
@@ -66,7 +66,6 @@ export function ApplyOrganizerPage() {
   const status = user?.role === 'organizer' ? 'approved' : (request?.status as string | undefined)
   const requestName = (request?.publicPresence as { publicName?: string } | undefined)?.publicName ?? ''
 
-  const steps = STEP_KEYS.map((key) => ({ title: t(`organizer.steps.${key}.title`), body: t(`organizer.steps.${key}.body`) }))
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -74,12 +73,13 @@ export function ApplyOrganizerPage() {
     if (name.trim().length < 2) return void dispatch(toastPushed('error', t('organizer.fields.nameRequired')))
     if (!cityId) return void dispatch(toastPushed('error', t('organizer.fields.cityRequired')))
     if (!mobile) return void dispatch(toastPushed('error', t('organizer.fields.phoneInvalid')))
+    if (!isValidCommercialRegistration(crNumber)) return void dispatch(toastPushed('error', t('organizer.fields.crInvalid')))
 
     const body = new FormData()
     body.append('publicPresence[publicName]', name.trim())
     body.append('entity[regions][]', cityId)
     body.append('entity[contactPhone]', mobile)
-    if (crNumber.trim()) body.append('entity[registrationNumber]', crNumber.trim())
+    body.append('entity[registrationNumber]', commercialRegistrationDigits(crNumber))
     if (about.trim()) body.append('publicPresence[biography]', about.trim())
     try {
       await applyOrganizer(body).unwrap()
@@ -185,19 +185,6 @@ export function ApplyOrganizerPage() {
           </div>
           <p className="mt-lg text-[15px] leading-[1.6] text-ink-secondary">{t('organizer.subtitle')}</p>
 
-          <ol className="mt-lg flex flex-col gap-[12px]">
-            {steps.map((step, index) => (
-              <li key={step.title} className="flex gap-[14px] rounded-[18px] border border-border-default bg-surface-default px-[20px] py-[16px]">
-                <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[12px] bg-bg-tint-brand text-[14px] font-extrabold text-ink-brand">
-                  {index + 1}
-                </span>
-                <div>
-                  <p className="text-[15px] font-bold text-ink-primary">{step.title}</p>
-                  <p className="mt-[2px] text-[14px] leading-[1.55] text-ink-secondary">{step.body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
 
           <div className="mt-lg">{body}</div>
         </div>

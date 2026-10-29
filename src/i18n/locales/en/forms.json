@@ -120,11 +120,12 @@
       "name": "Organization or your name",
       "city": "City",
       "phone": "Mobile number",
-      "cr": "Commercial registration no. (optional)",
+      "cr": "Commercial registration no.",
       "about": "What kind of events do you organise? (optional)",
       "nameRequired": "Add your organization's name or yours",
       "cityRequired": "Choose a city",
-      "phoneInvalid": "Enter a Saudi mobile number, like 05XXXXXXXX"
+      "phoneInvalid": "Enter a Saudi mobile number, like 05XXXXXXXX",
+      "crInvalid": "The commercial registration number is 10 digits"
     },
     "steps": {
       "request": {
