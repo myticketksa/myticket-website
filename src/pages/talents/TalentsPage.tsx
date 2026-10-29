@@ -42,6 +42,18 @@ function talentClientWindow(uiPage: number) {
  * Talents directory — mobile only: search by name, talent type, city,
  * highest-rated toggle. API: filters[category], filters[in].
  */
+/** Same logos and order as the app's talents hub (talentSponsors), colour versions. */
+const SPONSORS = [
+  { src: "/sponsors/ministry-of-media.svg", name: "Ministry of Media" },
+  { src: "/sponsors/vision-2030.png", name: "Saudi Vision 2030" },
+  { src: "/sponsors/public-transport-authority.png", name: "Public Transport Authority" },
+  { src: "/sponsors/human-rights-commission.png", name: "Human Rights Commission" },
+  { src: "/sponsors/ministry-of-culture.svg", name: "Ministry of Culture" },
+  { src: "/sponsors/tourism-national-heritage.png", name: "Saudi Commission for Tourism and National Heritage" },
+  { src: "/sponsors/general-entertainment-authority.svg", name: "General Entertainment Authority" },
+  { src: "/sponsors/ministry-of-sport.png", name: "Ministry of Sport" },
+];
+
 export function TalentsPage() {
   const { t } = useTranslation(["catalog", "common", "nav"]);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -307,6 +319,18 @@ export function TalentsPage() {
             />
           </div>
         ) : null}
+      </PageSection>
+
+      {/* The ministries and authorities shown on the app's talents hub, in colour. */}
+      <PageSection padTop={0} padBottom={72}>
+        <h2 className="mb-lg text-[20px] font-bold text-ink-primary">{t("partners.title")}</h2>
+        <ul className="flex flex-wrap items-center justify-center gap-x-[40px] gap-y-[28px] rounded-[18px] border border-border-default bg-white px-lg py-[28px]">
+          {SPONSORS.map((sponsor) => (
+            <li key={sponsor.src}>
+              <img src={sponsor.src} alt={sponsor.name} loading="lazy" className="h-[64px] w-auto max-w-[170px] object-contain" />
+            </li>
+          ))}
+        </ul>
       </PageSection>
     </>
   );

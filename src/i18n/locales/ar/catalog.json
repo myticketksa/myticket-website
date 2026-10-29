@@ -541,5 +541,8 @@
   "organizer": {
     "follow": "متابعة",
     "allEvents": "كل الفعاليات"
+  },
+  "partners": {
+    "title": "شركاؤنا"
   }
 }

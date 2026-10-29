@@ -534,5 +534,8 @@
   "organizer": {
     "follow": "Follow",
     "allEvents": "All events"
+  },
+  "partners": {
+    "title": "Our partners"
   }
 }
