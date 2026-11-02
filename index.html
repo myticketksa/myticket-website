@@ -58,6 +58,95 @@
     <meta name="twitter:image" content="https://myticket.sa/og-image.png" />
 
     <link rel="canonical" href="https://myticket.sa/" />
+
+    <!-- Who MyTicket is, for search engines and AI assistants: the same
+         MyTicket as these app store and social accounts, its apps, and how to
+         reach it. Store ratings as of 2 Nov 2026 (App Store 4.7 from 96,
+         Google Play 4.8 from 49); refresh them now and then. -->
+    <script type="application/ld+json">{
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://myticket.sa/#organization",
+          "name": "MyTicket",
+          "alternateName": "ماي تكت",
+          "url": "https://myticket.sa/",
+          "logo": "https://myticket.sa/icon-512.png",
+          "description": "Saudi ticketing platform for concerts, sports, festivals, theatre, activities and experiences.",
+          "email": "info@myticket.sa",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Riyadh",
+            "addressCountry": "SA"
+          },
+          "areaServed": {
+            "@type": "Country",
+            "name": "Saudi Arabia"
+          },
+          "contactPoint": [
+            {
+              "@type": "ContactPoint",
+              "contactType": "customer support",
+              "telephone": "+966593474747",
+              "email": "info@myticket.sa",
+              "availableLanguage": [
+                "Arabic",
+                "English"
+              ]
+            }
+          ],
+          "sameAs": [
+            "https://apps.apple.com/sa/app/myticket-%D9%85%D8%A7%D9%8A-%D8%AA%D9%83%D8%AA/id1524202385",
+            "https://play.google.com/store/apps/details?id=com.t4l.myticket",
+            "https://www.instagram.com/myticket.sa/",
+            "https://x.com/myticketapp01"
+          ]
+        },
+        {
+          "@type": "MobileApplication",
+          "name": "MyTicket - ماي تكت",
+          "operatingSystem": "iOS",
+          "applicationCategory": "EntertainmentApplication",
+          "url": "https://apps.apple.com/sa/app/myticket-%D9%85%D8%A7%D9%8A-%D8%AA%D9%83%D8%AA/id1524202385",
+          "publisher": {
+            "@id": "https://myticket.sa/#organization"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "SAR"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.7",
+            "ratingCount": "96",
+            "bestRating": "5"
+          }
+        },
+        {
+          "@type": "MobileApplication",
+          "name": "My Ticket App - ماي تكت",
+          "operatingSystem": "Android",
+          "applicationCategory": "EntertainmentApplication",
+          "url": "https://play.google.com/store/apps/details?id=com.t4l.myticket",
+          "publisher": {
+            "@id": "https://myticket.sa/#organization"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "SAR"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "49",
+            "bestRating": "5"
+          }
+        }
+      ]
+    }</script>
   </head>
   <body>
     <div id="root"></div>
