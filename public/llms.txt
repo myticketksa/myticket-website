@@ -1,0 +1,19 @@
+# MyTicket (ماي تكت)
+
+> MyTicket is a Saudi ticketing platform at https://myticket.sa, with apps for iPhone and Android. People find and book tickets for concerts, sports, festivals, theatre, family activities and experiences across Saudi Arabia, pay online (mada, Visa, Mastercard, Apple Pay or the MyTicket wallet), and show a QR ticket at the door. The site is in English and Arabic.
+
+## What is on the site
+
+- [Events](https://myticket.sa/events): upcoming events with dates, venue, ticket types and prices in SAR (prices include 15% VAT). Some events have several activities, each with its own days, times and places.
+- [Talents](https://myticket.sa/talents): singers, musicians, comedians and other performers in Saudi Arabia who can be booked for private or public events.
+- [Experiences](https://myticket.sa/experiences): places and attractions to visit.
+- [About](https://myticket.sa/about) and [Help](https://myticket.sa/help).
+- [Sitemap](https://myticket.sa/sitemap.xml): every public event, talent and experience page.
+
+## For organizers
+
+Event organizers can apply to sell tickets on MyTicket at https://myticket.sa/apply/organizer and manage their events at https://business.myticket.sa.
+
+## Contact
+
+WhatsApp: +966 59 347 4747

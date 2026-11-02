@@ -1,0 +1,19 @@
+# MyTicket (myticket.sa). Public pages are open to search engines and AI
+# assistants; account, checkout and ticket pages are personal and not crawled.
+User-agent: *
+Allow: /
+Disallow: /checkout
+Disallow: /payment-return
+Disallow: /order-confirmation
+Disallow: /my-tickets
+Disallow: /wallet
+Disallow: /profile
+Disallow: /settings
+Disallow: /favorites
+Disallow: /saved
+Disallow: /support
+Disallow: /gift/
+Disallow: /probe
+Disallow: /maintenance
+
+Sitemap: https://myticket.sa/sitemap.xml
