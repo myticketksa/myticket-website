@@ -469,8 +469,6 @@ export function EventDetailPage() {
     /** An activity's start time ("09:00"), when it has times. */
     time?: string | null;
     lines: BookingLine[];
-    /** A sports event's buyer ID (Ministry of Sport rules). */
-    buyerId?: { idType: string; idNumber: string };
   };
 
   /**
@@ -600,8 +598,6 @@ export function EventDetailPage() {
             // Optional: a ticket left without a name carries the account's.
             name: line.name.trim() || authUser?.name || "",
           })),
-          // A sports event's buyer ID (Ministry of Sport rules).
-          ...(booking.buyerId ?? {}),
         },
       }).unwrap();
       // Order creation consumes the hold.
@@ -1014,9 +1010,7 @@ export function EventDetailPage() {
             activitySlots={bookingActivity ? (activitySlots ?? []) : undefined}
             activitySlotsLoading={activitySlotsLoading}
             accountName={authUser?.name ?? undefined}
-            sportsEvent={Boolean((eventSource as { isSports?: boolean } | undefined)?.isSports)}
             maxPerPerson={(eventSource as { maxTicketsPerPerson?: number | null } | undefined)?.maxTicketsPerPerson ?? null}
-            savedId={authUser?.idType && authUser?.idNumber ? { type: authUser.idType, number: authUser.idNumber } : null}
             refundUntilHours={
               eventSource && "refundUntilHours" in eventSource
                 ? ((eventSource as { refundUntilHours?: number | null }).refundUntilHours ?? null)

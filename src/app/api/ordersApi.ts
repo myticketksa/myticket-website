@@ -18,9 +18,6 @@ export const ordersApi = baseApi.injectEndpoints({
           quantity?: number
           /** Required. Omitting it fails with `session_required`. */
           sessionId?: number
-          /** A sports event's buyer ID (national_id, iqama, passport, visa, border). */
-          idType?: string
-          idNumber?: string
         }
       }
     >({

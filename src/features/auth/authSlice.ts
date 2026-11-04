@@ -12,9 +12,6 @@ export interface AuthUser {
   emailVerified?: boolean
   walletBalance?: number
   created_at?: string
-  /** The ID from the last sports booking, to fill the next one. */
-  idType?: string | null
-  idNumber?: string | null
 }
 
 interface AuthState {
@@ -40,8 +37,6 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
     role: String(record.role ?? 'default'),
     emailVerified: Boolean(record.emailVerified ?? record.email_verified),
     walletBalance: walletNum != null && Number.isFinite(walletNum) ? walletNum : undefined,
-    idType: record.idType != null ? String(record.idType) : null,
-    idNumber: record.idNumber != null ? String(record.idNumber) : null,
     created_at:
       record.created_at != null
         ? String(record.created_at)
