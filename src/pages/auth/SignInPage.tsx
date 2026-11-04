@@ -7,7 +7,7 @@ import { ArrowLeftIcon } from "@/components/icons";
 import { Button, Checkbox, Field, TextInput, PasswordInput } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { useLoginMutation } from "@/app/api/authApi";
-import { GoogleSignInButton, OrDivider } from "@/components/auth/GoogleSignInButton";
+import { GoogleSignInButton, OrDivider, PhoneSignInLink } from "@/components/auth/GoogleSignInButton";
 import { useAppDispatch } from "@/app/hooks";
 import { credentialsSet } from "@/features/auth/authSlice";
 import { toastPushed } from "@/features/ui/uiSlice";
@@ -151,6 +151,7 @@ export function SignInPage() {
 
       <OrDivider />
       <GoogleSignInButton nextPath={nextPath} persist={passwordForm.watch("keepSignedIn") !== false} />
+      <PhoneSignInLink nextPath={nextPath} />
 
       <Link
         to="/"

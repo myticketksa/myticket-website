@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui";
 import { useFirebaseLoginMutation } from "@/app/api/authApi";
@@ -72,5 +72,22 @@ export function OrDivider() {
       {t("google.or")}
       <span className="h-px flex-1 bg-border-default" />
     </div>
+  );
+}
+
+/** "Continue with phone number" — opens the phone sign-in, same pill as Google's. */
+export function PhoneSignInLink({ nextPath = "/" }: { nextPath?: string }) {
+  const { t } = useTranslation("auth");
+  return (
+    <Link
+      to={`/sign-in/phone${nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : ""}`}
+      className="mt-[12px] flex h-[52px] w-full items-center justify-center gap-[10px] rounded-[26px] border border-border-default bg-surface-default text-[16px] font-semibold text-ink-primary transition-colors hover:bg-[color-mix(in_srgb,var(--color-brand-primary)_6%,transparent)]"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="6" y="2" width="12" height="20" rx="2.5" />
+        <path d="M11 18h2" />
+      </svg>
+      {t("phone.continue")}
+    </Link>
   );
 }

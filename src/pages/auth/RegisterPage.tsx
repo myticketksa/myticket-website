@@ -5,10 +5,10 @@ import { useTranslation } from "react-i18next";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Divider } from "@/components/data-display";
 import { Button, Checkbox, Field, TextInput, PasswordInput } from "@/components/ui";
-import { useRegisterMutation, useVerifyEmailMutation } from "@/app/api/authApi";
+import { useRegisterMutation, useResendSignupCodeMutation, useVerifyEmailMutation } from "@/app/api/authApi";
 import { useAppDispatch } from "@/app/hooks";
 import { credentialsSet } from "@/features/auth/authSlice";
-import { GoogleSignInButton, OrDivider } from "@/components/auth/GoogleSignInButton";
+import { GoogleSignInButton, OrDivider, PhoneSignInLink } from "@/components/auth/GoogleSignInButton";
 import { toastPushed } from "@/features/ui/uiSlice";
 import { apiErrorMessage } from "@/lib/api/unwrap";
 import {
@@ -96,6 +96,7 @@ export function RegisterPage() {
     }
   }
 
+  const [resendSignupCode, resendState] = useResendSignupCodeMutation();
   const busy = registerState.isLoading || verifyState.isLoading;
 
   return (
@@ -247,6 +248,7 @@ export function RegisterPage() {
           {/* Or skip the form: Google makes the account, no code step. */}
           <OrDivider />
           <GoogleSignInButton />
+          <PhoneSignInLink />
         </form>
       ) : (
         <form
@@ -274,6 +276,28 @@ export function RegisterPage() {
           >
             {t("auth:register.verifySubmit")}
           </Button>
+          <div className="mt-[18px] flex items-center justify-between text-[14px] font-medium">
+            {/* A mistyped email: back to the form, still filled in; signing
+                up again replaces the unfinished account. */}
+            <button type="button" className="text-ink-secondary" onClick={() => setStep("form")}>
+              {t("auth:register.wrongEmail")}
+            </button>
+            <button
+              type="button"
+              className="text-ink-brand"
+              disabled={resendState.isLoading}
+              onClick={async () => {
+                try {
+                  await resendSignupCode({ email: form.getValues("email").trim() }).unwrap();
+                  dispatch(toastPushed("success", t("auth:register.codeResent")));
+                } catch (error) {
+                  dispatch(toastPushed("error", apiErrorMessage(error, t("auth:register.error"))));
+                }
+              }}
+            >
+              {t("auth:register.resendCode")}
+            </button>
+          </div>
         </form>
       )}
     </div>

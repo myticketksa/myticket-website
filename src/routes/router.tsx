@@ -27,6 +27,7 @@ import {
   CheckoutPage,
   OrderConfirmationPage,
   SignInPage,
+  PhoneSignInPage,
   RegisterPage,
   ResetPasswordPage,
   ProfilePage,
@@ -130,6 +131,7 @@ export const router = createBrowserRouter([
         element: <AuthLayout />,
         children: [
           { path: "/sign-in", element: <SignInPage /> },
+          { path: "/sign-in/phone", element: <PhoneSignInPage /> },
           { path: "/register", element: <RegisterPage /> },
           { path: "/reset-password", element: <ResetPasswordPage /> },
         ],

@@ -11,6 +11,7 @@ export { OrderConfirmationPage } from "./checkout/OrderConfirmationPage";
 export { SeatSelectionPage } from "./checkout/SeatSelectionPage";
 export { CheckoutPage } from "./checkout/CheckoutPage";
 export { SignInPage } from "./auth/SignInPage";
+export { PhoneSignInPage } from "./auth/PhoneSignInPage";
 export { RegisterPage } from "./auth/RegisterPage";
 export { ResetPasswordPage } from "./auth/ResetPasswordPage";
 export { ProfilePage } from "./account/ProfilePage";

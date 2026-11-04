@@ -45,6 +45,29 @@ export const authApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: unknown) => unwrapData<AuthSessionPayload>(response),
     }),
+    // Sign-in with a Saudi mobile and a texted code (3 Nov 2026). Verifying
+    // signs a known number in; a new number returns needsProfile and a
+    // signupToken, and phoneComplete makes the account.
+    // A new sign-up code to the email the account was made with.
+    resendSignupCode: build.mutation<unknown, { email: string }>({
+      query: (body) => ({ url: '/auth/register/resend-email', method: 'POST', body }),
+    }),
+    phoneRequest: build.mutation<{ resendIn?: number }, { phone: string }>({
+      query: (body) => ({ url: '/auth/login/phone/request', method: 'POST', body }),
+      transformResponse: (response: unknown) => unwrapData<{ resendIn?: number }>(response),
+    }),
+    phoneVerify: build.mutation<
+      AuthSessionPayload | { needsProfile: true; signupToken: string },
+      { phone: string; code: string }
+    >({
+      query: (body) => ({ url: '/auth/login/phone/verify', method: 'POST', body }),
+      transformResponse: (response: unknown) =>
+        unwrapData<AuthSessionPayload | { needsProfile: true; signupToken: string }>(response),
+    }),
+    phoneComplete: build.mutation<AuthSessionPayload, { signupToken: string; name: string; email: string }>({
+      query: (body) => ({ url: '/auth/login/phone/complete', method: 'POST', body }),
+      transformResponse: (response: unknown) => unwrapData<AuthSessionPayload>(response),
+    }),
     forgotPassword: build.mutation<unknown, { email: string }>({
       query: (body) => ({
         url: '/auth/login/password/forgot',
@@ -91,6 +114,10 @@ export const {
   useVerifyEmailMutation,
   useLoginMutation,
   useFirebaseLoginMutation,
+  useResendSignupCodeMutation,
+  usePhoneRequestMutation,
+  usePhoneVerifyMutation,
+  usePhoneCompleteMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useRequestLoginCodeMutation,
