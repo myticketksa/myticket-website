@@ -437,7 +437,21 @@
     "placesLeft": "{{count}} left",
     "noSlots": "No times available right now.",
     "activityFrom": "From {{price}}",
-    "alwaysOpen": "Always open"
+    "alwaysOpen": "Always open",
+    "idTitle": "Your ID",
+    "idHint": "This is a sports event: the Ministry of Sport requires tickets to be linked to the buyer's ID. It may be checked at the gate.",
+    "idTypeLabel": "ID type",
+    "idType": {
+      "national_id": "National ID",
+      "iqama": "Iqama",
+      "passport": "Passport",
+      "visa": "Visa number",
+      "border": "Border number"
+    },
+    "idNumberLabel": "ID number",
+    "idNumberPlaceholder": "ID number",
+    "idRequired": "Enter your ID number to book a sports event.",
+    "perPersonLimit": "Up to {{count}} tickets per person for this event."
   },
   "search": {
     "title": "Search",

@@ -71,6 +71,7 @@ export interface BookingModalProps {
     lines: BookingLine[];
     promoCode: string;
     method: BookingPaymentMethod;
+    buyerId?: { idType: string; idNumber: string };
   }) => void;
   /**
    * Apply: the parent makes the order and applies the code, as the app does,
@@ -96,7 +97,17 @@ export interface BookingModalProps {
   accountName?: string;
   /** Hours before the start that refunds close; null = no refunds. Shown at checkout only. */
   refundUntilHours?: number | null;
+  /**
+   * A sports event (Ministry of Sport rules): the buyer's ID goes with the
+   * order. `savedId` fills it from the last sports booking.
+   */
+  sportsEvent?: boolean;
+  savedId?: { type: string; number: string } | null;
+  /** Most tickets one person may hold for the event. */
+  maxPerPerson?: number | null;
 }
+
+export const ID_TYPES = ["national_id", "iqama", "passport", "visa", "border"] as const;
 
 export function BookingModal({
   open,
@@ -119,7 +130,12 @@ export function BookingModal({
   activitySlotsLoading,
   accountName,
   refundUntilHours,
+  sportsEvent = false,
+  savedId,
+  maxPerPerson,
 }: BookingModalProps) {
+  const [idType, setIdType] = useState<string>(savedId?.type ?? "national_id");
+  const [idNumber, setIdNumber] = useState<string>(savedId?.number ?? "");
   const isActivity = activitySlots !== undefined;
   const { t } = useTranslation(["catalog", "checkout", "common"]);
   const locale = getActiveLocale() === "ar" ? "ar-SA" : "en-SA";
@@ -226,7 +242,7 @@ export function BookingModal({
   const remaining = isActivity
     ? (activeSlot?.left ?? undefined)
     : activeSession ? sessionRemaining(activeSession) : undefined;
-  const ceiling = Math.min(MAX_TICKETS, remaining ?? MAX_TICKETS);
+  const ceiling = Math.min(MAX_TICKETS, remaining ?? MAX_TICKETS, maxPerPerson ?? MAX_TICKETS);
   const canAdd = Boolean(sessionId) && lines.length < ceiling;
   const canRemove = lines.length > 0;
 
@@ -246,6 +262,7 @@ export function BookingModal({
     }
     if (index === 1) {
       if (lines.length === 0) return t("detail.addAtLeastOne");
+      if (sportsEvent && idNumber.trim().length < 5) return t("detail.idRequired");
       if (assignedSeating) {
         if (lines.some((line) => line.seatId == null))
           return t("detail.seatRequired");
@@ -317,6 +334,7 @@ export function BookingModal({
       lines,
       promoCode: freeEntry ? "" : (appliedPromo?.code ?? promoCode.trim()),
       method,
+      ...(sportsEvent ? { buyerId: { idType, idNumber: idNumber.trim() } } : {}),
     });
   }
 
@@ -475,6 +493,37 @@ export function BookingModal({
                   <PlusIcon size={16} />
                 </button>
               </div>
+            </div>
+          )}
+
+          {step === 1 && maxPerPerson ? (
+            <p className="mb-md text-[13px] text-ink-secondary">{t("detail.perPersonLimit", { count: maxPerPerson })}</p>
+          ) : null}
+
+          {/* Sports: the buyer's ID, linked to the tickets (Ministry of Sport rules). */}
+          {step === 1 && sportsEvent && (
+            <div className="mb-lg flex flex-col gap-xs rounded-[14px] border border-border-default bg-surface-default p-[14px]">
+              <span className="text-[13px] font-semibold text-ink-primary">{t("detail.idTitle")}</span>
+              <span className="text-[12px] text-ink-secondary">{t("detail.idHint")}</span>
+              <select
+                value={idType}
+                onChange={(event) => setIdType(event.target.value)}
+                aria-label={t("detail.idTypeLabel")}
+                className="h-input rounded-input border border-border-default bg-bg-page px-field-pad text-[15px] text-ink-primary"
+              >
+                {ID_TYPES.map((type) => (
+                  <option key={type} value={type}>{t(`detail.idType.${type}`)}</option>
+                ))}
+              </select>
+              <TextInput
+                value={idNumber}
+                dir="ltr"
+                inputMode={idType === "passport" ? "text" : "numeric"}
+                placeholder={t("detail.idNumberPlaceholder")}
+                aria-label={t("detail.idNumberLabel")}
+                onChange={(event) => setIdNumber(event.target.value)}
+                className="bg-bg-page"
+              />
             </div>
           )}
 

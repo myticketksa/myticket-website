@@ -444,7 +444,21 @@
     "placesLeft": "متبقي {{count}}",
     "noSlots": "لا توجد مواعيد متاحة حالياً.",
     "activityFrom": "من {{price}}",
-    "alwaysOpen": "مفتوح دائماً"
+    "alwaysOpen": "مفتوح دائماً",
+    "idTitle": "هويتك",
+    "idHint": "هذه فعالية رياضية: تشترط وزارة الرياضة ربط التذاكر بهوية المشتري، وقد يُتحقق منها عند الدخول.",
+    "idTypeLabel": "نوع الهوية",
+    "idType": {
+      "national_id": "الهوية الوطنية",
+      "iqama": "الإقامة",
+      "passport": "جواز السفر",
+      "visa": "رقم التأشيرة",
+      "border": "رقم الحدود"
+    },
+    "idNumberLabel": "رقم الهوية",
+    "idNumberPlaceholder": "رقم الهوية",
+    "idRequired": "أدخل رقم هويتك لحجز فعالية رياضية.",
+    "perPersonLimit": "بحد أقصى {{count}} تذاكر للشخص لهذه الفعالية."
   },
   "search": {
     "title": "بحث",
