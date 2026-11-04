@@ -48,6 +48,18 @@ export const authApi = baseApi.injectEndpoints({
     // Sign-in with a Saudi mobile and a texted code (3 Nov 2026). Verifying
     // signs a known number in; a new number returns needsProfile and a
     // signupToken, and phoneComplete makes the account.
+    // Which sign-up / sign-in ways are on (admin: App settings), read fresh
+    // each time a sign-in page opens.
+    getAuthOptions: build.query<{ email: boolean; google: boolean; phone: boolean }, void>({
+      query: () => '/generals/auth-options',
+      transformResponse: (response: unknown) =>
+        ({ email: true, google: true, phone: false, ...(unwrapData<object>(response) ?? {}) }) as {
+          email: boolean
+          google: boolean
+          phone: boolean
+        },
+      keepUnusedDataFor: 0,
+    }),
     // A new sign-up code to the email the account was made with.
     resendSignupCode: build.mutation<unknown, { email: string }>({
       query: (body) => ({ url: '/auth/register/resend-email', method: 'POST', body }),
@@ -115,6 +127,7 @@ export const {
   useLoginMutation,
   useFirebaseLoginMutation,
   useResendSignupCodeMutation,
+  useGetAuthOptionsQuery,
   usePhoneRequestMutation,
   usePhoneVerifyMutation,
   usePhoneCompleteMutation,

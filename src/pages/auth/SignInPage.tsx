@@ -6,7 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { ArrowLeftIcon } from "@/components/icons";
 import { Button, Checkbox, Field, TextInput, PasswordInput } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { useLoginMutation } from "@/app/api/authApi";
+import { useGetAuthOptionsQuery, useLoginMutation } from "@/app/api/authApi";
 import { GoogleSignInButton, OrDivider, PhoneSignInLink } from "@/components/auth/GoogleSignInButton";
 import { useAppDispatch } from "@/app/hooks";
 import { credentialsSet } from "@/features/auth/authSlice";
@@ -29,6 +29,7 @@ export function SignInPage() {
   const nextPath = searchParams.get("next") || "/";
   const dispatch = useAppDispatch();
   const [login, loginState] = useLoginMutation();
+  const { data: options = { email: true, google: true, phone: false } } = useGetAuthOptionsQuery(undefined, { refetchOnMountOrArgChange: true });
 
   const passwordResolver = useMemo(
     () => yupResolver(createSignInSchema((key) => tv(key))),
@@ -149,9 +150,13 @@ export function SignInPage() {
         </Button>
       </form>
 
-      <OrDivider />
-      <GoogleSignInButton nextPath={nextPath} persist={passwordForm.watch("keepSignedIn") !== false} />
-      <PhoneSignInLink nextPath={nextPath} />
+      {/* Which ways are on is set in the admin panel (App settings). Signing
+          in with a password always stays, for accounts that have one. */}
+      {(options.google || options.phone) && <OrDivider />}
+      {options.google && (
+        <GoogleSignInButton nextPath={nextPath} persist={passwordForm.watch("keepSignedIn") !== false} />
+      )}
+      {options.phone && <PhoneSignInLink nextPath={nextPath} />}
 
       <Link
         to="/"

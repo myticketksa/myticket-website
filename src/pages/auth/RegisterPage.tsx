@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Divider } from "@/components/data-display";
 import { Button, Checkbox, Field, TextInput, PasswordInput } from "@/components/ui";
-import { useRegisterMutation, useResendSignupCodeMutation, useVerifyEmailMutation } from "@/app/api/authApi";
+import { useGetAuthOptionsQuery, useRegisterMutation, useResendSignupCodeMutation, useVerifyEmailMutation } from "@/app/api/authApi";
 import { useAppDispatch } from "@/app/hooks";
 import { credentialsSet } from "@/features/auth/authSlice";
 import { GoogleSignInButton, OrDivider, PhoneSignInLink } from "@/components/auth/GoogleSignInButton";
@@ -97,6 +97,7 @@ export function RegisterPage() {
   }
 
   const [resendSignupCode, resendState] = useResendSignupCodeMutation();
+  const { data: options = { email: true, google: true, phone: false } } = useGetAuthOptionsQuery(undefined, { refetchOnMountOrArgChange: true });
   const busy = registerState.isLoading || verifyState.isLoading;
 
   return (
@@ -133,6 +134,9 @@ export function RegisterPage() {
       </p>
 
       {step === "form" ? (
+        <>
+        {/* The email form shows only while email sign-up is on (admin: App settings). */}
+        {options.email && (
         <form
           className="mt-[28px] flex flex-col"
           onSubmit={form.handleSubmit(onRegister)}
@@ -245,11 +249,13 @@ export function RegisterPage() {
             {t("auth:register.submit")}
           </Button>
 
-          {/* Or skip the form: Google makes the account, no code step. */}
-          <OrDivider />
-          <GoogleSignInButton />
-          <PhoneSignInLink />
         </form>
+        )}
+        {/* Or skip the form: Google or a phone code makes the account. */}
+        {options.email && (options.google || options.phone) && <OrDivider />}
+        {options.google && <GoogleSignInButton />}
+        {options.phone && <PhoneSignInLink />}
+        </>
       ) : (
         <form
           className="mt-[28px] flex flex-col"
