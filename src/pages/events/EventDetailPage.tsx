@@ -469,6 +469,8 @@ export function EventDetailPage() {
     /** An activity's start time ("09:00"), when it has times. */
     time?: string | null;
     lines: BookingLine[];
+    /** A sports event's buyer ID (Ministry of Sport rules). */
+    buyerId?: { idType: string; idNumber: string };
   };
 
   /**

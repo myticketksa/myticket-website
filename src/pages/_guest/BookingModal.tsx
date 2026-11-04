@@ -78,7 +78,7 @@ export interface BookingModalProps {
    * and answers with the new total (null when it was refused).
    */
   onApplyPromo?: (
-    booking: { typeId: number; sessionId: number; time: string | null; lines: BookingLine[] },
+    booking: { typeId: number; sessionId: number; time: string | null; lines: BookingLine[]; buyerId?: { idType: string; idNumber: string } },
     code: string,
   ) => Promise<{ amount: number; before: number } | null>;
   /** The applied code is taken off: the parent cancels the order it made. */
@@ -307,7 +307,10 @@ export function BookingModal({
     }
     setError("");
     setApplyingPromo(true);
-    const result = await onApplyPromo({ typeId: typeId!, sessionId: sessionId!, time, lines }, code);
+    const result = await onApplyPromo(
+      { typeId: typeId!, sessionId: sessionId!, time, lines, ...(sportsEvent ? { buyerId: { idType, idNumber: idNumber.trim() } } : {}) },
+      code,
+    );
     setApplyingPromo(false);
     if (result) setAppliedPromo({ code, ...result });
   }
