@@ -23,6 +23,9 @@ export const PrintableTicket = forwardRef<
     [t('ticket.fieldRow'), seat?.row],
     [t('ticket.fieldSeat'), seat?.seat],
     [t('ticket.fieldGate'), seat?.gate],
+    // When it enters, and who to ask (Ministry of Sport rules), as on the screen.
+    [t('ticket.fieldEntry'), seat?.entry ?? undefined],
+    [t('ticket.fieldSupport'), 'info@myticket.sa'],
   ].filter((field): field is [string, string] => Boolean(field[1]) && field[1] !== '—')
 
   return (

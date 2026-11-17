@@ -21,7 +21,7 @@ const TOPIC_META: { id: string; Icon: ComponentType<IconProps> }[] = [
   { id: 'tickets', Icon: TicketIcon },
   { id: 'refunds', Icon: ArrowCounterClockwiseIcon },
   { id: 'payments', Icon: WalletIcon },
-  { id: 'waitlists', Icon: StarIcon },
+  { id: 'sports', Icon: StarIcon },
   { id: 'account', Icon: UserCircleIcon },
   { id: 'business', Icon: BuildingsIcon },
 ]

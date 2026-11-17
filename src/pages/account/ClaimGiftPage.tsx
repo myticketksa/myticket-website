@@ -11,6 +11,7 @@ import { useAppDispatch } from '@/app/hooks'
 import { toastPushed } from '@/features/ui/uiSlice'
 import { localizedString } from '@/lib/api/locale'
 import { apiErrorMessage } from '@/lib/api/unwrap'
+import { VerifyPhoneDialog } from '@/pages/_guest/VerifyPhoneDialog'
 
 /**
  * Claim a gifted ticket — `GET /gift-tickets/{id}` + `POST /gift-tickets/{id}`.
@@ -44,8 +45,11 @@ export function ClaimGiftPage() {
     )
   }, [giftDetail, resolvedGiftId])
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault()
+  // A sports ticket goes to a confirmed mobile number: confirm it, then claim again.
+  const [verifyPhoneOpen, setVerifyPhoneOpen] = useState(false)
+
+  async function handleSubmit(event?: FormEvent) {
+    event?.preventDefault()
     const id = resolvedGiftId
     if (!id) {
       dispatch(toastPushed('error', t('account:claim.missingRef')))
@@ -57,12 +61,17 @@ export function ClaimGiftPage() {
       dispatch(toastPushed('success', t('account:claim.success')))
       navigate('/my-tickets')
     } catch (error) {
+      if ((error as { data?: { data?: { reason?: string } } })?.data?.data?.reason === 'phone_verification_required') {
+        setVerifyPhoneOpen(true)
+        return
+      }
       dispatch(toastPushed('error', apiErrorMessage(error, t('account:claim.error'))))
     }
   }
 
   return (
     <>
+      <VerifyPhoneDialog open={verifyPhoneOpen} onOpenChange={setVerifyPhoneOpen} onDone={() => void handleSubmit()} />
       <FunnelHeader
         label={t('account:claim.header')}
         backHref="/my-tickets"

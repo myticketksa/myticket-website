@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { CloseIcon, MinusIcon, PlusIcon } from "@/components/icons";
-import { Button, TextInput } from "@/components/ui";
+import { Button, Select, TextInput } from "@/components/ui";
+import { useGetCountriesQuery } from "@/app/api/accountApis";
+import { BotCheckWidget } from "@/components/BotCheckWidget";
 import { cn } from "@/lib/cn";
 import { formatMoneySar } from "@/lib/api/locale";
 import { getActiveLocale } from "@/i18n/config";
-import type { EventSession } from "@/lib/api/mappers/events";
+import type { EventSession, SupplierTerms } from "@/lib/api/mappers/events";
 import { sessionRemaining } from "@/lib/api/mappers/events";
 import { formatRange, SessionPicker } from "./SessionPicker";
 import { ActivitySlotPicker } from "./ActivitySlotPicker";
@@ -43,14 +45,21 @@ export type SeatOption = {
 export type BookingLine = {
   name: string;
   seatId?: number;
+  /** A sports ticket's holder (Ministry of Sport rules): ISO country codes, YYYY-MM-DD. */
+  nationality?: string;
+  residence?: string;
+  birthDate?: string;
+  gender?: "male" | "female";
 };
+
+const holderComplete = (line: BookingLine) => Boolean(line.nationality && line.residence && line.birthDate && line.gender);
 
 export interface BookingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   eventTitle: string;
   /** Ticket types on sale for the chosen showtime. */
-  types: { id: number; name: string; price: number; disabled?: boolean }[];
+  types: { id: number; name: string; price: number; disabled?: boolean; supplierGuest?: string }[];
   sessions: EventSession[];
   seats: SeatOption[];
   /** Assigned seating asks for a seat per ticket; free seating does not. */
@@ -69,6 +78,9 @@ export interface BookingModalProps {
     sessionId: number;
     time: string | null;
     lines: BookingLine[];
+    supplierTermsAccepted: boolean;
+    expectedAmount?: number;
+    botCheckToken?: string;
     promoCode: string;
     method: BookingPaymentMethod;
   }) => void;
@@ -77,7 +89,7 @@ export interface BookingModalProps {
    * and answers with the new total (null when it was refused).
    */
   onApplyPromo?: (
-    booking: { typeId: number; sessionId: number; time: string | null; lines: BookingLine[] },
+    booking: { typeId: number; sessionId: number; time: string | null; lines: BookingLine[]; supplierTermsAccepted: boolean; expectedAmount?: number; botCheckToken?: string },
     code: string,
   ) => Promise<{ amount: number; before: number } | null>;
   /** The applied code is taken off: the parent cancels the order it made. */
@@ -98,6 +110,14 @@ export interface BookingModalProps {
   refundUntilHours?: number | null;
   /** Most tickets one person may hold for the event. */
   maxPerPerson?: number | null;
+  /** A trip run by another company (Al-Haddad Scuba): its terms are ticked before paying. */
+  supplier?: SupplierTerms | null;
+  /** Sports events: each ticket carries its holder's nationality, residence, birth date and gender. */
+  holderDetails?: boolean;
+  /** Sports events: "I'm not a robot" before the order is made (null: not asked). */
+  botCheckSiteKey?: string | null;
+  /** Changes when the server refused the check, so it is asked again. */
+  botCheckResetSignal?: number;
 }
 
 
@@ -123,7 +143,13 @@ export function BookingModal({
   accountName,
   refundUntilHours,
   maxPerPerson,
+  supplier,
+  holderDetails = false,
+  botCheckSiteKey = null,
+  botCheckResetSignal = 0,
 }: BookingModalProps) {
+  const { data: countries = [] } = useGetCountriesQuery(undefined, { skip: !holderDetails || !open });
+  const [botToken, setBotToken] = useState<string | null>(null);
   const isActivity = activitySlots !== undefined;
   const { t } = useTranslation(["catalog", "checkout", "common"]);
   const locale = getActiveLocale() === "ar" ? "ar-SA" : "en-SA";
@@ -145,6 +171,7 @@ export function BookingModal({
   const [method, setMethod] = useState<BookingPaymentMethod>("card");
   const [error, setError] = useState("");
   const [step, setStep] = useState(0);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Reopening starts clean; a half-filled booking from last time is worse than
   // an empty one.
@@ -160,6 +187,7 @@ export function BookingModal({
     setAppliedPromo(null);
     setError("");
     setStep(0);
+    setTermsAccepted(false);
     onSessionChange?.(initialSession);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -210,8 +238,16 @@ export function BookingModal({
     });
   }, [seats, sessionId, typeId]);
 
-  const unitPrice =
-    types.find((type) => type.id === typeId)?.price ?? types[0]?.price ?? 0;
+  const activeSlot = isActivity
+    ? activitySlots.find((slot) => slot.sessionId === sessionId && (slot.time ?? null) === time)
+    : undefined;
+  const chosenType = types.find((type) => type.id === typeId);
+  // A supplier's trip costs that time's price, not the "from" price on its
+  // type; a whole-boat charter is priced as one adult.
+  const slotPrice = chosenType?.supplierGuest && activeSlot?.prices
+    ? activeSlot.prices[chosenType.supplierGuest === "boat" ? "adult" : chosenType.supplierGuest] ?? activeSlot.prices.adult
+    : undefined;
+  const unitPrice = slotPrice ?? chosenType?.price ?? types[0]?.price ?? 0;
   // The price already has the night's offer in it — ticket types are read from
   // the chosen session, which reports `discountedPrice`. Subtracting the offer
   // again charged 59 for a ticket priced 84. The offer is shown as information,
@@ -224,9 +260,6 @@ export function BookingModal({
   const totalDue = appliedPromo ? appliedPromo.amount : beforePromo;
   const promoDiscount = appliedPromo ? Math.max(0, beforePromo - appliedPromo.amount) : 0;
 
-  const activeSlot = isActivity
-    ? activitySlots.find((slot) => slot.sessionId === sessionId && (slot.time ?? null) === time)
-    : undefined;
   const remaining = isActivity
     ? (activeSlot?.left ?? undefined)
     : activeSession ? sessionRemaining(activeSession) : undefined;
@@ -256,8 +289,11 @@ export function BookingModal({
         const seen = new Set(lines.map((line) => line.seatId));
         if (seen.size !== lines.length) return t("detail.seatDuplicate");
       }
+      if (holderDetails && !lines.every(holderComplete)) return t("detail.holderDetailsRequired");
       return "";
     }
+    if (index === 2 && supplier && !termsAccepted) return t("checkout:checkout.supplierTermsRequired");
+    if (index === 2 && botCheckSiteKey && !botToken && !appliedPromo) return t("detail.botCheckRequired");
     return "";
   }
 
@@ -285,6 +321,8 @@ export function BookingModal({
   async function applyPromo() {
     const code = promoCode.trim();
     if (!code || !onApplyPromo || applyingPromo) return;
+    if (supplier && !termsAccepted) return setError(t("checkout:checkout.supplierTermsRequired"));
+    if (botCheckSiteKey && !botToken) return setError(t("detail.botCheckRequired"));
     for (let index = 0; index < STEPS.length - 1; index += 1) {
       const message = validate(index);
       if (message) {
@@ -295,7 +333,7 @@ export function BookingModal({
     setError("");
     setApplyingPromo(true);
     const result = await onApplyPromo(
-      { typeId: typeId!, sessionId: sessionId!, time, lines },
+      { typeId: typeId!, sessionId: sessionId!, time, lines, supplierTermsAccepted: termsAccepted, expectedAmount: supplier ? subtotal : undefined, botCheckToken: botToken ?? undefined },
       code,
     );
     setApplyingPromo(false);
@@ -322,6 +360,9 @@ export function BookingModal({
       sessionId: sessionId!,
       time,
       lines,
+      supplierTermsAccepted: termsAccepted,
+      expectedAmount: supplier ? subtotal : undefined,
+      botCheckToken: botToken ?? undefined,
       promoCode: freeEntry ? "" : (appliedPromo?.code ?? promoCode.trim()),
       method,
     });
@@ -529,6 +570,15 @@ export function BookingModal({
                       {t("detail.attendeeNameDefault", { name: accountName })}
                     </span>
                   ) : null}
+                  {holderDetails ? (
+                    <HolderFields
+                      line={line}
+                      countries={countries}
+                      onChange={(patch) =>
+                        setLines((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)))
+                      }
+                    />
+                  ) : null}
                   {assignedSeating && (
                     <div className="mt-xs rounded-[11px] bg-white px-[12px] py-[12px]">
                       <div className="mb-sm flex items-center justify-between gap-md">
@@ -690,6 +740,52 @@ export function BookingModal({
             </div>
           )}
 
+          {/* A trip run by another company: its terms, ticked before paying. */}
+          {step === 2 && supplier && (
+            <div className="mb-lg">
+              <label className="flex cursor-pointer items-start gap-sm text-[14px] text-ink-primary">
+                <input
+                  type="checkbox"
+                  className="mt-[3px] h-4 w-4 accent-brand-primary"
+                  checked={termsAccepted}
+                  onChange={(event) => {
+                    setTermsAccepted(event.target.checked);
+                    setError("");
+                  }}
+                />
+                <span>{t("checkout:checkout.supplierTermsAgree", { name: supplier.name })}</span>
+              </label>
+              <div className="mt-xs flex flex-wrap gap-x-md gap-y-xs ps-lg text-[13px]">
+                {([
+                  ["supplierTermsLink", supplier.termsUrl],
+                  ["supplierPrivacyLink", supplier.privacyUrl],
+                  ["supplierPolicyLink", supplier.policyUrl],
+                ] as const)
+                  .filter(([, url]) => url)
+                  .map(([key, url]) => (
+                    <a key={key} href={url!} target="_blank" rel="noopener noreferrer" className="text-ink-brand underline">
+                      {t(`checkout:checkout.${key}`)}
+                    </a>
+                  ))}
+              </div>
+              <p className="mt-xs ps-lg text-[12px] text-ink-muted">
+                {t("checkout:checkout.supplierTermsNote", { name: supplier.name })}
+              </p>
+            </div>
+          )}
+
+          {step === 2 && botCheckSiteKey && !appliedPromo && (
+            <BotCheckWidget
+              siteKey={botCheckSiteKey}
+              lang={getActiveLocale()}
+              resetSignal={botCheckResetSignal}
+              onToken={(token) => {
+                setBotToken(token);
+                if (token) setError("");
+              }}
+            />
+          )}
+
           {/* The refund policy appears here, at checkout, and nowhere else. */}
           {step === 2 && !freeEntry && refundUntilHours !== undefined && (
             <p className="mb-lg text-[13px] text-ink-secondary">
@@ -697,7 +793,10 @@ export function BookingModal({
                 ? t("checkout:checkout.refundPolicyNone")
                 : refundUntilHours % 24 === 0 && refundUntilHours > 24
                   ? t("checkout:checkout.refundPolicyDays", { count: refundUntilHours / 24 })
-                  : t("checkout:checkout.refundPolicyHours", { count: refundUntilHours })}
+                  : t("checkout:checkout.refundPolicyHours", { count: refundUntilHours })}{" "}
+              <a href="/legal?doc=policies" target="_blank" rel="noopener noreferrer" className="text-ink-brand underline">
+                {t("checkout:checkout.policiesLink")}
+              </a>
             </p>
           )}
 
@@ -982,6 +1081,78 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex items-center justify-between gap-md">
       <span className="text-[14px] text-ink-secondary">{label}</span>
       <span className="ltr-run text-[14px] text-ink-primary">{value}</span>
+    </div>
+  );
+}
+
+/** A sports ticket's holder: nationality, country of residence, birth date, gender. */
+function HolderFields({
+  line,
+  countries,
+  onChange,
+}: {
+  line: BookingLine;
+  countries: { code: string; name: { ar: string; en: string } }[];
+  onChange: (patch: Partial<BookingLine>) => void;
+}) {
+  const { t } = useTranslation("catalog");
+  const lang = getActiveLocale();
+  const options = countries.map((c) => (
+    <option key={c.code} value={c.code}>
+      {c.name[lang] ?? c.name.en}
+    </option>
+  ));
+  const today = new Date().toISOString().slice(0, 10);
+  return (
+    <div className="mt-xs grid grid-cols-1 gap-xs sm:grid-cols-2">
+      <Select
+        value={line.nationality ?? ""}
+        aria-label={t("detail.holderNationality")}
+        onChange={(event) => onChange({ nationality: event.target.value || undefined })}
+        className="bg-bg-page"
+      >
+        <option value="">{t("detail.holderNationality")}</option>
+        {options}
+      </Select>
+      <Select
+        value={line.residence ?? ""}
+        aria-label={t("detail.holderResidence")}
+        onChange={(event) => onChange({ residence: event.target.value || undefined })}
+        className="bg-bg-page"
+      >
+        <option value="">{t("detail.holderResidence")}</option>
+        {options}
+      </Select>
+      <label className="flex flex-col gap-[4px] text-[12px] text-ink-secondary">
+        {t("detail.holderBirthDate")}
+        <TextInput
+          type="date"
+          max={today}
+          min="1900-01-01"
+          value={line.birthDate ?? ""}
+          onChange={(event) => onChange({ birthDate: event.target.value || undefined })}
+          className="bg-bg-page"
+        />
+      </label>
+      <div role="radiogroup" aria-label={t("detail.holderGender")} className="flex items-end gap-xs">
+        {(["male", "female"] as const).map((gender) => (
+          <button
+            key={gender}
+            type="button"
+            role="radio"
+            aria-checked={line.gender === gender}
+            onClick={() => onChange({ gender })}
+            className={cn(
+              "h-input flex-1 rounded-input border text-[14px] font-semibold",
+              line.gender === gender
+                ? "border-border-focus bg-surface-default text-ink-primary"
+                : "border-border-default bg-bg-page text-ink-secondary",
+            )}
+          >
+            {t(gender === "male" ? "detail.holderMale" : "detail.holderFemale")}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

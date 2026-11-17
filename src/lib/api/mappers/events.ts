@@ -63,6 +63,17 @@ export type EventActivity = {
   durationMinutes?: number;
   capacity?: number;
   ticketTypeIds: number[];
+  /** Run by another company (Al-Haddad Scuba): whose terms are accepted at checkout. */
+  supplier?: SupplierTerms | null;
+  /** Its own photo (optional); none: the event's. */
+  image?: string | null;
+};
+
+export type SupplierTerms = {
+  name: string;
+  termsUrl?: string | null;
+  privacyUrl?: string | null;
+  policyUrl?: string | null;
 };
 
 export function listActivities(event: ApiRecord | undefined): EventActivity[] {
@@ -84,6 +95,16 @@ export function listActivities(event: ApiRecord | undefined): EventActivity[] {
         durationMinutes: numberOrUndefined(record.durationMinutes),
         capacity: numberOrUndefined(record.capacity),
         ticketTypeIds: numbers(record.ticketTypeIds),
+        image: typeof record.image === "string" && record.image ? record.image : null,
+        supplier:
+          record.supplier && typeof record.supplier === "object"
+            ? {
+                name: inReaderLanguage(record.supplier as ApiRecord, "name") || String((record.supplier as ApiRecord).name ?? ""),
+                termsUrl: ((record.supplier as ApiRecord).termsUrl as string | null) ?? null,
+                privacyUrl: ((record.supplier as ApiRecord).privacyUrl as string | null) ?? null,
+                policyUrl: ((record.supplier as ApiRecord).policyUrl as string | null) ?? null,
+              }
+            : null,
       },
     ];
   });
@@ -233,6 +254,8 @@ export function listTicketTypes(
   detail?: string;
   remaining?: number;
   isSpecialNeeds: boolean;
+  /** A supplier's guest kind (adult/child/infant/boat): priced by the picked time. */
+  supplierGuest?: string;
 }> {
   if (!event) return [];
   const types = event.ticketTypes ?? event.ticket_types ?? event.tickets;
@@ -270,6 +293,7 @@ export function listTicketTypes(
           inReaderLanguage(record, "description") ||
           localizedString(record.detail ?? record.zone),
         remaining: remainingByType.get(Number(idRaw)),
+        supplierGuest: typeof record.supplierGuest === "string" ? record.supplierGuest : undefined,
         isSpecialNeeds:
           record.isSpecialNeeds === true ||
           record.is_special_needs === true ||

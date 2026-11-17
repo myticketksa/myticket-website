@@ -163,5 +163,26 @@
       "activity": "نشاط"
     },
     "orderNumber": "طلب {{id}}"
+  },
+  "supplier": {
+    "tripBy": "تنظّمها {{name}}",
+    "bookingNumber": "رقم الحجز لدى {{name}}",
+    "departs": "موعد الانطلاق",
+    "guests": "الضيوف",
+    "adults": "{{count}} بالغ",
+    "children": "{{count}} أطفال",
+    "infants": "{{count}} رضّع",
+    "meeting": "مكان وموعد التجمع",
+    "map": "افتح الخريطة",
+    "openTicket": "افتح تذكرتك من {{name}}",
+    "openTicketNote": "يمسح فريق {{name}} هذه التذكرة عند الحضور.",
+    "guestDetails": "أكمل بيانات الضيوف",
+    "guestDetailsNote": "تحتاج {{name}} بيانات جميع الضيوف قبل الساعة 8 مساءً من اليوم السابق للرحلة.",
+    "detailsDone": "تم استلام بيانات جميع الضيوف",
+    "statusHeld": "جارٍ تأكيد حجزك لدى {{name}}…",
+    "statusFailed": "لم تتمكن {{name}} من تأكيد هذه الرحلة، وسيُعاد إليك المبلغ كاملاً.",
+    "statusCancelledByThem": "ألغت {{name}} هذه الرحلة، وأُعيد إليك المبلغ كاملاً.",
+    "statusCancelled": "هذه الرحلة ملغاة.",
+    "scanNote": "اعرض تذكرة {{name}} أعلاه عند الحضور."
   }
 }

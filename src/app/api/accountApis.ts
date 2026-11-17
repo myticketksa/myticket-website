@@ -12,6 +12,15 @@ export const accountApis = baseApi.injectEndpoints({
       transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
       keepUnusedDataFor: 0,
     }),
+    /** Confirm the account's mobile number with a texted code (sports tickets need one). */
+    accountPhoneRequest: build.mutation<{ resendIn?: number }, { phone: string }>({
+      query: (body) => ({ url: '/me/phone/request', method: 'POST', body }),
+      transformResponse: (response: unknown) => unwrapData<{ resendIn?: number }>(response) ?? {},
+    }),
+    accountPhoneVerify: build.mutation<ApiRecord, { phone: string; code: string }>({
+      query: (body) => ({ url: '/me/phone/verify', method: 'POST', body }),
+      transformResponse: (response: unknown) => unwrapData<ApiRecord>(response) ?? {},
+    }),
     getFavorites: build.query<ApiRecord[], void>({
       query: () => '/favorites',
       transformResponse: (response: unknown) => asList<ApiRecord>(response),
@@ -85,6 +94,11 @@ export const accountApis = baseApi.injectEndpoints({
     getCities: build.query<ApiRecord[], void>({
       query: () => '/generals/cities',
       transformResponse: (response: unknown) => asList<ApiRecord>(response),
+    }),
+    // Nationality and country of residence for a sports ticket's holder (16 Nov 2026).
+    getCountries: build.query<{ code: string; name: { ar: string; en: string } }[], void>({
+      query: () => '/generals/countries',
+      transformResponse: (response: unknown) => asList<{ code: string; name: { ar: string; en: string } }>(response),
     }),
     getOfferedServices: build.query<ApiRecord[], void>({
       query: () => '/generals/offered-services',
@@ -257,6 +271,7 @@ export const {
   useApplyVendorMutation,
   useApplyOrganizerMutation,
   useGetCitiesQuery,
+  useGetCountriesQuery,
   useGetOfferedServicesQuery,
   useGetPerformanceCategoriesQuery,
   useGetMyReviewsQuery,
@@ -272,4 +287,6 @@ export const {
   useGetAdvertisementsQuery,
   useDeleteAccountMutation,
   useUpdateGuestProfileMutation,
+  useAccountPhoneRequestMutation,
+  useAccountPhoneVerifyMutation,
 } = accountApis

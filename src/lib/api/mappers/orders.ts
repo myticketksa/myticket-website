@@ -17,6 +17,8 @@ export type OrderConfirmationTicket = {
   qrValue: string
   ticketTypeLabel: string
   scanStatus: string
+  /** Run by another company (Al-Haddad): their ticket is scanned, not this code. */
+  supplier?: string | null
 }
 
 export type OrderConfirmationLineItem = {
@@ -156,6 +158,7 @@ function mapTickets(
         seat,
         gate: gateFromSeat || '—',
         qrValue: ticketQrValue(ticket, id),
+        supplier: typeof ticket.supplier === 'string' ? ticket.supplier : null,
         ticketTypeLabel:
           localizedString(ticket.ticketType ?? ticket.ticket_type, fallbackTier) ||
           fallbackTier,
@@ -592,6 +595,10 @@ export type OrderTicketSeatView = {
   /** Given away: no code here (it's the recipient's), and who has it. */
   gifted?: boolean
   giftedTo?: string | null
+  /** Run by another company (Al-Haddad): their ticket is scanned, not this code. */
+  supplier?: string | null
+  /** When its entry opens and closes ("18:00 – 21:30"), set per ticket type. */
+  entry?: string | null
 }
 
 export type OrderDetailView = {
@@ -699,7 +706,9 @@ export function mapOrderToDetailView(
         id: ticketId,
         ticketTypeLabel: localizedString(ticket.ticketType ?? ticket.ticket_type, tierName),
         scanStatus: localizedString(ticket.scanStatus ?? ticket.scan_status, payment),
-        gate: hasSeat ? seatField(seat, 'gate') || '—' : '—',
+        // The ticket type's gate, else the seat's.
+        gate: localizedString(ticket.gate) || (hasSeat ? seatField(seat, 'gate') || '—' : '—'),
+        entry: ticket.entryFrom ? `${String(ticket.entryFrom)}${ticket.entryUntil ? ` – ${String(ticket.entryUntil)}` : ''}` : null,
         block: hasSeat
           ? seatField(seat, 'block') || seatField(seat, 'section') || '—'
           : seatingType === 'free'
@@ -715,6 +724,7 @@ export function mapOrderToDetailView(
             : '—',
         qrValue: gifted ? '' : ticketQrValue(ticket, ticketId),
         holderName: localizedString(ticket.holderName ?? ticket.holder_name),
+        supplier: typeof ticket.supplier === 'string' ? ticket.supplier : null,
         gifted,
         giftedTo: gifted ? giftedTo.get(ticketId) ?? null : null,
       }

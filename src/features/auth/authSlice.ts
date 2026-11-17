@@ -10,6 +10,8 @@ export interface AuthUser {
   phone: string
   role: string
   emailVerified?: boolean
+  /** A confirmed mobile number: tickets for sports events need one (16 Nov 2026). */
+  phoneVerified?: boolean
   walletBalance?: number
   created_at?: string
 }
@@ -36,6 +38,7 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
     phone: String(record.phone ?? ''),
     role: String(record.role ?? 'default'),
     emailVerified: Boolean(record.emailVerified ?? record.email_verified),
+    phoneVerified: Boolean(record.phoneVerified ?? record.phone_verified),
     walletBalance: walletNum != null && Number.isFinite(walletNum) ? walletNum : undefined,
     created_at:
       record.created_at != null

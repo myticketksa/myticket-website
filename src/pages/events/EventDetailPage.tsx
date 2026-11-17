@@ -78,6 +78,7 @@ import {
   googleMapsUrl,
   parseEventCoordinates,
 } from "@/components/maps/EventVenueMap";
+import { VerifyPhoneDialog } from "@/pages/_guest/VerifyPhoneDialog";
 
 function pickDetailString(
   record: Record<string, unknown> | undefined,
@@ -416,7 +417,7 @@ export function EventDetailPage() {
   const bookingActivity =
     activities.find((activity) => activity.id === activityId) ??
     (activities.length === 1 && (activities[0]!.startTimes.length > 0 || isPermanent) ? activities[0] : undefined);
-  const { data: activitySlots, isFetching: activitySlotsLoading } = useGetActivitySlotsQuery(
+  const { data: activitySlots, isFetching: activitySlotsLoading, refetch: refetchActivitySlots } = useGetActivitySlotsQuery(
     { eventId: resolvedId!, activityId: bookingActivity?.id ?? 0 },
     { skip: !resolvedId || !bookingActivity || !bookingOpen, refetchOnMountOrArgChange: true },
   );
@@ -429,6 +430,7 @@ export function EventDetailPage() {
         id: tier.id,
         name: tier.name,
         price: tier.price,
+        supplierGuest: tier.supplierGuest,
         remaining: tier.remaining,
         disabled: tier.remaining === 0,
       })),
@@ -469,6 +471,12 @@ export function EventDetailPage() {
     /** An activity's start time ("09:00"), when it has times. */
     time?: string | null;
     lines: BookingLine[];
+    /** A trip run by another company: its terms were ticked. */
+    supplierTermsAccepted?: boolean;
+    /** The total the customer was shown (a trip operator's prices change by day). */
+    expectedAmount?: number;
+    /** "I'm not a robot" (sports events). */
+    botCheckToken?: string;
   };
 
   /**
@@ -510,6 +518,7 @@ export function EventDetailPage() {
   } | null>(null);
   /** Bumped when the pending order is cancelled, so the dialog drops its promo. */
   const [promoResetSignal, setPromoResetSignal] = useState(0);
+  const [botCheckResetSignal, setBotCheckResetSignal] = useState(0);
 
   function cancelUnpaidOrder(orderId: number) {
     void cancelOrder(orderId)
@@ -529,6 +538,25 @@ export function EventDetailPage() {
     const pending = pendingOrderRef.current;
     pendingOrderRef.current = null;
     if (pending) cancelUnpaidOrder(pending.orderId);
+  }
+
+  // Sports events: tickets go to a confirmed mobile number (16 Nov 2026).
+  const needsVerifiedPhone = Boolean((eventSource as { requiresVerifiedPhone?: boolean } | undefined)?.requiresVerifiedPhone);
+  const [verifyPhoneOpen, setVerifyPhoneOpen] = useState(false);
+  function openBooking() {
+    if (needsVerifiedPhone && authUser && !authUser.phoneVerified) {
+      setVerifyPhoneOpen(true);
+      return;
+    }
+    setBookingOpen(true);
+  }
+  /** The server asked for a confirmed number (a stale session): confirm it, then book again. */
+  function askForPhoneIfNeeded(error: unknown): boolean {
+    const reason = (error as { data?: { data?: { reason?: string } } })?.data?.data?.reason;
+    if (reason !== "phone_verification_required") return false;
+    setBookingOpen(false);
+    setVerifyPhoneOpen(true);
+    return true;
   }
 
   function signedIn(): boolean {
@@ -593,10 +621,17 @@ export function EventDetailPage() {
           ...(assigned && seatIds.length
             ? { seatIds, holdId }
             : {}),
+          ...(booking.supplierTermsAccepted ? { supplierTermsAccepted: true } : {}),
+          ...(booking.expectedAmount != null ? { expectedAmount: booking.expectedAmount } : {}),
+          ...(booking.botCheckToken ? { botCheckToken: booking.botCheckToken } : {}),
           beneficiaries: booking.lines.map((line, index) => ({
             quantity_id: index + 1,
             // Optional: a ticket left without a name carries the account's.
             name: line.name.trim() || authUser?.name || "",
+            // A sports ticket's holder (Ministry of Sport rules).
+            ...(line.nationality
+              ? { nationality: line.nationality, residence: line.residence, birth_date: line.birthDate, gender: line.gender }
+              : {}),
           })),
         },
       }).unwrap();
@@ -626,6 +661,10 @@ export function EventDetailPage() {
     } catch (error) {
       if (holdId) {
         void releaseHold({ eventId: resolvedId, holdId });
+      }
+      // The robot check lapsed or failed: ask it again.
+      if ((error as { data?: { data?: { reason?: string } } })?.data?.data?.reason === "bot_check_failed") {
+        setBotCheckResetSignal((value) => value + 1);
       }
       throw error;
     }
@@ -677,6 +716,8 @@ export function EventDetailPage() {
       dispatch(toastPushed("success", t("checkout:checkout.promoApplied")));
       return Number.isFinite(amount) ? { amount, before: pending.amount } : null;
     } catch (error) {
+      refreshIfPriceMoved(error);
+      if (askForPhoneIfNeeded(error)) return null;
       // The API explains a refused code in words (expired, for another event…).
       dispatch(
         toastPushed(
@@ -688,6 +729,12 @@ export function EventDetailPage() {
       );
       return null;
     }
+  }
+
+  /** A trip operator's price moved after it was shown: show the new one, to accept with Pay. */
+  function refreshIfPriceMoved(error: unknown) {
+    const reason = (error as { data?: { data?: { reason?: string } } })?.data?.data?.reason;
+    if (reason === "price_changed" && bookingActivity) void refetchActivitySlots();
   }
 
   async function confirmBooking(booking: BookingBase & {
@@ -769,6 +816,8 @@ export function EventDetailPage() {
       }
       navigate(`/order-confirmation?orderId=${orderId}`);
     } catch (error) {
+      refreshIfPriceMoved(error);
+      if (askForPhoneIfNeeded(error)) return;
       const { status, message: code } = apiErrorDetails(error);
       // A payment that failed before any money moved leaves an unpaid order
       // holding the seats: the seat showed as sold and the order sat in My
@@ -948,7 +997,7 @@ export function EventDetailPage() {
               types={apiTicketTypes}
               onBook={(id) => {
                 setActivityId(id);
-                setBookingOpen(true);
+                openBooking();
               }}
               disabled={isPastEvent}
             />
@@ -991,13 +1040,14 @@ export function EventDetailPage() {
               <Button
                 className="w-full sm:w-auto"
                 disabled={isPastEvent}
-                onClick={() => setBookingOpen(true)}
+                onClick={openBooking}
               >
                 {isPastEvent ? t("detail.eventEnded") : primaryLabel}
               </Button>
             </div>
           ) : null}
 
+          <VerifyPhoneDialog open={verifyPhoneOpen} onOpenChange={setVerifyPhoneOpen} onDone={() => setBookingOpen(true)} />
           <BookingModal
             open={bookingOpen}
             onOpenChange={(open) => {
@@ -1011,6 +1061,10 @@ export function EventDetailPage() {
             activitySlotsLoading={activitySlotsLoading}
             accountName={authUser?.name ?? undefined}
             maxPerPerson={(eventSource as { maxTicketsPerPerson?: number | null } | undefined)?.maxTicketsPerPerson ?? null}
+            supplier={bookingActivity?.supplier ?? null}
+            holderDetails={needsVerifiedPhone}
+            botCheckSiteKey={(eventSource as { botCheckSiteKey?: string | null } | undefined)?.botCheckSiteKey ?? null}
+            botCheckResetSignal={botCheckResetSignal}
             refundUntilHours={
               eventSource && "refundUntilHours" in eventSource
                 ? ((eventSource as { refundUntilHours?: number | null }).refundUntilHours ?? null)
@@ -1153,6 +1207,14 @@ function activitySchedule(activity: EventActivity, t: (key: string, options?: Re
       numberingSystem: "latn",
     });
   const [fh, fm] = times[0]!.split(":").map(Number);
+  // A trip run by another company (Al-Haddad): its departures only, as it gives no end time.
+  if (activity.supplier) {
+    const departures = times.map((time) => {
+      const [th, tm] = time.split(":").map(Number);
+      return clock(th! * 60 + tm!);
+    });
+    return `${dayText} · ${t("detail.activityDeparts", { times: departures.join(locale.startsWith("ar") ? "، " : ", ") })}`;
+  }
   return `${dayText} · ${clock(fh! * 60 + fm!)} – ${clock(endMinutes)}`;
 }
 
@@ -1193,7 +1255,7 @@ function ActivityList({
 }: {
   activities: EventActivity[];
   sessions: EventSession[];
-  types: { id: number; name: string; price: number; detail?: string }[];
+  types: { id: number; name: string; price: number; detail?: string; supplierGuest?: string }[];
   onBook: (activityId: number) => void;
   disabled?: boolean;
 }) {
@@ -1203,7 +1265,8 @@ function ActivityList({
     <section className="flex flex-col gap-md">
       <h2 className="text-[20px] font-bold text-ink-primary">{t("detail.activitiesTitle")}</h2>
       {activities.map((activity) => {
-        const own = types.filter((type) => activity.ticketTypeIds.includes(type.id));
+        // An infant riding free on a supplier's trip would make it look free.
+        const own = types.filter((type) => activity.ticketTypeIds.includes(type.id) && type.supplierGuest !== "infant");
         const next = nextOpening(activity, sessions);
         const from = own.length ? Math.min(...own.map((type) => type.price)) : null;
         return (
@@ -1214,7 +1277,11 @@ function ActivityList({
             onClick={() => onBook(activity.id)}
             className="group flex items-stretch gap-[10px] text-start disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <span className="bg-brand-gradient flex w-[68px] shrink-0 flex-col items-center justify-center rounded-[16px] py-sm text-white">
+            <span
+              className={`${activity.image ? "bg-cover bg-center" : "bg-brand-gradient"} relative flex w-[68px] shrink-0 flex-col items-center justify-center overflow-hidden rounded-[16px] py-sm text-white`}
+              // Its own photo, with the next date over it.
+              style={activity.image ? { backgroundImage: `linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)), url("${activity.image}")` } : undefined}
+            >
               <span className="ltr-run text-[22px] font-bold leading-none">
                 {next ? next.toLocaleDateString("en-US", { day: "numeric", timeZone: "Asia/Riyadh" }) : "—"}
               </span>

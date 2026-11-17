@@ -17,8 +17,8 @@
   "eyebrow": "Your account",
   "wallet": {
     "title": "Wallet",
-    "lede": "Cashback and refunds land here after events clear.",
-    "subtitle": "Cashback from nights you've been to, refunds, and money from tickets you've resold. Spend it at checkout or withdraw it to your bank.",
+    "lede": "Refunds and top-ups land here.",
+    "subtitle": "Refunds and top-ups. Spend your balance at checkout.",
     "open": "Open wallet",
     "balance": "Balance",
     "available": "Available to spend",
@@ -183,7 +183,7 @@
     "badgeValid": "VALID · NOT YET USED",
     "ticketId": "Ticket {{id}}",
     "fieldHolder": "HOLDER",
-    "fieldGate": "GATE",
+    "fieldGate": "Gate",
     "fieldBlock": "BLOCK",
     "fieldRow": "ROW",
     "fieldSeat": "SEAT",
@@ -227,7 +227,9 @@
     "refundKeep": "Keep my tickets",
     "refundFailed": "Couldn’t send the refund request. Try again or contact support.",
     "gifted": "Gifted",
-    "giftedTo": "Gifted to {{name}}"
+    "giftedTo": "Gifted to {{name}}",
+    "fieldEntry": "Gates open",
+    "fieldSupport": "Support"
   },
   "gift": {
     "header": "Send a ticket",
@@ -749,7 +751,7 @@
     "quick": {
       "refund": "Where's my refund?",
       "qr": "My QR code won't scan",
-      "waitlists": "How do waitlists work?",
+      "sports": "Buying sports tickets",
       "gift": "Gifting a ticket"
     },
     "tagIssue": "Issue",

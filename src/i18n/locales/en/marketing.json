@@ -26,7 +26,7 @@
     "cards": [
       {
         "title": "For the people going out",
-        "body": "Every ticket is a real, verified QR code. Refunds follow rules you can read before you pay. Sold-out shows have honest waitlists and a legitimate resale auction instead of a parking-lot scalper. And your wallet keeps cashback, refunds and resale money in one place — spendable tonight or withdrawable to your bank."
+        "body": "Every ticket is a real QR code, checked by our servers at the door, and a second scan is refused. Refund rules are shown before you pay, and prices include VAT with no hidden fees. A ticket passes to someone else only inside MyTicket, as a gift with a new code. Refunds go back the way you paid."
       },
       {
         "title": "For the people making the nights",
@@ -34,11 +34,11 @@
       },
       {
         "title": "How we make money",
-        "body": "A platform fee on each ticket — always shown as its own line, never hidden in the price — and a commission when a ticket resells at auction. That's it."
+        "body": "A commission from the organiser on each ticket sold. You pay the price shown, VAT included, with no extra fees on top. That's it."
       },
       {
         "title": "Where we are",
-        "body": "Built in Riyadh, operating across all of Saudi Arabia, in Arabic and English. Prices in Saudi Riyals, support every day from 9:00 to 01:00 AST.",
+        "body": "Built in Riyadh, operating across all of Saudi Arabia, in Arabic and English. Prices in Saudi Riyals, and support around the clock, every day.",
         "links": [
           {
             "label": "Help centre",
@@ -58,12 +58,12 @@
   },
   "help": {
     "title": "How can we help?",
-    "lede": "Answers to the things people ask us most — refunds, transfers, entry and the auction.",
+    "lede": "Answers to the things people ask us most — refunds, gifting tickets, entry and sports events.",
     "searchPlaceholder": "Search help topics — refunds, QR codes, transfers…",
     "articlesCount": "{{count}} articles",
     "stillStuck": "Still stuck?",
     "talkToHuman": "Talk to a human",
-    "supportHours": "Support is open 09:00 — 01:00 every day, in Arabic and English. Average reply time today is 6 minutes.",
+    "supportHours": "Support is open around the clock, every day, in Arabic and English.",
     "startChat": "Start a chat",
     "emailSupport": "Email support",
     "quickLinks": "Quick links",
@@ -81,8 +81,8 @@
         "href": "/settings"
       },
       {
-        "label": "How the auction works",
-        "href": "/auctions"
+        "label": "Refund and complaints policy",
+        "href": "/legal?doc=policies"
       },
       {
         "label": "Follow my support cases",
@@ -107,7 +107,7 @@
           },
           {
             "q": "Do I need to print anything?",
-            "a": "No. The offline QR in the app is enough. You can also add tickets to Apple Wallet or download a PDF if you prefer."
+            "a": "No. The QR code in the app is enough. You can also download your tickets as a PDF."
           },
           {
             "q": "The name on my ticket is wrong",
@@ -129,7 +129,7 @@
         "faqs": [
           {
             "q": "When can I get a free refund?",
-            "a": "Most events allow a free refund until a date shown on the ticket. After that, transfer or list on the auction."
+            "a": "Each event sets its refund window, shown before you pay. After that, you can still gift the ticket to someone."
           },
           {
             "q": "How long do refunds take?",
@@ -137,57 +137,55 @@
           },
           {
             "q": "What if the event is cancelled?",
-            "a": "We'll email you and open an automatic refund. You don't need to file a case unless something looks wrong."
+            "a": "Every paid ticket is refunded automatically, the way you paid, and we email you. You don't need to do anything."
+          },
+          {
+            "q": "What if the event is postponed?",
+            "a": "Your ticket stays valid for the new date, and you can ask for a full refund whatever the event's refund window."
           }
         ]
       },
       "payments": {
         "title": "Payments & wallet",
-        "blurb": "Cards, Tabby, cashback, and withdrawing wallet balance.",
+        "blurb": "Cards, Apple Pay and your MyTicket wallet.",
         "faqs": [
           {
             "q": "Which payment methods work?",
-            "a": "Visa, Mastercard, mada, Apple Pay, and Tabby on eligible events. Your wallet balance can also pay part or all of an order."
+            "a": "Visa, Mastercard, mada and Apple Pay. Your wallet balance can also pay for an order."
           },
           {
-            "q": "How does cashback work?",
-            "a": "Eligible purchases credit your MyTicket wallet after the event. You can spend it on future tickets or withdraw when the balance allows."
+            "q": "Are there extra fees?",
+            "a": "No. The price you see includes VAT, and there are no service fees or hidden charges."
           },
           {
-            "q": "Can I split a payment?",
-            "a": "Tabby splits eligible orders into instalments. The schedule is shown at checkout and again on the ticket order card."
+            "q": "Where does my refund go?",
+            "a": "A wallet payment goes back to your wallet at once; a card payment goes back to the same card."
+          },
+          {
+            "q": "Can I get my wallet balance back?",
+            "a": "No. Wallet balance, including money you top up, is for buying on MyTicket only. It can't be withdrawn or refunded to a card or bank account."
           }
         ]
       },
-      "auction": {
-        "title": "Resale auction",
-        "blurb": "Listing a seat, bidding, fees, and settlement.",
+      "sports": {
+        "title": "Sports tickets",
+        "blurb": "What sports events ask for, and why.",
         "faqs": [
           {
-            "q": "How do I list a ticket?",
-            "a": "Open the ticket and choose List for resale. Set your ask within the allowed range and we handle payout when it sells."
+            "q": "Why do I need to confirm my mobile number?",
+            "a": "The Ministry of Sport's rules tie sports tickets to a person. You confirm your number once, with a code sent by text message, and each number belongs to one account."
           },
           {
-            "q": "Are auction tickets genuine?",
-            "a": "Yes — every listing is an original MyTicket seat. The QR transfers to the buyer automatically on settle."
+            "q": "How many tickets can I buy?",
+            "a": "Up to five per person for each sports event, or fewer if the organiser sets a lower limit."
           },
           {
-            "q": "What fees apply?",
-            "a": "Seller and buyer fees are shown before you confirm. They come out of the settlement so there are no surprises later."
-          }
-        ]
-      },
-      "waitlists": {
-        "title": "Waitlists",
-        "blurb": "Joining a sold-out night and how alerts work.",
-        "faqs": [
-          {
-            "q": "How do waitlists work?",
-            "a": "Join from the event page. If seats free up or a resale lands in range, we'll notify you first."
+            "q": "Why do you ask for each holder's details?",
+            "a": "The rules ask for each ticket holder's nationality, country of residence, date of birth and gender. They are kept with the ticket and used only for the event and the rules."
           },
           {
-            "q": "Do waitlists cost anything?",
-            "a": "Joining is free. You're only charged if you buy a ticket when one becomes available."
+            "q": "Can I resell my ticket?",
+            "a": "No. MyTicket has no resale. You can gift a ticket inside MyTicket: it gets a new code and yours stops working."
           }
         ]
       },
@@ -224,7 +222,7 @@
   "legal": {
     "title": "The fine print, readable.",
     "lede": "The rules of using MyTicket. Written to be read, not skimmed past.",
-    "lastUpdated": "Last updated 12 Jul 2026",
+    "lastUpdated": "Last updated 17 Nov 2026",
     "tocLabel": "In this document",
     "questionsPrefix": "Questions about any of this?",
     "talkToSupport": "Talk to support",
@@ -346,15 +344,15 @@
           },
           {
             "title": "2 · Data we collect",
-            "body": "MyTicket does not collect personal information about a user visiting the site unless the user specifically and knowingly chooses to provide it. Data provided directly by the user: identity data (name, national ID or residency number when required, for identity verification or regulatory compliance), contact data (mobile number, email, address), business account data (commercial registration and event or service details, for organizer and vendor accounts), and payment data (purchase details and wallet balance, without storing full card data). MyTicket does not collect, store, or retain bank card data, including the card number or security code (CVV) — payment data is processed securely and directly through the certified payment gateway, and its handling is governed by that provider's own security and privacy policies. Automatically collected data: device data and approximate location to improve search results, usage data (browsed events and favorited tickets), and cookies and similar technologies."
+            "body": "MyTicket does not collect personal information about a user visiting the site unless the user specifically and knowingly chooses to provide it. Data provided directly by the user: identity data (name, national ID or residency number when required, for identity verification or regulatory compliance), contact data (mobile number, email, address), business account data (commercial registration and event or service details, for organizer and vendor accounts), and payment data (purchase details and wallet balance, without storing full card data). For sports event tickets: a mobile number confirmed by a one-time code, and for each ticket its holder's nationality, country of residence, date of birth and gender, as the Ministry of Sport's rules require. MyTicket does not collect, store, or retain bank card data, including the card number or security code (CVV) — payment data is processed securely and directly through the certified payment gateway, and its handling is governed by that provider's own security and privacy policies. Automatically collected data: device data and approximate location to improve search results, usage data (browsed events and favorited tickets), and cookies and similar technologies."
           },
           {
             "title": "3 · How we use the data",
-            "body": "Completing purchases, issuing tickets, and managing the wallet; personalizing the experience and showing recommendations relevant to your interests; verifying identity, preventing fraud, and protecting platform security; and sending operational notifications and optional marketing messages you can unsubscribe from at any time."
+            "body": "Completing purchases, issuing tickets, and managing the wallet; personalizing the experience and showing recommendations relevant to your interests; verifying identity, preventing fraud, and protecting platform security; meeting the Ministry of Sport's rules for sports tickets (the per-person limit, purchase bans and holder details); and sending operational notifications and optional marketing messages you can unsubscribe from at any time."
           },
           {
             "title": "4 · Sharing data with third parties",
-            "body": "The platform does not sell users' personal data to any third party. Data is shared with the event organizer when a ticket is purchased, only to the extent necessary to manage attendance."
+            "body": "The platform does not sell users' personal data to any third party. Data is shared with the event organizer when a ticket is purchased, only to the extent necessary to manage attendance. Before booking a sports event, users pass an \"I'm not a robot\" check run by a specialist provider, which receives the device's internet address and the browser details needed to tell people from automated programs. Sales records for sports tickets are made available to the Ministry of Sport on request."
           },
           {
             "title": "5 · PDPL compliance",
@@ -370,7 +368,7 @@
           },
           {
             "title": "8 · Data retention periods",
-            "body": "We retain user data for as long as the account is active, plus any additional period required to meet regulatory obligations after the account is closed. Once no longer needed, data is deleted or securely anonymized."
+            "body": "We retain user data for as long as the account is active. Records of sales, payments, refunds, transfers, entries and invoices are kept for at least ten years from the transaction, under the Commercial Books Law. Verification codes sent by text message are not kept after they expire (10 minutes). When an account is deleted, its name, email and mobile number are removed; purchase records the law requires us to keep remain, including the names and details written on tickets. A purchase ban on a mobile number stays in place until it is lifted, even if the account is deleted. Once no longer needed, data is deleted or securely anonymized."
           },
           {
             "title": "9 · User rights",
@@ -428,6 +426,43 @@
           {
             "title": "6 · Updates",
             "body": "When this policy changes in a material way, we note the date at the top of this page."
+          }
+        ]
+      },
+      "policies": {
+        "label": "Refunds & consumer protection",
+        "toc": [
+          "1 · Prices and fees",
+          "2 · Cancellations and refunds",
+          "3 · Tickets for sports events",
+          "4 · Data protection",
+          "5 · Complaints and questions",
+          "6 · People with disabilities"
+        ],
+        "sections": [
+          {
+            "title": "1 · Prices and fees",
+            "body": "• Ticket prices are shown including VAT before payment, with the price before VAT and the VAT itself.\n• The platform adds no service fee and no hidden charges.\n• Ticket categories, prices, the per-person limit and the refund policy are shown before you buy.\n• Prices don't change with demand. A price change applies only to later sales, never to tickets already sold."
+          },
+          {
+            "title": "2 · Cancellations and refunds",
+            "body": "• Each event's organizer sets its refund window, or makes its tickets non-refundable; the window is shown before payment.\n• Ask for a refund in the app or on the website within the window, and follow it from the ticket page.\n• Wallet payments go back to the wallet at once; card payments go back to the original card through the payment gateway.\n• Wallet balance, including money you top up, is for buying on MyTicket only: it can't be withdrawn as cash or refunded to a card or bank account.\n• If the event is cancelled, every paid ticket is refunded automatically, without asking.\n• If the event is postponed, the ticket stays valid for the new date, and you can ask for a full refund whatever the refund window.\n• Unpaid orders are cancelled automatically after 15 minutes."
+          },
+          {
+            "title": "3 · Tickets for sports events",
+            "body": "• Buying a ticket for a sports event, or receiving one as a gift, needs a mobile number confirmed by a one-time code; a number belongs to one account.\n• One person may hold no more than five tickets for the event, or the organizer's lower limit.\n• Tickets pass to others only inside the platform, each with a new entry code; the old one stops working.\n• Each ticket carries its holder's nationality, country of residence, date of birth and gender; the order isn't accepted without them.\n• An \"I'm not a robot\" check comes before booking.\n• The platform can stop an account or a mobile number from buying, and does so for anyone the Ministry of Sport bans from venues.\n• The platform or the organizer may cancel a ticket obtained or traded against the rules."
+          },
+          {
+            "title": "4 · Data protection",
+            "body": "Buyers' details are used to complete the booking, issue the tickets and check them at entry, and are shared only as Saudi law allows. See the privacy policy for details."
+          },
+          {
+            "title": "5 · Complaints and questions",
+            "body": "• Support is available around the clock, every day.\n• Support chat in the app and on the website (the Support page).\n• Email: info@myticket.sa\n• Every complaint is kept in a dated conversation that the support team follows until it's closed.\n• A complaint made during an event is handled within 30 minutes; one made after it, within five working days."
+          },
+          {
+            "title": "6 · People with disabilities",
+            "body": "The platform offers ticket categories and seats for people with disabilities whenever the event's organizer provides them."
           }
         ]
       }

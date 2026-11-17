@@ -7,7 +7,8 @@ import { cn } from '@/lib/cn'
 type LegalSection = { title: string; body: string }
 type LegalDoc = { label: string; toc: string[]; sections: LegalSection[] }
 
-const DOC_IDS = ['terms', 'privacy', 'cookies'] as const
+// policies: refunds, consumer protection and complaints (Ministry of Sport rules, 16 Nov 2026).
+const DOC_IDS = ['terms', 'privacy', 'cookies', 'policies'] as const
 
 /**
  * Legal — Figma `207:12042`.

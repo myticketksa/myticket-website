@@ -23,6 +23,8 @@ import { extractOrderId } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 import { cn } from '@/lib/cn'
 import { PrintableTicket, saveTicketsPdf } from './ticketPdf'
+import { mapSupplierBookings } from '@/lib/api/mappers/supplierBookings'
+import { SupplierBookingCard } from '@/pages/_guest/SupplierBookingCard'
 
 function resolveOrderFromList(
   orders: Record<string, unknown>[] | undefined,
@@ -217,7 +219,8 @@ export function TicketDetails({
           variant="secondary"
           size="md"
           className="h-[38px] rounded-[19px]"
-          disabled={!paid || (tickets.length > 0 && tickets.every((seat) => seat.gifted))}
+          // Trips run by another company are checked in with their ticket, not a PDF of ours.
+          disabled={!paid || (tickets.length > 0 && tickets.every((seat) => seat.gifted || seat.supplier))}
           loading={printing}
           onClick={() => void handleDownload()}
         >
@@ -227,7 +230,7 @@ export function TicketDetails({
 
       {printing && detail ? (
         <div aria-hidden="true" className="pointer-events-none fixed top-0 -left-[10000px] flex flex-col gap-lg">
-          {(tickets.length > 0 ? tickets.filter((seat) => !seat.gifted) : [undefined]).map((seat, seatIndex) => (
+          {(tickets.length > 0 ? tickets.filter((seat) => !seat.gifted && !seat.supplier) : [undefined]).map((seat, seatIndex) => (
             <PrintableTicket
               key={seat?.id ?? seatIndex}
               ref={(node) => {
@@ -248,6 +251,10 @@ export function TicketDetails({
       ) : null}
 
       <div className="mt-lg flex flex-col gap-lg">
+        {/* Trips run by another company: their booking, ticket and form. */}
+        {mapSupplierBookings(orderRecord).map((booking) => (
+          <SupplierBookingCard key={`${booking.supplier}-${booking.bookingNumber ?? booking.status}`} booking={booking} />
+        ))}
         {(tickets.length > 0 ? tickets : [undefined]).map((seat, seatIndex) => {
           const ticketNo = seat?.id ?? `${orderIdLabel}-${seatIndex + 1}`
           const qrValue = seat?.qrValue || ticketNo
@@ -257,6 +264,8 @@ export function TicketDetails({
               className="relative flex flex-col overflow-hidden rounded-[20px] border border-border-default bg-surface-default sm:flex-row"
             >
               <div className="min-w-0 flex-1 px-lg py-[18px] sm:px-[24px] sm:py-[22px]">
+                {/* The event's own picture (its marks and logos). */}
+                {detail?.cover ? <img src={detail.cover} alt="" className="mb-[14px] h-[110px] w-full rounded-[12px] object-cover" /> : null}
                 <div className="mt-0 grid grid-cols-2 gap-[12px] sm:grid-cols-3 sm:gap-[18px]">
                   {[
                     // The name typed for this ticket at booking, as the app shows it.
@@ -266,6 +275,10 @@ export function TicketDetails({
                     [t('ticket.fieldTicketNumber'), ticketNo],
                     [t('ticket.fieldSeat'), seat?.seat ?? '—'],
                     [t('ticket.fieldTicketType'), seat?.ticketTypeLabel ?? '—'],
+                    // Where and when it enters, and who to ask (Ministry of Sport rules).
+                    ...(seat?.gate && seat.gate !== '—' ? [[t('ticket.fieldGate'), seat.gate]] : []),
+                    ...(seat?.entry ? [[t('ticket.fieldEntry'), seat.entry]] : []),
+                    [t('ticket.fieldSupport'), 'info@myticket.sa'],
                     [t('ticket.fieldPaymentMethod'), detail?.paymentMethod ?? '—'],
                     [t('ticket.fieldReservationDate'), detail?.purchasedAt ?? '—'],
                   ].map(([label, value]) => (
@@ -315,7 +328,12 @@ export function TicketDetails({
               </div>
 
               <div className="relative flex w-full shrink-0 flex-col items-center justify-center gap-[14px] border-t-2 border-dashed border-border-default bg-bg-page px-[22px] py-[28px] sm:w-[260px] sm:border-t-0 sm:border-s-2 md:w-[280px]">
-                {seat?.gifted ? (
+                {seat?.supplier && !seat.gifted ? (
+                  // Their staff scan their own ticket (the card above), not ours.
+                  <p className="text-center text-[14px] font-bold text-ink-brand">
+                    {t('common:supplier.scanNote', { name: mapSupplierBookings(orderRecord)[0]?.operator ?? '' })}
+                  </p>
+                ) : seat?.gifted ? (
                   // Given away: the code is the recipient's now, never shown here.
                   <p className="rounded-[14px] bg-bg-tint-brand px-[16px] py-[12px] text-center text-[14px] font-bold text-ink-brand-strong">
                     {seat.giftedTo ? t('ticket.giftedTo', { name: seat.giftedTo }) : t('ticket.gifted')}

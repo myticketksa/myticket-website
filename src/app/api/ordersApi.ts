@@ -11,13 +11,27 @@ export const ordersApi = baseApi.injectEndpoints({
         eventId: string | number
         body: {
           items?: { ticketId: number; quantity: number; seatIds?: number[] }[]
-          beneficiaries?: { quantity_id: number; name: string }[]
+          beneficiaries?: {
+            quantity_id: number
+            name: string
+            // A sports ticket's holder (Ministry of Sport rules).
+            nationality?: string
+            residence?: string
+            birth_date?: string
+            gender?: 'male' | 'female'
+          }[]
           seatIds?: number[]
           holdId?: string
           ticketId?: number
           quantity?: number
           /** Required. Omitting it fails with `session_required`. */
           sessionId?: number
+          /** The customer ticked a trip operator's terms (Al-Haddad trips). */
+          supplierTermsAccepted?: boolean
+          /** The total the customer was shown (a trip operator's prices change by day). */
+          expectedAmount?: number
+          /** "I'm not a robot" (sports events). */
+          botCheckToken?: string
         }
       }
     >({

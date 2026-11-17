@@ -143,7 +143,14 @@
     "offerDiscount": "خصم العرض",
     "walletInsufficient": "رصيد محفظتك غير كافٍ. اشحن المحفظة أو اختر طريقة دفع أخرى.",
     "promoDiscount": "الخصم",
-    "priceBeforeVat": "السعر قبل الضريبة"
+    "priceBeforeVat": "السعر قبل الضريبة",
+    "supplierTermsAgree": "أوافق على شروط الاستخدام وسياسة الخصوصية وسياسة الإلغاء الخاصة بـ{{name}}، وعلى مشاركة اسمي وجوالي وبريدي مع {{name}} لهذا الحجز.",
+    "supplierTermsNote": "تنظّم {{name}} هذه الرحلة.",
+    "supplierTermsRequired": "يجب الموافقة على شروط منظم الرحلة للمتابعة.",
+    "supplierTermsLink": "شروط الاستخدام",
+    "supplierPrivacyLink": "سياسة الخصوصية",
+    "supplierPolicyLink": "سياسة الإلغاء",
+    "policiesLink": "سياسات الاسترداد وحماية المستهلك"
   },
   "confirmation": {
     "title": "أنت ذاهب.",

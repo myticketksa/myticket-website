@@ -429,6 +429,7 @@
     "activitiesTitle": "Activities",
     "activityBook": "Book",
     "activityEveryDay": "Every day",
+    "activityDeparts": "departs {{times}}",
     "activityEveryDayExcept": "Every day except {{days}}",
     "bookingSlot": "Booking day",
     "bookingTime": "Time",
@@ -438,7 +439,15 @@
     "noSlots": "No times available right now.",
     "activityFrom": "From {{price}}",
     "alwaysOpen": "Always open",
-    "perPersonLimit": "Up to {{count}} tickets per person for this event."
+    "perPersonLimit": "Up to {{count}} tickets per person for this event.",
+    "holderNationality": "Nationality",
+    "holderResidence": "Country of residence",
+    "holderBirthDate": "Date of birth",
+    "holderGender": "Gender",
+    "holderMale": "Male",
+    "holderFemale": "Female",
+    "holderDetailsRequired": "For sports events, add each ticket holder's nationality, country of residence, date of birth and gender.",
+    "botCheckRequired": "Confirm you're not a robot first."
   },
   "search": {
     "title": "Search",

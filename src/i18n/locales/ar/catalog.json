@@ -436,6 +436,7 @@
     "activitiesTitle": "الأنشطة",
     "activityBook": "احجز",
     "activityEveryDay": "كل يوم",
+    "activityDeparts": "الانطلاق {{times}}",
     "activityEveryDayExcept": "كل يوم عدا {{days}}",
     "bookingSlot": "موعد الحجز",
     "bookingTime": "الوقت",
@@ -445,7 +446,15 @@
     "noSlots": "لا توجد مواعيد متاحة حالياً.",
     "activityFrom": "من {{price}}",
     "alwaysOpen": "مفتوح دائماً",
-    "perPersonLimit": "بحد أقصى {{count}} تذاكر للشخص لهذه الفعالية."
+    "perPersonLimit": "بحد أقصى {{count}} تذاكر للشخص لهذه الفعالية.",
+    "holderNationality": "الجنسية",
+    "holderResidence": "بلد الإقامة",
+    "holderBirthDate": "تاريخ الميلاد",
+    "holderGender": "الجنس",
+    "holderMale": "ذكر",
+    "holderFemale": "أنثى",
+    "holderDetailsRequired": "لتذاكر الفعاليات الرياضية، أدخل لكل حامل تذكرة الجنسية وبلد الإقامة وتاريخ الميلاد والجنس.",
+    "botCheckRequired": "أكّد أولاً أنك لست روبوتاً."
   },
   "search": {
     "title": "بحث",

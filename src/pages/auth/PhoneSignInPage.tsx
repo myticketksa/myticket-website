@@ -17,7 +17,7 @@ import { apiErrorMessage } from "@/lib/api/unwrap";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** The 9-digit Saudi mobile (5XXXXXXXX) from however it was typed or pasted. */
-function localMobile(value: string): string {
+export function localMobile(value: string): string {
   let digits = value
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
     .replace(/\D/g, "");

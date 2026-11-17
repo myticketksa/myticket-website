@@ -111,6 +111,8 @@ export type ActivitySlot = {
   startsAt: string | null;
   endsAt: string | null;
   left: number | null;
+  /** A supplier's trip: that time's price per guest kind. */
+  prices?: Record<string, number> | null;
 };
 
 export const {

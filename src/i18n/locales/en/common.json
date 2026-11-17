@@ -163,5 +163,26 @@
       "activity": "Activity"
     },
     "orderNumber": "Order {{id}}"
+  },
+  "supplier": {
+    "tripBy": "Run by {{name}}",
+    "bookingNumber": "{{name}} booking number",
+    "departs": "Departure",
+    "guests": "Guests",
+    "adults": "{{count}} adults",
+    "children": "{{count}} children",
+    "infants": "{{count}} infants",
+    "meeting": "Meeting point",
+    "map": "Open map",
+    "openTicket": "Open your {{name}} ticket",
+    "openTicketNote": "{{name}}'s staff scan this ticket at check-in.",
+    "guestDetails": "Fill in guest details",
+    "guestDetailsNote": "{{name}} needs every guest's details by 8 pm the day before the trip.",
+    "detailsDone": "All guest details received",
+    "statusHeld": "Confirming your booking with {{name}}…",
+    "statusFailed": "{{name}} couldn't confirm this trip. You're being refunded in full.",
+    "statusCancelledByThem": "{{name}} cancelled this trip. You've been refunded in full.",
+    "statusCancelled": "This trip is cancelled.",
+    "scanNote": "Show the {{name}} ticket above at check-in."
   }
 }

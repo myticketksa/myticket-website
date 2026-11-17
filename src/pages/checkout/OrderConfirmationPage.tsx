@@ -15,6 +15,8 @@ import { PageSection } from "@/layouts";
 import { cn } from "@/lib/cn";
 import { isPaymentPending } from "@/lib/purchase/paymentStatus";
 import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
+import { mapSupplierBookings } from "@/lib/api/mappers/supplierBookings";
+import { SupplierBookingCard } from "@/pages/_guest/SupplierBookingCard";
 import { useAppSelector } from "@/app/hooks";
 import { selectAuthUser } from "@/features/auth/authSlice";
 import {
@@ -254,6 +256,10 @@ export function OrderConfirmationPage() {
 
       <div className="mx-auto mt-[40px] flex max-w-[1040px] flex-col gap-[32px] lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-lg">
+          {/* Trips run by another company: their booking, ticket and form. */}
+          {mapSupplierBookings(order).map((booking) => (
+            <SupplierBookingCard key={`${booking.supplier}-${booking.bookingNumber ?? booking.status}`} booking={booking} />
+          ))}
           {view.tickets.map((ticket) => (
             <article
               key={ticket.id}
@@ -336,14 +342,21 @@ export function OrderConfirmationPage() {
                 </div>
               </div>
               <div className="flex shrink-0 flex-col items-center justify-center gap-sm border-t-[1.5px] border-dashed border-border-default bg-bg-page px-[22px] py-[18px] sm:border-t-0 sm:border-l-[1.5px]">
-                <div
-                  className={cn(
-                    "rounded-[10px] border border-border-default bg-surface-default p-sm",
-                    paymentPending && "opacity-50",
-                  )}
-                >
-                  <TicketQr value={ticket.qrValue} />
-                </div>
+                {ticket.supplier ? (
+                  // Their staff scan their own ticket (the card above), not ours.
+                  <p className="max-w-[200px] text-center text-[13px] font-bold text-ink-brand">
+                    {t("common:supplier.scanNote", { name: mapSupplierBookings(order)[0]?.operator ?? "" })}
+                  </p>
+                ) : (
+                  <div
+                    className={cn(
+                      "rounded-[10px] border border-border-default bg-surface-default p-sm",
+                      paymentPending && "opacity-50",
+                    )}
+                  >
+                    <TicketQr value={ticket.qrValue} />
+                  </div>
+                )}
                 {ticket.gate !== "—" ? (
                   <p className="text-[12px] font-semibold text-ink-secondary">
                     {ticket.gate}

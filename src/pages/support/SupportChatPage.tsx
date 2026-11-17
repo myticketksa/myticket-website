@@ -18,7 +18,7 @@ import {
 
 const FALLBACK_FROM = ["you", "agent", "you", "agent"] as const;
 
-const QUICK_LINK_IDS = ["refund", "qr", "waitlists", "gift"] as const;
+const QUICK_LINK_IDS = ["refund", "qr", "sports", "gift"] as const;
 
 /** Support chat — Figma `207:12302`. */
 export function SupportChatPage() {

@@ -143,7 +143,14 @@
     "offerDiscount": "Offer discount",
     "walletInsufficient": "Not enough balance in your wallet. Top it up or choose another payment method.",
     "promoDiscount": "Promo discount",
-    "priceBeforeVat": "Price before VAT"
+    "priceBeforeVat": "Price before VAT",
+    "supplierTermsAgree": "I accept {{name}}'s terms of use, privacy policy and cancellation policy, and agree to my name, phone and email being shared with {{name}} for this booking.",
+    "supplierTermsNote": "{{name}} runs this trip.",
+    "supplierTermsRequired": "Tick the box to accept the trip operator's terms.",
+    "supplierTermsLink": "Terms of use",
+    "supplierPrivacyLink": "Privacy policy",
+    "supplierPolicyLink": "Cancellation policy",
+    "policiesLink": "Refund and consumer-protection policies"
   },
   "confirmation": {
     "title": "You're going.",
