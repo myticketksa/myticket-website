@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button, Field, TextInput, Textarea } from '@/components/ui'
-import { FilterChip, MoneyAmount } from '@/components/data-display'
+import { MoneyAmount } from '@/components/data-display'
 import { TicketActionHeader } from '@/layouts'
 import { NotFoundPage } from '@/pages/system/NotFoundPage'
 import { useSendGiftTicketMutation } from '@/app/api/accountApis'
@@ -13,7 +13,6 @@ import { toastPushed } from '@/features/ui/uiSlice'
 import {
   extractOrderId,
   extractOrderTicketIds,
-  normalizeAuthIdentifier,
 } from '@/lib/api/formPayload'
 import { apiErrorMessage } from '@/lib/api/unwrap'
 
@@ -56,7 +55,6 @@ export function GiftTicketPage() {
     () => (order ? mapOrderToDetailView(order) : undefined),
     [order],
   )
-  const [mode, setMode] = useState<'email' | 'phone'>('email')
   const [recipient, setRecipient] = useState('')
   const [note, setNote] = useState('')
   const [sendGift, sendState] = useSendGiftTicketMutation()
@@ -103,7 +101,8 @@ export function GiftTicketPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!recipient.trim()) {
+    // Gifts go to an email address only (17 Nov 2026).
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient.trim())) {
       dispatch(toastPushed('error', t('account:gift.errorRecipient')))
       return
     }
@@ -119,7 +118,7 @@ export function GiftTicketPage() {
       await sendGift({
         orderId,
         ticketIds,
-        recipientIdentifier: normalizeAuthIdentifier(recipient),
+        recipientIdentifier: recipient.trim().toLowerCase(),
         note: note.trim() || undefined,
       }).unwrap()
       dispatch(toastPushed('success', t('account:gift.success')))
@@ -141,41 +140,28 @@ export function GiftTicketPage() {
             {t('account:gift.subtitle')}
           </p>
 
+          {order?.canGift === false ? (
+            <p className="mt-[30px] rounded-[20px] border border-border-default bg-surface-default p-[26px] text-[15px] text-ink-secondary">
+              {t('account:gift.sportsNoGifts')}
+            </p>
+          ) : (
           <form
             className="mt-[30px] flex flex-col gap-xl rounded-[20px] border border-border-default bg-surface-default p-[26px]"
             onSubmit={(event) => void handleSubmit(event)}
           >
             <div>
               <p className="text-[13px] font-semibold text-ink-primary">{t('account:gift.sendTo')}</p>
-              <div className="mt-[8px] flex flex-wrap gap-[8px]">
-                <FilterChip
-                  selected={mode === 'email'}
-                  onClick={() => setMode('email')}
-                  className="h-[36px] rounded-[18px] px-lg text-[13.5px] font-semibold"
-                >
-                  {t('account:gift.email')}
-                </FilterChip>
-                <FilterChip
-                  selected={mode === 'phone'}
-                  onClick={() => setMode('phone')}
-                  className="h-[36px] rounded-[18px] px-lg text-[13.5px] font-semibold"
-                >
-                  {t('account:gift.phone')}
-                </FilterChip>
-              </div>
+
               <TextInput
                 id="recipient"
                 className="mt-[10px]"
-                type={mode === 'email' ? 'email' : 'tel'}
-                placeholder={mode === 'email' ? 'friend@email.com' : '+966 5X XXX XXXX'}
+                type="email"
+                placeholder="friend@email.com"
                 value={recipient}
                 onChange={(event) => setRecipient(event.target.value)}
                 required
               />
-              <p className="mt-[7px] text-[12.5px] text-ink-muted">
-                If they don&apos;t have a MyTicket account yet, we&apos;ll help them make one in a
-                minute.
-              </p>
+              <p className="mt-[7px] text-[12.5px] text-ink-muted">{t('account:gift.emailHint')}</p>
             </div>
 
             <Field
@@ -231,6 +217,7 @@ export function GiftTicketPage() {
               </Link>
             </div>
           </form>
+          )}
         </div>
 
         <aside className="flex w-full shrink-0 flex-col gap-[14px] lg:w-[380px]">

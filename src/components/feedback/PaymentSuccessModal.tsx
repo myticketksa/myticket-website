@@ -1,5 +1,6 @@
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { useTranslation } from "react-i18next";
+import { useGetOrderDetailsQuery } from "@/app/api/ordersApi";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui";
 import { PageSection } from "@/layouts";
@@ -21,6 +22,9 @@ export function PaymentSuccessModal({
 }: PaymentSuccessModalProps) {
   const { t } = useTranslation(["checkout", "common"]);
   const navigate = useNavigate();
+  // Sports tickets can't be gifted (17 Nov 2026): the order says so.
+  const { data: order } = useGetOrderDetailsQuery(orderId ?? 0, { skip: !open || orderId == null });
+  const canGift = (order as { canGift?: boolean } | undefined)?.canGift !== false;
 
   return (
     <DialogPrimitive.Root
@@ -57,6 +61,7 @@ export function PaymentSuccessModal({
               >
                 {t("checkout:payment.goToReservation")}
               </Button>
+              {canGift ? (
               <Button
                 variant="secondary"
                 className="w-full"
@@ -70,6 +75,7 @@ export function PaymentSuccessModal({
               >
                 {t("checkout:payment.giftTicket")}
               </Button>
+              ) : null}
             </div>
           </PageSection>
         </DialogPrimitive.Content>

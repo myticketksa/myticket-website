@@ -257,8 +257,10 @@
     "cta": "Send the ticket",
     "success": "Ticket sent",
     "error": "Could not send ticket",
-    "errorRecipient": "Enter an email or phone number",
-    "errorOrder": "This order is not ready to gift yet — open it from My tickets after purchase"
+    "errorRecipient": "Enter an email address",
+    "errorOrder": "This order is not ready to gift yet — open it from My tickets after purchase",
+    "emailHint": "They get the ticket by email, ready to scan. No account needed.",
+    "sportsNoGifts": "Tickets for sports events can't be gifted."
   },
   "claim": {
     "header": "Claim a gift",

@@ -293,7 +293,7 @@ export function TicketDetails({
                   ))}
                 </div>
                 <div className="mt-[22px] flex flex-wrap gap-[10px] border-t border-dashed border-border-default pt-[18px]">
-                  {paid ? (
+                  {orderRecord?.canGift === false ? null : paid ? (
                     <Link to={`/my-tickets/${detail?.id ?? id}/gift`}>
                       <Button variant="secondary" size="md">
                         {t('ticket.gift')}
