@@ -626,8 +626,9 @@ export function EventDetailPage() {
           ...(booking.botCheckToken ? { botCheckToken: booking.botCheckToken } : {}),
           beneficiaries: booking.lines.map((line, index) => ({
             quantity_id: index + 1,
-            // Optional: a ticket left without a name carries the account's.
-            name: line.name.trim() || authUser?.name || "",
+            // Optional: a ticket left without a name carries the account's;
+            // a sports ticket needs its holder's own name, as on their ID.
+            name: line.nationality ? line.name.trim() : line.name.trim() || authUser?.name || "",
             // A sports ticket's holder (Ministry of Sport rules).
             ...(line.nationality
               ? { nationality: line.nationality, residence: line.residence, birth_date: line.birthDate, gender: line.gender }

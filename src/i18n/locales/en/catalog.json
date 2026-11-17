@@ -446,8 +446,10 @@
     "holderGender": "Gender",
     "holderMale": "Male",
     "holderFemale": "Female",
-    "holderDetailsRequired": "For sports events, add each ticket holder's nationality, country of residence, date of birth and gender.",
-    "botCheckRequired": "Confirm you're not a robot first."
+    "holderDetailsRequired": "For sports events, add each ticket holder's name as written on their ID, nationality, country of residence, date of birth and gender.",
+    "botCheckRequired": "Confirm you're not a robot first.",
+    "attendeeNameRequired": "Full name (required)",
+    "attendeeNameAsId": "Name as written on your ID"
   },
   "search": {
     "title": "Search",

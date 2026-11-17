@@ -52,7 +52,7 @@ export type BookingLine = {
   gender?: "male" | "female";
 };
 
-const holderComplete = (line: BookingLine) => Boolean(line.nationality && line.residence && line.birthDate && line.gender);
+const holderComplete = (line: BookingLine) => Boolean(line.name.trim() && line.nationality && line.residence && line.birthDate && line.gender);
 
 export interface BookingModalProps {
   open: boolean;
@@ -552,7 +552,7 @@ export function BookingModal({
                   </span>
                   <TextInput
                     value={line.name}
-                    placeholder={t("detail.attendeeNameOptional")}
+                    placeholder={t(holderDetails ? "detail.attendeeNameRequired" : "detail.attendeeNameOptional")}
                     aria-label={t("detail.attendeeNameFor", { n: index + 1 })}
                     onChange={(event) => {
                       setLines((current) =>
@@ -565,7 +565,10 @@ export function BookingModal({
                     }}
                     className="bg-bg-page"
                   />
-                  {accountName && !line.name.trim() ? (
+                  {/* Sports events: the holder's name as on their ID, required. */}
+                  {holderDetails ? (
+                    <span className="text-[12px] text-ink-secondary">{t("detail.attendeeNameAsId")}</span>
+                  ) : accountName && !line.name.trim() ? (
                     <span className="text-[12px] text-ink-secondary">
                       {t("detail.attendeeNameDefault", { name: accountName })}
                     </span>
