@@ -103,7 +103,7 @@
           },
           {
             "q": "Can I send a ticket to someone else?",
-            "a": "Yes — open the ticket and choose Transfer to a guest. They get their own QR as soon as they accept, and yours stops working."
+            "a": "Yes, except tickets for sports events. Open the ticket, choose Gift and enter their email: the ticket reaches them ready to scan, and yours stops working."
           },
           {
             "q": "Do I need to print anything?",
@@ -185,7 +185,7 @@
           },
           {
             "q": "Can I resell my ticket?",
-            "a": "No. MyTicket has no resale. You can gift a ticket inside MyTicket: it gets a new code and yours stops working."
+            "a": "No. MyTicket has no resale, and sports tickets can't be gifted or passed on."
           }
         ]
       },
@@ -450,7 +450,7 @@
           },
           {
             "title": "3 · Tickets for sports events",
-            "body": "• Buying a ticket for a sports event, or receiving one as a gift, needs a mobile number confirmed by a one-time code; a number belongs to one account.\n• One person may hold no more than five tickets for the event, or the organizer's lower limit, including tickets received as gifts.\n• Tickets pass to others only inside the platform, each with a new entry code; the old one stops working.\n• Each ticket carries its holder's name as written on their ID, nationality, country of residence, date of birth and gender; the order isn't accepted without them.\n• An \"I'm not a robot\" check comes before booking.\n• The platform can stop an account or a mobile number from buying, and does so for anyone the Ministry of Sport bans from venues.\n• The platform or the organizer may cancel a ticket obtained or traded against the rules."
+            "body": "• Buying a ticket for a sports event needs a mobile number confirmed by a one-time code; a number belongs to one account.\n• One person may hold no more than five tickets for the event, or the organizer's lower limit.\n• Sports tickets can't be gifted or passed to someone else.\n• Each ticket carries its holder's name as written on their ID, nationality, country of residence, date of birth and gender; the order isn't accepted without them.\n• An \"I'm not a robot\" check comes before booking.\n• The platform can stop an account or a mobile number from buying, and does so for anyone the Ministry of Sport bans from venues.\n• The platform or the organizer may cancel a ticket obtained or traded against the rules."
           },
           {
             "title": "4 · Data protection",
