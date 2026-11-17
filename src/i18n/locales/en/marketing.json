@@ -137,7 +137,7 @@
           },
           {
             "q": "What if the event is cancelled?",
-            "a": "Every paid ticket is refunded automatically, the way you paid, and we email you. You don't need to do anything."
+            "a": "Every paid ticket is refunded the way you paid, and we email you. You don't need to ask."
           },
           {
             "q": "What if the event is postponed?",
@@ -446,7 +446,7 @@
           },
           {
             "title": "2 · Cancellations and refunds",
-            "body": "• Each event's organizer sets its refund window, or makes its tickets non-refundable; the window is shown before payment.\n• Ask for a refund in the app or on the website within the window, and follow it from the ticket page.\n• Wallet payments go back to the wallet at once; card payments go back to the original card through the payment gateway.\n• Wallet balance, including money you top up, is for buying on MyTicket only: it can't be withdrawn as cash or refunded to a card or bank account.\n• If the event is cancelled, every paid ticket is refunded automatically, without asking.\n• If the event is postponed, the ticket stays valid for the new date, and you can ask for a full refund whatever the refund window.\n• Unpaid orders are cancelled automatically after 15 minutes."
+            "body": "• Each event's organizer sets its refund window, or makes its tickets non-refundable; the window is shown before payment.\n• Ask for a refund in the app or on the website within the window, and follow it from the ticket page.\n• Wallet payments go back to the wallet at once; card payments go back to the original card through the payment gateway.\n• Wallet balance, including money you top up, is for buying on MyTicket only: it can't be withdrawn as cash or refunded to a card or bank account.\n• If the event is cancelled, every paid ticket is refunded to the original payment method or the wallet, with no need to ask, and each buyer is emailed.\n• If the event is postponed, the ticket stays valid for the new date, and you can ask for a full refund whatever the refund window.\n• Unpaid orders are cancelled automatically after 15 minutes."
           },
           {
             "title": "3 · Tickets for sports events",
