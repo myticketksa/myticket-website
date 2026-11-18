@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { holderRows } from './holderRows'
+import { gateForSentence, holderRows } from './holderRows'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
@@ -289,7 +289,7 @@ export function TicketDetails({
                       <p className="text-[11px] font-bold tracking-[0.77px] text-ink-muted uppercase">
                         {label}
                       </p>
-                      <p className="mt-[4px] text-[15px] font-semibold text-ink-primary">
+                      <p className="mt-[4px] text-[15px] font-semibold text-ink-primary [overflow-wrap:anywhere]">
                         {value}
                       </p>
                     </div>
@@ -353,9 +353,7 @@ export function TicketDetails({
                     </div>
                     <div className="text-center text-[13px] leading-[1.45]">
                       <p className="font-semibold text-ink-secondary">
-                        {t('ticket.scanAtGate', {
-                          gate: seat?.gate && seat.gate !== '—' ? seat.gate : '—',
-                        })}
+                        {t('ticket.scanAtGate', { gate: gateForSentence(seat?.gate) })}
                       </p>
                     </div>
                   </>

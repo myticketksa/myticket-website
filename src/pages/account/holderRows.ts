@@ -16,3 +16,9 @@ export function holderRows(
     [t('ticket.fieldEmail'), holder.email ?? ''],
   ] as [string, string][]).filter(([, value]) => Boolean(value))
 }
+
+/** A gate for "Scan at Gate {{gate}}": "Gate 1" or "البوابة 1" becomes "1", so the word isn't said twice. */
+export function gateForSentence(gate: string | undefined | null): string {
+  if (!gate || gate === '—') return '—'
+  return gate.replace(/^\s*(gate|البوابة|بوابة)\s*/i, '').trim() || gate
+}

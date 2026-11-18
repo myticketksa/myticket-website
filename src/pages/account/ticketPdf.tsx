@@ -3,7 +3,7 @@ import { forwardRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Logo } from '@/components/navigation'
 import type { OrderDetailView, OrderTicketSeatView } from '@/lib/api/mappers/orders'
-import { holderRows } from './holderRows'
+import { gateForSentence, holderRows } from './holderRows'
 
 /**
  * One ticket as it goes into the PDF: event, date, the ticket's fields and its
@@ -65,7 +65,7 @@ export const PrintableTicket = forwardRef<
           fgColor="#0A0A0A"
         />
         <p className="text-[13px] font-semibold text-ink-secondary">
-          {t('ticket.scanAtGate', { gate: seat?.gate && seat.gate !== '—' ? seat.gate : '—' })}
+          {t('ticket.scanAtGate', { gate: gateForSentence(seat?.gate) })}
         </p>
       </div>
     </div>
