@@ -3,6 +3,7 @@ import { forwardRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Logo } from '@/components/navigation'
 import type { OrderDetailView, OrderTicketSeatView } from '@/lib/api/mappers/orders'
+import { holderRows } from './holderRows'
 
 /**
  * One ticket as it goes into the PDF: event, date, the ticket's fields and its
@@ -17,6 +18,7 @@ export const PrintableTicket = forwardRef<
   const { t } = useTranslation('account')
   const fields = [
     [t('ticket.fieldName'), seat?.holderName],
+    ...holderRows(seat?.holder, t),
     [t('ticket.fieldTicketNumber'), ticketNo],
     [t('ticket.fieldTicketType'), seat?.ticketTypeLabel],
     [t('ticket.fieldBlock'), seat?.block],

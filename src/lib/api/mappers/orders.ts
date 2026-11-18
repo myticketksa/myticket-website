@@ -599,6 +599,15 @@ export type OrderTicketSeatView = {
   supplier?: string | null
   /** When its entry opens and closes ("18:00 – 21:30"), set per ticket type. */
   entry?: string | null
+  /** A sports ticket's holder (Ministry of Sport rules): shown on the ticket. */
+  holder?: {
+    nationality: string
+    residence: string
+    birthDate: string | null
+    gender: string | null
+    phone: string | null
+    email: string | null
+  } | null
 }
 
 export type OrderDetailView = {
@@ -724,6 +733,16 @@ export function mapOrderToDetailView(
             : '—',
         qrValue: gifted ? '' : ticketQrValue(ticket, ticketId),
         holderName: localizedString(ticket.holderName ?? ticket.holder_name),
+        holder: ticket.holderNationality
+          ? {
+              nationality: String(ticket.holderNationalityName ?? ticket.holderNationality),
+              residence: String(ticket.holderResidenceName ?? ticket.holderResidence ?? ''),
+              birthDate: ticket.holderBirthDate ? String(ticket.holderBirthDate) : null,
+              gender: ticket.holderGender ? String(ticket.holderGender) : null,
+              phone: ticket.holderPhone ? `+${String(ticket.holderPhone).replace(/^\+/, '')}` : null,
+              email: ticket.holderEmail ? String(ticket.holderEmail) : null,
+            }
+          : null,
         supplier: typeof ticket.supplier === 'string' ? ticket.supplier : null,
         gifted,
         giftedTo: gifted ? giftedTo.get(ticketId) ?? null : null,

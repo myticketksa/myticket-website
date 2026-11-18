@@ -229,7 +229,9 @@
     "gifted": "مُهداة",
     "giftedTo": "مُهداة إلى {{name}}",
     "fieldEntry": "فتح البوابات",
-    "fieldSupport": "الدعم"
+    "fieldSupport": "الدعم",
+    "fieldPhone": "الجوال",
+    "fieldEmail": "البريد الإلكتروني"
   },
   "gift": {
     "header": "إرسال تذكرة",

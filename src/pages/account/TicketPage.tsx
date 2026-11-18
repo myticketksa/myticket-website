@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { holderRows } from './holderRows'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
@@ -270,6 +271,8 @@ export function TicketDetails({
                   {[
                     // The name typed for this ticket at booking, as the app shows it.
                     ...(seat?.holderName ? [[t('ticket.fieldName'), seat.holderName]] : []),
+                    // A sports ticket's holder details (Ministry of Sport rules).
+                    ...holderRows(seat?.holder, t),
                     [t('ticket.fieldCity'), detail?.city ?? '—'],
                     [t('ticket.fieldStartTime'), detail?.startTime ?? '—'],
                     [t('ticket.fieldTicketNumber'), ticketNo],
@@ -389,3 +392,4 @@ export function TicketDetails({
     </div>
   )
 }
+

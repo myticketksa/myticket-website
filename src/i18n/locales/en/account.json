@@ -229,7 +229,9 @@
     "gifted": "Gifted",
     "giftedTo": "Gifted to {{name}}",
     "fieldEntry": "Gates open",
-    "fieldSupport": "Support"
+    "fieldSupport": "Support",
+    "fieldPhone": "Mobile",
+    "fieldEmail": "Email"
   },
   "gift": {
     "header": "Send a ticket",
