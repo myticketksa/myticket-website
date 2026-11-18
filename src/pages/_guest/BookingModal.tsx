@@ -1100,6 +1100,11 @@ function HolderFields({
 }) {
   const { t } = useTranslation("catalog");
   const lang = getActiveLocale();
+  // Most holders live in Saudi Arabia: start there, changeable.
+  useEffect(() => {
+    if (!line.residence) onChange({ residence: "SA" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const options = countries.map((c) => (
     <option key={c.code} value={c.code}>
       {c.name[lang] ?? c.name.en}
