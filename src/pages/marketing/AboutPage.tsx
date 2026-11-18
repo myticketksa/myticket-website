@@ -3,10 +3,8 @@ import {
   MarketingCardGrid,
   MarketingCta,
   MarketingHero,
-  MarketingStats,
 } from "@/pages/_account/MarketingShell";
 
-type AboutStat = { value: string; label: string };
 type AboutCard = {
   title: string;
   body: string;
@@ -16,7 +14,6 @@ type AboutCard = {
 /** About — Figma `207:11984`. */
 export function AboutPage() {
   const { t } = useTranslation("marketing");
-  const stats = t("about.stats", { returnObjects: true }) as AboutStat[];
   const cards = t("about.cards", { returnObjects: true }) as AboutCard[];
 
   return (
@@ -27,7 +24,6 @@ export function AboutPage() {
         title={t("about.title")}
         subtitle={t("about.lede")}
       />
-      <MarketingStats stats={Array.isArray(stats) ? stats : []} />
       <MarketingCardGrid
         items={(Array.isArray(cards) ? cards : []).map((card) => ({
           title: card.title,

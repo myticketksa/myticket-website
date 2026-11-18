@@ -5,24 +5,6 @@
     "lede": "MyTicket is where people across the Kingdom find live experiences — concerts, sports, festivals, theatre, family days, and places worth the drive — and buy their way in with one tap. Organizers apply with a short request and we agree the terms with them; facility and talent requests come from guest accounts.",
     "ctaText": "The best way to understand MyTicket is to find your next night out.",
     "ctaLabel": "Browse what's on",
-    "stats": [
-      {
-        "value": "2.1M",
-        "label": "guests with an account"
-      },
-      {
-        "value": "1,400+",
-        "label": "events ticketed this year"
-      },
-      {
-        "value": "13",
-        "label": "regions with live events"
-      },
-      {
-        "value": "5,000+",
-        "label": "talents reviewed"
-      }
-    ],
     "cards": [
       {
         "title": "For the people going out",
@@ -479,20 +461,6 @@
     "title": "You make the night. We'll fill it.",
     "lede": "Sell tickets to the audience already browsing MyTicket. Send a short request — we call to agree the terms, then your {{role}} dashboard opens.",
     "imageryLabel": "Imagery — organizer at a sold-out show",
-    "stats": [
-      {
-        "value": "1,400+",
-        "label": "events sold this year"
-      },
-      {
-        "value": "2.1M",
-        "label": "guests buying on MyTicket"
-      },
-      {
-        "value": "Office",
-        "label": "request, call, dashboard"
-      }
-    ],
     "benefits": [
       {
         "title": "An audience that's already here",
