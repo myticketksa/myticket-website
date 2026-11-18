@@ -96,8 +96,6 @@ export interface BookingModalProps {
   onDiscardPromo?: () => void;
   /** Changes when the parent dropped that order, so the applied code goes too. */
   promoResetSignal?: number;
-  /** Valid tickets the person already holds for this event on the chosen day. */
-  alreadyHeld?: number;
   /**
    * Booking one activity of the event (27 Oct 2026): its days and times
    * replace the showtime list, and the chosen time goes with the order.
@@ -137,7 +135,6 @@ export function BookingModal({
   onApplyPromo,
   onDiscardPromo,
   promoResetSignal,
-  alreadyHeld = 0,
   activitySlots,
   activitySlotsLoading,
   accountName,
@@ -620,13 +617,6 @@ export function BookingModal({
                 </div>
               );
             })}
-
-          {step === 2 && alreadyHeld > 0 && (
-            // Someone unsure a payment went through used to book again (19 Oct sim).
-            <p className="mb-sm rounded-[12px] bg-bg-tint-brand px-[14px] py-[10px] text-[13px] font-semibold text-ink-brand-strong">
-              {t("detail.alreadyHeld", { count: alreadyHeld })}
-            </p>
-          )}
 
           {step === 2 && (
             <section className="mb-lg flex flex-col gap-[8px] rounded-[16px] border border-border-default bg-surface-default p-md">
