@@ -99,7 +99,7 @@
         "faqs": [
           {
             "q": "Where do I find my ticket?",
-            "a": "Every ticket sits in My tickets the moment payment clears. Open the event, tap the ticket and the QR code fills the screen — it also works with no signal, so you don't need data at the gate."
+            "a": "Every ticket sits in My tickets the moment payment clears. Open the event and tap the ticket to show its QR code."
           },
           {
             "q": "Can I send a ticket to someone else?",

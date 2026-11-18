@@ -204,7 +204,7 @@
     "refundNote": "Full refund until 72 hours before doors.",
     "resaleAuction": "resale auction",
     "nextSteps": {
-      "offline": "Your tickets live in My tickets — offline QR codes work even without signal.",
+      "offline": "Your tickets are in My tickets.",
       "share": "Share a ticket with a friend and they get their own QR the moment they accept.",
       "remind": "We'll remind you an hour before doors with the gate and bag-policy notes."
     },
