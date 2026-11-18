@@ -15,6 +15,8 @@ export const PAYMENT_SUCCESS_ORDER_KEY = "myticket.paymentSuccessOrderId";
 const ALLOWED_RETURN_HOSTS = new Set([
   "myticket.sa",
   "www.myticket.sa",
+  // The test website, on the test server (18 Nov 2026).
+  "test.myticket.sa",
   "localhost",
   "127.0.0.1",
 ]);
