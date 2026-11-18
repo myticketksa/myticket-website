@@ -194,8 +194,8 @@
         "blurb": "Sign-in, notifications, and keeping your tickets safe.",
         "faqs": [
           {
-            "q": "How do I turn on two-factor sign-in?",
-            "a": "Open Settings → Security and add a phone number or authenticator. We recommend it before any high-value purchase."
+            "q": "I forgot my password",
+            "a": "Choose \"Forgot password\" on the sign-in page and we'll email you a code to set a new one."
           },
           {
             "q": "I lost access to my email",

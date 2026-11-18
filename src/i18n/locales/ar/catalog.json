@@ -269,7 +269,7 @@
     "bids": "{{count}} مزايدات",
     "watching": "{{count}} يتابعون",
     "endsIn": "ينتهي خلال ",
-    "searchMatches": "{{count}} نتيجة عبر الفعاليات والمواهب والتجارب والمزادات.",
+    "searchMatches": "{{count}} نتيجة عبر الفعاليات والمواهب والتجارب.",
     "resultTypes": "أنواع النتائج",
     "showAllResults": "عرض كل النتائج",
     "alsoLookedFor": "من بحث عن هذا نظر أيضاً إلى",

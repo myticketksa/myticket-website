@@ -269,7 +269,7 @@
     "bids": "{{count}} bids",
     "watching": "{{count}} watching",
     "endsIn": "Ends in ",
-    "searchMatches": "{{count}} matches across events, talents, experiences and auctions.",
+    "searchMatches": "{{count}} matches across events, talents and experiences.",
     "resultTypes": "Result types",
     "showAllResults": "Show all results",
     "alsoLookedFor": "People searching this also looked for",

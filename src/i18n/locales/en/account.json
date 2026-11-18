@@ -539,12 +539,12 @@
       },
       "wallet": {
         "title": "Wallet & payouts",
-        "desc": "Balance and bank",
+        "desc": "Balance and top-ups",
         "tag": "Open"
       },
       "notifications": {
         "title": "Notifications",
-        "desc": "Push, email, SMS",
+        "desc": "Push and email",
         "tag": "6 on"
       },
       "favorites": {
@@ -750,7 +750,7 @@
     "keepSignIn": "Sign in — you'll come right back",
     "keepCase": "Turn into a tracked case",
     "quickerTitle": "Quicker answers",
-    "hours": "Support hours: 9:00–01:00 AST, every day. Outside these hours, leave a message — we reply first thing.",
+    "hours": "Support is available around the clock, every day.",
     "replyPlaceholder": "Reply in chat…",
     "quick": {
       "refund": "Where's my refund?",

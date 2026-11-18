@@ -23,8 +23,6 @@ import {
   TalentDetailPage,
   ExperiencesPage,
   ExperienceDetailPage,
-  SeatSelectionPage,
-  CheckoutPage,
   OrderConfirmationPage,
   SignInPage,
   PhoneSignInPage,
@@ -200,8 +198,6 @@ export const router = createBrowserRouter([
       {
         element: <PurchaseLayout />,
         children: [
-          { path: "/events/:slug/seats", element: <SeatSelectionPage /> },
-          { path: "/checkout", element: <CheckoutPage /> },
         ],
       },
     ],
