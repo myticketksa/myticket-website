@@ -1103,24 +1103,29 @@ function HolderFields({
   const today = new Date().toISOString().slice(0, 10);
   return (
     <div className="mt-xs grid grid-cols-1 gap-xs sm:grid-cols-2">
-      <Select
-        value={line.nationality ?? ""}
-        aria-label={t("detail.holderNationality")}
-        onChange={(event) => onChange({ nationality: event.target.value || undefined })}
-        className="bg-bg-page"
-      >
-        <option value="">{t("detail.holderNationality")}</option>
-        {options}
-      </Select>
-      <Select
-        value={line.residence ?? ""}
-        aria-label={t("detail.holderResidence")}
-        onChange={(event) => onChange({ residence: event.target.value || undefined })}
-        className="bg-bg-page"
-      >
-        <option value="">{t("detail.holderResidence")}</option>
-        {options}
-      </Select>
+      {/* Labelled above, like the birth date: once chosen, both show a country and looked the same. */}
+      <label className="flex flex-col gap-[4px] text-[12px] text-ink-secondary">
+        {t("detail.holderNationality")}
+        <Select
+          value={line.nationality ?? ""}
+          onChange={(event) => onChange({ nationality: event.target.value || undefined })}
+          className="bg-bg-page"
+        >
+          <option value="">{t("detail.holderNationality")}</option>
+          {options}
+        </Select>
+      </label>
+      <label className="flex flex-col gap-[4px] text-[12px] text-ink-secondary">
+        {t("detail.holderResidence")}
+        <Select
+          value={line.residence ?? ""}
+          onChange={(event) => onChange({ residence: event.target.value || undefined })}
+          className="bg-bg-page"
+        >
+          <option value="">{t("detail.holderResidence")}</option>
+          {options}
+        </Select>
+      </label>
       <label className="flex flex-col gap-[4px] text-[12px] text-ink-secondary">
         {t("detail.holderBirthDate")}
         <TextInput
